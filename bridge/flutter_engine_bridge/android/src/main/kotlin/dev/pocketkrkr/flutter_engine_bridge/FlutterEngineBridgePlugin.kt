@@ -21,7 +21,7 @@
  * error; the GPU path below is the canonical way to get frames from the engine.
  */
 
-package dev.krkr2.flutter_engine_bridge
+package dev.pocketkrkr.flutter_engine_bridge
 
 import android.os.Build
 import android.view.Surface

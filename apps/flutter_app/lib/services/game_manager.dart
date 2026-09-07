@@ -7,7 +7,7 @@ import '../models/game_info.dart';
 
 /// Manages persisted game list using SharedPreferences.
 class GameManager {
-  static const String _storageKey = 'krkr2_game_list';
+  static const String _storageKey = 'pocketkrkr_game_list';
   static const int _maxSessionSeconds = 86400; // 24h cap per session
   static const int _maxSettledSessionIds = 64;
 

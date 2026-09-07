@@ -16,7 +16,7 @@ def flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "
 def flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
 android {
-    namespace = "org.github.krkr2.flutter_app"
+    namespace = "org.pocketkrkr.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "org.github.krkr2.flutter_app"
+        applicationId = "org.pocketkrkr.app"
         // The engine .so is built for API 24 (see vcpkg/triplets/arm64-android.cmake).
         minSdk = 24
         targetSdk = flutter.targetSdkVersion

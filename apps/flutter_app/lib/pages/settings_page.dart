@@ -164,9 +164,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
     // Apply locale change in real-time
     if (code == 'system') {
-      Krkr2App.setLocale(context, null);
+      PocketKrKrApp.setLocale(context, null);
     } else {
-      Krkr2App.setLocale(context, Locale(code));
+      PocketKrKrApp.setLocale(context, Locale(code));
     }
   }
 
@@ -178,7 +178,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     // Apply theme change in real-time
     final mode = code == 'light' ? ThemeMode.light : ThemeMode.dark;
-    Krkr2App.setThemeMode(context, mode);
+    PocketKrKrApp.setThemeMode(context, mode);
   }
 
   @override
