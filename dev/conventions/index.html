@@ -1,0 +1,1825 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="口袋里的吉里吉里2 —— 面向移动端的 KiriKiri2 视觉小说引擎运行环境（C++ 引擎 + Flutter 壳）">
+      
+      
+      
+        <link rel="canonical" href="https://krkr2next.com/dev/conventions/">
+      
+      
+        <link rel="prev" href="../build/">
+      
+      
+        <link rel="next" href="../rendering-diagnosis/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../resources/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>约定与历史陷阱 - PocketKrKr</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="PocketKrKr" class="md-header__button md-logo" aria-label="PocketKrKr" data-md-component="logo">
+      
+  <img src="../../resources/favicon.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PocketKrKr
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              约定与历史陷阱
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="切换为深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换为深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/FiresonZ/KrKr2-Next-Mobile" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    FiresonZ/KrKr2-Next-Mobile
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="PocketKrKr" class="md-nav__button md-logo" aria-label="PocketKrKr" data-md-component="logo">
+      
+  <img src="../../resources/favicon.svg" alt="logo">
+
+    </a>
+    PocketKrKr
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/FiresonZ/KrKr2-Next-Mobile" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    FiresonZ/KrKr2-Next-Mobile
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    项目简介
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    项目简介
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    插件清单
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../support_games.txt" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    支持的游戏
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发文档
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    开发文档
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../for-beginners/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    小白开发指引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developers-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    开发者入门
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tech-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    技术栈
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../todo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    架构与源码
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    架构与源码
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../source-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    源代码结构地图
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-references/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    关键引用
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    构建与约定
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    构建与约定
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    构建与工具链
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    约定与历史陷阱
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    约定与历史陷阱
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-win32-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 名为 win32 的目录是「跨平台共享实现」，不是 Windows 专属 ⚠️
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 平台守卫是惰性的，删除需谨慎
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-vcpkgports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. vcpkg/ports 是共享的第三方构建配方，不要删
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-live2d-cubism-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Live2D Cubism SDK 需手动放置（可选，缺库自动禁用）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-ios-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. iOS / macOS 引擎二进制形态不同
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-angle-openglframework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. ANGLE 与系统 OpenGL.framework 符号冲突
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-2026-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 平台收敛与恢复历史（2026-09）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 其他约定
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-simdhighway2026-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. SIMD（Highway）审计记录（2026-09）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. SIMD（Highway）审计记录（2026-09）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        高危（输出明显错误）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        中危（alpha 通道不一致，合成边缘出错）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        低危（位级偏差 / 死代码）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        修复建议
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-android-2026-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Android 恢复要点（2026-09）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering-diagnosis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    渲染 / 黑屏诊断
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    兼容与性能
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    兼容与性能
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    游戏兼容性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../perf-optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    性能优化候选
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-win32-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 名为 win32 的目录是「跨平台共享实现」，不是 Windows 专属 ⚠️
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 平台守卫是惰性的，删除需谨慎
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-vcpkgports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. vcpkg/ports 是共享的第三方构建配方，不要删
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-live2d-cubism-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Live2D Cubism SDK 需手动放置（可选，缺库自动禁用）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-ios-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. iOS / macOS 引擎二进制形态不同
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-angle-openglframework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. ANGLE 与系统 OpenGL.framework 符号冲突
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-2026-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 平台收敛与恢复历史（2026-09）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 其他约定
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-simdhighway2026-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. SIMD（Highway）审计记录（2026-09）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. SIMD（Highway）审计记录（2026-09）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        高危（输出明显错误）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alpha" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        中危（alpha 通道不一致，合成边缘出错）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        低危（位级偏差 / 死代码）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        修复建议
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-android-2026-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Android 恢复要点（2026-09）
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="_1">约定与历史陷阱（务必阅读）<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>这些是前人在平台收敛过程中踩过的坑与重要决策。<strong>改代码前先读本页</strong>，
+尤其是涉及目录删除、平台守卫、vcpkg 时。</p>
+</blockquote>
+<h2 id="1-win32-windows">1. 名为 <code>win32</code> 的目录是「跨平台共享实现」，不是 Windows 专属 ⚠️<a class="headerlink" href="#1-win32-windows" title="Permanent link">&para;</a></h2>
+<p>以下目录被 <strong>所有 Apple 平台无条件编译</strong>，是共享实现，<strong>绝不能删</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cpp/core/sound/win32/</code></td>
+<td>音频设备实现（CDDA/MIDI/Wave/WaveMixer/tvpsnd），基于 OpenAL</td>
+</tr>
+<tr>
+<td><code>cpp/core/utils/win32/</code></td>
+<td>线程/定时器/剪贴板/触控板等实现</td>
+</tr>
+<tr>
+<td><code>cpp/core/environ/win32/SystemControl.cpp</code></td>
+<td>系统控制（事件分发、内存治理），根 <code>environ/CMakeLists.txt</code> 无条件编译</td>
+</tr>
+</tbody>
+</table>
+<p><code>environ/win32/</code> 目前仅保留 6 个必需文件：
+<code>SystemControl.cpp/.h</code>、<code>TVPWindow.h</code>、<code>ApplicationSpecialPath.h</code>、<code>EmergencyExit.h</code>、<code>DetectCPU.h</code>。
+其余 Windows UI 死代码（TVPWindow.cpp、WindowFormUnit、MouseCursor、TouchPoint 等）已删除。</p>
+<h2 id="2">2. 平台守卫是惰性的，删除需谨慎<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>共享源文件中存在 <code>#if defined(__ANDROID__)</code>、<code>#if defined(__linux__)</code>、<code>#ifdef WIN32</code> 等分支。
+在 Apple 构建中这些分支<strong>永远不会编译</strong>（惰性死代码），不影响构建。
+<strong>默认不要动它们</strong>——强行剥离是高风险重构，收益低。例子：
+<code>engine_api.cpp</code>、<code>ScriptMgnIntf.cpp</code>、<code>StorageImpl.cpp</code>、<code>krkr_egl_context.cpp</code>、
+<code>RenderManager_ogl.cpp</code>、<code>WaveMixer.cpp</code>、<code>ui_stubs.cpp</code>、<code>krkrgles.cpp</code> 等。
+若确实需要清理，必须逐文件确认 Apple 路径仍完整。</p>
+<h2 id="3-vcpkgports">3. vcpkg/ports 是共享的第三方构建配方，不要删<a class="headerlink" href="#3-vcpkgports" title="Permanent link">&para;</a></h2>
+<p><code>vcpkg/ports/*</code> 中 7zip/ffmpeg/angle 等的平台补丁（如 <code>0001-android-ffmpeg.patch</code>、
+<code>PlatformAndroid.cmake</code>）虽然名义上属于其他平台，但<strong>在现有配置中是无条件/按端口逻辑应用</strong>的，
+且 vcpkg 只会在 Apple triplet 下被调用。删除可能破坏现有可用构建。
+平台目标由 <code>vcpkg.json</code> + <code>vcpkg/triplets/arm64-ios.cmake</code> 控制（已收敛）。</p>
+<h2 id="4-live2d-cubism-sdk">4. Live2D Cubism SDK 需手动放置（可选，缺库自动禁用）<a class="headerlink" href="#4-live2d-cubism-sdk" title="Permanent link">&para;</a></h2>
+<p><code>cpp/plugins/cubism/</code> 仅含头文件；<code>Core/lib/</code>（预编译静态库）与 <code>Framework/</code>
+被 <code>.gitignore</code> 忽略，需从 live2d.com 下载后按路径放置：
+- iOS：<code>Core/lib/ios/Release-iphoneos/libLive2DCubismCore.a</code>
+- macOS：<code>Core/lib/macos/{arm64,x86_64}/libLive2DCubismCore.a</code>
+- Android：需要 Android 版 core 库，路径需自行补充到 <code>cpp/plugins/CMakeLists.txt</code></p>
+<p>缺库时 <strong>不会导致构建失败</strong>：<code>plugins/CMakeLists.txt</code> 检测 SDK 是否存在，
+不存在则跳过 <code>krkrlive2d.cpp</code>、把 <code>CubismFramework</code> 建成空的 INTERFACE 目标
+（2026-09 修复：此前 CI 因缺 Framework 直接 CMake 报错）。</p>
+<h2 id="5-ios-macos">5. iOS / macOS 引擎二进制形态不同<a class="headerlink" href="#5-ios-macos" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>iOS</strong>：<code>engine_api</code> 为<strong>静态库</strong>，定义 <code>ENGINE_API_EXPORT_SYMBOLS</code>，链接进 Runner；
+  Dart 用 <code>DynamicLibrary.process()</code> 定位符号。静态库合并脚本见 <code>build_ios.sh</code>。</li>
+<li><strong>macOS</strong>：<code>engine_api</code> 为<strong>动态库</strong> <code>libengine_api.dylib</code>，定义 <code>ENGINE_API_BUILD_SHARED</code>，
+  打包进 App 的 <code>Contents/Frameworks/</code>。</li>
+<li><code>bridge/flutter_engine_bridge/ios/Libs/*.a</code> 是构建产物（gitignore），勿提交。</li>
+</ul>
+<h2 id="6-angle-openglframework">6. ANGLE 与系统 OpenGL.framework 符号冲突<a class="headerlink" href="#6-angle-openglframework" title="Permanent link">&para;</a></h2>
+<p>Apple 上必须对 ANGLE 的 <code>libGLESv2</code>/<code>libEGL</code>/<code>libANGLE</code> 用 <code>-force_load</code> 强制全量链接
+（见 <code>bridge/engine_api/CMakeLists.txt</code>），否则 GL/EGL 符号可能被系统框架抢先解析。</p>
+<h2 id="7-2026-09">7. 平台收敛与恢复历史（2026-09）<a class="headerlink" href="#7-2026-09" title="Permanent link">&para;</a></h2>
+<p>仓库先收敛为 <strong>iOS + macOS</strong>，随后（2026-09）恢复 Android，定位改为 <strong>mobile（iOS + Android）</strong>。</p>
+<p>第一次收敛（iOS + macOS）时删除：</p>
+<table>
+<thead>
+<tr>
+<th>已删除</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/flutter_app/{android,linux,windows}/</code></td>
+<td>Flutter 壳平台目录</td>
+</tr>
+<tr>
+<td><code>bridge/flutter_engine_bridge/{android,linux,windows}/</code> 及 example 中对应目录</td>
+<td>插件平台实现</td>
+</tr>
+<tr>
+<td><code>platforms/{android,linux,windows}/</code></td>
+<td>平台入口（Android JNI、Linux、Windows）</td>
+</tr>
+<tr>
+<td><code>cpp/core/environ/{android,linux}/</code></td>
+<td>JNI/Linux 平台实现</td>
+</tr>
+<tr>
+<td><code>build/build_android.sh</code>、<code>cmake/vcpkg_android.cmake</code></td>
+<td>Android 构建</td>
+</tr>
+<tr>
+<td><code>vcpkg/triplets/*-android.cmake</code>（4个）</td>
+<td>Android triplets</td>
+</tr>
+<tr>
+<td><code>cpp/plugins/layerex_draw/windows/</code></td>
+<td>Windows 专属绘制</td>
+</tr>
+<tr>
+<td><code>environ/win32/</code> 大部分死代码</td>
+<td>见第 1 节</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>保留项：<code>platforms/apple/macos/</code>（macOS 资源）、<code>tools/</code>（macOS 工具）、
+<code>docs/dev/</code>（本文档）、<code>docs/</code>（GitHub Pages 落地页）。</p>
+</blockquote>
+<p>第二次恢复（Android，2026-09）新增：</p>
+<table>
+<thead>
+<tr>
+<th>新增</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apps/flutter_app/android/</code></td>
+<td>Flutter Android 壳层（标准模板，gradlew/wrapper jar 由 <code>flutter create</code> 再生成）</td>
+</tr>
+<tr>
+<td><code>bridge/flutter_engine_bridge/android/</code></td>
+<td>Kotlin 插件（MethodChannel + SurfaceTexture + JNI）</td>
+</tr>
+<tr>
+<td><code>bridge/engine_api/src/engine_api_android_jni.cpp</code></td>
+<td>JNI 胶水（<code>krkr_GetNativeWindow</code> 定义、<code>nativeSetSurface</code>/<code>nativeDetachSurface</code>）</td>
+</tr>
+<tr>
+<td><code>vcpkg/triplets/arm64-android.cmake</code></td>
+<td>Android triplet（arm64-v8a，API 24）</td>
+</tr>
+<tr>
+<td><code>build/build_android.sh</code></td>
+<td>Android 一键构建（镜像 build_ios.sh）</td>
+</tr>
+<tr>
+<td><code>.github/workflows/android_package.yml</code></td>
+<td>Android CI 打包（Ubuntu runner）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8">8. 其他约定<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Dart 壳应用中存在大量 <code>Platform.isAndroid</code> 等运行时分支，在 iOS/macOS 上恒为 false，
+  编译运行无影响；<strong>属业务逻辑</strong>，与平台基础设施无关，未清理。这些分支正是 Android 恢复时
+  的现成支持（SurfaceTexture 零拷贝 + RGBA 回读兜底）。</li>
+<li><code>ENABLE_TESTS</code> / <code>BUILD_TOOLS</code> 在 iOS/Android 上默认关闭（<code>CMakePresets.json</code> 对应预设里 <code>false</code>）；
+  Linux 宿主验证预设里打开。</li>
+<li>根 <code>CMakeLists.txt</code> 不再生成独立可执行 <code>krkr2</code>（Flutter 壳接管入口），仅构建引擎库。</li>
+<li><code>docs/</code>（GitHub Pages + FAQ/插件清单/兼容列表）与 <code>docs/dev/</code>（开发文档）已合并为单一 docs 目录；
+  <code>doc/</code> 旧目录与无引用图片已删除（2026-09）。</li>
+</ul>
+<h2 id="9-simdhighway2026-09">9. SIMD（Highway）审计记录（2026-09）<a class="headerlink" href="#9-simdhighway2026-09" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>结论：<strong>无语法错误</strong>（Highway foreach_target 模式、HWY_EXPORT/HWY_DYNAMIC_DISPATCH 结构正确），
+但存在<strong>多处向量公式与标量参考不一致</strong>的缺陷。修复时务必逐函数对照
+<code>cpp/core/visual/tvpgl.cpp</code> 中 <code>*_c</code> 标量实现。</p>
+</blockquote>
+<h3 id="_2">高危（输出明显错误）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>SubBlend 系（<code>tvpgl_simd_arithmetic_blend.cpp</code> 全部 4 个）</strong>
+   SIMD 用 <code>SaturatedSub(d, s)</code>（= max(d−s,0)）；标量 <code>TVPSubBlend_c</code> 语义是
+   <strong><code>max(s+d−255, 0)</code></strong>（饱和 d+s−255）。向量路径整段错误，且与同函数尾部标量不一致 → 行内带状错误。</p>
+</li>
+<li>
+<p><strong>ScreenBlend_o / ScreenBlend_HDA_o（<code>tvpgl_simd_arithmetic_blend.cpp</code>）</strong>
+   标量（<code>TVPScreenBlend_o_c</code>）：<code>(~d) * ~((s*opa)&gt;&gt;8) &gt;&gt; 8</code>（无外层取反）；
+   SIMD：<code>~((~d) * ((~s*opa)&gt;&gt;8) &gt;&gt; 8)</code>。源缩放公式与最终取反均不同，数值差异巨大。</p>
+</li>
+</ol>
+<h3 id="alpha">中危（alpha 通道不一致，合成边缘出错）<a class="headerlink" href="#alpha" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>AdditiveAlphaBlend / AdditiveAlphaBlend_o（<code>tvpgl_simd_premul_blend.cpp</code>）</strong>
+   标量不对 alpha 字节缩放（结果 alpha = src_a）；SIMD 对 alpha 字节也做
+   <code>d_a*(255-s_a)&gt;&gt;8</code> 缩放再饱和加 → 向量与尾部不一致。</p>
+</li>
+<li>
+<p><strong>Ps*Blend NORM / _o 全系（<code>tvpgl_simd_ps_blend.cpp</code> / <code>_ps_blend2.cpp</code>，8 模式 × 2）</strong>
+   标量（<code>tvpps.inc</code> + <code>TVPPS_ALPHABLEND</code>）NORM/_o 输出 <strong>alpha=0</strong>（只写 RGB）；
+   SIMD 的 <code>PsApplyAlpha</code> 对 alpha 字节做 <code>(s_a*a&gt;&gt;8)+(d_a*(255-a)&gt;&gt;8)</code> 混合 → 不一致。</p>
+</li>
+</ol>
+<h3 id="_3">低危（位级偏差 / 死代码）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>AlphaBlend / ConstAlphaBlend / PS alpha 应用</strong>：<code>(s*a&gt;&gt;8)+(d*(255-a)&gt;&gt;8)</code> 与标量
+   <code>d+((s-d)*a&gt;&gt;8)</code> 舍入至多差 1，视觉可忽略，但与 C 参考非位一致（对截图比对/Z 兼容测试有影响）。</li>
+<li><strong>ConvertAlphaToAdditiveAlpha</strong>：SIMD <code>(ch*a)&gt;&gt;8</code>（÷256）vs 标量 <code>(ch*a)/255</code>；
+   255 满 alpha 时 SIMD 得 254 而非 255。</li>
+<li><strong><code>tvpgl_simd_common.h</code> 的辅助函数（BlendChannelU16 等）</strong>：<code>(s-d)*a</code> 存在 u16 溢出隐患，
+   且<strong>全部未被任何实现文件使用</strong>（死代码）。未来复用前必须重写。</li>
+<li><strong>未注册的导出函数</strong>：<code>ConstAlphaBlend_d/a</code>、<code>AdditiveAlphaBlend_a/ao</code>、<code>DoBoxBlurAvg*</code>、
+   <code>ChBlur*</code> 等声明与实现存在但 <code>tvpgl_simd_init.cpp</code> 未注册——死代码，无害但易误导。</li>
+</ol>
+<h3 id="_4">修复建议<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>逐函数将 SIMD 公式<strong>对齐标量参考</strong>（SubBlend → <code>max(d+s-255,0)</code>；ScreenBlend_o →
+  标量式；AdditiveAlphaBlend 的 alpha=s_a；PS NORM 的 alpha=0 等）。</li>
+<li>修复后做 <strong>SIMD on/off 输出比对</strong>（<code>TVPGL_SIMD_Init</code> 是否调用）确认逐像素一致。
+  该验证<strong>不需要 macOS</strong>：在 Windows（SSE/AVX2）或 Android（NEON）上编译同一份核心即可，
+  公式缺陷与指令集无关。</li>
+<li>若短期不修：可在 <code>tvpgl_simd_init.cpp</code> 中把高危函数改为不注册（回退标量），避免错误渲染。</li>
+</ul>
+<h2 id="10-android-2026-09">10. Android 恢复要点（2026-09）<a class="headerlink" href="#10-android-2026-09" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>引擎侧早已就绪</strong>：<code>engine_api.cpp</code> 的 Android 渲染路径（<code>InitializeWithWindow</code>/
+  <code>AttachNativeWindow</code>/自动挂载 ANativeWindow）与 <code>__ANDROID__</code> ifdef 是恢复前就存在的，
+  只缺 <code>krkr_GetNativeWindow()</code>/<code>krkr_GetSurfaceDimensions()</code> 的实现（现在在
+  <code>engine_api_android_jni.cpp</code>，由 <code>-landroid -llog</code> 链接）。</li>
+<li><strong><code>.so</code> 必须自包含</strong>：Android 无法像 iOS 那样额外合并静态库，但插件子库
+  <code>target_sources(PUBLIC)</code> 的源码会经 <code>INTERFACE_SOURCES</code> 直接编进 <code>engine_api.so</code>，
+  所以 <code>engine_api</code> 以 SHARED 形态<strong>普通链接</strong> <code>krkr2core+krkr2plugin</code> 即可自包含。
+  注意 <strong>不要加 <code>--whole-archive</code></strong>：它会强制把 psbfile.a/motionplayer.a 的对象再拉一份，
+  与 engine_api 已编译的副本冲突，产生 ld.lld 重复符号（对齐上游 reAAAq/KrKr2-Next 做法）。</li>
+<li><strong>vcpkg angle 分平台</strong>：<code>vcpkg.json</code> 中 angle 拆成两条 —— Apple 用 <code>metal</code> feature，
+  Android 用 <code>vulkan</code> feature（feature 带 <code>supports</code> 约束，混用会编译失败）。</li>
+<li><strong>libpng</strong> 平台条件扩展为 <code>osx | ios | android</code>（<code>find_package(PNG REQUIRED)</code> 在
+  visual/CMakeLists.txt，所有平台都需要）。</li>
+<li><strong>Android 壳层的 gradlew/wrapper jar 是二进制产物</strong>，已被 <code>.gitignore</code> 忽略；
+  若缺失，在 <code>apps/flutter_app</code> 下执行 <code>flutter create --platforms=android .</code> 一键再生成
+  （不会破坏 Dart 代码）。Gradle/AGP/Kotlin 版本需与本机 Flutter 匹配，<code>flutter create</code> 会
+  生成匹配版本，优先采用。</li>
+<li><strong>minSdk 24</strong>：<code>apps/flutter_app/android/app/build.gradle</code> 与 vcpkg triplet 一致
+  （API 24 = Android 7.0），低于此版本的设备无法加载引擎 .so。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../build/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 构建与工具链">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                构建与工具链
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../rendering-diagnosis/" class="md-footer__link md-footer__link--next" aria-label="下一页: 渲染 / 黑屏诊断">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                渲染 / 黑屏诊断
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 PocketKrKr Contributors · <a href="https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/LICENSE">GPL-3.0</a>
+    </div>
+  
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/FiresonZ/KrKr2-Next-Mobile" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
