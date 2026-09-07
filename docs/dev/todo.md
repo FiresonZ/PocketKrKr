@@ -30,6 +30,8 @@
 ## 进行中 / 待验证
 
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
+> 移植清单/参考源：见 [krkrz-compat.md](krkrz-compat.md)（已确认各插件源码来源，含
+> krkrz/krkr2/Kirikiroid2 本地参考副本）。
 - **现象**（真机日志 `sabbat_kr`/魔女的夜宴，目录版）：游戏正常启动到
   `startup→Initialize→first.ks→title.ks`，XP3 全挂载，脚本/图层照常（事件 2 万对象、
   9k ICC、内存 230MB+），但合成源纹理始终 `(0,0,0,255)` 纯黑、draw 计数卡死不再增长。
@@ -44,8 +46,9 @@
 - **下一步**：
   1. 用 **Windows**（我们 CMakePresets 有 Windows MinGW 预设）跑同一游戏二分：
      Windows 也黑 → 引擎/Z 层问题；Windows 正常 → 才转 iOS 纹理链路。
-  2. 在 `ncbAutoRegister` 内部编表里给 Z 插件**挂名**（先能 link 成功），再定位
-     到底是 `drawdeviceD3DZ` / Z 主层合成缺哪一环导致主 DrawBuffer 不被合成。
+  2. 对照 **Kirikiroid2** `src/core/visual/RenderManager_ogl.cpp` + `BasicDrawDevice.cpp`
+     与我们的 `cpp/core/visual/RenderManager.*`，定位 Z 主层 `DrawBuffer` 未合成原因。
+  3. 在 `ncbAutoRegister` 内部编表里给 Z 插件**挂名**（先能 link 成功），再实现功能。
 - 参考：引擎主合成链 `BasicDrawDevice::Show→GetDrawBuffer→UpdateDrawBuffer`、
   `CompleteForWindow→InternalComplete2(_GPU)`、`__captureBaseDrawDevice` 包装挂点
   （见 `cpp/plugins/drawDeviceD2DCompat.cpp`）。
@@ -57,6 +60,7 @@
 - 备注：**已证实不是魔女的夜宴黑屏的原因**（`VideoOverlay total=0`）；保留为通用待办，
   供真正的视频 OP/影片游戏使用。
 - 待办：评估并把解码帧 RGBA 合成到引擎场景（Mixer/Layer）或 Flutter 纹理。
+- 参考实现：Kirikiroid2 `src/core/movie/krmovie.cpp` + `ffmpeg/KRMovie*.{h,cpp}`、krkrz `movie/win32/krmovie.cpp`（见 [krkrz-compat.md](krkrz-compat.md)）。
 - 参考：`cpp/core/visual/impl/VideoOvlImpl.cpp` 的 `EC_UPDATE` 处理与
   `iTVPVideoOverlay::PresentVideoImage` / `GetFrontBuffer` 契约。
 
