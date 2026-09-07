@@ -4929,9 +4929,11 @@ iTVPRenderManager *TVPGetRenderManager(const ttstr &name) {
 }
 
 static bool _RenderManagerInitialized = false;
+// 主渲染单例（原为函数局部 static）。提升到文件作用域，使
+// TVPResetRenderManagerForRestart 可清空放行二次 open_game 重建。
+static iTVPRenderManager *_RenderManager = nullptr;
 
 iTVPRenderManager *TVPGetRenderManager() {
-    static iTVPRenderManager *_RenderManager;
     if(!_RenderManager) {
         // Prefer command-line option set via engine_set_option
         tTJSVariant val;
@@ -4947,6 +4949,20 @@ iTVPRenderManager *TVPGetRenderManager() {
         _RenderManagerInitialized = true;
     }
     return _RenderManager;
+}
+
+void TVPResetRenderManagerForRestart() {
+    _RenderManager = nullptr;
+    _RenderManagerInitialized = false;
+    if(_RenderManagerFactory) {
+        // 释放已创建的渲染器实例，使二次 TVPGetRenderManager(name) 重建
+        for(auto &kv : *_RenderManagerFactory) {
+            if(kv.second.second) {
+                delete kv.second.second;
+                kv.second.second = nullptr;
+            }
+        }
+    }
 }
 
 bool TVPIsSoftwareRenderManager() {

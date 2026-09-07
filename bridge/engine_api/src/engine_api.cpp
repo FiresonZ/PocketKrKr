@@ -850,6 +850,10 @@ engine_result_t engine_destroy(engine_handle_t handle) {
       TVPResetApplicationForRestart();
       TVPResetStorageImplForRestart();
       TVPResetExtensionClassInstallStateForRestart();
+      // visual 级：清图形缓存（公开、二次可重建）+ 复位 RenderManager 单例，
+      // 使二次 open_game 能干净重建渲染器（tTVPAtExit 清理进程只注册一次、二次不重跑）。
+      TVPClearGraphicCache();
+      TVPResetRenderManagerForRestart();
     } catch (...) {
       spdlog::error("engine_destroy: reset-for-restart threw");
     }

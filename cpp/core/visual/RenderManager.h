@@ -331,3 +331,7 @@ namespace TJS {
 }
 iTVPRenderManager *TVPGetRenderManager(const TJS::tTJSString &name);
 bool TVPIsSoftwareRenderManager();
+
+// 复位 RenderManager 单例与已创建的渲染器实例，使 runtime-restart
+// 二次 open_game 时能干净重建。
+void TVPResetRenderManagerForRestart();
