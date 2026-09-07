@@ -1,0 +1,1555 @@
+﻿2026-09-07T04:55:55.7516030Z Current runner version: '2.337.0'
+2026-09-07T04:55:55.7533790Z ##[group]Runner Image Provisioner
+2026-09-07T04:55:55.7534410Z Hosted Compute Agent
+2026-09-07T04:55:55.7534780Z Version: 20260828.587
+2026-09-07T04:55:55.7535190Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-07T04:55:55.7537610Z Build Date: 2026-08-28T16:44:25Z
+2026-09-07T04:55:55.7538150Z Worker ID: {08ad513f-ca43-4d08-98af-b2e5c5161386}
+2026-09-07T04:55:55.7538650Z Azure Region: westus
+2026-09-07T04:55:55.7539020Z ##[endgroup]
+2026-09-07T04:55:55.7540200Z ##[group]Operating System
+2026-09-07T04:55:55.7540620Z macOS
+2026-09-07T04:55:55.7540950Z 15.7.9
+2026-09-07T04:55:55.7541290Z 24G830
+2026-09-07T04:55:55.7541620Z ##[endgroup]
+2026-09-07T04:55:55.7542000Z ##[group]Runner Image
+2026-09-07T04:55:55.7542420Z Image: macos-15-arm64
+2026-09-07T04:55:55.7542790Z Version: 20260829.0321.1
+2026-09-07T04:55:55.7543680Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260829.0321/images/macos/macos-15-arm64-Readme.md
+2026-09-07T04:55:55.7544680Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260829.0321
+2026-09-07T04:55:55.7545410Z ##[endgroup]
+2026-09-07T04:55:55.7546180Z ##[group]GITHUB_TOKEN Permissions
+2026-09-07T04:55:55.7548010Z Contents: write
+2026-09-07T04:55:55.7548380Z Metadata: read
+2026-09-07T04:55:55.7548730Z ##[endgroup]
+2026-09-07T04:55:55.7550360Z Secret source: Actions
+2026-09-07T04:55:55.7551020Z Prepare workflow directory
+2026-09-07T04:55:55.8140610Z Prepare all required actions
+2026-09-07T04:55:55.8201320Z Getting action download info
+2026-09-07T04:55:56.2402430Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-07T04:55:56.6525510Z Download action repository 'subosito/flutter-action@v2' (SHA:1a449444c387b1966244ae4d4f8c696479add0b2)
+2026-09-07T04:55:57.0458610Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-09-07T04:55:57.1653720Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-09-07T04:55:57.3923930Z Getting action download info
+2026-09-07T04:55:57.5117510Z Download action repository 'actions/cache@v5' (SHA:caa296126883cff596d87d8935842f9db880ef25)
+2026-09-07T04:55:57.6970290Z Complete job name: Build iOS (release)
+2026-09-07T04:55:57.7836460Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-07T04:55:57.7843840Z ##[group]Run actions/checkout@v4
+2026-09-07T04:55:57.7844340Z with:
+2026-09-07T04:55:57.7844720Z   repository: FiresonZ/PocketKrKr
+2026-09-07T04:55:57.7847470Z   token: ***
+2026-09-07T04:55:57.7847870Z   ssh-strict: true
+2026-09-07T04:55:57.7848280Z   ssh-user: git
+2026-09-07T04:55:57.7848630Z   persist-credentials: true
+2026-09-07T04:55:57.7849100Z   clean: true
+2026-09-07T04:55:57.7849470Z   sparse-checkout-cone-mode: true
+2026-09-07T04:55:57.7849850Z   fetch-depth: 1
+2026-09-07T04:55:57.7850160Z   fetch-tags: false
+2026-09-07T04:55:57.7850540Z   show-progress: true
+2026-09-07T04:55:57.7850870Z   lfs: false
+2026-09-07T04:55:57.7851230Z   submodules: false
+2026-09-07T04:55:57.7851620Z   set-safe-directory: true
+2026-09-07T04:55:57.7852050Z   allow-unsafe-pr-checkout: false
+2026-09-07T04:55:57.7852710Z env:
+2026-09-07T04:55:57.7853090Z   BUILD_TYPE: release
+2026-09-07T04:55:57.7853510Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:55:57.7853970Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:55:57.7854390Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:55:57.7854860Z   PUBLISH_RELEASE: true
+2026-09-07T04:55:57.7855270Z   JOBS: 4
+2026-09-07T04:55:57.7855680Z ##[endgroup]
+2026-09-07T04:55:58.2757530Z Syncing repository: FiresonZ/PocketKrKr
+2026-09-07T04:55:58.2759020Z ##[group]Getting Git version info
+2026-09-07T04:55:58.2759560Z Working directory is '/Users/runner/work/PocketKrKr/PocketKrKr'
+2026-09-07T04:55:58.2761200Z [command]/opt/homebrew/bin/git version
+2026-09-07T04:55:58.3895360Z git version 2.55.0
+2026-09-07T04:55:58.3932860Z ##[endgroup]
+2026-09-07T04:55:58.3947410Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/71b8ed7a-6771-42de-8038-7d90dc4e7d11/.gitconfig'
+2026-09-07T04:55:58.3963470Z Temporarily overriding HOME='/Users/runner/work/_temp/71b8ed7a-6771-42de-8038-7d90dc4e7d11' before making global git config changes
+2026-09-07T04:55:58.3966320Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-07T04:55:58.3975570Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/PocketKrKr/PocketKrKr
+2026-09-07T04:55:58.4242460Z Deleting the contents of '/Users/runner/work/PocketKrKr/PocketKrKr'
+2026-09-07T04:55:58.4244790Z ##[group]Initializing the repository
+2026-09-07T04:55:58.4246010Z [command]/opt/homebrew/bin/git init /Users/runner/work/PocketKrKr/PocketKrKr
+2026-09-07T04:55:58.4733200Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-07T04:55:58.4741230Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-07T04:55:58.4745640Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-07T04:55:58.4748050Z hint: call:
+2026-09-07T04:55:58.4750160Z hint:
+2026-09-07T04:55:58.4751970Z hint: 	git config --global init.defaultBranch <name>
+2026-09-07T04:55:58.4753970Z hint:
+2026-09-07T04:55:58.4755430Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-07T04:55:58.4756440Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-07T04:55:58.4757140Z hint:
+2026-09-07T04:55:58.4758230Z hint: 	git branch -m <name>
+2026-09-07T04:55:58.4759150Z hint:
+2026-09-07T04:55:58.4760300Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-07T04:55:58.4763900Z Initialized empty Git repository in /Users/runner/work/PocketKrKr/PocketKrKr/.git/
+2026-09-07T04:55:58.4770090Z [command]/opt/homebrew/bin/git remote add origin https://github.com/FiresonZ/PocketKrKr
+2026-09-07T04:55:58.4927220Z ##[endgroup]
+2026-09-07T04:55:58.4997550Z ##[group]Disabling automatic garbage collection
+2026-09-07T04:55:58.5001860Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+2026-09-07T04:55:58.5075360Z ##[endgroup]
+2026-09-07T04:55:58.5076190Z ##[group]Setting up auth
+2026-09-07T04:55:58.5083200Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-07T04:55:58.5263600Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-07T04:55:58.8659540Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-07T04:55:58.8973450Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-07T04:55:59.1396540Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-07T04:55:59.1723840Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-07T04:55:59.3602980Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-07T04:55:59.3741620Z ##[endgroup]
+2026-09-07T04:55:59.3742600Z ##[group]Fetching the repository
+2026-09-07T04:55:59.3755640Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +3b0045bdfbbba1576d86620da2d81f30b03d6801:refs/remotes/origin/main
+2026-09-07T04:56:00.2874770Z From https://github.com/FiresonZ/PocketKrKr
+2026-09-07T04:56:00.2878590Z  * [new ref]         3b0045bdfbbba1576d86620da2d81f30b03d6801 -> origin/main
+2026-09-07T04:56:00.2886730Z ##[endgroup]
+2026-09-07T04:56:00.2893750Z ##[group]Determining the checkout info
+2026-09-07T04:56:00.2902270Z ##[endgroup]
+2026-09-07T04:56:00.2905140Z [command]/opt/homebrew/bin/git sparse-checkout disable
+2026-09-07T04:56:00.3065840Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-07T04:56:00.3177030Z ##[group]Checking out the ref
+2026-09-07T04:56:00.3184100Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-09-07T04:56:00.6350190Z Switched to a new branch 'main'
+2026-09-07T04:56:00.6378790Z branch 'main' set up to track 'origin/main'.
+2026-09-07T04:56:00.6454790Z ##[endgroup]
+2026-09-07T04:56:00.6572910Z [command]/opt/homebrew/bin/git log -1 --format=%H
+2026-09-07T04:56:00.6704100Z 3b0045bdfbbba1576d86620da2d81f30b03d6801
+2026-09-07T04:56:00.7202870Z ##[group]Run if [[ -z "$RELEASE_VERSION" ]]; then
+2026-09-07T04:56:00.7203480Z [36;1mif [[ -z "$RELEASE_VERSION" ]]; then[0m
+2026-09-07T04:56:00.7203870Z [36;1m  echo "::error::勾选了「发布 Release」但没填写「发布版本号」；请填 X.Y.Z（如 0.1.4）再运行"[0m
+2026-09-07T04:56:00.7204190Z [36;1m  exit 1[0m
+2026-09-07T04:56:00.7204370Z [36;1mfi[0m
+2026-09-07T04:56:00.7204640Z [36;1mif [[ "$RELEASE_VERSION" != *.*.* || "$RELEASE_VERSION" != [0-9]*.*.* ]][0m
+2026-09-07T04:56:00.7204970Z [36;1mthen[0m
+2026-09-07T04:56:00.7205260Z [36;1m  echo "::error::发布版本号需为 X.Y.Z 三段式（如 0.1.4）；当前：$RELEASE_VERSION"[0m
+2026-09-07T04:56:00.7205600Z [36;1m  exit 1[0m
+2026-09-07T04:56:00.7205790Z [36;1mfi[0m
+2026-09-07T04:56:00.7265680Z shell: /bin/bash -e {0}
+2026-09-07T04:56:00.7267500Z env:
+2026-09-07T04:56:00.7268080Z   BUILD_TYPE: release
+2026-09-07T04:56:00.7268630Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:56:00.7269330Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:56:00.7269620Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:56:00.7270310Z   PUBLISH_RELEASE: true
+2026-09-07T04:56:00.7270940Z   JOBS: 4
+2026-09-07T04:56:00.7271140Z ##[endgroup]
+2026-09-07T04:56:00.8771500Z ##[group]Run subosito/flutter-action@v2
+2026-09-07T04:56:00.8771950Z with:
+2026-09-07T04:56:00.8772130Z   channel: stable
+2026-09-07T04:56:00.8772340Z   cache: true
+2026-09-07T04:56:00.8772500Z   architecture: ARM64
+2026-09-07T04:56:00.8772710Z   pub-cache-path: default
+2026-09-07T04:56:00.8772900Z   dry-run: false
+2026-09-07T04:56:00.8773210Z   git-source: https://github.com/flutter/flutter.git
+2026-09-07T04:56:00.8773510Z env:
+2026-09-07T04:56:00.8773690Z   BUILD_TYPE: release
+2026-09-07T04:56:00.8773920Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:56:00.8774190Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:56:00.8774440Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:56:00.8774650Z   PUBLISH_RELEASE: true
+2026-09-07T04:56:00.8774910Z   JOBS: 4
+2026-09-07T04:56:00.8775090Z ##[endgroup]
+2026-09-07T04:56:00.8919310Z ##[start-action display=Make yq tool available on Windows runners;id=__subosito_flutter-action.__run]
+2026-09-07T04:56:00.8974230Z ##[end-action id=__subosito_flutter-action.__run;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-09-07T04:56:00.8979750Z ##[start-action display=Make setup script executable;id=__subosito_flutter-action.__run_2]
+2026-09-07T04:56:00.9014670Z ##[group]Run chmod +x "$GITHUB_ACTION_PATH/setup.sh"
+2026-09-07T04:56:00.9015670Z [36;1mchmod +x "$GITHUB_ACTION_PATH/setup.sh"[0m
+2026-09-07T04:56:00.9147290Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T04:56:00.9148420Z env:
+2026-09-07T04:56:00.9149150Z   BUILD_TYPE: release
+2026-09-07T04:56:00.9149760Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:56:00.9150640Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:56:00.9151310Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:56:00.9151860Z   PUBLISH_RELEASE: true
+2026-09-07T04:56:00.9152530Z   JOBS: 4
+2026-09-07T04:56:00.9153110Z ##[endgroup]
+2026-09-07T04:56:00.9901070Z ##[end-action id=__subosito_flutter-action.__run_2;outcome=success;conclusion=success;duration_ms=92]
+2026-09-07T04:56:00.9903620Z ##[start-action display=Set action inputs;id=__subosito_flutter-action.flutter-action]
+2026-09-07T04:56:00.9984980Z ##[group]Run $GITHUB_ACTION_PATH/setup.sh -p \
+2026-09-07T04:56:00.9986490Z [36;1m$GITHUB_ACTION_PATH/setup.sh -p \[0m
+2026-09-07T04:56:00.9986830Z [36;1m  -n '' \[0m
+2026-09-07T04:56:00.9987030Z [36;1m  -f '' \[0m
+2026-09-07T04:56:00.9989420Z [36;1m  -a 'ARM64' \[0m
+2026-09-07T04:56:00.9990320Z [36;1m  -k '' \[0m
+2026-09-07T04:56:00.9990870Z [36;1m  -c '' \[0m
+2026-09-07T04:56:00.9991390Z [36;1m  -l '' \[0m
+2026-09-07T04:56:00.9991950Z [36;1m  -d 'default' \[0m
+2026-09-07T04:56:00.9992780Z [36;1m  -g 'https://github.com/flutter/flutter.git' \[0m
+2026-09-07T04:56:00.9993580Z [36;1m  stable[0m
+2026-09-07T04:56:01.0095210Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T04:56:01.0096110Z env:
+2026-09-07T04:56:01.0096640Z   BUILD_TYPE: release
+2026-09-07T04:56:01.0097240Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:56:01.0097840Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:56:01.0098420Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:56:01.0099060Z   PUBLISH_RELEASE: true
+2026-09-07T04:56:01.0099630Z   JOBS: 4
+2026-09-07T04:56:01.0100560Z ##[endgroup]
+2026-09-07T04:56:01.4325320Z ##[end-action id=__subosito_flutter-action.flutter-action;outcome=success;conclusion=success;duration_ms=442]
+2026-09-07T04:56:01.4331020Z ##[start-action display=Cache Flutter;id=__subosito_flutter-action.cache-flutter]
+2026-09-07T04:56:01.4393810Z ##[group]Run actions/cache@v5
+2026-09-07T04:56:01.4394110Z with:
+2026-09-07T04:56:01.4394390Z   path: /Users/runner/hostedtoolcache/flutter/stable-3.47.2-arm64
+2026-09-07T04:56:01.4394870Z   key: flutter-macos-stable-3.47.2-arm64-d3b14c876900e553bc736ca19295fc09e3853e8e
+2026-09-07T04:56:01.4395260Z   enableCrossOsArchive: false
+2026-09-07T04:56:01.4395540Z   fail-on-cache-miss: false
+2026-09-07T04:56:01.4395780Z   lookup-only: false
+2026-09-07T04:56:01.4395980Z   save-always: false
+2026-09-07T04:56:01.4396170Z env:
+2026-09-07T04:56:01.4396350Z   BUILD_TYPE: release
+2026-09-07T04:56:01.4396600Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:56:01.4397180Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:56:01.4397400Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:56:01.4397610Z   PUBLISH_RELEASE: true
+2026-09-07T04:56:01.4397820Z   JOBS: 4
+2026-09-07T04:56:01.4397980Z ##[endgroup]
+2026-09-07T04:56:01.8914700Z Cache hit for: flutter-macos-stable-3.47.2-arm64-d3b14c876900e553bc736ca19295fc09e3853e8e
+2026-09-07T04:56:03.2211740Z Received 0 of 2219003281 (0.0%), 0.0 MBs/sec
+2026-09-07T04:56:04.2300730Z Received 54525952 of 2219003281 (2.5%), 25.9 MBs/sec
+2026-09-07T04:56:05.2267480Z Received 125829120 of 2219003281 (5.7%), 39.9 MBs/sec
+2026-09-07T04:56:06.2279950Z Received 146800640 of 2219003281 (6.6%), 34.9 MBs/sec
+2026-09-07T04:56:07.2309870Z Received 209715200 of 2219003281 (9.5%), 39.9 MBs/sec
+2026-09-07T04:56:08.4278780Z Received 268435456 of 2219003281 (12.1%), 41.2 MBs/sec
+2026-09-07T04:56:09.4280540Z Received 314572800 of 2219003281 (14.2%), 41.6 MBs/sec
+2026-09-07T04:56:10.4343950Z Received 385875968 of 2219003281 (17.4%), 44.8 MBs/sec
+2026-09-07T04:56:11.4306370Z Received 402653184 of 2219003281 (18.1%), 41.7 MBs/sec
+2026-09-07T04:56:12.4300610Z Received 473956352 of 2219003281 (21.4%), 44.3 MBs/sec
+2026-09-07T04:56:13.5366340Z Received 536870912 of 2219003281 (24.2%), 45.2 MBs/sec
+2026-09-07T04:56:14.5358580Z Received 583008256 of 2219003281 (26.3%), 45.1 MBs/sec
+2026-09-07T04:56:15.5386410Z Received 645922816 of 2219003281 (29.1%), 46.2 MBs/sec
+2026-09-07T04:56:16.5405580Z Received 687865856 of 2219003281 (31.0%), 45.8 MBs/sec
+2026-09-07T04:56:17.5405630Z Received 759169024 of 2219003281 (34.2%), 47.2 MBs/sec
+2026-09-07T04:56:18.5421530Z Received 805306368 of 2219003281 (36.3%), 47.0 MBs/sec
+2026-09-07T04:56:19.5512140Z Received 859832320 of 2219003281 (38.7%), 47.3 MBs/sec
+2026-09-07T04:56:20.5440170Z Received 935329792 of 2219003281 (42.2%), 48.7 MBs/sec
+2026-09-07T04:56:21.5470340Z Received 994050048 of 2219003281 (44.8%), 49.0 MBs/sec
+2026-09-07T04:56:22.5489020Z Received 1065353216 of 2219003281 (48.0%), 50.0 MBs/sec
+2026-09-07T04:56:23.5503550Z Received 1107296256 of 2219003281 (49.9%), 49.5 MBs/sec
+2026-09-07T04:56:24.5500480Z Received 1182793728 of 2219003281 (53.3%), 50.5 MBs/sec
+2026-09-07T04:56:25.5523070Z Received 1241513984 of 2219003281 (55.9%), 50.7 MBs/sec
+2026-09-07T04:56:26.5570510Z Received 1317011456 of 2219003281 (59.4%), 51.6 MBs/sec
+2026-09-07T04:56:27.5549780Z Received 1371537408 of 2219003281 (61.8%), 51.6 MBs/sec
+2026-09-07T04:56:28.5568760Z Received 1451229184 of 2219003281 (65.4%), 52.5 MBs/sec
+2026-09-07T04:56:29.5572540Z Received 1509949440 of 2219003281 (68.0%), 52.7 MBs/sec
+2026-09-07T04:56:30.5603380Z Received 1577058304 of 2219003281 (71.1%), 53.1 MBs/sec
+2026-09-07T04:56:31.5596050Z Received 1610612736 of 2219003281 (72.6%), 52.3 MBs/sec
+2026-09-07T04:56:32.5619500Z Received 1677721600 of 2219003281 (75.6%), 52.7 MBs/sec
+2026-09-07T04:56:33.7391210Z Received 1744830464 of 2219003281 (78.6%), 52.8 MBs/sec
+2026-09-07T04:56:34.7385400Z Received 1786773504 of 2219003281 (80.5%), 52.4 MBs/sec
+2026-09-07T04:56:35.7408210Z Received 1858076672 of 2219003281 (83.7%), 52.9 MBs/sec
+2026-09-07T04:56:36.7402520Z Received 1879048192 of 2219003281 (84.7%), 51.9 MBs/sec
+2026-09-07T04:56:37.7411250Z Received 1962934272 of 2219003281 (88.5%), 52.7 MBs/sec
+2026-09-07T04:56:38.7430420Z Received 2013265920 of 2219003281 (90.7%), 52.6 MBs/sec
+2026-09-07T04:56:39.7518130Z Received 2067791872 of 2219003281 (93.2%), 52.6 MBs/sec
+2026-09-07T04:56:40.7468820Z Received 2143289344 of 2219003281 (96.6%), 53.1 MBs/sec
+2026-09-07T04:56:41.7472910Z Received 2181038080 of 2219003281 (98.3%), 52.6 MBs/sec
+2026-09-07T04:56:42.2935800Z Received 2219003281 of 2219003281 (100.0%), 52.8 MBs/sec
+2026-09-07T04:56:42.2967150Z Cache Size: ~2116 MB (2219003281 B)
+2026-09-07T04:56:42.3306950Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/dabbf0ca-6493-4797-9fbd-ec7f3708c910/cache.tzst -P -C /Users/runner/work/PocketKrKr/PocketKrKr --delay-directory-restore --use-compress-program unzstd
+2026-09-07T04:57:01.0827900Z Cache restored successfully
+2026-09-07T04:57:01.2750900Z Cache restored from key: flutter-macos-stable-3.47.2-arm64-d3b14c876900e553bc736ca19295fc09e3853e8e
+2026-09-07T04:57:01.2946020Z ##[end-action id=__subosito_flutter-action.cache-flutter;outcome=success;conclusion=success;duration_ms=59861]
+2026-09-07T04:57:01.2957500Z ##[start-action display=Cache pub dependencies;id=__subosito_flutter-action.cache-pub]
+2026-09-07T04:57:02.0121990Z ##[group]Run actions/cache@v5
+2026-09-07T04:57:02.0122300Z with:
+2026-09-07T04:57:02.0122490Z   path: /Users/runner/.pub-cache
+2026-09-07T04:57:02.0122850Z   key: flutter-pub-macos-stable-3.47.2-arm64-d3b14c876900e553bc736ca19295fc09e3853e8e-
+2026-09-07T04:57:02.0123360Z   enableCrossOsArchive: false
+2026-09-07T04:57:02.0123690Z   fail-on-cache-miss: false
+2026-09-07T04:57:02.0124000Z   lookup-only: false
+2026-09-07T04:57:02.0124370Z   save-always: false
+2026-09-07T04:57:02.0124530Z env:
+2026-09-07T04:57:02.0124680Z   BUILD_TYPE: release
+2026-09-07T04:57:02.0124860Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:57:02.0125350Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:57:02.0125540Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:57:02.0125750Z   PUBLISH_RELEASE: true
+2026-09-07T04:57:02.0126050Z   JOBS: 4
+2026-09-07T04:57:02.0126320Z ##[endgroup]
+2026-09-07T04:57:02.6787260Z Cache hit for: flutter-pub-macos-stable-3.47.2-arm64-d3b14c876900e553bc736ca19295fc09e3853e8e-
+2026-09-07T04:57:04.0128760Z Received 0 of 66587496 (0.0%), 0.0 MBs/sec
+2026-09-07T04:57:05.0147380Z Received 58720256 of 66587496 (88.2%), 28.0 MBs/sec
+2026-09-07T04:57:05.1089630Z Received 66587496 of 66587496 (100.0%), 30.3 MBs/sec
+2026-09-07T04:57:05.1095230Z Cache Size: ~64 MB (66587496 B)
+2026-09-07T04:57:05.1231850Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/f4de4dcb-4fc0-4679-bcda-eb174ca0595f/cache.tzst -P -C /Users/runner/work/PocketKrKr/PocketKrKr --delay-directory-restore --use-compress-program unzstd
+2026-09-07T04:57:08.1302550Z Cache restored successfully
+2026-09-07T04:57:08.2200140Z Cache restored from key: flutter-pub-macos-stable-3.47.2-arm64-d3b14c876900e553bc736ca19295fc09e3853e8e-
+2026-09-07T04:57:08.2693760Z ##[end-action id=__subosito_flutter-action.cache-pub;outcome=success;conclusion=success;duration_ms=6973]
+2026-09-07T04:57:08.2709700Z ##[start-action display=Run setup script;id=__subosito_flutter-action.__run_3]
+2026-09-07T04:57:08.2806930Z ##[group]Run $GITHUB_ACTION_PATH/setup.sh \
+2026-09-07T04:57:08.2814300Z [36;1m$GITHUB_ACTION_PATH/setup.sh \[0m
+2026-09-07T04:57:08.2815670Z [36;1m  -n '3.47.2' \[0m
+2026-09-07T04:57:08.2817120Z [36;1m  -a 'arm64' \[0m
+2026-09-07T04:57:08.2818580Z [36;1m  -c '/Users/runner/hostedtoolcache/flutter/stable-3.47.2-arm64' \[0m
+2026-09-07T04:57:08.2820910Z [36;1m  -d '/Users/runner/.pub-cache' \[0m
+2026-09-07T04:57:08.2821820Z [36;1m  stable[0m
+2026-09-07T04:57:08.3157680Z shell: /bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-07T04:57:08.3158120Z env:
+2026-09-07T04:57:08.3158410Z   BUILD_TYPE: release
+2026-09-07T04:57:08.3158710Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:57:08.3158980Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:57:08.3159300Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:57:08.3159730Z   PUBLISH_RELEASE: true
+2026-09-07T04:57:08.3159990Z   JOBS: 4
+2026-09-07T04:57:08.3160290Z ##[endgroup]
+2026-09-07T04:57:08.6180120Z ##[end-action id=__subosito_flutter-action.__run_3;outcome=success;conclusion=success;duration_ms=346]
+2026-09-07T04:57:08.6294450Z ##[group]Run brew install cmake ninja bison autoconf automake autoconf-archive libtool gettext pkg-config ccache
+2026-09-07T04:57:08.6296170Z [36;1mbrew install cmake ninja bison autoconf automake autoconf-archive libtool gettext pkg-config ccache[0m
+2026-09-07T04:57:08.6296710Z [36;1mflutter --version[0m
+2026-09-07T04:57:08.6296960Z [36;1mcmake --version | head -1[0m
+2026-09-07T04:57:08.6297200Z [36;1mninja --version[0m
+2026-09-07T04:57:08.6343100Z shell: /bin/bash -e {0}
+2026-09-07T04:57:08.6343390Z env:
+2026-09-07T04:57:08.6343620Z   BUILD_TYPE: release
+2026-09-07T04:57:08.6343980Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:57:08.6345460Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:57:08.6346280Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:57:08.6347180Z   PUBLISH_RELEASE: true
+2026-09-07T04:57:08.6347610Z   JOBS: 4
+2026-09-07T04:57:08.6348020Z   FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/stable-3.47.2-arm64/flutter
+2026-09-07T04:57:08.6348670Z   PUB_CACHE: /Users/runner/.pub-cache
+2026-09-07T04:57:08.6349040Z ##[endgroup]
+2026-09-07T04:57:11.1305770Z [33mWarning:[0m cmake 4.4.3 is already installed and up-to-date.
+2026-09-07T04:57:11.1306280Z To reinstall 4.4.3, run:
+2026-09-07T04:57:11.1306680Z   brew reinstall cmake
+2026-09-07T04:57:11.1342380Z [33mWarning:[0m ninja 1.13.2 is already installed and up-to-date.
+2026-09-07T04:57:11.1342870Z To reinstall 1.13.2, run:
+2026-09-07T04:57:11.1343190Z   brew reinstall ninja
+2026-09-07T04:57:11.1409670Z [33mWarning:[0m gettext 1.0 is already installed and up-to-date.
+2026-09-07T04:57:11.1410060Z To reinstall 1.0, run:
+2026-09-07T04:57:11.1410360Z   brew reinstall gettext
+2026-09-07T04:57:11.1446220Z [33mWarning:[0m pkgconf 3.0.6 is already installed and up-to-date.
+2026-09-07T04:57:11.1446840Z To reinstall 3.0.6, run:
+2026-09-07T04:57:11.1447210Z   brew reinstall pkgconf
+2026-09-07T04:57:11.9077500Z [32m==>[0m [1mDownloading bottle manifests[0m
+2026-09-07T04:57:11.9317510Z ✔︎ Bottle Manifest bison (3.8.2)
+2026-09-07T04:57:11.9319850Z ✔︎ Bottle Manifest autoconf (2.73)
+2026-09-07T04:57:11.9320550Z ✔︎ Bottle Manifest automake (1.18.1_1)
+2026-09-07T04:57:11.9321310Z ✔︎ Bottle Manifest autoconf-archive (2024.10.16)
+2026-09-07T04:57:11.9321990Z ✔︎ Bottle Manifest libtool (2.6.2)
+2026-09-07T04:57:11.9323240Z ✔︎ Bottle Manifest ccache (4.14)
+2026-09-07T04:57:11.9323740Z [34m==>[0m [1mWould install 6 formulae:[0m
+2026-09-07T04:57:11.9324170Z bison autoconf automake autoconf-archive libtool ccache
+2026-09-07T04:57:11.9849800Z [34m==>[0m [1mWould install 1 dependency for autoconf:[0m
+2026-09-07T04:57:11.9850390Z m4
+2026-09-07T04:57:11.9882960Z [34m==>[0m [1mWould install 2 dependencies for automake:[0m
+2026-09-07T04:57:11.9883500Z m4
+2026-09-07T04:57:11.9883890Z autoconf
+2026-09-07T04:57:11.9912440Z [34m==>[0m [1mWould install 2 dependencies for autoconf-archive:[0m
+2026-09-07T04:57:11.9912870Z m4
+2026-09-07T04:57:11.9913030Z autoconf
+2026-09-07T04:57:11.9925320Z [34m==>[0m [1mWould install 1 dependency for libtool:[0m
+2026-09-07T04:57:11.9925670Z m4
+2026-09-07T04:57:12.0368520Z [34m==>[0m [1mWould install 4 dependencies for ccache:[0m
+2026-09-07T04:57:12.0368970Z blake3
+2026-09-07T04:57:12.0369140Z fmt
+2026-09-07T04:57:12.0369280Z hiredis
+2026-09-07T04:57:12.0369450Z xxhash
+2026-09-07T04:57:12.1220180Z [32m==>[0m [1mFetching downloads for: [32mbison[39m, [32mautoconf[39m, [32mautomake[39m, [32mautoconf-archive[39m, [32mlibtool[39m and [32mccache[39m[0m
+2026-09-07T04:57:12.7423600Z ✔︎ Bottle automake (1.18.1_1)
+2026-09-07T04:57:12.8138170Z ✔︎ Bottle libtool (2.6.2)
+2026-09-07T04:57:12.8249310Z ✔︎ Bottle ccache (4.14)
+2026-09-07T04:57:12.8352200Z ✔︎ Bottle autoconf (2.73)
+2026-09-07T04:57:12.8601490Z ✔︎ Bottle Manifest m4 (1.4.21)
+2026-09-07T04:57:12.8919640Z ✔︎ Bottle m4 (1.4.21)
+2026-09-07T04:57:12.9021830Z ✔︎ Bottle Manifest blake3 (1.8.7)
+2026-09-07T04:57:12.9023770Z ✔︎ Bottle Manifest fmt (12.2.0)
+2026-09-07T04:57:12.9490580Z ✔︎ Bottle bison (3.8.2)
+2026-09-07T04:57:12.9724440Z ✔︎ Bottle Manifest hiredis (1.4.1)
+2026-09-07T04:57:12.9828360Z ✔︎ Bottle Manifest xxhash (0.8.3)
+2026-09-07T04:57:12.9965530Z ✔︎ Bottle blake3 (1.8.7)
+2026-09-07T04:57:13.0078400Z ✔︎ Bottle fmt (12.2.0)
+2026-09-07T04:57:13.1071300Z ✔︎ Bottle autoconf-archive (2024.10.16)
+2026-09-07T04:57:13.1909530Z ✔︎ Bottle hiredis (1.4.1)
+2026-09-07T04:57:13.3313450Z ✔︎ Bottle xxhash (0.8.3)
+2026-09-07T04:57:13.3335740Z [34m==>[0m [1mPouring bison--3.8.2.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:13.4834890Z 🍺  /opt/homebrew/Cellar/bison/3.8.2: 100 files, 3.9MB
+2026-09-07T04:57:13.4854890Z [32m==>[0m [1mInstalling autoconf dependency: [32mm4[39m[0m
+2026-09-07T04:57:13.4873190Z [34m==>[0m [1mPouring m4--1.4.21.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:13.4990660Z 🍺  /opt/homebrew/Cellar/m4/1.4.21: 14 files, 816.2KB
+2026-09-07T04:57:13.4992270Z [32m==>[0m [1mInstalling [32mautoconf[39m[0m
+2026-09-07T04:57:13.4993630Z [34m==>[0m [1mPouring autoconf--2.73.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:13.5387790Z 🍺  /opt/homebrew/Cellar/autoconf/2.73: 73 files, 3.8MB
+2026-09-07T04:57:13.5429490Z [34m==>[0m [1mPouring automake--1.18.1_1.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:13.5881220Z 🍺  /opt/homebrew/Cellar/automake/1.18.1_1: 134 files, 3.6MB
+2026-09-07T04:57:13.5922750Z [34m==>[0m [1mPouring autoconf-archive--2024.10.16.arm64_sequoia.bottle.1.tar.gz[0m
+2026-09-07T04:57:13.7677090Z 🍺  /opt/homebrew/Cellar/autoconf-archive/2024.10.16: 605 files, 3.8MB
+2026-09-07T04:57:13.7700940Z [34m==>[0m [1mPouring libtool--2.6.2.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:13.8109690Z 🍺  /opt/homebrew/Cellar/libtool/2.6.2: 78 files, 4.2MB
+2026-09-07T04:57:13.8369600Z [32m==>[0m [1mInstalling dependencies for ccache:[0m [32mblake3[39m, [32mfmt[39m, [32mhiredis[39m and [32mxxhash[39m[0m
+2026-09-07T04:57:13.8370570Z [32m==>[0m [1mInstalling ccache dependency: [32mblake3[39m[0m
+2026-09-07T04:57:13.8402480Z [34m==>[0m [1mPouring blake3--1.8.7.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:13.8768890Z 🍺  /opt/homebrew/Cellar/blake3/1.8.7: 13 files, 79.5KB
+2026-09-07T04:57:13.8770930Z [32m==>[0m [1mInstalling ccache dependency: [32mfmt[39m[0m
+2026-09-07T04:57:13.8800580Z [34m==>[0m [1mPouring fmt--12.2.0.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:13.9061160Z 🍺  /opt/homebrew/Cellar/fmt/12.2.0: 31 files, 1MB
+2026-09-07T04:57:13.9072880Z [32m==>[0m [1mInstalling ccache dependency: [32mhiredis[39m[0m
+2026-09-07T04:57:13.9143330Z [34m==>[0m [1mPouring hiredis--1.4.1.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:14.0259370Z 🍺  /opt/homebrew/Cellar/hiredis/1.4.1: 53 files, 549.3KB
+2026-09-07T04:57:14.0557000Z [32m==>[0m [1mInstalling ccache dependency: [32mxxhash[39m[0m
+2026-09-07T04:57:14.0659380Z [34m==>[0m [1mPouring xxhash--0.8.3.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:14.0860670Z 🍺  /opt/homebrew/Cellar/xxhash/0.8.3: 28 files, 537.7KB
+2026-09-07T04:57:14.0862030Z [32m==>[0m [1mInstalling [32mccache[39m[0m
+2026-09-07T04:57:14.0863360Z [34m==>[0m [1mPouring ccache--4.14.arm64_sequoia.bottle.tar.gz[0m
+2026-09-07T04:57:14.1217690Z 🍺  /opt/homebrew/Cellar/ccache/4.14: 89 files, 2.2MB
+2026-09-07T04:57:14.1222520Z [32m==>[0m [1mCaveats[0m
+2026-09-07T04:57:14.1222990Z [34m==>[0m [1mbison[0m
+2026-09-07T04:57:14.1223490Z bison is keg-only, which means it was not symlinked into /opt/homebrew,
+2026-09-07T04:57:14.1224100Z because macOS already provides this software and installing another version in
+2026-09-07T04:57:14.1225040Z parallel can cause all kinds of trouble.
+2026-09-07T04:57:14.1225270Z 
+2026-09-07T04:57:14.1225430Z If you need to have bison first in your PATH, run:
+2026-09-07T04:57:14.1225990Z   echo 'export PATH="/opt/homebrew/opt/bison/bin:$PATH"' >> /Users/runner/.bash_profile
+2026-09-07T04:57:14.1226350Z 
+2026-09-07T04:57:14.1226450Z For compilers to find bison you may need to set:
+2026-09-07T04:57:14.1226910Z   export LDFLAGS="-L/opt/homebrew/opt/bison/lib"
+2026-09-07T04:57:14.1227440Z [34m==>[0m [1mlibtool[0m
+2026-09-07T04:57:14.1228100Z All commands have been installed with the prefix "g".
+2026-09-07T04:57:14.1228550Z If you need to use these commands with their normal names, you
+2026-09-07T04:57:14.1229030Z can add a "gnubin" directory to your PATH from your bashrc like:
+2026-09-07T04:57:14.1229460Z   PATH="/opt/homebrew/opt/libtool/libexec/gnubin:$PATH"
+2026-09-07T04:57:14.1229770Z [34m==>[0m [1mccache[0m
+2026-09-07T04:57:14.1230120Z To install symlinks for compilers that will automatically use
+2026-09-07T04:57:14.1230510Z ccache, prepend this directory to your PATH:
+2026-09-07T04:57:14.1230760Z   /opt/homebrew/opt/ccache/libexec
+2026-09-07T04:57:14.1230960Z 
+2026-09-07T04:57:14.1231160Z If this is an upgrade and you have previously added the symlinks to
+2026-09-07T04:57:14.1231600Z your PATH, you may need to modify it to the path specified above so
+2026-09-07T04:57:14.1231920Z it points to the current version.
+2026-09-07T04:57:14.1232130Z 
+2026-09-07T04:57:14.1232290Z NOTE: ccache can prevent some software from compiling.
+2026-09-07T04:57:14.1232650Z ALSO NOTE: The brew command, by design, will never use ccache.
+2026-09-07T04:57:14.4823530Z Flutter 3.47.2 • channel stable • https://github.com/flutter/flutter.git
+2026-09-07T04:57:14.4824210Z Framework • revision d3b14c8769 (11 days ago) • 2026-08-26 16:07:51 -0700
+2026-09-07T04:57:14.4825060Z Engine • hash 1cf1c4773fb941c4c74a7f8bb144a8837596c0f4 (revision a804b26164) (11 days ago) • 2026-08-26 18:46:13.000Z
+2026-09-07T04:57:14.4827660Z Tools • Dart 3.13.2 • DevTools 2.60.0
+2026-09-07T04:57:14.5509580Z cmake version 4.4.3
+2026-09-07T04:57:14.5560660Z 1.13.2
+2026-09-07T04:57:14.5656690Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-07T04:57:14.5657890Z ##[group]Run actions/cache/restore@v4
+2026-09-07T04:57:14.5658140Z with:
+2026-09-07T04:57:14.5658290Z   path: ~/.cache/ccache
+2026-09-07T04:57:14.5658500Z   key: ccache-macOS-refs/heads/main
+2026-09-07T04:57:14.5658760Z   restore-keys: ccache-macOS-
+
+2026-09-07T04:57:14.5659020Z   enableCrossOsArchive: false
+2026-09-07T04:57:14.5659330Z   fail-on-cache-miss: false
+2026-09-07T04:57:14.5659960Z   lookup-only: false
+2026-09-07T04:57:14.5660140Z env:
+2026-09-07T04:57:14.5660280Z   BUILD_TYPE: release
+2026-09-07T04:57:14.5660460Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:57:14.5660630Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:57:14.5660850Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:57:14.5661380Z   PUBLISH_RELEASE: true
+2026-09-07T04:57:14.5661670Z   JOBS: 4
+2026-09-07T04:57:14.5662040Z   FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/stable-3.47.2-arm64/flutter
+2026-09-07T04:57:14.5662460Z   PUB_CACHE: /Users/runner/.pub-cache
+2026-09-07T04:57:14.5662660Z ##[endgroup]
+2026-09-07T04:57:14.7026830Z (node:51959) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-07T04:57:14.7027620Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-07T04:57:14.9393540Z Cache hit for: ccache-macOS-refs/heads/main
+2026-09-07T04:57:14.9496330Z (node:51959) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-09-07T04:57:16.2374420Z Received 4194304 of 23252798 (18.0%), 4.0 MBs/sec
+2026-09-07T04:57:16.5188460Z Received 23252798 of 23252798 (100.0%), 17.3 MBs/sec
+2026-09-07T04:57:16.5191820Z Cache Size: ~22 MB (23252798 B)
+2026-09-07T04:57:16.5241810Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/08c3cdd9-299f-4652-b831-5fd1c6189fcb/cache.tzst -P -C /Users/runner/work/PocketKrKr/PocketKrKr --delay-directory-restore --use-compress-program unzstd
+2026-09-07T04:57:16.7405800Z Cache restored successfully
+2026-09-07T04:57:16.7504610Z Cache restored from key: ccache-macOS-refs/heads/main
+2026-09-07T04:57:16.9617640Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-07T04:57:16.9618780Z ##[group]Run actions/cache/restore@v4
+2026-09-07T04:57:16.9619030Z with:
+2026-09-07T04:57:16.9619200Z   path: ~/.cache/vcpkg
+2026-09-07T04:57:16.9619550Z   key: vcpkg-macOS-973ab3e6891fa53385dac25149d5a3d2fefc93867f3bc9b47be446615efa254d
+2026-09-07T04:57:16.9619960Z   restore-keys: vcpkg-macOS-
+
+2026-09-07T04:57:16.9620190Z   enableCrossOsArchive: false
+2026-09-07T04:57:16.9620410Z   fail-on-cache-miss: false
+2026-09-07T04:57:16.9620620Z   lookup-only: false
+2026-09-07T04:57:16.9620790Z env:
+2026-09-07T04:57:16.9620960Z   BUILD_TYPE: release
+2026-09-07T04:57:16.9621190Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:57:16.9621460Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:57:16.9621640Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:57:16.9621850Z   PUBLISH_RELEASE: true
+2026-09-07T04:57:16.9622030Z   JOBS: 4
+2026-09-07T04:57:16.9622330Z   FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/stable-3.47.2-arm64/flutter
+2026-09-07T04:57:16.9622700Z   PUB_CACHE: /Users/runner/.pub-cache
+2026-09-07T04:57:16.9623190Z ##[endgroup]
+2026-09-07T04:57:17.0914320Z (node:52071) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-09-07T04:57:17.1016600Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-09-07T04:57:17.3376410Z (node:52071) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-09-07T04:57:17.3781240Z Cache hit for: vcpkg-macOS-973ab3e6891fa53385dac25149d5a3d2fefc93867f3bc9b47be446615efa254d
+2026-09-07T04:57:18.6169270Z Received 0 of 2135836605 (0.0%), 0.0 MBs/sec
+2026-09-07T04:57:19.6172150Z Received 75497472 of 2135836605 (3.5%), 35.9 MBs/sec
+2026-09-07T04:57:20.6220550Z Received 138412032 of 2135836605 (6.5%), 43.9 MBs/sec
+2026-09-07T04:57:21.6189040Z Received 230686720 of 2135836605 (10.8%), 54.9 MBs/sec
+2026-09-07T04:57:22.6202120Z Received 301989888 of 2135836605 (14.1%), 57.5 MBs/sec
+2026-09-07T04:57:23.6227970Z Received 390070272 of 2135836605 (18.3%), 61.9 MBs/sec
+2026-09-07T04:57:24.6246950Z Received 448790528 of 2135836605 (21.0%), 61.0 MBs/sec
+2026-09-07T04:57:25.6296450Z Received 528482304 of 2135836605 (24.7%), 62.9 MBs/sec
+2026-09-07T04:57:26.6304960Z Received 583008256 of 2135836605 (27.3%), 61.7 MBs/sec
+2026-09-07T04:57:27.6306240Z Received 662700032 of 2135836605 (31.0%), 63.1 MBs/sec
+2026-09-07T04:57:28.6310790Z Received 704643072 of 2135836605 (33.0%), 61.0 MBs/sec
+2026-09-07T04:57:29.6306100Z Received 775946240 of 2135836605 (36.3%), 61.6 MBs/sec
+2026-09-07T04:57:30.6307600Z Received 805306368 of 2135836605 (37.7%), 59.0 MBs/sec
+2026-09-07T04:57:31.6337910Z Received 868220928 of 2135836605 (40.7%), 59.1 MBs/sec
+2026-09-07T04:57:32.6357490Z Received 935329792 of 2135836605 (43.8%), 59.4 MBs/sec
+2026-09-07T04:57:33.6359350Z Received 981467136 of 2135836605 (46.0%), 58.4 MBs/sec
+2026-09-07T04:57:34.6361000Z Received 1056964608 of 2135836605 (49.5%), 59.2 MBs/sec
+2026-09-07T04:57:35.6363150Z Received 1098907648 of 2135836605 (51.5%), 58.1 MBs/sec
+2026-09-07T04:57:36.6358730Z Received 1161822208 of 2135836605 (54.4%), 58.2 MBs/sec
+2026-09-07T04:57:37.6383460Z Received 1203765248 of 2135836605 (56.4%), 57.3 MBs/sec
+2026-09-07T04:57:38.6378680Z Received 1233125376 of 2135836605 (57.7%), 55.9 MBs/sec
+2026-09-07T04:57:39.6396690Z Received 1296039936 of 2135836605 (60.7%), 56.1 MBs/sec
+2026-09-07T04:57:40.7502080Z Received 1342177280 of 2135836605 (62.8%), 55.3 MBs/sec
+2026-09-07T04:57:41.7500920Z Received 1379926016 of 2135836605 (64.6%), 54.5 MBs/sec
+2026-09-07T04:57:42.7627870Z Received 1451229184 of 2135836605 (67.9%), 55.1 MBs/sec
+2026-09-07T04:57:43.7538510Z Received 1476395008 of 2135836605 (69.1%), 53.9 MBs/sec
+2026-09-07T04:57:44.7556500Z Received 1535115264 of 2135836605 (71.9%), 53.9 MBs/sec
+2026-09-07T04:57:45.7570620Z Received 1598029824 of 2135836605 (74.8%), 54.2 MBs/sec
+2026-09-07T04:57:46.7607080Z Received 1619001344 of 2135836605 (75.8%), 53.0 MBs/sec
+2026-09-07T04:57:47.7580530Z Received 1677721600 of 2135836605 (78.6%), 53.1 MBs/sec
+2026-09-07T04:57:48.7587660Z Received 1736441856 of 2135836605 (81.3%), 53.2 MBs/sec
+2026-09-07T04:57:49.7596520Z Received 1769996288 of 2135836605 (82.9%), 52.5 MBs/sec
+2026-09-07T04:57:50.7599870Z Received 1845493760 of 2135836605 (86.4%), 53.1 MBs/sec
+2026-09-07T04:57:51.7625480Z Received 1879048192 of 2135836605 (88.0%), 52.5 MBs/sec
+2026-09-07T04:57:52.7658850Z Received 1933574144 of 2135836605 (90.5%), 52.5 MBs/sec
+2026-09-07T04:57:53.7650320Z Received 1996488704 of 2135836605 (93.5%), 52.7 MBs/sec
+2026-09-07T04:57:54.7653430Z Received 2025848832 of 2135836605 (94.9%), 52.0 MBs/sec
+2026-09-07T04:57:55.7653320Z Received 2092957696 of 2135836605 (98.0%), 52.3 MBs/sec
+2026-09-07T04:57:56.5934250Z Received 2135836605 of 2135836605 (100.0%), 52.3 MBs/sec
+2026-09-07T04:57:56.5954260Z Cache Size: ~2037 MB (2135836605 B)
+2026-09-07T04:57:56.6054080Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/7eaf3dc0-5f32-4026-a286-2ef9cb343500/cache.tzst -P -C /Users/runner/work/PocketKrKr/PocketKrKr --delay-directory-restore --use-compress-program unzstd
+2026-09-07T04:58:03.9019470Z Cache restored successfully
+2026-09-07T04:58:04.4565830Z Cache restored from key: vcpkg-macOS-973ab3e6891fa53385dac25149d5a3d2fefc93867f3bc9b47be446615efa254d
+2026-09-07T04:58:04.4962010Z ##[group]Run export VCPKG_BINARY_SOURCES="files,${HOME}/.cache/vcpkg,readwrite"
+2026-09-07T04:58:04.4963670Z [36;1mexport VCPKG_BINARY_SOURCES="files,${HOME}/.cache/vcpkg,readwrite"[0m
+2026-09-07T04:58:04.4965110Z [36;1mexport CCACHE_DIR="${HOME}/.cache/ccache"[0m
+2026-09-07T04:58:04.4966360Z [36;1m# 兜底：Windows 上传/zip 解压易丢失执行位，先确保 build.sh 可执行[0m
+2026-09-07T04:58:04.4967340Z [36;1mchmod +x build.sh[0m
+2026-09-07T04:58:04.4968230Z [36;1m./build.sh ios "$BUILD_TYPE"[0m
+2026-09-07T04:58:04.5240280Z shell: /bin/bash -e {0}
+2026-09-07T04:58:04.5240660Z env:
+2026-09-07T04:58:04.5241190Z   BUILD_TYPE: release
+2026-09-07T04:58:04.5241710Z   ENABLE_RENDER_PROBE: false
+2026-09-07T04:58:04.5242040Z   KRKR_LOG_LEVEL: auto
+2026-09-07T04:58:04.5242420Z   RELEASE_VERSION: 0.0.1
+2026-09-07T04:58:04.5242780Z   PUBLISH_RELEASE: true
+2026-09-07T04:58:04.5249160Z   JOBS: 4
+2026-09-07T04:58:04.5249550Z   FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/stable-3.47.2-arm64/flutter
+2026-09-07T04:58:04.5250510Z   PUB_CACHE: /Users/runner/.pub-cache
+2026-09-07T04:58:04.5250860Z ##[endgroup]
+2026-09-07T04:58:04.6584850Z [0;36m==============================[0m
+2026-09-07T04:58:04.6588820Z [0;36m  Building: ios (release)[0m
+2026-09-07T04:58:04.6598820Z [0;36m==============================[0m
+2026-09-07T04:58:04.6617120Z 
+2026-09-07T04:58:04.7110610Z [INFO] vcpkg not found. Automatically setting up vcpkg in .devtools/vcpkg...
+2026-09-07T04:58:04.7487690Z Cloning into '/Users/runner/work/PocketKrKr/PocketKrKr/.devtools/vcpkg'...
+2026-09-07T04:58:22.4179010Z Updating files:  23% (3323/14284)
+2026-09-07T04:58:22.5305240Z Updating files:  24% (3429/14284)
+2026-09-07T04:58:22.5461030Z Updating files:  25% (3571/14284)
+2026-09-07T04:58:22.5987860Z Updating files:  26% (3714/14284)
+2026-09-07T04:58:22.6143920Z Updating files:  27% (3857/14284)
+2026-09-07T04:58:22.6749030Z Updating files:  28% (4000/14284)
+2026-09-07T04:58:22.7221600Z Updating files:  29% (4143/14284)
+2026-09-07T04:58:22.7388770Z Updating files:  30% (4286/14284)
+2026-09-07T04:58:22.7896290Z Updating files:  31% (4429/14284)
+2026-09-07T04:58:22.8030010Z Updating files:  32% (4571/14284)
+2026-09-07T04:58:22.8589340Z Updating files:  33% (4714/14284)
+2026-09-07T04:58:22.9136060Z Updating files:  34% (4857/14284)
+2026-09-07T04:58:22.9300160Z Updating files:  35% (5000/14284)
+2026-09-07T04:58:22.9862810Z Updating files:  36% (5143/14284)
+2026-09-07T04:58:23.0044750Z Updating files:  37% (5286/14284)
+2026-09-07T04:58:23.0444650Z Updating files:  38% (5428/14284)
+2026-09-07T04:58:23.0616010Z Updating files:  39% (5571/14284)
+2026-09-07T04:58:23.1108450Z Updating files:  40% (5714/14284)
+2026-09-07T04:58:23.1857290Z Updating files:  41% (5857/14284)
+2026-09-07T04:58:23.2078610Z Updating files:  42% (6000/14284)
+2026-09-07T04:58:23.2434910Z Updating files:  43% (6143/14284)
+2026-09-07T04:58:23.2925800Z Updating files:  44% (6285/14284)
+2026-09-07T04:58:23.3108580Z Updating files:  45% (6428/14284)
+2026-09-07T04:58:23.3565330Z Updating files:  46% (6571/14284)
+2026-09-07T04:58:23.3729250Z Updating files:  47% (6714/14284)
+2026-09-07T04:58:23.3999690Z Updating files:  48% (6857/14284)
+2026-09-07T04:58:23.4411990Z Updating files:  48% (6929/14284)
+2026-09-07T04:58:23.4584650Z Updating files:  49% (7000/14284)
+2026-09-07T04:58:23.5127650Z Updating files:  50% (7142/14284)
+2026-09-07T04:58:23.5591030Z Updating files:  51% (7285/14284)
+2026-09-07T04:58:23.5769190Z Updating files:  52% (7428/14284)
+2026-09-07T04:58:23.6256750Z Updating files:  53% (7571/14284)
+2026-09-07T04:58:23.6456600Z Updating files:  54% (7714/14284)
+2026-09-07T04:58:23.6998550Z Updating files:  55% (7857/14284)
+2026-09-07T04:58:23.7550010Z Updating files:  56% (8000/14284)
+2026-09-07T04:58:23.7747910Z Updating files:  57% (8142/14284)
+2026-09-07T04:58:23.8273160Z Updating files:  58% (8285/14284)
+2026-09-07T04:58:23.8446560Z Updating files:  59% (8428/14284)
+2026-09-07T04:58:23.8891470Z Updating files:  60% (8571/14284)
+2026-09-07T04:58:23.9388360Z Updating files:  61% (8714/14284)
+2026-09-07T04:58:23.9601310Z Updating files:  62% (8857/14284)
+2026-09-07T04:58:24.0113330Z Updating files:  63% (8999/14284)
+2026-09-07T04:58:24.0737420Z Updating files:  64% (9142/14284)
+2026-09-07T04:58:24.0875730Z Updating files:  65% (9285/14284)
+2026-09-07T04:58:24.1455870Z Updating files:  66% (9428/14284)
+2026-09-07T04:58:24.1639510Z Updating files:  67% (9571/14284)
+2026-09-07T04:58:24.2217460Z Updating files:  68% (9714/14284)
+2026-09-07T04:58:24.2805630Z Updating files:  69% (9856/14284)
+2026-09-07T04:58:24.2965320Z Updating files:  70% (9999/14284)
+2026-09-07T04:58:24.3451590Z Updating files:  71% (10142/14284)
+2026-09-07T04:58:24.3616480Z Updating files:  72% (10285/14284)
+2026-09-07T04:58:24.3782810Z Updating files:  73% (10428/14284)
+2026-09-07T04:58:24.4004610Z Updating files:  74% (10571/14284)
+2026-09-07T04:58:24.4257370Z Updating files:  74% (10688/14284)
+2026-09-07T04:58:24.4393480Z Updating files:  75% (10713/14284)
+2026-09-07T04:58:24.4546810Z Updating files:  76% (10856/14284)
+2026-09-07T04:58:24.4972500Z Updating files:  77% (10999/14284)
+2026-09-07T04:58:24.5602240Z Updating files:  78% (11142/14284)
+2026-09-07T04:58:24.5791400Z Updating files:  79% (11285/14284)
+2026-09-07T04:58:24.5970310Z Updating files:  80% (11428/14284)
+2026-09-07T04:58:24.6204690Z Updating files:  81% (11571/14284)
+2026-09-07T04:58:24.6555060Z Updating files:  82% (11713/14284)
+2026-09-07T04:58:24.6698630Z Updating files:  83% (11856/14284)
+2026-09-07T04:58:24.7122710Z Updating files:  84% (11999/14284)
+2026-09-07T04:58:24.7257020Z Updating files:  85% (12142/14284)
+2026-09-07T04:58:24.7401540Z Updating files:  86% (12285/14284)
+2026-09-07T04:58:24.7545200Z Updating files:  87% (12428/14284)
+2026-09-07T04:58:24.7778940Z Updating files:  88% (12570/14284)
+2026-09-07T04:58:24.7949670Z Updating files:  89% (12713/14284)
+2026-09-07T04:58:24.8152030Z Updating files:  90% (12856/14284)
+2026-09-07T04:58:24.8341290Z Updating files:  91% (12999/14284)
+2026-09-07T04:58:24.8524860Z Updating files:  92% (13142/14284)
+2026-09-07T04:58:24.8658380Z Updating files:  93% (13285/14284)
+2026-09-07T04:58:24.9056690Z Updating files:  94% (13427/14284)
+2026-09-07T04:58:24.9190600Z Updating files:  95% (13570/14284)
+2026-09-07T04:58:24.9366430Z Updating files:  96% (13713/14284)
+2026-09-07T04:58:24.9505830Z Updating files:  97% (13856/14284)
+2026-09-07T04:58:24.9673570Z Updating files:  98% (13999/14284)
+2026-09-07T04:58:25.0134930Z Updating files:  99% (14142/14284)
+2026-09-07T04:58:25.0135660Z Updating files: 100% (14284/14284)
+2026-09-07T04:58:25.0136240Z Updating files: 100% (14284/14284), done.
+2026-09-07T04:58:25.0944380Z Downloading vcpkg-macos...
+2026-09-07T04:58:25.4737960Z vcpkg package management program version 2026-07-27-98d7cb0cf1f4686a3e43aa5672b6230c1d56bce8
+2026-09-07T04:58:25.4740990Z 
+2026-09-07T04:58:25.4741560Z See LICENSE.txt for license information.
+2026-09-07T04:58:25.4786840Z 
+2026-09-07T04:58:25.4795260Z [0;36m========================================[0m
+2026-09-07T04:58:25.4797840Z [0;36m  Pre-flight checks[0m
+2026-09-07T04:58:25.4798490Z [0;36m========================================[0m
+2026-09-07T04:58:25.4799040Z [0;32m[INFO][0m Build type:    Release
+2026-09-07T04:58:25.4799660Z [0;32m[INFO][0m Project root:  /Users/runner/work/PocketKrKr/PocketKrKr
+2026-09-07T04:58:25.4800280Z [0;32m[INFO][0m CMake preset:  iOS Release Build
+2026-09-07T04:58:25.4802320Z [0;32m[INFO][0m Flutter SDK:   /Users/runner/hostedtoolcache/flutter/stable-3.47.2-arm64/flutter
+2026-09-07T04:58:25.4803710Z [0;32m[INFO][0m Parallel jobs: 4
+2026-09-07T04:58:25.4804220Z 
+2026-09-07T04:58:25.4804670Z [0;36m========================================[0m
+2026-09-07T04:58:25.4805660Z [0;36m  Step 1/3: Building C++ engine (static library)[0m
+2026-09-07T04:58:25.4808550Z [0;36m========================================[0m
+2026-09-07T04:58:25.4812110Z [0;32m[INFO][0m Running CMake configure... (probe='false', log_level='auto')
+2026-09-07T04:58:25.5404680Z -- Ccache found: /opt/homebrew/bin/ccache
+2026-09-07T04:58:25.5505680Z -- Running vcpkg install
+2026-09-07T04:58:29.3766510Z Detecting compiler hash for triplet arm64-osx...
+2026-09-07T04:58:33.3690750Z Compiler found: /usr/bin/c++
+2026-09-07T04:58:33.3826730Z Detecting compiler hash for triplet arm64-ios...
+2026-09-07T04:58:35.4834100Z Compiler found: /usr/bin/c++
+2026-09-07T04:58:35.6463720Z The following packages will be built and installed:
+2026-09-07T04:58:35.6464480Z     7zip:arm64-ios@24.09#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/7zip
+2026-09-07T04:58:35.6465160Z     angle[core,metal]:arm64-ios@chromium_7258#3 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/angle
+2026-09-07T04:58:35.6465740Z   * boost-algorithm:arm64-ios@1.88.0
+2026-09-07T04:58:35.6466190Z   * boost-align:arm64-ios@1.88.0
+2026-09-07T04:58:35.6466550Z   * boost-array:arm64-ios@1.88.0
+2026-09-07T04:58:35.6466830Z   * boost-assert:arm64-ios@1.88.0
+2026-09-07T04:58:35.6467810Z   * boost-atomic:arm64-ios@1.88.0
+2026-09-07T04:58:35.6468190Z   * boost-bind:arm64-ios@1.88.0
+2026-09-07T04:58:35.6468500Z   * boost-charconv:arm64-ios@1.88.0#1
+2026-09-07T04:58:35.6468850Z   * boost-chrono:arm64-ios@1.88.0
+2026-09-07T04:58:35.6469230Z   * boost-cmake:arm64-ios@1.88.0
+2026-09-07T04:58:35.6469570Z   * boost-concept-check:arm64-ios@1.88.0
+2026-09-07T04:58:35.6469900Z   * boost-config:arm64-ios@1.88.0
+2026-09-07T04:58:35.6470220Z   * boost-container:arm64-ios@1.88.0#1
+2026-09-07T04:58:35.6470530Z   * boost-container-hash:arm64-ios@1.88.0
+2026-09-07T04:58:35.6470860Z   * boost-conversion:arm64-ios@1.88.0
+2026-09-07T04:58:35.6471180Z   * boost-core:arm64-ios@1.88.0
+2026-09-07T04:58:35.6471500Z   * boost-date-time:arm64-ios@1.88.0
+2026-09-07T04:58:35.6471820Z   * boost-describe:arm64-ios@1.88.0
+2026-09-07T04:58:35.6472110Z   * boost-detail:arm64-ios@1.88.0
+2026-09-07T04:58:35.6472410Z   * boost-dynamic-bitset:arm64-ios@1.88.0
+2026-09-07T04:58:35.6472760Z   * boost-endian:arm64-ios@1.88.0
+2026-09-07T04:58:35.6473110Z   * boost-exception:arm64-ios@1.88.0
+2026-09-07T04:58:35.6473450Z   * boost-function:arm64-ios@1.88.0
+2026-09-07T04:58:35.6473800Z   * boost-function-types:arm64-ios@1.88.0
+2026-09-07T04:58:35.6474100Z   * boost-functional:arm64-ios@1.88.0
+2026-09-07T04:58:35.6474520Z   * boost-fusion:arm64-ios@1.88.0
+2026-09-07T04:58:35.6474890Z   * boost-headers:arm64-ios@1.88.0
+2026-09-07T04:58:35.6475200Z   * boost-integer:arm64-ios@1.88.0
+2026-09-07T04:58:35.6475490Z   * boost-intrusive:arm64-ios@1.88.0
+2026-09-07T04:58:35.6475810Z   * boost-io:arm64-ios@1.88.0
+2026-09-07T04:58:35.6476150Z     boost-iostreams[bzip2,core,lzma,zlib,zstd]:arm64-ios@1.88.0
+2026-09-07T04:58:35.6476550Z   * boost-iterator:arm64-ios@1.88.0
+2026-09-07T04:58:35.6476890Z   * boost-lexical-cast:arm64-ios@1.88.0
+2026-09-07T04:58:35.6477220Z     boost-locale:arm64-ios@1.88.0#1
+2026-09-07T04:58:35.6477510Z   * boost-move:arm64-ios@1.88.0
+2026-09-07T04:58:35.6477790Z   * boost-mp11:arm64-ios@1.88.0
+2026-09-07T04:58:35.6478080Z   * boost-mpl:arm64-ios@1.88.0
+2026-09-07T04:58:35.6478380Z   * boost-numeric-conversion:arm64-ios@1.88.0
+2026-09-07T04:58:35.6478750Z   * boost-optional:arm64-ios@1.88.0
+2026-09-07T04:58:35.6479060Z     boost-phoenix:arm64-ios@1.88.0
+2026-09-07T04:58:35.6479380Z   * boost-pool:arm64-ios@1.88.0
+2026-09-07T04:58:35.6479680Z   * boost-predef:arm64-ios@1.88.0
+2026-09-07T04:58:35.6479980Z   * boost-preprocessor:arm64-ios@1.88.0
+2026-09-07T04:58:35.6480280Z   * boost-proto:arm64-ios@1.88.0
+2026-09-07T04:58:35.6480630Z   * boost-random:arm64-ios@1.88.0
+2026-09-07T04:58:35.6480920Z   * boost-range:arm64-ios@1.88.0
+2026-09-07T04:58:35.6481230Z   * boost-ratio:arm64-ios@1.88.0
+2026-09-07T04:58:35.6481540Z   * boost-regex:arm64-ios@1.88.0
+2026-09-07T04:58:35.6481820Z   * boost-smart-ptr:arm64-ios@1.88.0
+2026-09-07T04:58:35.6482170Z     boost-spirit:arm64-ios@1.88.0
+2026-09-07T04:58:35.6482490Z   * boost-static-assert:arm64-ios@1.88.0
+2026-09-07T04:58:35.6482830Z   * boost-system:arm64-ios@1.88.0
+2026-09-07T04:58:35.6483120Z   * boost-thread:arm64-ios@1.88.0
+2026-09-07T04:58:35.6483410Z   * boost-throw-exception:arm64-ios@1.88.0
+2026-09-07T04:58:35.6485810Z   * boost-tokenizer:arm64-ios@1.88.0
+2026-09-07T04:58:35.6486250Z   * boost-tuple:arm64-ios@1.88.0
+2026-09-07T04:58:35.6486610Z   * boost-type-index:arm64-ios@1.88.0
+2026-09-07T04:58:35.6487050Z   * boost-type-traits:arm64-ios@1.88.0
+2026-09-07T04:58:35.6487400Z   * boost-typeof:arm64-ios@1.88.0
+2026-09-07T04:58:35.6487680Z   * boost-uninstall:arm64-ios@1.88.0
+2026-09-07T04:58:35.6488030Z   * boost-unordered:arm64-ios@1.88.0
+2026-09-07T04:58:35.6488330Z   * boost-utility:arm64-ios@1.88.0
+2026-09-07T04:58:35.6488820Z   * boost-variant:arm64-ios@1.88.0
+2026-09-07T04:58:35.6489300Z   * boost-variant2:arm64-ios@1.88.0
+2026-09-07T04:58:35.6489570Z   * boost-winapi:arm64-ios@1.88.0
+2026-09-07T04:58:35.6490020Z   * brotli:arm64-ios@1.1.0#2 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/brotli
+2026-09-07T04:58:35.6490630Z   * bzip2[core,tool]:arm64-ios@1.0.8#7 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/bzip2
+2026-09-07T04:58:35.6492290Z   * cairo[core,fontconfig,freetype,gobject]:arm64-ios@1.18.4#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/cairo
+2026-09-07T04:58:35.6492840Z   * dirent:arm64-ios@1.26
+2026-09-07T04:58:35.6493100Z   * dirent:arm64-osx@1.26
+2026-09-07T04:58:35.6493360Z   * egl-registry:arm64-ios@2024-01-25
+2026-09-07T04:58:35.6493820Z   * expat:arm64-ios@2.7.1#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/expat
+2026-09-07T04:58:35.6494430Z     ffmpeg:arm64-ios@3.3.9#2 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/ffmpeg
+2026-09-07T04:58:35.6509800Z     fmt:arm64-ios@11.2.0
+2026-09-07T04:58:35.6510260Z   * fontconfig:arm64-ios@2.15.0#4 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/fontconfig
+2026-09-07T04:58:35.6511020Z   * freetype[brotli,bzip2,core,png,zlib]:arm64-ios@2.13.3#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/freetype
+2026-09-07T04:58:35.6511530Z   * fribidi:arm64-ios@1.0.16
+2026-09-07T04:58:35.6511970Z   * fribidi:arm64-osx@1.0.16
+2026-09-07T04:58:35.6512210Z   * gettext[core,tools]:arm64-osx@0.22.5#2
+2026-09-07T04:58:35.6512660Z   * gettext-libintl:arm64-ios@0.22.5#5 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/gettext-libintl
+2026-09-07T04:58:35.6513280Z   * gettext-libintl:arm64-osx@0.22.5#5 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/gettext-libintl
+2026-09-07T04:58:35.6513880Z   * glib:arm64-osx@2.84.2#7 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/glib
+2026-09-07T04:58:35.6514400Z   * glib:arm64-ios@2.84.2#7 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/glib
+2026-09-07T04:58:35.6514780Z   * gperf:arm64-osx@3.3
+2026-09-07T04:58:35.6515030Z   * harfbuzz[core,freetype]:arm64-ios@11.3.3
+2026-09-07T04:58:35.6515350Z     highway:arm64-ios@1.3.0
+2026-09-07T04:58:35.6515590Z     jxrlib:arm64-ios@2019.10.9#7
+2026-09-07T04:58:35.6516040Z     libarchive:arm64-ios@3.7.7 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libarchive
+2026-09-07T04:58:35.6516580Z   * libexif:arm64-ios@0.6.25 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libexif
+2026-09-07T04:58:35.6517110Z   * libffi:arm64-osx@3.5.2#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libffi
+2026-09-07T04:58:35.6517850Z   * libffi:arm64-ios@3.5.2#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libffi
+2026-09-07T04:58:35.6518410Z     libgdiplus:arm64-ios@5.6.1#5 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libgdiplus
+2026-09-07T04:58:35.6518980Z   * libiconv:arm64-ios@1.18#2 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libiconv
+2026-09-07T04:58:35.6519490Z   * libiconv:arm64-osx@1.18#2 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libiconv
+2026-09-07T04:58:35.6519860Z     libjpeg-turbo:arm64-ios@3.1.1
+2026-09-07T04:58:35.6520070Z   * liblzma:arm64-ios@5.8.1
+2026-09-07T04:58:35.6520260Z   * libogg:arm64-ios@1.3.6#1
+2026-09-07T04:58:35.6520600Z     libpng:arm64-ios@1.6.50#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/libpng
+2026-09-07T04:58:35.6520960Z   * libuuid:arm64-ios@1.0.3#15
+2026-09-07T04:58:35.6521480Z     libvorbis:arm64-ios@1.3.7#4
+2026-09-07T04:58:35.6523070Z     libwebp[core,libwebpmux,nearlossless,simd]:arm64-ios@1.6.0#1
+2026-09-07T04:58:35.6523500Z     libxml2[core,iconv,zlib]:arm64-ios@2.14.5#1
+2026-09-07T04:58:35.6523840Z     lz4:arm64-ios@1.10.0
+2026-09-07T04:58:35.6524120Z     minizip:arm64-ios@1.3.1#1
+2026-09-07T04:58:35.6524370Z     oniguruma:arm64-ios@6.9.10
+2026-09-07T04:58:35.6524640Z     openal-soft:arm64-ios@1.24.3#1
+2026-09-07T04:58:35.6524900Z     opencv4:arm64-ios@4.7.0#6
+2026-09-07T04:58:35.6525150Z   * opengl-registry:arm64-ios@2024-02-10#1
+2026-09-07T04:58:35.6525410Z   * opus:arm64-ios@1.5.2
+2026-09-07T04:58:35.6525610Z     opusfile:arm64-ios@0.12+20221121#1
+2026-09-07T04:58:35.6525840Z   * pango:arm64-ios@1.56.1#2
+2026-09-07T04:58:35.6526310Z   * pcre2[core,platform-default-features]:arm64-ios@10.46#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/pcre2
+2026-09-07T04:58:35.6543690Z   * pcre2[core,jit,platform-default-features]:arm64-osx@10.46#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/pcre2
+2026-09-07T04:58:35.6544310Z   * pixman:arm64-ios@0.44.2 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/pixman
+2026-09-07T04:58:35.6544680Z   * pkgconf:arm64-osx@2.5.1#1
+2026-09-07T04:58:35.6544890Z   * pthread:arm64-ios@3.0.0#2
+2026-09-07T04:58:35.6545090Z   * pthreads:arm64-ios@3.0.0#14
+2026-09-07T04:58:35.6545300Z     sdl2:arm64-ios@2.32.10
+2026-09-07T04:58:35.6545480Z     spdlog:arm64-ios@1.15.3
+2026-09-07T04:58:35.6545700Z   * tiff[core,jpeg,lzma,zip]:arm64-ios@4.7.0
+2026-09-07T04:58:35.6546030Z     tinyxml2:arm64-ios@11.0.0
+2026-09-07T04:58:35.6546360Z     uchardet:arm64-ios@0.0.8
+2026-09-07T04:58:35.6546690Z     unrar:arm64-ios@6.0.7#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/unrar
+2026-09-07T04:58:35.6547070Z   * vcpkg-boost:arm64-osx@2025-03-29
+2026-09-07T04:58:35.6547310Z     vcpkg-cmake:arm64-osx@2024-04-23
+2026-09-07T04:58:35.6547600Z   * vcpkg-cmake-config:arm64-osx@2024-05-23
+2026-09-07T04:58:35.6547920Z   * vcpkg-cmake-get-vars:arm64-osx@2025-05-29
+2026-09-07T04:58:35.6548200Z   * vcpkg-get-python-packages:arm64-osx@2025-04-05
+2026-09-07T04:58:35.6548470Z   * vcpkg-make:arm64-osx@2025-08-21
+2026-09-07T04:58:35.6548740Z   * vcpkg-pkgconfig-get-modules:arm64-osx@2024-04-03
+2026-09-07T04:58:35.6549040Z   * vcpkg-tool-meson:arm64-osx@1.9.0
+2026-09-07T04:58:35.6549380Z   * zlib:arm64-osx@1.3.1#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/zlib
+2026-09-07T04:58:35.6549910Z   * zlib:arm64-ios@1.3.1#1 -- /Users/runner/work/PocketKrKr/PocketKrKr/./vcpkg/ports/zlib
+2026-09-07T04:58:35.6550280Z     zstd:arm64-ios@1.5.7
+2026-09-07T04:58:35.6550560Z Additional packages (*) will be modified to complete this operation.
+2026-09-07T04:58:43.7385040Z Restored 135 package(s) from /Users/runner/.cache/vcpkg/archives in 8.1 s. Use --debug to see more details.
+2026-09-07T04:58:43.7483580Z Installing 1/135 vcpkg-cmake-config:arm64-osx@2024-05-23...
+2026-09-07T04:58:43.7618580Z vcpkg-cmake-config:arm64-osx@2024-05-23 package ABI: 04fea3e0ab48b2881f3a5cc38aba288c917cd60fca6d38e8e1d87369a9dd7907
+2026-09-07T04:58:43.7728540Z Elapsed time to handle vcpkg-cmake-config:arm64-osx: 3.51 ms
+2026-09-07T04:58:43.7894240Z Installing 2/135 vcpkg-cmake:arm64-osx@2024-04-23...
+2026-09-07T04:58:43.8021180Z vcpkg-cmake:arm64-osx@2024-04-23 package ABI: ddf9caddb6fd5da5294b930f994f5d8fa4f40f118de71d8f0de8f4ec51e3abb8
+2026-09-07T04:58:43.8023200Z Elapsed time to handle vcpkg-cmake:arm64-osx: 2 ms
+2026-09-07T04:58:43.8133650Z Installing 3/135 7zip:arm64-ios@24.09#1...
+2026-09-07T04:58:43.8271090Z 7zip:arm64-ios@24.09#1 package ABI: 631aac78bcf04b5b0d246c224aae71b71a69b909a2299ef9a231285f4a4a6a60
+2026-09-07T04:58:43.8373280Z Elapsed time to handle 7zip:arm64-ios: 95.7 ms
+2026-09-07T04:58:43.8405740Z Installing 4/135 zlib:arm64-ios@1.3.1#1...
+2026-09-07T04:58:43.8406450Z zlib:arm64-ios@1.3.1#1 package ABI: 2103234f8a8ac0e56bb635e62c9b0bb22e5f2c53c65980bf060dd1ddd7a08b43
+2026-09-07T04:58:43.8407240Z Elapsed time to handle zlib:arm64-ios: 4.82 ms
+2026-09-07T04:58:43.8408680Z Installing 5/135 vcpkg-get-python-packages:arm64-osx@2025-04-05...
+2026-09-07T04:58:43.8410300Z vcpkg-get-python-packages:arm64-osx@2025-04-05 package ABI: 61a04a13a4e95de50c5ecadfa28322391ecade775355ae440718604d9ae24c9c
+2026-09-07T04:58:43.8412700Z Elapsed time to handle vcpkg-get-python-packages:arm64-osx: 2.78 ms
+2026-09-07T04:58:43.8414610Z Installing 6/135 egl-registry:arm64-ios@2024-01-25...
+2026-09-07T04:58:43.8415350Z egl-registry:arm64-ios@2024-01-25 package ABI: 7911574c83d19ee7f3a50e3d67c9a16c170122ad61df77645dc5a11b4cbfdea3
+2026-09-07T04:58:43.8444630Z Elapsed time to handle egl-registry:arm64-ios: 3.58 ms
+2026-09-07T04:58:43.8445560Z Installing 7/135 opengl-registry:arm64-ios@2024-02-10#1...
+2026-09-07T04:58:43.8447110Z opengl-registry:arm64-ios@2024-02-10#1 package ABI: f39c33696dc170aa5b0440f610f1e3fa64e786535fbb9395531b2857c3e4a95a
+2026-09-07T04:58:43.8522460Z Elapsed time to handle opengl-registry:arm64-ios: 7.88 ms
+2026-09-07T04:58:43.8523080Z Installing 8/135 angle[core,metal]:arm64-ios@chromium_7258#3...
+2026-09-07T04:58:43.8523740Z angle[core,metal]:arm64-ios@chromium_7258#3 package ABI: 7e4ac8cecd84c4f5f781f8d27af5133ed360f1c1919028008d7d25331cf8c807
+2026-09-07T04:58:43.8644710Z Elapsed time to handle angle:arm64-ios: 9.98 ms
+2026-09-07T04:58:43.8683090Z Installing 9/135 zstd:arm64-ios@1.5.7...
+2026-09-07T04:58:43.8683960Z zstd:arm64-ios@1.5.7 package ABI: c5f280ce00c5dd40ad0830d3da02eca697e4b1ee5cb8004afb3e8bd8477e2fc0
+2026-09-07T04:58:43.8684720Z Elapsed time to handle zstd:arm64-ios: 6.09 ms
+2026-09-07T04:58:43.8685260Z Installing 10/135 liblzma:arm64-ios@5.8.1...
+2026-09-07T04:58:43.8685920Z liblzma:arm64-ios@5.8.1 package ABI: c177e7ec74fe815c2f0e802a8dfb882efb20c4348e747d4aa669738544e29ecb
+2026-09-07T04:58:43.8774080Z Elapsed time to handle liblzma:arm64-ios: 9.04 ms
+2026-09-07T04:58:43.8775000Z Installing 11/135 vcpkg-boost:arm64-osx@2025-03-29...
+2026-09-07T04:58:43.8779260Z vcpkg-boost:arm64-osx@2025-03-29 package ABI: f826563f54b9b17864157936bbd8456a952ef0906e440d4538fe02b8568cfa12
+2026-09-07T04:58:43.8803120Z Elapsed time to handle vcpkg-boost:arm64-osx: 2.91 ms
+2026-09-07T04:58:43.8803660Z Installing 12/135 boost-uninstall:arm64-ios@1.88.0...
+2026-09-07T04:58:43.8804280Z boost-uninstall:arm64-ios@1.88.0 package ABI: 91878503ada05408dd514f34672911e99e5f00595e2ec9e9431e2a4dca06e4af
+2026-09-07T04:58:43.8844870Z Elapsed time to handle boost-uninstall:arm64-ios: 4.01 ms
+2026-09-07T04:58:43.8845860Z Installing 13/135 boost-cmake:arm64-ios@1.88.0...
+2026-09-07T04:58:43.8847180Z boost-cmake:arm64-ios@1.88.0 package ABI: f22655a91ce3e31d6b131e3cec1134c1349b949e32c05306c01e2fd14f5c8e92
+2026-09-07T04:58:43.8905360Z Elapsed time to handle boost-cmake:arm64-ios: 5.86 ms
+2026-09-07T04:58:43.8906000Z Installing 14/135 boost-headers:arm64-ios@1.88.0...
+2026-09-07T04:58:43.8908010Z boost-headers:arm64-ios@1.88.0 package ABI: a36f4e63b6c6d974a340d8345ced76b504f8956ab2feb19340f561236fcf67f5
+2026-09-07T04:58:43.8936260Z Elapsed time to handle boost-headers:arm64-ios: 3.3 ms
+2026-09-07T04:58:43.8936940Z Installing 15/135 boost-config:arm64-ios@1.88.0...
+2026-09-07T04:58:43.8937720Z boost-config:arm64-ios@1.88.0 package ABI: 39c9b347c72577fc752811fb4e2685f5ef4cae13cdc297d8471590f35f5cb8d6
+2026-09-07T04:58:43.9435470Z Elapsed time to handle boost-config:arm64-ios: 48.1 ms
+2026-09-07T04:58:43.9437420Z Installing 16/135 boost-static-assert:arm64-ios@1.88.0...
+2026-09-07T04:58:43.9439870Z boost-static-assert:arm64-ios@1.88.0 package ABI: 1e8d46a428cd0ec39492c18b3e008df34855f620cb2a9071a120b2743e0a836a
+2026-09-07T04:58:43.9476550Z Elapsed time to handle boost-static-assert:arm64-ios: 5.88 ms
+2026-09-07T04:58:43.9477990Z Installing 17/135 boost-type-traits:arm64-ios@1.88.0...
+2026-09-07T04:58:43.9479420Z boost-type-traits:arm64-ios@1.88.0 package ABI: 2fffc073a5e08ecb0e31ee6b1c12d7a6afa3fdc5c0d8fa321d09d7291a39abab
+2026-09-07T04:58:43.9862230Z Elapsed time to handle boost-type-traits:arm64-ios: 38.5 ms
+2026-09-07T04:58:43.9909900Z Installing 18/135 boost-assert:arm64-ios@1.88.0...
+2026-09-07T04:58:43.9911170Z boost-assert:arm64-ios@1.88.0 package ABI: 210a6921801587fe68864d92d35b0de98d9e2ce097e449fd0ad230ebbb9cfc96
+2026-09-07T04:58:43.9913620Z Elapsed time to handle boost-assert:arm64-ios: 4.42 ms
+2026-09-07T04:58:43.9914860Z Installing 19/135 boost-throw-exception:arm64-ios@1.88.0...
+2026-09-07T04:58:43.9916560Z boost-throw-exception:arm64-ios@1.88.0 package ABI: 73f9a07f5e3b29fe62811a22aca81c2203825180a64137661b03353e9d57271f
+2026-09-07T04:58:43.9947740Z Elapsed time to handle boost-throw-exception:arm64-ios: 3.7 ms
+2026-09-07T04:58:43.9948420Z Installing 20/135 boost-preprocessor:arm64-ios@1.88.0...
+2026-09-07T04:58:43.9949130Z boost-preprocessor:arm64-ios@1.88.0 package ABI: becdde42ef628ec02acf767ec66f463221a5acd5cb0179b580594f439317802e
+2026-09-07T04:58:44.0748530Z Elapsed time to handle boost-preprocessor:arm64-ios: 80.2 ms
+2026-09-07T04:58:44.0751010Z Installing 21/135 boost-io:arm64-ios@1.88.0...
+2026-09-07T04:58:44.0751680Z boost-io:arm64-ios@1.88.0 package ABI: 3e16162ea103fd40fa4b342fe9c17e994bf8af8861ec7cd975580f282d42d504
+2026-09-07T04:58:44.0807430Z Elapsed time to handle boost-io:arm64-ios: 5.9 ms
+2026-09-07T04:58:44.0808050Z Installing 22/135 boost-core:arm64-ios@1.88.0...
+2026-09-07T04:58:44.0808730Z boost-core:arm64-ios@1.88.0 package ABI: 6ca87789665d780005a65bbcb8253aaad6da5f64500d486a5c8c8eed3f97ec42
+2026-09-07T04:58:44.1048180Z Elapsed time to handle boost-core:arm64-ios: 22.9 ms
+2026-09-07T04:58:44.1109700Z Installing 23/135 boost-utility:arm64-ios@1.88.0...
+2026-09-07T04:58:44.1149660Z boost-utility:arm64-ios@1.88.0 package ABI: 17cba3875789a09f97b9524093ca392c855b13db22d834337bd8325025665462
+2026-09-07T04:58:44.1150510Z Elapsed time to handle boost-utility:arm64-ios: 10.4 ms
+2026-09-07T04:58:44.1151040Z Installing 24/135 boost-smart-ptr:arm64-ios@1.88.0...
+2026-09-07T04:58:44.1151730Z boost-smart-ptr:arm64-ios@1.88.0 package ABI: 824fe1da80059a1a249682083d2ac36f4fddb06137d88fef43ca590aeb79d2d5
+2026-09-07T04:58:44.1376600Z Elapsed time to handle boost-smart-ptr:arm64-ios: 20.8 ms
+2026-09-07T04:58:44.1491660Z Installing 25/135 boost-predef:arm64-ios@1.88.0...
+2026-09-07T04:58:44.1624650Z boost-predef:arm64-ios@1.88.0 package ABI: 002a12cad4df133ecd9a2a8a9c2dd71812a6f1070b567f84ae5b40f5f54fc8ee
+2026-09-07T04:58:44.1649250Z Elapsed time to handle boost-predef:arm64-ios: 29.5 ms
+2026-09-07T04:58:44.1651130Z Installing 26/135 boost-mpl:arm64-ios@1.88.0...
+2026-09-07T04:58:44.1652820Z boost-mpl:arm64-ios@1.88.0 package ABI: 4da9e0c85a3b2e8794ef0df85919aa1f1cab7cadf65765497810e24375a97fb6
+2026-09-07T04:58:44.3887440Z Elapsed time to handle boost-mpl:arm64-ios: 219 ms
+2026-09-07T04:58:44.3989180Z Installing 27/135 boost-integer:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4094490Z boost-integer:arm64-ios@1.88.0 package ABI: a5b1e053ff442f87b81c4b95bb1b5cee2228016466f0ca858780d8ea3b4312be
+2026-09-07T04:58:44.4106370Z Elapsed time to handle boost-integer:arm64-ios: 5.52 ms
+2026-09-07T04:58:44.4111330Z Installing 28/135 boost-mp11:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4112080Z boost-mp11:arm64-ios@1.88.0 package ABI: 31cffbb475270516012615fa6ed0431ad7aa65f4d091df03f25d15b00d511c91
+2026-09-07T04:58:44.4112720Z Elapsed time to handle boost-mp11:arm64-ios: 9.96 ms
+2026-09-07T04:58:44.4113250Z Installing 29/135 boost-describe:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4113920Z boost-describe:arm64-ios@1.88.0 package ABI: 8ea5839b71dba4d03afa93920b83153c24664cc0b93ba1464414e17302eb6efb
+2026-09-07T04:58:44.4114580Z Elapsed time to handle boost-describe:arm64-ios: 10.9 ms
+2026-09-07T04:58:44.4115110Z Installing 30/135 boost-container-hash:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4115800Z boost-container-hash:arm64-ios@1.88.0 package ABI: 06b72e5c5cb6b7f1f2ef4ff7efc763c26a3298972ceee687a574de1be7a81600
+2026-09-07T04:58:44.4198560Z Elapsed time to handle boost-container-hash:arm64-ios: 9.92 ms
+2026-09-07T04:58:44.4200010Z Installing 31/135 boost-concept-check:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4202500Z boost-concept-check:arm64-ios@1.88.0 package ABI: 4e6698b32a6469bd21d5cafdb5106ee6c21c58f3c47e77dd98c22ab815f1a9a0
+2026-09-07T04:58:44.4276100Z Elapsed time to handle boost-concept-check:arm64-ios: 7.74 ms
+2026-09-07T04:58:44.4276700Z Installing 32/135 boost-regex:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4277440Z boost-regex:arm64-ios@1.88.0 package ABI: 591f67b3ea1c6bb09413d161e0a43eaea2a3f48161928334cfa3e356bbf7a1db
+2026-09-07T04:58:44.4510530Z Elapsed time to handle boost-regex:arm64-ios: 23.4 ms
+2026-09-07T04:58:44.4511880Z Installing 33/135 boost-tuple:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4513400Z boost-tuple:arm64-ios@1.88.0 package ABI: be07bf2589843a7d0d0b3a6a0e6a76443360316ff5b00d448f0551199158a193
+2026-09-07T04:58:44.4580750Z Elapsed time to handle boost-tuple:arm64-ios: 6.98 ms
+2026-09-07T04:58:44.4581720Z Installing 34/135 boost-optional:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4582970Z boost-optional:arm64-ios@1.88.0 package ABI: a9242af815eb663551c8570177215bd35142f67a426ec21488bba377f7a1df81
+2026-09-07T04:58:44.4686770Z Elapsed time to handle boost-optional:arm64-ios: 10.4 ms
+2026-09-07T04:58:44.4687650Z Installing 35/135 boost-typeof:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4688350Z boost-typeof:arm64-ios@1.88.0 package ABI: bd2d9ab5e3f292ef532ac03ace8d5708bf53368e70d0b9283d81cd285e54aeb1
+2026-09-07T04:58:44.4786550Z Elapsed time to handle boost-typeof:arm64-ios: 10.2 ms
+2026-09-07T04:58:44.4787980Z Installing 36/135 boost-detail:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4789670Z boost-detail:arm64-ios@1.88.0 package ABI: 24839c8b41b2f00f595cec30e7a5a3f5b8359dee7784b264fcf26fe4eb631286
+2026-09-07T04:58:44.4898270Z Elapsed time to handle boost-detail:arm64-ios: 11.2 ms
+2026-09-07T04:58:44.4898790Z Installing 37/135 boost-function-types:arm64-ios@1.88.0...
+2026-09-07T04:58:44.4899390Z boost-function-types:arm64-ios@1.88.0 package ABI: ffd57ffb5b8476879143c6fc172a52bafaf7acb497798b9bd95829d57f398a48
+2026-09-07T04:58:44.5125450Z Elapsed time to handle boost-function-types:arm64-ios: 22.7 ms
+2026-09-07T04:58:44.5125940Z Installing 38/135 boost-bind:arm64-ios@1.88.0...
+2026-09-07T04:58:44.5126500Z boost-bind:arm64-ios@1.88.0 package ABI: 237879430f40af829b3bb07ad6f258f9ece1108835769ed91180a3bcda75263d
+2026-09-07T04:58:44.5241430Z Elapsed time to handle boost-bind:arm64-ios: 10.6 ms
+2026-09-07T04:58:44.5242220Z Installing 39/135 boost-function:arm64-ios@1.88.0...
+2026-09-07T04:58:44.5242890Z boost-function:arm64-ios@1.88.0 package ABI: 24d97812b5112eed0c227f15c9d650fc7ab91a5538ebe2930ea3fc681fb0aef1
+2026-09-07T04:58:44.5337810Z Elapsed time to handle boost-function:arm64-ios: 10.5 ms
+2026-09-07T04:58:44.5339110Z Installing 40/135 boost-functional:arm64-ios@1.88.0...
+2026-09-07T04:58:44.5340830Z boost-functional:arm64-ios@1.88.0 package ABI: d69d32222960407ad9771c24fd57fc95e75fb3dcc1b7d7b2e8dc0c40fbf94144
+2026-09-07T04:58:44.5408610Z Elapsed time to handle boost-functional:arm64-ios: 7.05 ms
+2026-09-07T04:58:44.5409630Z Installing 41/135 boost-fusion:arm64-ios@1.88.0...
+2026-09-07T04:58:44.5410950Z boost-fusion:arm64-ios@1.88.0 package ABI: d7d258be3eb1c73fe0092248dbd85686818aac847d98a8ae4489c91d602b7900
+2026-09-07T04:58:44.7497880Z Elapsed time to handle boost-fusion:arm64-ios: 209 ms
+2026-09-07T04:58:44.7546030Z Installing 42/135 boost-iterator:arm64-ios@1.88.0...
+2026-09-07T04:58:44.7548420Z boost-iterator:arm64-ios@1.88.0 package ABI: 04c9a1e107406608886f81d6b3e7407e6baf6c1a1d096e0dd3193be0da5a0407
+2026-09-07T04:58:44.7665140Z Elapsed time to handle boost-iterator:arm64-ios: 16.8 ms
+2026-09-07T04:58:44.7665600Z Installing 43/135 boost-conversion:arm64-ios@1.88.0...
+2026-09-07T04:58:44.7666170Z boost-conversion:arm64-ios@1.88.0 package ABI: eb8fa81c60954ff2443000551e4c2a8b0b274527acad5e7e94537cd545d9d403
+2026-09-07T04:58:44.7759090Z Elapsed time to handle boost-conversion:arm64-ios: 8.52 ms
+2026-09-07T04:58:44.7759750Z Installing 44/135 boost-array:arm64-ios@1.88.0...
+2026-09-07T04:58:44.7760490Z boost-array:arm64-ios@1.88.0 package ABI: 216cf1ab7828297af08bd6aa397661b94129483995b9209dd662ed5e2b46e93c
+2026-09-07T04:58:44.7835710Z Elapsed time to handle boost-array:arm64-ios: 8.37 ms
+2026-09-07T04:58:44.7837580Z Installing 45/135 boost-range:arm64-ios@1.88.0...
+2026-09-07T04:58:44.7839150Z boost-range:arm64-ios@1.88.0 package ABI: 6f86b709863c4b7bd40d24151d81761f535c09803a7449979af7f4abc9cb812b
+2026-09-07T04:58:44.8224840Z Elapsed time to handle boost-range:arm64-ios: 36.9 ms
+2026-09-07T04:58:44.8225590Z Installing 46/135 boost-winapi:arm64-ios@1.88.0...
+2026-09-07T04:58:44.8226330Z boost-winapi:arm64-ios@1.88.0 package ABI: af3612ab4a4fc5caf2d76609aa746e299ce5fdf05d8a7a48d1249c55ac161730
+2026-09-07T04:58:44.8504420Z Elapsed time to handle boost-winapi:arm64-ios: 29.9 ms
+2026-09-07T04:58:44.8506210Z Installing 47/135 boost-variant2:arm64-ios@1.88.0...
+2026-09-07T04:58:44.8507080Z boost-variant2:arm64-ios@1.88.0 package ABI: 68c81f47005f57edc08aac2eb778973a95652220326ab0389e3a6b1f714c87a4
+2026-09-07T04:58:44.8587070Z Elapsed time to handle boost-variant2:arm64-ios: 8.23 ms
+2026-09-07T04:58:44.8588570Z Installing 48/135 boost-system:arm64-ios@1.88.0...
+2026-09-07T04:58:44.8589860Z boost-system:arm64-ios@1.88.0 package ABI: c1841dbd895e86f81c8069094d5a0e6b34ae2756d1e658a996833820634f61a1
+2026-09-07T04:58:44.8729900Z Elapsed time to handle boost-system:arm64-ios: 14.3 ms
+2026-09-07T04:58:44.8740040Z Installing 49/135 boost-move:arm64-ios@1.88.0...
+2026-09-07T04:58:44.8740750Z boost-move:arm64-ios@1.88.0 package ABI: 0d2cd7ab2d9e79a5e7c1e06e8fabeccee9e8fd8c22dfdd68c0b1073fba74ace7
+2026-09-07T04:58:44.8892740Z Elapsed time to handle boost-move:arm64-ios: 16.3 ms
+2026-09-07T04:58:44.8893430Z Installing 50/135 boost-dynamic-bitset:arm64-ios@1.88.0...
+2026-09-07T04:58:44.8894220Z boost-dynamic-bitset:arm64-ios@1.88.0 package ABI: a35a65071726df1d3a748601e9cfb7d138ae936bb5f64374ab2e5b7a9b7977d7
+2026-09-07T04:58:44.8993050Z Elapsed time to handle boost-dynamic-bitset:arm64-ios: 9.92 ms
+2026-09-07T04:58:44.8994020Z Installing 51/135 boost-random:arm64-ios@1.88.0...
+2026-09-07T04:58:44.8994790Z boost-random:arm64-ios@1.88.0 package ABI: bc6ee0ce2e017dd414d9473148ee58429703fbb0a5585612683001ac25e521f5
+2026-09-07T04:58:44.9256690Z Elapsed time to handle boost-random:arm64-ios: 25.2 ms
+2026-09-07T04:58:44.9276740Z Installing 52/135 boost-numeric-conversion:arm64-ios@1.88.0...
+2026-09-07T04:58:44.9278360Z boost-numeric-conversion:arm64-ios@1.88.0 package ABI: ffb74230f7004dce3df5d5369d75f60c4832d26da61a6989091e5b71ebb3b6da
+2026-09-07T04:58:44.9799610Z Elapsed time to handle boost-numeric-conversion:arm64-ios: 55.3 ms
+2026-09-07T04:58:44.9800270Z Installing 53/135 bzip2[core,tool]:arm64-ios@1.0.8#7...
+2026-09-07T04:58:44.9800900Z bzip2[core,tool]:arm64-ios@1.0.8#7 package ABI: 4bf9876c85fe45fc958de8457c123a6d867e14f2fe1d93019bd205ea648e78cf
+2026-09-07T04:58:44.9912660Z Elapsed time to handle bzip2:arm64-ios: 11.2 ms
+2026-09-07T04:58:44.9914620Z Installing 54/135 boost-iostreams[bzip2,core,lzma,zlib,zstd]:arm64-ios@1.88.0...
+2026-09-07T04:58:44.9916820Z boost-iostreams[bzip2,core,lzma,zlib,zstd]:arm64-ios@1.88.0 package ABI: a819de86f3f7596e5acea4918e1c391dfe0325e1cf1630fbb6b0534da6fd11cc
+2026-09-07T04:58:45.0235110Z Elapsed time to handle boost-iostreams:arm64-ios: 32.3 ms
+2026-09-07T04:58:45.0235730Z Installing 55/135 vcpkg-cmake-get-vars:arm64-osx@2025-05-29...
+2026-09-07T04:58:45.0236460Z vcpkg-cmake-get-vars:arm64-osx@2025-05-29 package ABI: 01dd184fd8d1ceea9b0badd99568e8a8a27654d31d92dc8d5083fd3531836d8b
+2026-09-07T04:58:45.0268750Z Elapsed time to handle vcpkg-cmake-get-vars:arm64-osx: 3.39 ms
+2026-09-07T04:58:45.0269240Z Installing 56/135 vcpkg-make:arm64-osx@2025-08-21...
+2026-09-07T04:58:45.0269810Z vcpkg-make:arm64-osx@2025-08-21 package ABI: 3060f954b010c4c4691d3b5bec55d2e9b483c8d9c48c8cb3f547b1c3927e1397
+2026-09-07T04:58:45.0314540Z Elapsed time to handle vcpkg-make:arm64-osx: 4.42 ms
+2026-09-07T04:58:45.0315550Z Installing 57/135 libiconv:arm64-ios@1.18#2...
+2026-09-07T04:58:45.0316840Z libiconv:arm64-ios@1.18#2 package ABI: f029e2083a1a28b6d8a783705e2144eaaa2b87b0f251f81f29443e4a2377d357
+2026-09-07T04:58:45.0482170Z Elapsed time to handle libiconv:arm64-ios: 12.2 ms
+2026-09-07T04:58:45.0599990Z Installing 58/135 boost-exception:arm64-ios@1.88.0...
+2026-09-07T04:58:45.0628230Z boost-exception:arm64-ios@1.88.0 package ABI: 6e0de0c59e1990664559a64e79a77dbbadc9ced769b75832e4509cdc07066d23
+2026-09-07T04:58:45.0629680Z Elapsed time to handle boost-exception:arm64-ios: 17.9 ms
+2026-09-07T04:58:45.0630640Z Installing 59/135 boost-tokenizer:arm64-ios@1.88.0...
+2026-09-07T04:58:45.0631880Z boost-tokenizer:arm64-ios@1.88.0 package ABI: 61eeb55f1130b93eda112d0796a3edf10b84e1750787be89b4716f05616a5597
+2026-09-07T04:58:45.0758200Z Elapsed time to handle boost-tokenizer:arm64-ios: 14.1 ms
+2026-09-07T04:58:45.0759430Z Installing 60/135 boost-intrusive:arm64-ios@1.88.0...
+2026-09-07T04:58:45.0760270Z boost-intrusive:arm64-ios@1.88.0 package ABI: a2b070c02ebb752a8c77fffacdce5e10a942389ed7266b0dbefe062701425a61
+2026-09-07T04:58:45.1492950Z Elapsed time to handle boost-intrusive:arm64-ios: 65.3 ms
+2026-09-07T04:58:45.1633530Z Installing 61/135 boost-container:arm64-ios@1.88.0#1...
+2026-09-07T04:58:45.1740220Z boost-container:arm64-ios@1.88.0#1 package ABI: 4d8f3bc7fbe3fec53283f26cb466f030449b3038e87e0f5e68417519a5d2de7d
+2026-09-07T04:58:45.1844470Z Elapsed time to handle boost-container:arm64-ios: 33.7 ms
+2026-09-07T04:58:45.1996700Z Installing 62/135 boost-lexical-cast:arm64-ios@1.88.0...
+2026-09-07T04:58:45.2120900Z boost-lexical-cast:arm64-ios@1.88.0 package ABI: 535511055eb9852dd8b93a0f933be573012e3b28adffe420fd2144288c0e4353
+2026-09-07T04:58:45.2223390Z Elapsed time to handle boost-lexical-cast:arm64-ios: 21 ms
+2026-09-07T04:58:45.2338580Z Installing 63/135 boost-unordered:arm64-ios@1.88.0...
+2026-09-07T04:58:45.2440200Z boost-unordered:arm64-ios@1.88.0 package ABI: efd36d3cd24ef433e11a9f2f47f782e4de66067d93e63ef1b2229e280137a680
+2026-09-07T04:58:45.2526700Z Elapsed time to handle boost-unordered:arm64-ios: 22.2 ms
+2026-09-07T04:58:45.2530440Z Installing 64/135 boost-algorithm:arm64-ios@1.88.0...
+2026-09-07T04:58:45.2531360Z boost-algorithm:arm64-ios@1.88.0 package ABI: c333911e573fd55fa4d231df7b863a5d88245f8fc5168b2c39a6c26e84eab4d3
+2026-09-07T04:58:45.2532190Z Elapsed time to handle boost-algorithm:arm64-ios: 24.9 ms
+2026-09-07T04:58:45.2532670Z Installing 65/135 boost-date-time:arm64-ios@1.88.0...
+2026-09-07T04:58:45.2533320Z boost-date-time:arm64-ios@1.88.0 package ABI: 0fd7884849a03ab932deee4205049c57eaf127a4623853f75b0a47b26375009e
+2026-09-07T04:58:45.2695500Z Elapsed time to handle boost-date-time:arm64-ios: 26.3 ms
+2026-09-07T04:58:45.2697310Z Installing 66/135 boost-ratio:arm64-ios@1.88.0...
+2026-09-07T04:58:45.2698690Z boost-ratio:arm64-ios@1.88.0 package ABI: 8b39d2c701c021067cd32899771c47b5168cdb40ab6db1aa7f16074421aa0813
+2026-09-07T04:58:45.2818140Z Elapsed time to handle boost-ratio:arm64-ios: 12.4 ms
+2026-09-07T04:58:45.2818730Z Installing 67/135 boost-chrono:arm64-ios@1.88.0...
+2026-09-07T04:58:45.2819220Z boost-chrono:arm64-ios@1.88.0 package ABI: 2cf5490b13dd2d8744b99eef49fc8b3bcc04c991962d71421985b08db29fc0ab
+2026-09-07T04:58:45.3015730Z Elapsed time to handle boost-chrono:arm64-ios: 19.7 ms
+2026-09-07T04:58:45.3016260Z Installing 68/135 boost-align:arm64-ios@1.88.0...
+2026-09-07T04:58:45.3016880Z boost-align:arm64-ios@1.88.0 package ABI: 60077274f3ce3aac94c43430a2fb901c4f5a9c3ba0aca9c729c83d8ac04a24c9
+2026-09-07T04:58:45.3199000Z Elapsed time to handle boost-align:arm64-ios: 16.7 ms
+2026-09-07T04:58:45.3230570Z Installing 69/135 boost-atomic:arm64-ios@1.88.0...
+2026-09-07T04:58:45.3231090Z boost-atomic:arm64-ios@1.88.0 package ABI: ec18e69d73880142d273def85e6114b358ded1a7ff81f835636bbadb9afdcb6a
+2026-09-07T04:58:45.3554590Z Elapsed time to handle boost-atomic:arm64-ios: 37.2 ms
+2026-09-07T04:58:45.3554940Z Installing 70/135 boost-thread:arm64-ios@1.88.0...
+2026-09-07T04:58:45.3555410Z boost-thread:arm64-ios@1.88.0 package ABI: dcd9727110f5d79fe3b12ca4f7c6a8b7c6ebb76bce428353314f65302e8f2678
+2026-09-07T04:58:45.3946040Z Elapsed time to handle boost-thread:arm64-ios: 38.8 ms
+2026-09-07T04:58:45.3947420Z Installing 71/135 boost-charconv:arm64-ios@1.88.0#1...
+2026-09-07T04:58:45.3948510Z boost-charconv:arm64-ios@1.88.0#1 package ABI: 898b131aea290ecac2983b4bc11e085cfd0d871a8db98a7e01362f22fab16bad
+2026-09-07T04:58:45.4128140Z Elapsed time to handle boost-charconv:arm64-ios: 18.2 ms
+2026-09-07T04:58:45.4129340Z Installing 72/135 boost-locale:arm64-ios@1.88.0#1...
+2026-09-07T04:58:45.4130890Z boost-locale:arm64-ios@1.88.0#1 package ABI: 8de40c51691b1ade447c5f53d9ce55059a03c0c827af64ca0b426a98296155be
+2026-09-07T04:58:45.4266770Z Elapsed time to handle boost-locale:arm64-ios: 13.9 ms
+2026-09-07T04:58:45.4303330Z Installing 73/135 boost-proto:arm64-ios@1.88.0...
+2026-09-07T04:58:45.4303820Z boost-proto:arm64-ios@1.88.0 package ABI: 700af5a0988879b1238ff18a5e606e7b19545978a707fd6876cb656b1ccdfc09
+2026-09-07T04:58:45.4631940Z Elapsed time to handle boost-proto:arm64-ios: 36.5 ms
+2026-09-07T04:58:45.4645930Z Installing 74/135 boost-phoenix:arm64-ios@1.88.0...
+2026-09-07T04:58:45.4647620Z boost-phoenix:arm64-ios@1.88.0 package ABI: 3b92d79ac2098f918efd8b4c3b9ce7bb9b414bdcb157509d28cf11fec2b50b6e
+2026-09-07T04:58:45.5328470Z Elapsed time to handle boost-phoenix:arm64-ios: 68.1 ms
+2026-09-07T04:58:45.5329040Z Installing 75/135 boost-type-index:arm64-ios@1.88.0...
+2026-09-07T04:58:45.5329950Z boost-type-index:arm64-ios@1.88.0 package ABI: fb9987eb9de889bb2a329efd267f9b148164d833058e992dde27f9ba8d97f204
+2026-09-07T04:58:45.5466530Z Elapsed time to handle boost-type-index:arm64-ios: 15.3 ms
+2026-09-07T04:58:45.5467660Z Installing 76/135 boost-variant:arm64-ios@1.88.0...
+2026-09-07T04:58:45.5469110Z boost-variant:arm64-ios@1.88.0 package ABI: 58a8fa1d84aa4904b169f9a3a23a7881ad6e130a3a3f55d509be77d47a8eef40
+2026-09-07T04:58:45.5638140Z Elapsed time to handle boost-variant:arm64-ios: 17.1 ms
+2026-09-07T04:58:45.5677770Z Installing 77/135 boost-pool:arm64-ios@1.88.0...
+2026-09-07T04:58:45.5678700Z boost-pool:arm64-ios@1.88.0 package ABI: 174788fd69b8a8c08dbea50d5f448b92081ba009e5a722355246cf7933be1248
+2026-09-07T04:58:45.5797660Z Elapsed time to handle boost-pool:arm64-ios: 16.1 ms
+2026-09-07T04:58:45.5798260Z Installing 78/135 boost-endian:arm64-ios@1.88.0...
+2026-09-07T04:58:45.5798900Z boost-endian:arm64-ios@1.88.0 package ABI: 13d5c3b7aeb166ff9572e1456c450881af973061044296c845e354a758a6a95b
+2026-09-07T04:58:45.5927250Z Elapsed time to handle boost-endian:arm64-ios: 12.9 ms
+2026-09-07T04:58:45.5927750Z Installing 79/135 boost-spirit:arm64-ios@1.88.0...
+2026-09-07T04:58:45.5928380Z boost-spirit:arm64-ios@1.88.0 package ABI: 1ea2c1c3751a0f688fa3361be11ba88aab9f3236d3a8f2362d3606901a652275
+2026-09-07T04:58:45.8816320Z Elapsed time to handle boost-spirit:arm64-ios: 279 ms
+2026-09-07T04:58:45.8917190Z Installing 80/135 vcpkg-tool-meson:arm64-osx@1.9.0...
+2026-09-07T04:58:45.8952090Z vcpkg-tool-meson:arm64-osx@1.9.0 package ABI: 2818e158e1a99392182ea1ad5e207616d57c1a30c63f750d2a69dc1da3be3a3e
+2026-09-07T04:58:45.8952970Z Elapsed time to handle vcpkg-tool-meson:arm64-osx: 6.96 ms
+2026-09-07T04:58:45.8953440Z Installing 81/135 pkgconf:arm64-osx@2.5.1#1...
+2026-09-07T04:58:45.8953990Z pkgconf:arm64-osx@2.5.1#1 package ABI: 0ab1145bdd2dc1dde511f666f98dbc12c892266c43f56fc98cfac3fe89c68577
+2026-09-07T04:58:45.8954540Z Elapsed time to handle pkgconf:arm64-osx: 10.7 ms
+2026-09-07T04:58:45.8954980Z Installing 82/135 vcpkg-pkgconfig-get-modules:arm64-osx@2024-04-03...
+2026-09-07T04:58:45.8955680Z vcpkg-pkgconfig-get-modules:arm64-osx@2024-04-03 package ABI: 0c720d408e1d9a7d1a74eef22244e19b7b89cdfcd8cfb3bb7d7c1ef66213e287
+2026-09-07T04:58:45.8956390Z Elapsed time to handle vcpkg-pkgconfig-get-modules:arm64-osx: 4.1 ms
+2026-09-07T04:58:45.8956860Z Installing 83/135 ffmpeg:arm64-ios@3.3.9#2...
+2026-09-07T04:58:45.8957420Z ffmpeg:arm64-ios@3.3.9#2 package ABI: 89b0ba90f76c6dfc678cdfab79240f6d24a83f04db5954eea6858014e2c0c226
+2026-09-07T04:58:45.9263880Z Elapsed time to handle ffmpeg:arm64-ios: 32.9 ms
+2026-09-07T04:58:45.9264630Z Installing 84/135 fmt:arm64-ios@11.2.0...
+2026-09-07T04:58:45.9265660Z fmt:arm64-ios@11.2.0 package ABI: e8c22c4085eeb1dc3282c3f7dd9fae019f551e2a204075afd00e2574cc1c45cb
+2026-09-07T04:58:45.9416590Z Elapsed time to handle fmt:arm64-ios: 15.3 ms
+2026-09-07T04:58:45.9420210Z Installing 85/135 highway:arm64-ios@1.3.0...
+2026-09-07T04:58:45.9421630Z highway:arm64-ios@1.3.0 package ABI: 56360fef1b8cf5a309b0b78b4e4825e1adb790c989fef8616914a6e1008f9818
+2026-09-07T04:58:45.9645450Z Elapsed time to handle highway:arm64-ios: 22.9 ms
+2026-09-07T04:58:45.9645970Z Installing 86/135 jxrlib:arm64-ios@2019.10.9#7...
+2026-09-07T04:58:45.9646560Z jxrlib:arm64-ios@2019.10.9#7 package ABI: 64972f2d9a3427e8ea314bac3188351cd98e9ff766d23f54a42a1c333acf8faf
+2026-09-07T04:58:45.9776630Z Elapsed time to handle jxrlib:arm64-ios: 13.1 ms
+2026-09-07T04:58:45.9777110Z Installing 87/135 libarchive:arm64-ios@3.7.7...
+2026-09-07T04:58:45.9777750Z libarchive:arm64-ios@3.7.7 package ABI: 0574bd1faadf33920946173ba98b34da4957ca574af5677b25f16921878aadf9
+2026-09-07T04:58:45.9901550Z Elapsed time to handle libarchive:arm64-ios: 12.3 ms
+2026-09-07T04:58:45.9902460Z Installing 88/135 libjpeg-turbo:arm64-ios@3.1.1...
+2026-09-07T04:58:45.9904830Z libjpeg-turbo:arm64-ios@3.1.1 package ABI: 58ce5c1762f1effa7195588442cbf57f91b289938138b8c40d66c77345416cd8
+2026-09-07T04:58:46.0063430Z Elapsed time to handle libjpeg-turbo:arm64-ios: 16.2 ms
+2026-09-07T04:58:46.0063990Z Installing 89/135 tiff[core,jpeg,lzma,zip]:arm64-ios@4.7.0...
+2026-09-07T04:58:46.0212180Z tiff[core,jpeg,lzma,zip]:arm64-ios@4.7.0 package ABI: 5e451da442c1eb4c0b4d8ab9df4cfb1f74a9b044afff1a08d93a2aa387bfdafd
+2026-09-07T04:58:46.0212700Z Elapsed time to handle tiff:arm64-ios: 14.8 ms
+2026-09-07T04:58:46.0213120Z Installing 90/135 libpng:arm64-ios@1.6.50#1...
+2026-09-07T04:58:46.0213710Z libpng:arm64-ios@1.6.50#1 package ABI: 21b2f88b9680d5eeb9f946d1b7c1944311398d1573d08f904bf4524564ef21f7
+2026-09-07T04:58:46.0377950Z Elapsed time to handle libpng:arm64-ios: 16.5 ms
+2026-09-07T04:58:46.0413300Z Installing 91/135 brotli:arm64-ios@1.1.0#2...
+2026-09-07T04:58:46.0414690Z brotli:arm64-ios@1.1.0#2 package ABI: 58b459adc0e557af52bbb88258cf4077785121670b012bb4224940a828d876e2
+2026-09-07T04:58:46.0545630Z Elapsed time to handle brotli:arm64-ios: 16.8 ms
+2026-09-07T04:58:46.0546230Z Installing 92/135 freetype[brotli,bzip2,core,png,zlib]:arm64-ios@2.13.3#1...
+2026-09-07T04:58:46.0546850Z freetype[brotli,bzip2,core,png,zlib]:arm64-ios@2.13.3#1 package ABI: 62431371f89550acf9521b99a845652b2029c352627239823296094d44f385b0
+2026-09-07T04:58:46.0765170Z Elapsed time to handle freetype:arm64-ios: 21.9 ms
+2026-09-07T04:58:46.0766070Z Installing 93/135 harfbuzz[core,freetype]:arm64-ios@11.3.3...
+2026-09-07T04:58:46.0767600Z harfbuzz[core,freetype]:arm64-ios@11.3.3 package ABI: edc82c59237af419553d26a2d067abced9215aaf15300d28ae869faa728970b4
+2026-09-07T04:58:46.0954130Z Elapsed time to handle harfbuzz:arm64-ios: 18.6 ms
+2026-09-07T04:58:46.0954930Z Installing 94/135 zlib:arm64-osx@1.3.1#1...
+2026-09-07T04:58:46.0955960Z zlib:arm64-osx@1.3.1#1 package ABI: 09808ef8412f8860274c02d8b1b2eea8eb47f5db6a5e067ffd5dbbc8ab6856de
+2026-09-07T04:58:46.1008110Z Elapsed time to handle zlib:arm64-osx: 5.66 ms
+2026-09-07T04:58:46.1009530Z Installing 95/135 pcre2[core,jit,platform-default-features]:arm64-osx@10.46#1...
+2026-09-07T04:58:46.1022940Z pcre2[core,jit,platform-default-features]:arm64-osx@10.46#1 package ABI: c8b7e20b152271768ee1ff26c0669a562bf61a34bc630675e4d995e440f28d01
+2026-09-07T04:58:46.1365250Z Elapsed time to handle pcre2:arm64-osx: 34.7 ms
+2026-09-07T04:58:46.1366480Z Installing 96/135 libiconv:arm64-osx@1.18#2...
+2026-09-07T04:58:46.1367720Z libiconv:arm64-osx@1.18#2 package ABI: 1de7b89f1da21dccd77b7a70f70ae35862a528f2c5f89c8ac48f6785c896b2fb
+2026-09-07T04:58:46.1423610Z Elapsed time to handle libiconv:arm64-osx: 6.79 ms
+2026-09-07T04:58:46.1424580Z Installing 97/135 libffi:arm64-osx@3.5.2#1...
+2026-09-07T04:58:46.1425690Z libffi:arm64-osx@3.5.2#1 package ABI: 94250df30f74ea2b173a4fe7d14265ea56edf2e75523c400ddbfb6fed0e8e893
+2026-09-07T04:58:46.1521420Z Elapsed time to handle libffi:arm64-osx: 9.79 ms
+2026-09-07T04:58:46.1521760Z Installing 98/135 gettext-libintl:arm64-osx@0.22.5#5...
+2026-09-07T04:58:46.1522680Z gettext-libintl:arm64-osx@0.22.5#5 package ABI: 2a3f2d2c623bb2e38a37bdb56b729cd0bf79b83edaf76291b6b6c0a03712ae8c
+2026-09-07T04:58:46.1595460Z Elapsed time to handle gettext-libintl:arm64-osx: 7.31 ms
+2026-09-07T04:58:46.1596860Z Installing 99/135 gettext[core,tools]:arm64-osx@0.22.5#2...
+2026-09-07T04:58:46.1598420Z gettext[core,tools]:arm64-osx@0.22.5#2 package ABI: 73b2a3ec9428d25cc254e3e54620aa0263ba0a710be03e30f1d4690a840b3fd2
+2026-09-07T04:58:46.1927570Z Elapsed time to handle gettext:arm64-osx: 33.2 ms
+2026-09-07T04:58:46.1928180Z Installing 100/135 dirent:arm64-osx@1.26...
+2026-09-07T04:58:46.1928710Z dirent:arm64-osx@1.26 package ABI: 53592a5ba16a94d47e85a9fbf40f08f0f908341de4c31de3e854f912983df7de
+2026-09-07T04:58:46.1994250Z Elapsed time to handle dirent:arm64-osx: 6.57 ms
+2026-09-07T04:58:46.1994640Z Installing 101/135 glib:arm64-osx@2.84.2#7...
+2026-09-07T04:58:46.1995090Z glib:arm64-osx@2.84.2#7 package ABI: a45365159d6ccc5d5cf0d26900bf0944c3b93200b36959fa7e27c6476d2d0bad
+2026-09-07T04:58:46.3011880Z Elapsed time to handle glib:arm64-osx: 100 ms
+2026-09-07T04:58:46.3012740Z Installing 102/135 pcre2[core,platform-default-features]:arm64-ios@10.46#1...
+2026-09-07T04:58:46.3013500Z pcre2[core,platform-default-features]:arm64-ios@10.46#1 package ABI: d6bdd7a4077cdfd832f47b4e071ff64a6d0209431e8ab4f454445a5dd28b677f
+2026-09-07T04:58:46.3303800Z Elapsed time to handle pcre2:arm64-ios: 30.5 ms
+2026-09-07T04:58:46.3305270Z Installing 103/135 libffi:arm64-ios@3.5.2#1...
+2026-09-07T04:58:46.3305910Z libffi:arm64-ios@3.5.2#1 package ABI: febbb80b5ddfef62ab1b8ececbfda916e7782c4b3ac5c7b89516c942d43bfe33
+2026-09-07T04:58:46.3447510Z Elapsed time to handle libffi:arm64-ios: 14.3 ms
+2026-09-07T04:58:46.3448360Z Installing 104/135 gettext-libintl:arm64-ios@0.22.5#5...
+2026-09-07T04:58:46.3449600Z gettext-libintl:arm64-ios@0.22.5#5 package ABI: 9cf37d0ff82a6b7f618034ab464a5751f83be485bda3c9060795e633f5258ab6
+2026-09-07T04:58:46.3578190Z Elapsed time to handle gettext-libintl:arm64-ios: 13 ms
+2026-09-07T04:58:46.3579050Z Installing 105/135 dirent:arm64-ios@1.26...
+2026-09-07T04:58:46.3580120Z dirent:arm64-ios@1.26 package ABI: e59658685c10d24fae4a1541ed3213f4bdd5c741fa558484fa86755b40a88eb6
+2026-09-07T04:58:46.3711670Z Elapsed time to handle dirent:arm64-ios: 13.4 ms
+2026-09-07T04:58:46.3712030Z Installing 106/135 glib:arm64-ios@2.84.2#7...
+2026-09-07T04:58:46.3712510Z glib:arm64-ios@2.84.2#7 package ABI: b681b4090760a231c3d9076803fa87dfbcf0e5b3c0ef14bdcb505c96abf3623b
+2026-09-07T04:58:46.4795580Z Elapsed time to handle glib:arm64-ios: 108 ms
+2026-09-07T04:58:46.4801640Z Installing 107/135 fribidi:arm64-osx@1.0.16...
+2026-09-07T04:58:46.4802280Z fribidi:arm64-osx@1.0.16 package ABI: ddd90734dad9cc9994a5ef19c1d6652f71b7292f9fc5f63e15e14cbc8f65fea8
+2026-09-07T04:58:46.4918920Z Elapsed time to handle fribidi:arm64-osx: 11.6 ms
+2026-09-07T04:58:46.4954030Z Installing 108/135 fribidi:arm64-ios@1.0.16...
+2026-09-07T04:58:46.4955520Z fribidi:arm64-ios@1.0.16 package ABI: f87fa6e2696138644655cf06ca99f93aa56b36661c4f43054c4bdd771c29b5a9
+2026-09-07T04:58:46.5085630Z Elapsed time to handle fribidi:arm64-ios: 17.5 ms
+2026-09-07T04:58:46.5086040Z Installing 109/135 pthreads:arm64-ios@3.0.0#14...
+2026-09-07T04:58:46.5086500Z pthreads:arm64-ios@3.0.0#14 package ABI: 4d1442456ebc332897bec7c374e9dec41566e723dfc1a6f1f5a7b5dcc8364e9e
+2026-09-07T04:58:46.5193960Z Elapsed time to handle pthreads:arm64-ios: 10.7 ms
+2026-09-07T04:58:46.5194760Z Installing 110/135 pthread:arm64-ios@3.0.0#2...
+2026-09-07T04:58:46.5195870Z pthread:arm64-ios@3.0.0#2 package ABI: 4edf0a08f91df06f0e252f7b121b8e9f52a0f106b1205358767fd244cad15aaf
+2026-09-07T04:58:46.5307040Z Elapsed time to handle pthread:arm64-ios: 11.3 ms
+2026-09-07T04:58:46.5307900Z Installing 111/135 libuuid:arm64-ios@1.0.3#15...
+2026-09-07T04:58:46.5309020Z libuuid:arm64-ios@1.0.3#15 package ABI: f65e77739e86734bf9fd7ced0730199c8c5982ef23d04589ad16b96113f51fe0
+2026-09-07T04:58:46.5451370Z Elapsed time to handle libuuid:arm64-ios: 14.4 ms
+2026-09-07T04:58:46.5459710Z Installing 112/135 gperf:arm64-osx@3.3...
+2026-09-07T04:58:46.5460590Z gperf:arm64-osx@3.3 package ABI: 92d2f6573e8e2108c9ca0e17018083c3d94d2b1ba2add129a9bbc0686b600dbc
+2026-09-07T04:58:46.5516020Z Elapsed time to handle gperf:arm64-osx: 6.37 ms
+2026-09-07T04:58:46.5519750Z Installing 113/135 expat:arm64-ios@2.7.1#1...
+2026-09-07T04:58:46.5521240Z expat:arm64-ios@2.7.1#1 package ABI: 7e9811312f38507bcc65bace4bcbff13fbca9da79deec7798a911f9a98cf22c6
+2026-09-07T04:58:46.5661440Z Elapsed time to handle expat:arm64-ios: 14.3 ms
+2026-09-07T04:58:46.5662430Z Installing 114/135 fontconfig:arm64-ios@2.15.0#4...
+2026-09-07T04:58:46.5663620Z fontconfig:arm64-ios@2.15.0#4 package ABI: a41a186fa33cb44897142ccadbc49b24a03fc12b4bfc239b2fdab516d3671954
+2026-09-07T04:58:46.5909500Z Elapsed time to handle fontconfig:arm64-ios: 24.9 ms
+2026-09-07T04:58:46.5910300Z Installing 115/135 pixman:arm64-ios@0.44.2...
+2026-09-07T04:58:46.5911540Z pixman:arm64-ios@0.44.2 package ABI: 38d263ecab7adfb484230485e86cfb39ed988be28aa16b157ae6bedb4e3c4873
+2026-09-07T04:58:46.6055100Z Elapsed time to handle pixman:arm64-ios: 14.7 ms
+2026-09-07T04:58:46.6055750Z Installing 116/135 cairo[core,fontconfig,freetype,gobject]:arm64-ios@1.18.4#1...
+2026-09-07T04:58:46.6056580Z cairo[core,fontconfig,freetype,gobject]:arm64-ios@1.18.4#1 package ABI: 5514d32a2d1da5fc99a5ea4365b7004554aa19031f7587225323bf1b758d0184
+2026-09-07T04:58:46.6341150Z Elapsed time to handle cairo:arm64-ios: 28.3 ms
+2026-09-07T04:58:46.6345000Z Installing 117/135 pango:arm64-ios@1.56.1#2...
+2026-09-07T04:58:46.6346350Z pango:arm64-ios@1.56.1#2 package ABI: 88aed527715ec62362e90b37b511ba97642fbefd8a6e7654e693fd9e7860ee40
+2026-09-07T04:58:46.6726970Z Elapsed time to handle pango:arm64-ios: 38.9 ms
+2026-09-07T04:58:46.6755230Z Installing 118/135 libexif:arm64-ios@0.6.25...
+2026-09-07T04:58:46.6755890Z libexif:arm64-ios@0.6.25 package ABI: 8bd7b337ce236f55c9ac076ae55791ccf205abc8fcb5d5a351c73e9b3906187e
+2026-09-07T04:58:46.6888230Z Elapsed time to handle libexif:arm64-ios: 16 ms
+2026-09-07T04:58:46.6889350Z Installing 119/135 libgdiplus:arm64-ios@5.6.1#5...
+2026-09-07T04:58:46.6890840Z libgdiplus:arm64-ios@5.6.1#5 package ABI: 9bdc13c151f3802631ddad40ce5dcf9ff9c8eceb56bb647e9027a00a6549ba21
+2026-09-07T04:58:46.7125800Z Elapsed time to handle libgdiplus:arm64-ios: 23.8 ms
+2026-09-07T04:58:46.7138990Z Installing 120/135 libogg:arm64-ios@1.3.6#1...
+2026-09-07T04:58:46.7140360Z libogg:arm64-ios@1.3.6#1 package ABI: 7814b14400acc35c43fb2f9bf94dc39c76dfa7cb5203e861ee1298932aed560f
+2026-09-07T04:58:46.7266660Z Elapsed time to handle libogg:arm64-ios: 14 ms
+2026-09-07T04:58:46.7267930Z Installing 121/135 libvorbis:arm64-ios@1.3.7#4...
+2026-09-07T04:58:46.7269340Z libvorbis:arm64-ios@1.3.7#4 package ABI: b3dea00b0d6fddfc93a451b450a335808c9a623325b8f2d31da4d1be171b6b92
+2026-09-07T04:58:46.7432590Z Elapsed time to handle libvorbis:arm64-ios: 16.3 ms
+2026-09-07T04:58:46.7435760Z Installing 122/135 libwebp[core,libwebpmux,nearlossless,simd]:arm64-ios@1.6.0#1...
+2026-09-07T04:58:46.7438020Z libwebp[core,libwebpmux,nearlossless,simd]:arm64-ios@1.6.0#1 package ABI: 45b0bfb9b82d9851ab67d6ecf243cc29597d6a0ddc972dda04b49010721b20bb
+2026-09-07T04:58:46.7661710Z Elapsed time to handle libwebp:arm64-ios: 23.1 ms
+2026-09-07T04:58:46.7663120Z Installing 123/135 libxml2[core,iconv,zlib]:arm64-ios@2.14.5#1...
+2026-09-07T04:58:46.7665000Z libxml2[core,iconv,zlib]:arm64-ios@2.14.5#1 package ABI: 2b2a785273e88d4a0bb0c07e7b2b38c48a86dd88ae264e50e614ed873529c0a0
+2026-09-07T04:58:46.7860010Z Elapsed time to handle libxml2:arm64-ios: 19.8 ms
+2026-09-07T04:58:46.7861440Z Installing 124/135 lz4:arm64-ios@1.10.0...
+2026-09-07T04:58:46.7862000Z lz4:arm64-ios@1.10.0 package ABI: 0447c6f938b53c0f6cf000a274fda657d3ff0ad30ed30d5dc6762727d33c7a95
+2026-09-07T04:58:46.8027710Z Elapsed time to handle lz4:arm64-ios: 16.7 ms
+2026-09-07T04:58:46.8028990Z Installing 125/135 minizip:arm64-ios@1.3.1#1...
+2026-09-07T04:58:46.8032990Z minizip:arm64-ios@1.3.1#1 package ABI: cdff0be75f148da51f0f93b23b16b493c8c8abc1c07bb2c0e775760baa4e4e02
+2026-09-07T04:58:46.8177600Z Elapsed time to handle minizip:arm64-ios: 15 ms
+2026-09-07T04:58:46.8179240Z Installing 126/135 oniguruma:arm64-ios@6.9.10...
+2026-09-07T04:58:46.8180430Z oniguruma:arm64-ios@6.9.10 package ABI: b92dd5fe9f7a700aed9f46e4ca7b0d5d6c5deb8b31e992f4dc95d07822b02be8
+2026-09-07T04:58:46.8375870Z Elapsed time to handle oniguruma:arm64-ios: 19.9 ms
+2026-09-07T04:58:46.8376230Z Installing 127/135 openal-soft:arm64-ios@1.24.3#1...
+2026-09-07T04:58:46.8376770Z openal-soft:arm64-ios@1.24.3#1 package ABI: 319b1e6b4ec0893d5c6974c78a2bd9e0ed500514599e3957dd35d2fd44392359
+2026-09-07T04:58:46.8524720Z Elapsed time to handle openal-soft:arm64-ios: 14.8 ms
+2026-09-07T04:58:46.8525190Z Installing 128/135 opencv4:arm64-ios@4.7.0#6...
+2026-09-07T04:58:46.8525790Z opencv4:arm64-ios@4.7.0#6 package ABI: 5250aa194fe992b7dc9ddea5b7ae194a3cbeac96c6448473bbce73001f239114
+2026-09-07T04:58:46.9034120Z Elapsed time to handle opencv4:arm64-ios: 50.8 ms
+2026-09-07T04:58:46.9037380Z Installing 129/135 opus:arm64-ios@1.5.2...
+2026-09-07T04:58:46.9039140Z opus:arm64-ios@1.5.2 package ABI: 45358175523f2f09aa8d553457c2f8da7651d31cc14f75c07931bf2d4c51d4cd
+2026-09-07T04:58:46.9193170Z Elapsed time to handle opus:arm64-ios: 16 ms
+2026-09-07T04:58:46.9193960Z Installing 130/135 opusfile:arm64-ios@0.12+20221121#1...
+2026-09-07T04:58:46.9195180Z opusfile:arm64-ios@0.12+20221121#1 package ABI: 84c447d89327d7622d8522c1011a4be714f92825ed3297577384be5bf883daa9
+2026-09-07T04:58:46.9351630Z Elapsed time to handle opusfile:arm64-ios: 15.9 ms
+2026-09-07T04:58:46.9352040Z Installing 131/135 sdl2:arm64-ios@2.32.10...
+2026-09-07T04:58:46.9352470Z sdl2:arm64-ios@2.32.10 package ABI: 8c6aeb2223a9cbd94ce0b79d0a090f478a6a11a7e8ead966c0c3a730c60d204b
+2026-09-07T04:58:46.9668500Z Elapsed time to handle sdl2:arm64-ios: 31.5 ms
+2026-09-07T04:58:46.9669630Z Installing 132/135 spdlog:arm64-ios@1.15.3...
+2026-09-07T04:58:46.9671070Z spdlog:arm64-ios@1.15.3 package ABI: 613f6eb43f0df956de1339dc96d97cff1148fbf0575c57964a15e3dbb57d566b
+2026-09-07T04:58:46.9991520Z Elapsed time to handle spdlog:arm64-ios: 32.2 ms
+2026-09-07T04:58:46.9999460Z Installing 133/135 tinyxml2:arm64-ios@11.0.0...
+2026-09-07T04:58:47.0000870Z tinyxml2:arm64-ios@11.0.0 package ABI: 537889ec84144dc387994007cd1e638cb08efb40dcfe1081009d289d25bd7c4d
+2026-09-07T04:58:47.0155550Z Elapsed time to handle tinyxml2:arm64-ios: 16.4 ms
+2026-09-07T04:58:47.0156090Z Installing 134/135 uchardet:arm64-ios@0.0.8...
+2026-09-07T04:58:47.0156680Z uchardet:arm64-ios@0.0.8 package ABI: 22bccf9393f0c564c587e8aaae0eb67d0d1b1e9dceb2a8650eab470849f7967c
+2026-09-07T04:58:47.0303090Z Elapsed time to handle uchardet:arm64-ios: 14.7 ms
+2026-09-07T04:58:47.0303930Z Installing 135/135 unrar:arm64-ios@6.0.7#1...
+2026-09-07T04:58:47.0305000Z unrar:arm64-ios@6.0.7#1 package ABI: efb7a3cb066d2595b625313e3d4f42ab476b5398814c91c2643f01c2205b8a8d
+2026-09-07T04:58:47.0519020Z Elapsed time to handle unrar:arm64-ios: 21.7 ms
+2026-09-07T04:58:47.0783680Z Installed contents are licensed to you by owners. Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+2026-09-07T04:58:47.0786420Z Some packages did not declare an SPDX license. Check the `copyright` file for each package for more information about their licensing.
+2026-09-07T04:58:47.0787780Z Packages installed in this vcpkg installation declare the following licenses:
+2026-09-07T04:58:47.0788300Z (BSD-3-Clause OR GPL-2.0-only)
+2026-09-07T04:58:47.0788650Z (FTL OR GPL-2.0-or-later)
+2026-09-07T04:58:47.0788950Z (LGPL-2.1-only OR MPL-1.1)
+2026-09-07T04:58:47.0789220Z Apache-2.0
+2026-09-07T04:58:47.0789450Z BSD-1-Clause
+2026-09-07T04:58:47.0789690Z BSD-2-Clause
+2026-09-07T04:58:47.0789920Z BSD-3-Clause
+2026-09-07T04:58:47.0790160Z BSL-1.0
+2026-09-07T04:58:47.0790380Z GPL-2.0
+2026-09-07T04:58:47.0790650Z GPL-3.0-only
+2026-09-07T04:58:47.0790920Z GPL-3.0-or-later
+2026-09-07T04:58:47.0792320Z LGPL-2.0-or-later
+2026-09-07T04:58:47.0792580Z LGPL-2.1-or-later
+2026-09-07T04:58:47.0792830Z MIT
+2026-09-07T04:58:47.0793360Z MIT-Modern-Variant
+2026-09-07T04:58:47.0793620Z MPL-1.1
+2026-09-07T04:58:47.0793840Z Zlib
+2026-09-07T04:58:47.0794060Z bzip2-1.0.6
+2026-09-07T04:58:47.0794730Z libpng-2.0
+2026-09-07T04:58:47.0795040Z libtiff
+2026-09-07T04:58:47.0795310Z 7zip provides CMake targets:
+2026-09-07T04:58:47.0796030Z 
+2026-09-07T04:58:47.0796290Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0796710Z   find_package(7zip CONFIG REQUIRED)
+2026-09-07T04:58:47.0812540Z   target_link_libraries(main PRIVATE 7zip::7zip)
+2026-09-07T04:58:47.0813970Z 
+2026-09-07T04:58:47.0814400Z The package angle provides unofficial CMake targets:
+2026-09-07T04:58:47.0814880Z 
+2026-09-07T04:58:47.0815090Z     find_package(unofficial-angle REQUIRED CONFIG)
+2026-09-07T04:58:47.0815720Z     target_link_libraries(main PRIVATE unofficial::angle::libGLESv2)
+2026-09-07T04:58:47.0816410Z 
+2026-09-07T04:58:47.0816620Z     # Or use the EGL target
+2026-09-07T04:58:47.0816990Z     find_package(unofficial-angle REQUIRED CONFIG)
+2026-09-07T04:58:47.0818120Z     target_link_libraries(main PRIVATE unofficial::angle::libEGL)
+2026-09-07T04:58:47.0818440Z 
+2026-09-07T04:58:47.0818610Z zstd provides CMake targets:
+2026-09-07T04:58:47.0818830Z 
+2026-09-07T04:58:47.0819100Z   find_package(zstd CONFIG REQUIRED)
+2026-09-07T04:58:47.0819560Z   target_link_libraries(main PRIVATE zstd::libzstd)
+2026-09-07T04:58:47.0819830Z 
+2026-09-07T04:58:47.0820620Z boost-iostreams provides CMake targets:
+2026-09-07T04:58:47.0821400Z 
+2026-09-07T04:58:47.0822100Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0823170Z   find_package(boost_iostreams CONFIG REQUIRED)
+2026-09-07T04:58:47.0823530Z   target_link_libraries(main PRIVATE Boost::iostreams)
+2026-09-07T04:58:47.0823720Z 
+2026-09-07T04:58:47.0823800Z boost-locale provides CMake targets:
+2026-09-07T04:58:47.0823960Z 
+2026-09-07T04:58:47.0824090Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0824380Z   find_package(boost_locale CONFIG REQUIRED)
+2026-09-07T04:58:47.0824680Z   target_link_libraries(main PRIVATE Boost::locale)
+2026-09-07T04:58:47.0824890Z 
+2026-09-07T04:58:47.0824980Z boost-phoenix provides CMake targets:
+2026-09-07T04:58:47.0825140Z 
+2026-09-07T04:58:47.0825280Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0825670Z   find_package(boost_phoenix CONFIG REQUIRED)
+2026-09-07T04:58:47.0825980Z   target_link_libraries(main PRIVATE Boost::phoenix)
+2026-09-07T04:58:47.0826180Z 
+2026-09-07T04:58:47.0826260Z boost-spirit provides CMake targets:
+2026-09-07T04:58:47.0826430Z 
+2026-09-07T04:58:47.0826550Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0826860Z   find_package(boost_spirit CONFIG REQUIRED)
+2026-09-07T04:58:47.0827130Z   target_link_libraries(main PRIVATE Boost::spirit)
+2026-09-07T04:58:47.0828130Z 
+2026-09-07T04:58:47.0828510Z To use ffmpeg add the following to your CMake project:
+2026-09-07T04:58:47.0829030Z 
+2026-09-07T04:58:47.0829250Z     find_package(FFMPEG REQUIRED)
+2026-09-07T04:58:47.0830030Z     target_include_directories(main PRIVATE ${FFMPEG_INCLUDE_DIRS})
+2026-09-07T04:58:47.0830830Z     target_link_directories(main PRIVATE ${FFMPEG_LIBRARIES})
+2026-09-07T04:58:47.0831070Z 
+2026-09-07T04:58:47.0831180Z The package fmt provides CMake targets:
+2026-09-07T04:58:47.0831390Z 
+2026-09-07T04:58:47.0831500Z     find_package(fmt CONFIG REQUIRED)
+2026-09-07T04:58:47.0831770Z     target_link_libraries(main PRIVATE fmt::fmt)
+2026-09-07T04:58:47.0831950Z 
+2026-09-07T04:58:47.0832020Z     # Or use the header-only version
+2026-09-07T04:58:47.0832270Z     find_package(fmt CONFIG REQUIRED)
+2026-09-07T04:58:47.0832550Z     target_link_libraries(main PRIVATE fmt::fmt-header-only)
+2026-09-07T04:58:47.0832770Z 
+2026-09-07T04:58:47.0832840Z highway provides CMake targets:
+2026-09-07T04:58:47.0832980Z 
+2026-09-07T04:58:47.0833060Z     find_package(hwy CONFIG REQUIRED)
+2026-09-07T04:58:47.0833300Z     target_link_libraries(main PRIVATE hwy::hwy)
+2026-09-07T04:58:47.0833480Z 
+2026-09-07T04:58:47.0833610Z The package jxrlib provides CMake integration:
+2026-09-07T04:58:47.0833790Z 
+2026-09-07T04:58:47.0833880Z     find_package(JXR REQUIRED)
+2026-09-07T04:58:47.0834610Z     target_include_directories(main PRIVATE ${JXR_INCLUDE_DIRS})
+2026-09-07T04:58:47.0834980Z     target_link_libraries(main PRIVATE ${JXR_LIBRARIES})
+2026-09-07T04:58:47.0835220Z 
+2026-09-07T04:58:47.0835360Z libarchive is compatible with the CMake Find Module:
+2026-09-07T04:58:47.0835550Z 
+2026-09-07T04:58:47.0835630Z   find_package(LibArchive REQUIRED)
+2026-09-07T04:58:47.0835960Z   target_link_libraries(main PRIVATE LibArchive::LibArchive) # since CMake 3.17
+2026-09-07T04:58:47.0836230Z 
+2026-09-07T04:58:47.0836310Z libarchive provides pkg-config modules:
+2026-09-07T04:58:47.0836470Z 
+2026-09-07T04:58:47.0836630Z   # library that can create and read several streaming archive formats
+2026-09-07T04:58:47.0839430Z   libarchive
+2026-09-07T04:58:47.0839540Z 
+2026-09-07T04:58:47.0839730Z libjpeg-turbo is compatible with built-in implementation-agnostic CMake targets:
+2026-09-07T04:58:47.0840580Z 
+2026-09-07T04:58:47.0840680Z     find_package(JPEG REQUIRED)
+2026-09-07T04:58:47.0840960Z     target_link_libraries(main PRIVATE JPEG::JPEG)
+2026-09-07T04:58:47.0841150Z 
+2026-09-07T04:58:47.0841290Z libjpeg-turbo provides CMake targets for the TurboJPEG C API:
+2026-09-07T04:58:47.0841510Z 
+2026-09-07T04:58:47.0841630Z     find_package(libjpeg-turbo CONFIG REQUIRED)
+2026-09-07T04:58:47.0842370Z     target_link_libraries(main PRIVATE $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>)
+2026-09-07T04:58:47.0844720Z 
+2026-09-07T04:58:47.0844830Z libpng provides CMake targets:
+2026-09-07T04:58:47.0845030Z 
+2026-09-07T04:58:47.0845120Z   find_package(PNG REQUIRED)
+2026-09-07T04:58:47.0845440Z   target_link_libraries(main PRIVATE PNG::PNG)
+2026-09-07T04:58:47.0845920Z 
+2026-09-07T04:58:47.0847290Z To use libgdiplus add the following to your CMake project:
+2026-09-07T04:58:47.0847900Z 
+2026-09-07T04:58:47.0848180Z     find_package(libgdiplus CONFIG REQUIRED)
+2026-09-07T04:58:47.0849080Z     target_include_directories(main PRIVATE libgdiplus::libgdiplus)
+2026-09-07T04:58:47.0850440Z 
+2026-09-07T04:58:47.0850630Z The package libvorbis provides CMake targets:
+2026-09-07T04:58:47.0850880Z 
+2026-09-07T04:58:47.0851060Z     # Vorbis reference encoder and decoder, low-level API
+2026-09-07T04:58:47.0851380Z     find_package(Vorbis CONFIG REQUIRED)
+2026-09-07T04:58:47.0851680Z     target_link_libraries(main PRIVATE Vorbis::vorbis)
+2026-09-07T04:58:47.0851870Z 
+2026-09-07T04:58:47.0852030Z     # Audio stream decoding and basic manipulation, high-level API
+2026-09-07T04:58:47.0852430Z     find_package(Vorbis CONFIG REQUIRED)
+2026-09-07T04:58:47.0852770Z     target_link_libraries(main PRIVATE Vorbis::vorbisfile)
+2026-09-07T04:58:47.0853000Z 
+2026-09-07T04:58:47.0853160Z     # Convenience API for setting up an encoding environment
+2026-09-07T04:58:47.0853520Z     find_package(Vorbis CONFIG REQUIRED)
+2026-09-07T04:58:47.0853860Z     target_link_libraries(main PRIVATE Vorbis::vorbisenc)
+2026-09-07T04:58:47.0854080Z 
+2026-09-07T04:58:47.0854160Z libwebp provides CMake targets:
+2026-09-07T04:58:47.0854300Z 
+2026-09-07T04:58:47.0854380Z     find_package(WebP CONFIG REQUIRED)
+2026-09-07T04:58:47.0854590Z     # basic usage
+2026-09-07T04:58:47.0854910Z     target_link_libraries(main PRIVATE WebP::webp WebP::webpdecoder WebP::webpdemux)
+2026-09-07T04:58:47.0855460Z     # for manipulating the WebP graphics format container (port feature libwebpmux)
+2026-09-07T04:58:47.0855940Z     target_link_libraries(main PRIVATE WebP::libwebpmux)
+2026-09-07T04:58:47.0856270Z     # for sharp RGB to YUV conversion
+2026-09-07T04:58:47.0856580Z     target_link_libraries(main PRIVATE WebP::sharpyuv)
+2026-09-07T04:58:47.0857240Z 
+2026-09-07T04:58:47.0857440Z The package libxml2 is compatible with built-in CMake targets:
+2026-09-07T04:58:47.0857700Z 
+2026-09-07T04:58:47.0857780Z     find_package(LibXml2 REQUIRED)
+2026-09-07T04:58:47.0858070Z     target_link_libraries(main PRIVATE LibXml2::LibXml2)
+2026-09-07T04:58:47.0858260Z 
+2026-09-07T04:58:47.0858330Z lz4 provides CMake targets:
+2026-09-07T04:58:47.0859260Z 
+2026-09-07T04:58:47.0859360Z   find_package(lz4 CONFIG REQUIRED)
+2026-09-07T04:58:47.0859630Z   target_link_libraries(main PRIVATE lz4::lz4)
+2026-09-07T04:58:47.0859830Z 
+2026-09-07T04:58:47.0859900Z lz4 provides pkg-config modules:
+2026-09-07T04:58:47.0860040Z 
+2026-09-07T04:58:47.0860100Z   liblz4
+2026-09-07T04:58:47.0860170Z 
+2026-09-07T04:58:47.0860250Z minizip provides CMake targets:
+2026-09-07T04:58:47.0860380Z 
+2026-09-07T04:58:47.0860500Z     find_package(unofficial-minizip CONFIG REQUIRED)
+2026-09-07T04:58:47.0860860Z     target_link_libraries(main PRIVATE unofficial::minizip::minizip)
+2026-09-07T04:58:47.0861150Z 
+2026-09-07T04:58:47.0861230Z oniguruma provides CMake targets:
+2026-09-07T04:58:47.0861380Z 
+2026-09-07T04:58:47.0861520Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0861810Z   find_package(oniguruma CONFIG REQUIRED)
+2026-09-07T04:58:47.0862260Z   target_link_libraries(main PRIVATE oniguruma::onig)
+2026-09-07T04:58:47.0862450Z 
+2026-09-07T04:58:47.0862540Z oniguruma provides pkg-config modules:
+2026-09-07T04:58:47.0862690Z 
+2026-09-07T04:58:47.0862770Z   # Regular expression library
+2026-09-07T04:58:47.0862960Z   oniguruma
+2026-09-07T04:58:47.0863040Z 
+2026-09-07T04:58:47.0863120Z openal-soft provides CMake targets:
+2026-09-07T04:58:47.0863270Z 
+2026-09-07T04:58:47.0863400Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0863670Z   find_package(OpenAL CONFIG REQUIRED)
+2026-09-07T04:58:47.0863930Z   target_link_libraries(main PRIVATE OpenAL::OpenAL)
+2026-09-07T04:58:47.0864120Z 
+2026-09-07T04:58:47.0864210Z openal-soft provides pkg-config modules:
+2026-09-07T04:58:47.0864370Z 
+2026-09-07T04:58:47.0864460Z   # OpenAL is a cross-platform 3D audio API
+2026-09-07T04:58:47.0864690Z   openal
+2026-09-07T04:58:47.0875220Z 
+2026-09-07T04:58:47.0876160Z If you do not install the meta-port *opencv*, the package opencv4 is compatible with CMake
+2026-09-07T04:58:47.0876980Z if you set the OpenCV_DIR *before* the find_package call
+2026-09-07T04:58:47.0877190Z 
+2026-09-07T04:58:47.0877340Z     set(OpenCV_DIR "${VCPKG_INSTALLED_DIR}/arm64-ios/share/opencv4")
+2026-09-07T04:58:47.0877650Z     find_package(OpenCV REQUIRED)
+2026-09-07T04:58:47.0877790Z 
+2026-09-07T04:58:47.0877880Z The package opusfile provides CMake targets:
+2026-09-07T04:58:47.0878060Z 
+2026-09-07T04:58:47.0878140Z     find_package(OpusFile CONFIG REQUIRED)
+2026-09-07T04:58:47.0878440Z     target_link_libraries(main PRIVATE OpusFile::opusfile)
+2026-09-07T04:58:47.0878640Z 
+2026-09-07T04:58:47.0879360Z     # To use the opusurl API
+2026-09-07T04:58:47.0879740Z     target_link_libraries(main PRIVATE OpusFile::opusurl)
+2026-09-07T04:58:47.0879990Z 
+2026-09-07T04:58:47.0880070Z sdl2 provides CMake targets:
+2026-09-07T04:58:47.0880210Z 
+2026-09-07T04:58:47.0880290Z     find_package(SDL2 CONFIG REQUIRED)
+2026-09-07T04:58:47.0880510Z     target_link_libraries(main
+2026-09-07T04:58:47.0880710Z         PRIVATE
+2026-09-07T04:58:47.0880890Z         $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+2026-09-07T04:58:47.0881220Z         $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+2026-09-07T04:58:47.0881560Z     )
+2026-09-07T04:58:47.0881640Z 
+2026-09-07T04:58:47.0881730Z The package spdlog provides CMake targets:
+2026-09-07T04:58:47.0881910Z 
+2026-09-07T04:58:47.0882010Z     find_package(spdlog CONFIG REQUIRED)
+2026-09-07T04:58:47.0882350Z     target_link_libraries(main PRIVATE spdlog::spdlog)
+2026-09-07T04:58:47.0882540Z 
+2026-09-07T04:58:47.0882620Z     # Or use the header-only version
+2026-09-07T04:58:47.0882870Z     find_package(spdlog CONFIG REQUIRED)
+2026-09-07T04:58:47.0883190Z     target_link_libraries(main PRIVATE spdlog::spdlog_header_only)
+2026-09-07T04:58:47.0883410Z 
+2026-09-07T04:58:47.0883480Z tinyxml2 provides CMake targets:
+2026-09-07T04:58:47.0883630Z 
+2026-09-07T04:58:47.0883750Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0884040Z   find_package(tinyxml2 CONFIG REQUIRED)
+2026-09-07T04:58:47.0884990Z   target_link_libraries(main PRIVATE tinyxml2::tinyxml2)
+2026-09-07T04:58:47.0885280Z 
+2026-09-07T04:58:47.0885380Z tinyxml2 provides pkg-config modules:
+2026-09-07T04:58:47.0885580Z 
+2026-09-07T04:58:47.0885650Z   # simple, small, C++ XML parser
+2026-09-07T04:58:47.0886200Z   tinyxml2
+2026-09-07T04:58:47.0886290Z 
+2026-09-07T04:58:47.0886360Z uchardet provides CMake targets:
+2026-09-07T04:58:47.0886510Z 
+2026-09-07T04:58:47.0886660Z   # this is heuristically generated, and may not be correct
+2026-09-07T04:58:47.0886990Z   find_package(uchardet CONFIG REQUIRED)
+2026-09-07T04:58:47.0887280Z   target_link_libraries(main PRIVATE uchardet::libuchardet)
+2026-09-07T04:58:47.0887490Z 
+2026-09-07T04:58:47.0887570Z uchardet provides pkg-config modules:
+2026-09-07T04:58:47.0887720Z 
+2026-09-07T04:58:47.0887830Z   # An encoding detector library ported from Mozilla
+2026-09-07T04:58:47.0888070Z   uchardet
+2026-09-07T04:58:47.0888260Z 
+2026-09-07T04:58:47.0888360Z unrar is compatible with the CMake Find Module:
+2026-09-07T04:58:47.0888560Z 
+2026-09-07T04:58:47.0889240Z   find_package(unrar CONFIG REQUIRED)
+2026-09-07T04:58:47.0890140Z   target_link_libraries(main PRIVATE unrar::unrar)
+2026-09-07T04:58:47.0890470Z All requested installations completed successfully in: 3.3 s
+2026-09-07T04:58:47.0904010Z -- Running vcpkg install - done
+2026-09-07T04:58:47.2615890Z -- The C compiler identification is AppleClang 17.0.0.17000013
+2026-09-07T04:58:47.4359630Z -- The CXX compiler identification is AppleClang 17.0.0.17000013
+2026-09-07T04:58:47.4686800Z -- Detecting C compiler ABI info
+2026-09-07T04:58:47.5922640Z -- Detecting C compiler ABI info - done
+2026-09-07T04:58:47.6358720Z -- Check for working C compiler: /usr/bin/clang - skipped
+2026-09-07T04:58:47.6360290Z -- Detecting C compile features
+2026-09-07T04:58:47.6364710Z -- Detecting C compile features - done
+2026-09-07T04:58:47.6421610Z -- Detecting CXX compiler ABI info
+2026-09-07T04:58:47.7687050Z -- Detecting CXX compiler ABI info - done
+2026-09-07T04:58:47.8129180Z -- Check for working CXX compiler: /usr/bin/clang++ - skipped
+2026-09-07T04:58:47.8131050Z -- Detecting CXX compile features
+2026-09-07T04:58:47.8137040Z -- Detecting CXX compile features - done
+2026-09-07T04:58:48.0176240Z -- Found FFMPEG: optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libavfilter.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libavfilter.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libavformat.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libavformat.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libavcodec.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libavcodec.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libswresample.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libswresample.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libswscale.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libswscale.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libavutil.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libavutil.a;optimized;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/QuartzCore.framework;optimized;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/VideoToolbox.framework;optimized;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/CoreVideo.framework;optimized;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/CoreFoundation.framework;optimized;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/AudioToolbox.framework;optimized;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/CoreMedia.framework;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libiconv.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/liblzma.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libbz2.a;optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libz.a;optimized;-pthread;optimized;m;debug;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/QuartzCore.framework;debug;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/VideoToolbox.framework;debug;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/CoreVideo.framework;debug;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/CoreFoundation.framework;debug;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/AudioToolbox.framework;debug;/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk/System/Library/Frameworks/CoreMedia.framework;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libiconv.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/liblzma.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libbz2.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libz.a;debug;-pthread;debug;m
+2026-09-07T04:58:51.4884890Z '/opt/homebrew/opt/bison/bin/bison' '/Users/runner/work/PocketKrKr/PocketKrKr/cpp/core/tjs2/bison/tjs.y'
+2026-09-07T04:58:51.4887250Z '/opt/homebrew/opt/bison/bin/bison' '/Users/runner/work/PocketKrKr/PocketKrKr/cpp/core/tjs2/bison/tjsdate.y'
+2026-09-07T04:58:51.4889330Z '/opt/homebrew/opt/bison/bin/bison' '/Users/runner/work/PocketKrKr/PocketKrKr/cpp/core/tjs2/bison/tjspp.y'
+2026-09-07T04:58:51.4890880Z -- Found Python3: /opt/homebrew/bin/python3.14 (found version "3.14.7") found components: Interpreter
+2026-09-07T04:58:51.5188950Z '/opt/homebrew/bin/python3.14' 'create_world_map.py' '/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/cpp/core/tjs2/gen/tjsDateWordMap.inc'
+2026-09-07T04:58:51.5190590Z create file: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/cpp/core/tjs2/gen/tjsDateWordMap.inc
+2026-09-07T04:58:51.9762090Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-09-07T04:58:52.2059770Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+2026-09-07T04:58:52.2077960Z -- Found Threads: TRUE
+2026-09-07T04:58:52.6047330Z -- Performing Test Iconv_IS_BUILT_IN
+2026-09-07T04:58:52.8820280Z -- Performing Test Iconv_IS_BUILT_IN - Failed
+2026-09-07T04:58:52.9210300Z -- Found Iconv: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libiconv.a (found version "1.18")
+2026-09-07T04:58:52.9831380Z -- Found LibArchive: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libarchive.a (found version "3.7.7")
+2026-09-07T04:58:53.0059290Z -- Found ZLIB: optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libz.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libz.a (found version "1.3.1")
+2026-09-07T04:58:53.1681380Z -- The OBJC compiler identification is AppleClang 17.0.0.17000013
+2026-09-07T04:58:53.3134070Z -- The OBJCXX compiler identification is AppleClang 17.0.0.17000013
+2026-09-07T04:58:53.3474810Z -- Detecting OBJC compiler ABI info
+2026-09-07T04:58:53.4789440Z -- Detecting OBJC compiler ABI info - done
+2026-09-07T04:58:53.5237300Z -- Check for working OBJC compiler: /usr/bin/clang - skipped
+2026-09-07T04:58:53.5340250Z -- Detecting OBJCXX compiler ABI info
+2026-09-07T04:58:53.6536740Z -- Detecting OBJCXX compiler ABI info - done
+2026-09-07T04:58:53.6965180Z -- Check for working OBJCXX compiler: /usr/bin/clang++ - skipped
+2026-09-07T04:58:53.7949430Z -- ANGLE found — EGL + GLES2 libraries linked
+2026-09-07T04:58:53.8773760Z -- Found JXR: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/include/jxrlib
+2026-09-07T04:58:53.9260940Z -- Found OpenCV: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios (found version "4.7.0")
+2026-09-07T04:58:54.0196880Z -- Found BZip2: optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libbz2.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libbz2d.a (found version "1.0.8")
+2026-09-07T04:58:54.0213380Z -- Looking for BZ2_bzCompressInit
+2026-09-07T04:58:54.1539210Z -- Looking for BZ2_bzCompressInit - found
+2026-09-07T04:58:54.2577460Z -- Found PNG: optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/libpng16.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libpng16d.a (found version "1.6.50")
+2026-09-07T04:58:54.2904080Z -- ANGLE found — KRKR_USE_ANGLE=1 propagated to all modules
+2026-09-07T04:58:54.2931480Z CMake Warning at cpp/plugins/CMakeLists.txt:128 (message):
+2026-09-07T04:58:54.2932820Z   Live2D Cubism SDK not found (cubism/Framework + Core/lib) — Live2D plugin
+2026-09-07T04:58:54.2933260Z   disabled
+2026-09-07T04:58:54.2933760Z 
+2026-09-07T04:58:54.2933960Z 
+2026-09-07T04:58:54.4568060Z -- Found LibLZMA: optimized;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/lib/liblzma.a;debug;/Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/liblzma.a (found version "5.8.1")
+2026-09-07T04:58:54.4924480Z -- engine_api: force_load ANGLE libGLESv2: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libGLESv2_angle.a
+2026-09-07T04:58:54.4925480Z -- engine_api: force_load ANGLE libEGL: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/libEGL_angle.a
+2026-09-07T04:58:54.4926490Z -- engine_api: force_load ANGLE libANGLE: /Users/runner/work/PocketKrKr/PocketKrKr/out/ios/release/vcpkg_installed/arm64-ios/debug/lib/ANGLE.a
+2026-09-07T04:58:54.4933380Z -- Configuring done (29.0s)
+2026-09-07T04:58:54.7262520Z CMake Error in cpp/plugins/layerex_draw/CMakeLists.txt:
+2026-09-07T04:58:54.7264130Z   Imported target "libgdiplus::libgdiplus" includes non-existent path
+2026-09-07T04:58:54.7265400Z 
+2026-09-07T04:58:54.7265980Z     "/Users/runner/work/KrKr2-Next-Mobile/KrKr2-Next-Mobile/out/ios/release/vcpkg_installed/arm64-ios/include"
+2026-09-07T04:58:54.7266420Z 
+2026-09-07T04:58:54.7266610Z   in its INTERFACE_INCLUDE_DIRECTORIES.  Possible reasons include:
+2026-09-07T04:58:54.7266850Z 
+2026-09-07T04:58:54.7267030Z   * The path was deleted, renamed, or moved to another location.
+2026-09-07T04:58:54.7267290Z 
+2026-09-07T04:58:54.7267480Z   * An install or uninstall procedure did not complete successfully.
+2026-09-07T04:58:54.7267760Z 
+2026-09-07T04:58:54.7267930Z   * The installation package was faulty and references files it does not
+2026-09-07T04:58:54.7268300Z   provide.
+2026-09-07T04:58:54.7268420Z 
+2026-09-07T04:58:54.7268420Z 
+2026-09-07T04:58:54.7268420Z 
+2026-09-07T04:58:54.7288080Z CMake Error in cpp/plugins/layerex_draw/CMakeLists.txt:
+2026-09-07T04:58:54.7288650Z   Imported target "libgdiplus::libgdiplus" includes non-existent path
+2026-09-07T04:58:54.7288970Z 
+2026-09-07T04:58:54.7289300Z     "/Users/runner/work/KrKr2-Next-Mobile/KrKr2-Next-Mobile/out/ios/release/vcpkg_installed/arm64-ios/include"
+2026-09-07T04:58:54.7289700Z 
+2026-09-07T04:58:54.7289860Z   in its INTERFACE_INCLUDE_DIRECTORIES.  Possible reasons include:
+2026-09-07T04:58:54.7290090Z 
+2026-09-07T04:58:54.7290230Z   * The path was deleted, renamed, or moved to another location.
+2026-09-07T04:58:54.7290440Z 
+2026-09-07T04:58:54.7290610Z   * An install or uninstall procedure did not complete successfully.
+2026-09-07T04:58:54.7290920Z 
+2026-09-07T04:58:54.7291100Z   * The installation package was faulty and references files it does not
+2026-09-07T04:58:54.7291400Z   provide.
+2026-09-07T04:58:54.7291630Z 
+2026-09-07T04:58:54.7291630Z 
+2026-09-07T04:58:54.7291640Z 
+2026-09-07T04:58:54.7887070Z CMake Generate step failed.  Build files cannot be regenerated correctly.
+2026-09-07T04:58:54.7887440Z -- Generating done (0.3s)
+2026-09-07T04:58:54.8021550Z ##[error]Process completed with exit code 1.
+2026-09-07T04:58:54.8414650Z Post job cleanup.
+2026-09-07T04:58:54.8421380Z ##[start-action display=Cache pub dependencies;id=__bc466bde-5647-4700-a19b-eb9a6f9f4289.cache-pub]
+2026-09-07T04:58:54.8424250Z ##[end-action id=__bc466bde-5647-4700-a19b-eb9a6f9f4289.cache-pub;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-09-07T04:58:54.8426560Z ##[start-action display=Cache Flutter;id=__bc466bde-5647-4700-a19b-eb9a6f9f4289.cache-flutter]
+2026-09-07T04:58:54.8428230Z ##[end-action id=__bc466bde-5647-4700-a19b-eb9a6f9f4289.cache-flutter;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-09-07T04:58:54.8535420Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-07T04:58:54.8538330Z Post job cleanup.
+2026-09-07T04:58:55.0657090Z [command]/opt/homebrew/bin/git version
+2026-09-07T04:58:55.0779660Z git version 2.55.0
+2026-09-07T04:58:55.0801750Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/32e5f2a0-ff79-421e-ba54-31846adaa8c5/.gitconfig'
+2026-09-07T04:58:55.0811060Z Temporarily overriding HOME='/Users/runner/work/_temp/32e5f2a0-ff79-421e-ba54-31846adaa8c5' before making global git config changes
+2026-09-07T04:58:55.0812040Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-07T04:58:55.0817110Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/PocketKrKr/PocketKrKr
+2026-09-07T04:58:55.0908310Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-07T04:58:55.0983630Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-07T04:58:55.2575920Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-07T04:58:55.2671620Z http.https://github.com/.extraheader
+2026-09-07T04:58:55.2688660Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-07T04:58:55.2834420Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-07T04:58:55.4155110Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-07T04:58:55.4289770Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-07T04:58:55.6139720Z Cleaning up orphan processes
+2026-09-07T04:58:56.6601230Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache/restore@v4, actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
