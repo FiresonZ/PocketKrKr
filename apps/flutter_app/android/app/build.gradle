@@ -50,3 +50,8 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // KR2Activity (org.tvp.kirikiri2) 的 Material 对话框（ShowMessageBox/ShowInputBox）依赖。
+    implementation "com.google.android.material:material:1.12.0"
+}

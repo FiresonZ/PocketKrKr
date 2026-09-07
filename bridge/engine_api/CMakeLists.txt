@@ -33,6 +33,12 @@ target_include_directories(engine_api
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+if(ANDROID)
+    # engine_api_android_jni.cpp needs krkr::JniHelper (android/KrkrJniHelper.h).
+    target_include_directories(engine_api PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../cpp/core/environ
+    )
+endif()
 
 if(TARGET krkr2core AND TARGET krkr2plugin)
     target_compile_definitions(engine_api PRIVATE ENGINE_API_USE_KRKR2_RUNTIME)

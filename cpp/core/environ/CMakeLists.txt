@@ -29,14 +29,13 @@ set(ENVIRON_SOURCE_FILES
     # Stub implementations are in stubs/ui_stubs.cpp
     ${ENVIRON_PATH}/stubs/ui_stubs.cpp
 
-    # Linux 宿主平台实现（CI 引擎核心验证用）。文件体有 #if defined(__linux__)
-    # 守卫，在 Apple/Android 上为空翻译单元，不影响各平台原生实现。
-    ${ENVIRON_PATH}/stubs/platform_linux.cpp
-
-    # Android 平台实现（文件体有 #if defined(__ANDROID__) 守卫）。
-    # 移动端 UI 由 Flutter 接管，其余平台函数(文件/时钟/内存/生命周期)与 Linux 同源，
-    # 具体见 android/platform_android.cpp。
-    ${ENVIRON_PATH}/android/platform_android.cpp
+    # 平台源：
+    #   Android：JNI 桥（KrkrJniHelper + AndroidUtils，完整 JNI 平台实现，走 KR2Activity/AppContext）
+    #   Linux：stubs/platform_linux.cpp（__linux__ 守卫，CI 宿主验证用）
+    # 不复用上游 linux/Platform.cpp：其 #ifdef LINUX 在 Android 下为空且强依赖 gtk，不适合移动端。
+    $<$<BOOL:${ANDROID}>:${ENVIRON_PATH}/android/KrkrJniHelper.cpp>
+    $<$<BOOL:${ANDROID}>:${ENVIRON_PATH}/android/AndroidUtils.cpp>
+    $<$<NOT:ANDROID>:${ENVIRON_PATH}/stubs/platform_linux.cpp>
 
     ${ENVIRON_PATH}/win32/SystemControl.cpp
 )
@@ -44,6 +43,7 @@ set(ENVIRON_SOURCE_FILES
 set(ENVIRON_HEADERS_DIR
     ${ENVIRON_PATH}/
     ${ENVIRON_PATH}/win32
+    $<$<BOOL:${ANDROID}>:${ENVIRON_PATH}/android>
     ${ENVIRON_PATH}/sdl
 )
 
