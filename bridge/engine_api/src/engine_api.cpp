@@ -809,6 +809,36 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     // Avoid triggering platform exit() path in the host process.
     TVPTerminated = false;
     TVPTerminateCode = 0;
+
+    // ---- runtime-restart（热重启）teardown ----
+    // 参考上游 vcdlk PR#12「make runtime restartable after engine_destroy」。
+    // 修"不杀后台无法再开游戏"的真正根因：此前 engine_destroy 只重置
+    // g_runtime_active/g_runtime_owner，却从不复位 g_runtime_started_once，
+    // 第二次 engine_open_game 必命中 "runtime restart is not supported yet"。
+    // 现在做到完整卸载：TVPSystemUninit + 销毁引擎单例 + Bootstrap::Shutdown
+    // + 复位 started_once，使不杀进程也能再次 create/open。
+    try {
+      TVPSystemUninit();
+    } catch (...) {
+      spdlog::error("engine_destroy: TVPSystemUninit threw");
+    }
+
+    if (auto* scene = TVPMainScene::GetInstance()) {
+      delete scene;
+    }
+    if (auto* loop = EngineLoop::GetInstance()) {
+      delete loop;
+    }
+
+    if (g_engine_bootstrapped) {
+      TVPEngineBootstrap::Shutdown();
+      g_engine_bootstrapped = false;
+    }
+
+    // 允许下一次 engine_open_game 再次启动。
+    g_runtime_started_once = false;
+    spdlog::info("engine_destroy: runtime teardown complete (restartable)");
+    spdlog::default_logger()->flush();
   }
 
   delete impl;

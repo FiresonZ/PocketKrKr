@@ -75,6 +75,20 @@
   `iTVPVideoOverlay::PresentVideoImage` / `GetFrontBuffer` 契约。
 
 ### 3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
+> **C 端根因已定位**（这篇日志复现确认）：`engine_api.cpp` 的 `g_runtime_started_once`
+> 一旦置 true 从不复位；`engine_destroy` 只清 `g_runtime_active/owner`，漏了它 → 第二次
+> `engine_open_game` 必命中 `runtime restart is not supported yet`。Dart shutdown 是前置，
+> 绕不过这个 C 端标志。
+>
+> **进度**：engine_api.cpp `engine_destroy` 已按 PR#12 加入热重启 teardown
+> （TVPSystemUninit + 销毁 MainScene/EngineLoop 单例 + Bootstrap::Shutdown +
+> `g_runtime_started_once=false`）。**剩余待移植的 Reset 函数**（PR#12 C++ 侧，保证重初始化干净）：
+> `TVPResetScriptEngineForRestart`（ScriptMgnIntf）、`TVPResetRuntimeForRestart`（SysInitIntf）、
+> `TVPResetSysInitImplForRestart`（SysInitImpl）、`TVPResetApplicationForRestart`（Application）、
+> `TVPResetStorageImplForRestart`（StorageImpl，改 TVPGetAppPath 缓存）、
+> `TVPResetExtensionClassInstallStateForRestart`（Extension）、`TVPResetPluginSystemForRestart`/
+> `TVPUnregisterInternalPluginsForRestart`/`ncbAutoRegister::ResetModuleStateForRestart`（Plugin/ncbind）；
+> visual 级（RenderManager/Font/Trans/Window/Bitmap/LayerBitmap/OpenGL）为第二批。
 - 现象：首次开游戏正常；不杀进程、退出后再开另一款游戏报
   `Engine Error engine_open_game_async failed: result=-3, error=runtime restart is not supported yet`。
 - 已做：Dart 侧 `_exitGame` 现在先 `engineDestroy()` 等销毁完成再 `pop`。
