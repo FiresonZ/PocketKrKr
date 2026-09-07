@@ -162,10 +162,10 @@
 ### 6. multiimage（多图/psd 相关）支持
 - 待办：规划 `multiimage`（多图像/图层处理）相关能力；确切范围与用例待明确后拆解。
 
-### 7. 非标准目录结构（散装 xp3 启动定位）
+### 7. 非标准目录结构（散装 xp3 启动定位）— ✅ 已成功
 - 现状：已支持标准 `data.xp3`/同目录 xp3 自动挂载（`TVPAutoMountProjectXP3Archives`）。
-- 待办：验证形如 `D:\...\委員界の異端者體驗版`（体验版，目录内散装文件而非标准
-  gameexe.dat/data.xp3 布局）的目录能否识别与启动；若不支持，补目录结构探测与启动文件定位。
+- 验证：形如 `D:\...\委員界の異端者體驗版` 这种目录内散装文件（非标准
+  gameexe.dat/data.xp3 布局）的目录已能识别并启动，本次无需再处理。
 
 ### 8. 去除桌面端残余文件【工程清理，未来执行】
 - **目标**：本项目专注移动端（iOS/Android，macOS 为 Apple 开发目标）。逐步清理从上
@@ -203,16 +203,14 @@
 - **arm64 triplet ABI 修复是我们独有**（`VCPKG_CMAKE_CONFIGURE_OPTIONS -DANDROID_ABI=arm64-v8a`、
   `CMAKE_ANDROID_ARCH_ABI`/`CMAKE_SYSTEM_PROCESSOR=aarch64`），上游 triplet 是原版，别覆盖。
 
-### 11. Android「添加文件/压缩包」死代码 bug + 目录访问平台差异 🏷 新增
+### 11. Android「添加文件/压缩包」死代码 bug + 目录访问平台差异 【暂缓：功能未使用】
+> 2026-09 结论：「添加文件/压缩包」入口当前无 UI 使用场景，**暂不需要验证/修复**。
 - 问题 1（死代码）：`home_page.dart _addGameArchive()` Android 分支调用
   `_platformChannel.invokeMethod('pickFile')`（`flutter_engine_bridge` channel），但
   **Android `FlutterEngineBridgePlugin.onMethodCall` 与 iOS Swift 均无 `pickFile` 实现**
   → 必抛 `MissingPluginException`，「添加压缩包/XP3」在 Android 上直接失败。
 - 问题 2（平台差异）：Android 用 SAF（`file_picker.getDirectoryPath`）拿 `content://` URI +
-  持久授权，iOS/macOS 拿真实路径。这是**权限模型差异，不是"目录不能访问"**，但依赖
-  `file_picker` SAF 授权机制，需真机确认「添加文件夹」在 Android 可用。
-- 待办：
-  1. 在 Android 原生补 `pickFile`（`ACTION_OPEN_DOCUMENT` + SAF + 持久 URI 授权并 copy 到
-     app 私有目录，或改为 `FilePicker.pickFiles` + SAF），修复死代码；
-  2. 真机验证「添加文件夹」`content://` 路径能否被引擎打开（需 SAF 权限持续/落盘）；
-  3. 若走 copy 方案，注意 APK 体积与引擎只认真实路径的读取方式。
+  持久授权，iOS/macOS 拿真实路径。这是**权限模型差异，不是"目录不能访问"**。
+- 若后续要启用该功能再做：Android 原生补 `pickFile`（`ACTION_OPEN_DOCUMENT` + SAF +
+  持久授权 copy 到 app 私有目录，或 `FilePicker.pickFiles` + SAF），注意 APK 体积与引擎
+  只认真实路径的读取方式。
