@@ -7,6 +7,23 @@
 
 ## 进行中 / 待验证
 
+### 0. Android 点开即闪退 — 缺 SDL Java 层（org.libsdl.app）【修复待真机复验】
+- **现象**（Redmi K70 真机 logcat）：点开应用即闪退，`Process ... has crashed too many times, killing`。
+  崩溃栈 `Fatal signal` 在 `libengine_api.so (JNI_OnLoad)`，
+  Abort message: `No pending exception expected: java.lang.ClassNotFoundException: org.libsdl.app.SDLActivity`。
+- **根因**：`libengine_api.so` 静态链入 SDL2（引擎确实用 SDL API：`WaveMixer.cpp` 的
+  `SDL_BuildAudioCVT/SDL_OpenAudioDevice`、`EngineBootstrap.cpp` 的 `SDL_SetMainReady`）。
+  SDL2 的安卓原生 `src/core/android/SDL_android.c` 在 `JNI_OnLoad` 里
+  `FindClass("org/libsdl/app/SDLActivity")`，但工程缺该 Java 层 → FindClass 留下
+  pending exception，`System.loadLibrary("engine_api")` 返回时 ART `AssertNoPendingException`
+  → `abort()`。这就是启动即闪退，不是 Flutter 层。
+- **修复**：从上游 `reAAAq/KrKr2-Next` 补入
+  `apps/flutter_app/android/app/src/main/java/org/libsdl/app/` 共 9 个 Java 源：
+  `HIDDevice(HIDDeviceManager/HIDDeviceUSB/HIDDeviceBLESteamController)`、
+  `SDL`、`SDLActivity`、`SDLAudioManager`、`SDLControllerManager`、`SDLSurface`。
+  SDLActivity 版本常量 = 2.32.10，与 vcpkg `sdl2 2.32.10` 一致，native 签名匹配。
+- **待验证**：重打 APK 真机启动不再闪退、主界面正常。
+
 ### 1. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 - **现象**（真机日志 `sabbat_kr`/魔女的夜宴，目录版）：游戏正常启动到
   `startup→Initialize→first.ks→title.ks`，XP3 全挂载，脚本/图层照常（事件 2 万对象、
