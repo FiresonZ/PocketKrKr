@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/FiresonZ/KrKr2-Next-Mobile/main/docs/resources/logo.png" alt="PocketKrKr" width="96">
+  <img src="https://raw.githubusercontent.com/FiresonZ/PocketKrKr/main/docs/resources/logo.png" alt="PocketKrKr" width="96">
   <h1 align="center">PocketKrKr</h1>
   <p align="center">A Next-Generation KiriKiri2 Runtime for Mobile (iOS + Android)</p>
 </p>
@@ -17,7 +17,7 @@
 
 **Language / 语言**: [中文](README.md) | English
 
-> 🙏 **PocketKrKr** (<https://github.com/FiresonZ/KrKr2-Next-Mobile>) is built as a
+> 🙏 **PocketKrKr** (<https://github.com/FiresonZ/PocketKrKr>) is built as a
 > **secondary development based on [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next)**.
 > Thanks to all upstream authors.
 
@@ -40,14 +40,7 @@ C++ Engine (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
         └─ Android:  SurfaceTexture ─┴────────────────┘ display
 ```
 
-- **Rendering pipeline**: the engine renders offscreen via ANGLE's EGL Pbuffer Surface (OpenGL ES 2.0);
-  the result is passed to a Flutter texture through **IOSurface** (iOS/macOS) or **SurfaceTexture** (Android)
-  with zero-copy transfer; CPU readback (`engineReadFrameRgba`) is the fallback path.
-- **Bridge layer**: `bridge/engine_api` exposes a stable C ABI (`engine_create` / `engine_tick` / `engine_destroy`, etc.);
-  iOS links it as a static library into the Runner, Android ships it as `libengine_api.so` inside the APK;
-  Dart prefers FFI, with MethodChannel as a fallback.
-
-> 📖 Full developer/AI-agent documentation: **[docs/dev/](docs/dev/README.md)** (tech stack, architecture, key references, build, conventions).
+> 📖 Full developer/AI-agent docs: **[docs/dev/](docs/dev/README.md)** (tech stack, architecture, key references, build, conventions).
 
 ## Platform Support
 
@@ -57,33 +50,17 @@ C++ Engine (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 | Android | 🚧 Primary target, in development | Vulkan | SurfaceTexture | `libengine_api.so` packaged into APK |
 | macOS | ✅ Development target | Metal | IOSurface | dylib bundled into Frameworks |
 
-> No macOS locally? Build the Android APK directly on Windows; package iOS through the GitHub Actions macOS runner.
-
 ## System Requirements
 
-### iOS
+| Platform | OS Version | Architecture | Notes |
+|----------|-----------|--------------|-------|
+| iOS | iOS / iPadOS 15.0+ | arm64 | any 64-bit device supporting iOS 15 |
+| Android | Android 7.0 (API 24)+ | arm64-v8a | Vulkan-capable GPU |
+| macOS | macOS (development target) | arm64 | — |
 
-| Item | Requirement |
-|------|-------------|
-| OS version | **iOS / iPadOS 15.0 or later** |
-| Architecture | 64-bit (**arm64**) only |
-| Devices | iPhone 6s or later; iPad Air 2 / iPad mini 4 or later; iPod touch (7th gen) |
-| Chip | A8 / A9 or later (i.e. all 64-bit devices that support iOS 15) |
-
-> The whole build/run chain (engine static library, vcpkg deps, Flutter) is configured for
-> `arm64` with deployment target `iOS 15.0` — see `CMakePresets.json`,
-> `vcpkg/triplets/arm64-ios.cmake` and `ios/Podfile`.
-
-### Android
-
-| Item | Requirement |
-|------|-------------|
-| OS version | **Android 7.0 (API 24) or later** |
-| Architecture | 64-bit (**arm64-v8a**) only |
-| Graphics | Vulkan-capable GPU (ANGLE Vulkan backend) |
-
-> The engine is configured for `arm64-v8a`, API 24 (see `vcpkg/triplets/arm64-android.cmake`);
-> building requires the Android NDK (set `ANDROID_NDK_HOME`).
+> The engine (static library / vcpkg deps / Flutter) is configured for `arm64` with the
+> corresponding minimum OS versions — see `CMakePresets.json`,
+> `vcpkg/triplets/arm64-ios.cmake`, `vcpkg/triplets/arm64-android.cmake`.
 
 ## Build
 
@@ -95,32 +72,12 @@ C++ Engine (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 
 See [docs/dev/build.md](docs/dev/build.md) and [build.sh](build.sh).
 
-## CI Packaging (GitHub Actions)
+## Getting the Builds / Installation
 
-Built-in packaging workflows:
-
-- **iOS**: [ios_package.yml](.github/workflows/ios_package.yml) (macOS runner)
-- **Android**: [android_package.yml](.github/workflows/android_package.yml) (Ubuntu runner)
-- **Engine-core verification (Linux)**: [engine_verify.yml](.github/workflows/engine_verify.yml)
-  (host build + tests, triggered on every push/PR — the fastest feedback loop)
-
-**Trigger** (packaging workflows):
-- Manual: Actions → pick the workflow → Run workflow (choose debug / release)
-- Automatic: push a `v*` tag (e.g. `v1.0.0`)
-
-**Artifacts**:
-- iOS: `PocketKrKr-iOS-<release|debug>.zip` (unsigned `Runner.app`, kept for 14 days)
-- Android: `PocketKrKr-Android-<release|debug>.apk` (kept for 14 days)
-
-**Install on device**:
-- iOS: download the zip → extract `Runner.app` → sign with your own Apple developer certificate
-  (recommended: open `apps/flutter_app/ios/Runner.xcworkspace` in Xcode, set your Team, then run),
-  or use `flutter run -d <device>` for development.
-- Android: install the APK directly (`adb install` or copy to the phone).
-
-**First build**: vcpkg must fully compile the target-platform dependencies
-(FFmpeg/OpenCV/ANGLE, etc.), which takes a while; vcpkg binary caching is enabled,
-so subsequent runs restore dependencies quickly.
+Online build artifacts are produced by GitHub Actions (iOS is unsigned, Android is an APK),
+with optional auto tag + Release + artifact upload. For trigger modes, artifact naming,
+on-device installation, and versioning conventions, see **[docs/dev/build.md](docs/dev/build.md)**.
+No macOS locally? The Android APK can be built directly on Windows.
 
 ## Development Progress
 
@@ -140,7 +97,7 @@ so subsequent runs restore dependencies quickly.
 
 - AI-agent first-screen instructions: [AGENTS.md](AGENTS.md)
 - Development docs (AI-agent quick reference): [docs/dev/](docs/dev/README.md)
-- Project home: <https://github.com/FiresonZ/KrKr2-Next-Mobile>
+- Project home: <https://github.com/FiresonZ/PocketKrKr>
 - Direct upstream (secondary development of KrKr2-Next): <https://github.com/reAAAq/KrKr2-Next>
 
 ## License
