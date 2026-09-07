@@ -10,6 +10,7 @@ void TVPInitFontNames();
 int TVPEnumFontsProc(const ttstr &FontPath);
 const ttstr &TVPGetDefaultFontName();
 tTJSBinaryStream *TVPCreateFontStream(const ttstr &fontname);
+void TVPResetFontImplForRestart();
 struct TVPFontNamePathInfo {
     ttstr Path;
     std::function<tTJSBinaryStream *(TVPFontNamePathInfo *)> Getter;

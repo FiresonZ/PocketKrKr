@@ -356,6 +356,27 @@ void TVPLoadInternalPlugins() {
     ncbAutoRegister::AllRegist();
     ncbAutoRegister::LoadAllModules();
 }
+//---------------------------------------------------------------------------
+static void TVPResetPluginFallbackStubsForRestart() {
+    // 上游另注销 s_ProxyStorageMedia（tTVPProxyStorageMedia*）；本地 TVPRegisterProxyFsStub
+    // 不保存 media 句柄，故只复位 ProxyStorageMap，使二次 init 能重新注册而不重复 AddRef。
+    if(s_ProxyStorageMap) {
+        s_ProxyStorageMap->Release();
+        s_ProxyStorageMap = nullptr;
+    }
+}
+//---------------------------------------------------------------------------
+void TVPUnregisterInternalPluginsForRestart() { // 对照上游 PR#12
+    spdlog::info("TVPUnregisterInternalPluginsForRestart: unregister internal plugins");
+    ncbAutoRegister::AllUnregist();
+    TVPResetPluginFallbackStubsForRestart();
+}
+void TVPResetPluginSystemForRestart() { // 对照上游 PR#12
+    spdlog::info("TVPResetPluginSystemForRestart: clear plugin restart state");
+    TVPAutoLoadPluginCount = 0;
+    TVPResetPluginFallbackStubsForRestart();
+    ncbAutoRegister::ResetModuleStateForRestart();
+}
 
 bool TVPLoadInternalPlugin(const ttstr &_name) {
     /* 1. 拿到 ttstr 的原始缓冲区 */

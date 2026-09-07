@@ -29,15 +29,21 @@
 
 ## 进行中 / 待验证
 
-### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 首屏后点击退出的兼容根因【已修，待真机复验】
-- 现象（千恋万花高压 真机日志 21:17:22）：开场播放 yuzulogo logo 后，`custom.ks:89`
-  访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`）报
-  `Member "D3DAdaptor" does not exist` → 脚本致命错误 → 主循环终止 → 首屏后点击退出。
+### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 首屏后点击退出的兼容根因
+- 旧现象（千恋万花高压 真机日志）：开场播放 yuzulogo logo 后，`custom.ks:89`
+  访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`），早期报
+  `Member "D3DAdaptor" does not exist` → 脚本致命错误。
 - 根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
   我们 motionplayer 未实现。
-- 修复：`Motion` 类补只读 `D3DAdaptor` getter，返回 undefined → 脚本 `typeof` 走 CPU/GL 分支
-  （motionplayer.hpp/main.cpp），消除致命错误。已改 `cpp/plugins/motionplayer/main.cpp`。
-- 待验证：真机确认首屏后点击不再退出、logo/正文能正常推进。
+- **新增现象（2026-09-08 00:32 日志）**：给 `D3DAdaptor` 返回 `undefined` 后，`Member
+  does not exist` 消失，但 krkrz 的 `affinesourcemotion.tjs drawAffine` 把
+  `Motion.D3DAdaptor` **当作 Object 传参/赋值**（`new MotionXX(D3DAdaptor, …)`）→ 报
+  `Cannot convert the variable type (() to Object)`，`custom.ks:89` 致命 → logo 后崩溃+卡死。
+- 修复（本轮，`cpp/plugins/motionplayer/main.cpp`）：`getD3DAdaptor` 改为返回 **stub 字典
+  对象**（与 `Motion.enableD3D` 的 `getEnableD3D` 同一模式）而非 undefined，避免
+  `() → Object` 转换错误。后续若脚本访问 stub 的具体成员再逐项补。
+- 待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor / 相关
+  motionplayer 成员的 stub。
 
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 > 移植清单/参考源：见 [krkrz-compat.md](krkrz-compat.md)（已确认各插件源码来源，含
@@ -75,6 +81,37 @@
   `iTVPVideoOverlay::PresentVideoImage` / `GetFrontBuffer` 契约。
 
 ### 3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
+> **❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治**。日志
+> `pocketkrkr_engine(1).log` 里 IINCHO-Re.co（krkr2）到 title 屏后退出：第一个游戏的最后一行
+> 日志停在 `00:31:46 journal title.ks:@s`，其后**完全没有 engine_destroy / TVPSystemUninit 任何
+> 日志**，也**没有 `runtime teardown complete`** → `engine_destroy` 在 `OnDeactivate` /
+> `TVPSystemUninit` / `scene·loop delete` / `Bootstrap::Shutdown` 之一处**静默挂死**（Flutter
+> UI 线程 await engineDestroy 阻塞 → 整机无响应）。
+> **本轮动作**：给 `engine_destroy` 逐级打点（进入/OnDeactivate/TVPSystemUninit/MainScene/
+> EngineLoop/Bootstrap/Reset 链/完成），下次真机退出即可据最后的点定位卡在哪一步。
+> 注意：engine_api 有 `#if ENGINE_API_USE_KRKR2_RUNTIME` 双实现，Android 联动 krkr2core/
+> plugin 走的是**带完整 teardown 的那份**（engine_api.cpp:757 附近），打点也加在这份。
+>
+> **最新决策（2026-09-08）：按上游 PR#12 完全对照做「安全退出」**（`engine_api.cpp` engine_destroy）。
+> - 关键修正：不再跳过 `TVPSystemUninit`，而是**先 `Application->OnExit()`**（内部
+>   `TVPUninitScriptEngine` + delete `TVPSystemControl`，让脚本引擎在安全上下文退出），
+>   再调 `TVPSystemUninit()`（其内部 `TVPUninitScriptEngine` 因守卫标志变 no-op）。
+>   裸调 `TVPSystemUninit` 会在 TJS 栈内销毁脚本引擎 = krkrz host 模式自声明的
+>   undefined behavior（hang），是此前退出即静默卡死的根因（参考 `SysInitImpl.cpp`
+>   `TVPTerminateSync` 注释）。打点顺序已按上游重排：OnExit→TVPSystemUninit→
+>   scene·EngineLoop→Reset 链→Bootstrap::Shutdown→`g_runtime_started_once=false`。
+> - ✅ **已全部对照上游移植（本轮）**：`TVPResetWindowListForRestart`（WindowIntf）、
+>   `TVPResetLayerBitmapImplForRestart`（LayerBitmapImpl）、`TVPResetFontImplForRestart`
+>   （FontImpl，并把 `TVPFontNamesInit` 提升为文件作用域）、`TVPResetTransIntfForRestart`
+>   （TransIntf）、`tTVPBitmapBitsAlloc::ResetForRestart`（BitmapBitsAlloc）、
+>   `TVPResetPluginSystemForRestart` + `TVPUnregisterInternalPluginsForRestart`
+>   （PluginImpl/ncbind，含 `ncbAutoRegister::ResetModuleStateForRestart`）。
+>   本地适配：本地无 `s_ProxyStorageMedia`（`TVPRegisterProxyFsStub` 不保存 media
+>   句柄），故 `TVPResetPluginFallbackStubsForRestart` 只复位 `s_ProxyStorageMap`。
+> - ✅ **打点保留，engine_destroy 复位链严格对照上游顺序**
+>   （Unregister→OnExit→TVPSystemUninit→scene·EngineLoop→13 项 Reset→Bootstrap→started_once）。
+> - ⏳ **待真机**：编译通过 + 退出不再静默卡死（走到 `runtime teardown complete`）+
+>   不杀进程能再开另一款游戏。
 > **C 端根因已定位**（这篇日志复现确认）：`engine_api.cpp` 的 `g_runtime_started_once`
 > 一旦置 true 从不复位；`engine_destroy` 只清 `g_runtime_active/owner`，漏了它 → 第二次
 > `engine_open_game` 必命中 `runtime restart is not supported yet`。Dart shutdown 是前置，
@@ -162,10 +199,10 @@
 ### 6. multiimage（多图/psd 相关）支持
 - 待办：规划 `multiimage`（多图像/图层处理）相关能力；确切范围与用例待明确后拆解。
 
-### 7. 非标准目录结构（散装 xp3 启动定位）
+### 7. 非标准目录结构（散装 xp3 启动定位）— ✅ 已成功
 - 现状：已支持标准 `data.xp3`/同目录 xp3 自动挂载（`TVPAutoMountProjectXP3Archives`）。
-- 待办：验证形如 `D:\...\委員界の異端者體驗版`（体验版，目录内散装文件而非标准
-  gameexe.dat/data.xp3 布局）的目录能否识别与启动；若不支持，补目录结构探测与启动文件定位。
+- 验证：形如 `D:\...\委員界の異端者體驗版` 这种目录内散装文件（非标准
+  gameexe.dat/data.xp3 布局）的目录已能识别并启动，本次无需再处理。
 
 ### 8. 去除桌面端残余文件【工程清理，未来执行】
 - **目标**：本项目专注移动端（iOS/Android，macOS 为 Apple 开发目标）。逐步清理从上
@@ -203,16 +240,14 @@
 - **arm64 triplet ABI 修复是我们独有**（`VCPKG_CMAKE_CONFIGURE_OPTIONS -DANDROID_ABI=arm64-v8a`、
   `CMAKE_ANDROID_ARCH_ABI`/`CMAKE_SYSTEM_PROCESSOR=aarch64`），上游 triplet 是原版，别覆盖。
 
-### 11. Android「添加文件/压缩包」死代码 bug + 目录访问平台差异 🏷 新增
+### 11. Android「添加文件/压缩包」死代码 bug + 目录访问平台差异 【暂缓：功能未使用】
+> 2026-09 结论：「添加文件/压缩包」入口当前无 UI 使用场景，**暂不需要验证/修复**。
 - 问题 1（死代码）：`home_page.dart _addGameArchive()` Android 分支调用
   `_platformChannel.invokeMethod('pickFile')`（`flutter_engine_bridge` channel），但
   **Android `FlutterEngineBridgePlugin.onMethodCall` 与 iOS Swift 均无 `pickFile` 实现**
   → 必抛 `MissingPluginException`，「添加压缩包/XP3」在 Android 上直接失败。
 - 问题 2（平台差异）：Android 用 SAF（`file_picker.getDirectoryPath`）拿 `content://` URI +
-  持久授权，iOS/macOS 拿真实路径。这是**权限模型差异，不是"目录不能访问"**，但依赖
-  `file_picker` SAF 授权机制，需真机确认「添加文件夹」在 Android 可用。
-- 待办：
-  1. 在 Android 原生补 `pickFile`（`ACTION_OPEN_DOCUMENT` + SAF + 持久 URI 授权并 copy 到
-     app 私有目录，或改为 `FilePicker.pickFiles` + SAF），修复死代码；
-  2. 真机验证「添加文件夹」`content://` 路径能否被引擎打开（需 SAF 权限持续/落盘）；
-  3. 若走 copy 方案，注意 APK 体积与引擎只认真实路径的读取方式。
+  持久授权，iOS/macOS 拿真实路径。这是**权限模型差异，不是"目录不能访问"**。
+- 若后续要启用该功能再做：Android 原生补 `pickFile`（`ACTION_OPEN_DOCUMENT` + SAF +
+  持久授权 copy 到 app 私有目录，或 `FilePicker.pickFiles` + SAF），注意 APK 体积与引擎
+  只认真实路径的读取方式。

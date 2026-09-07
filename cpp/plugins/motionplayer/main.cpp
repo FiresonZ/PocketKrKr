@@ -607,12 +607,24 @@ public:
 
     // Z（KIRIKIRI Z）游戏脚本会访问 Motion.D3DAdaptor（(property getter) motionD3DAdaptor）。
     // 它是 D3D 版 motionplayer（drawdeviceD3DZ / motionplayer_nod3d）专有成员；移动端无
-    // D3D，且我们已用 CPU/GL motion（Player::play 正常播 logo）。返回 undefined 让脚本的
-    // `typeof Motion.D3DAdaptor === "Object"` 走 else 的 CPU 兼容分支，避免
-    // `Member "D3DAdaptor" does not exist` 致命异常导致首屏后点击退出。
+    // D3D，我们已用 CPU/GL motion（Player::play 正常播 logo）。返回一个 stub 字典对象
+    // 让 `typeof Motion.D3DAdaptor` 不报 "Member does not exist"，且被当作 Object 传参/
+    // 赋值时不触发 "Cannot convert (() to Object)"。
     static tjs_error getD3DAdaptor(tTJSVariant *r, tjs_int, tTJSVariant **,
                                    iTJSDispatch2 *) {
-        if(r) *r = tTJSVariant(); // undefined → 无 D3D
+        // 返回 stub 字典对象（而非 undefined）：千恋万花等 krkrz 游戏的
+        // affinesourcemotion 会把 `Motion.D3DAdaptor` 直接当作 Object 传参/赋值
+        // （`new MotionXX(D3DAdaptor, ...)`），返回 undefined 会报
+        // "Cannot convert the variable type (() to Object)"。与上面
+        // Motion.enableD3D 的 getEnableD3D 同一模式：给一个空对象让 typeof 走
+        // "Object" 或赋值不崩；后续若有具体成员访问再逐个补 stub。
+        iTJSDispatch2 *obj = TJSCreateDictionaryObject();
+        if (obj) {
+            *r = tTJSVariant(obj);
+            obj->Release();
+        } else {
+            *r = tTJSVariant();
+        }
         return TJS_S_OK;
     }
 

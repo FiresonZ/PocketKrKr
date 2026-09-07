@@ -55,6 +55,12 @@ extern "C" void krkr_GetSurfaceDimensions(uint32_t*, uint32_t*);
 #include "visual/ogl/angle_backend.h"
 #include "visual/impl/WindowImpl.h"
 #include "visual/RenderManager.h"
+#include "visual/WindowIntf.h"
+#include "visual/TransIntf.h"
+#include "visual/FontImpl.h"
+#include "visual/impl/LayerBitmapImpl.h"
+#include "visual/impl/BitmapBitsAlloc.h"
+#include "plugin/PluginImpl.h"
 #include "psbfile/PSBMedia.h"
 #include "engine_options.h"
 
@@ -800,63 +806,110 @@ engine_result_t engine_destroy(engine_handle_t handle) {
   }
 
   if (owned_runtime) {
+    spdlog::info("engine_destroy: entering runtime teardown (owned_runtime=1)");
     try {
       Application->OnDeactivate();
+      spdlog::info("engine_destroy: Application::OnDeactivate done");
     } catch (...) {
+      spdlog::error("engine_destroy: Application::OnDeactivate threw");
     }
     Application->FilterUserMessage(
         [](std::vector<std::tuple<void*, int, tTVPApplication::tMsg>>& queue) {
           queue.clear();
         });
+    spdlog::info("engine_destroy: FilterUserMessage done");
 
     // Avoid triggering platform exit() path in the host process.
     TVPTerminated = false;
     TVPTerminateCode = 0;
 
     // ---- runtime-restart（热重启）teardown ----
-    // 参考上游 vcdlk PR#12「make runtime restartable after engine_destroy」。
-    // 修"不杀后台无法再开游戏"的真正根因：此前 engine_destroy 只重置
-    // g_runtime_active/g_runtime_owner，却从不复位 g_runtime_started_once，
-    // 第二次 engine_open_game 必命中 "runtime restart is not supported yet"。
-    // 现在做到完整卸载：TVPSystemUninit + 销毁引擎单例 + Bootstrap::Shutdown
-    // + 复位 started_once，使不杀进程也能再次 create/open。
+    // 参考上游 vcdlk PR#12「make runtime restartable after engine_destroy」
+    // （reAAAq/KrKr2-Next，2026-06-16）。修"不杀后台无法再开游戏"的真根因：
+    // 此前 engine_destroy 只清 g_runtime_active/g_runtime_owner，却从不复位
+    // g_runtime_started_once，第二次 engine_open_game 必命中
+    // "runtime restart is not supported yet"。现改为完整卸载 + 复位各子系统，
+    // 并复位 started_once，使不杀进程也能再次 create/open。逐级打点便于真机定位。
+    //
+    // 安全退出的关键（对照上游顺序）：**先 Application->OnExit() 让脚本引擎在
+    // 安全上下文退出**（OnExit 内部 TVPUninitScriptEngine + delete TVPSystemControl），
+    // 再 TVPSystemUninit()。裸调 TVPSystemUninit 会在 TJS 调用栈内销毁脚本引擎，
+    // 是 krkrz host（Flutter）模式自声明的 undefined behavior（hang），真机表现为
+    // 退出即静默卡死（详见 SysInitImpl.cpp TVPTerminateSync 注释）。上游正是靠
+    // OnExit 前置规避，随后 TVPSystemUninit 中 TVPUninitScriptEngine 因守卫标志
+    // 已置为 no-op。
+
+    // 1. 注销内部插件（需在脚本引擎销毁前），避免二次 AllRegist 重复 append 注册器。
     try {
+      spdlog::info("engine_destroy: TVPUnregisterInternalPluginsForRestart begin");
+      TVPUnregisterInternalPluginsForRestart();
+      spdlog::info("engine_destroy: TVPUnregisterInternalPluginsForRestart end");
+    } catch(...) {
+      spdlog::error("engine_destroy: TVPUnregisterInternalPluginsForRestart threw");
+    }
+
+    // 2. 安全卸载脚本引擎：OnExit → TVPUninitScriptEngine + delete TVPSystemControl。
+    try {
+      spdlog::info("engine_destroy: Application->OnExit begin");
+      Application->OnExit();
+      spdlog::info("engine_destroy: Application->OnExit end");
+    } catch (...) {
+      spdlog::error("engine_destroy: Application->OnExit threw");
+    }
+
+    // 3. TVPSystemUninit → TVPUninitTVPGL + TVPCauseAtExit(at-exit handlers)；
+    //    其内部 TVPUninitScriptEngine 已被步骤 2 调过（守卫标志）→ no-op。
+    try {
+      spdlog::info("engine_destroy: TVPSystemUninit begin");
       TVPSystemUninit();
+      spdlog::info("engine_destroy: TVPSystemUninit end");
     } catch (...) {
       spdlog::error("engine_destroy: TVPSystemUninit threw");
     }
 
+    // 4. 销毁 EngineLoop / MainScene 单例。
     if (auto* scene = TVPMainScene::GetInstance()) {
+      spdlog::info("engine_destroy: deleting TVPMainScene...");
       delete scene;
+      spdlog::info("engine_destroy: TVPMainScene deleted");
     }
     if (auto* loop = EngineLoop::GetInstance()) {
+      spdlog::info("engine_destroy: deleting EngineLoop...");
       delete loop;
+      spdlog::info("engine_destroy: EngineLoop deleted");
     }
 
-    if (g_engine_bootstrapped) {
-      TVPEngineBootstrap::Shutdown();
-      g_engine_bootstrapped = false;
-    }
-
-    // 允许下一次 engine_open_game 再次启动。
-    g_runtime_started_once = false;
-
-    // 复位各子系统静态标志位与缓存，确保二次初始化干净
-    // （普通链接下必要，否则这些 Reset 无引用会被 GC 掉）。
+    // 5. 复位各子系统静态标志位与缓存，确保二次初始化干净。
+    //    （顺序严格对照上游 PR#12 的复位链。）
     try {
       TVPResetRuntimeForRestart();
       TVPResetScriptEngineForRestart();
       TVPResetSysInitImplForRestart();
       TVPResetApplicationForRestart();
       TVPResetStorageImplForRestart();
-      TVPResetExtensionClassInstallStateForRestart();
-      // visual 级：清图形缓存（公开、二次可重建）+ 复位 RenderManager 单例，
-      // 使二次 open_game 能干净重建渲染器（tTVPAtExit 清理进程只注册一次、二次不重跑）。
-      TVPClearGraphicCache();
       TVPResetRenderManagerForRestart();
+      TVPResetWindowListForRestart();
+      TVPResetLayerBitmapImplForRestart();
+      TVPResetFontImplForRestart();
+      TVPResetTransIntfForRestart();
+      tTVPBitmapBitsAlloc::ResetForRestart();
+      TVPResetExtensionClassInstallStateForRestart();
+      TVPResetPluginSystemForRestart();
+      spdlog::info("engine_destroy: reset-for-restart done");
     } catch (...) {
       spdlog::error("engine_destroy: reset-for-restart threw");
     }
+
+    // 6. EngineBootstrap 关闭（上游置于复位链之后）。
+    if (g_engine_bootstrapped) {
+      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown...");
+      TVPEngineBootstrap::Shutdown();
+      g_engine_bootstrapped = false;
+      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown done");
+    }
+
+    // 7. 允许下一次 engine_open_game 再次启动。
+    g_runtime_started_once = false;
 
     spdlog::info("engine_destroy: runtime teardown complete (restartable)");
     spdlog::default_logger()->flush();
