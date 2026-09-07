@@ -2128,6 +2128,7 @@ struct ncbAutoRegister {
 	static bool LoadModule(const ttstr &_name);
 	static bool HasModule(const ttstr &_name);
 	static void LoadAllModules();
+	static void ResetModuleStateForRestart();
 protected:
 	virtual void Regist()   const = 0;
 	virtual void Unregist() const = 0;

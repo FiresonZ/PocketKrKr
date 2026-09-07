@@ -244,6 +244,16 @@ struct tTVPClearFontCacheCallback : public tTVPCompactEventCallbackIntf {
 } static TVPClearFontCacheCallback;
 static bool TVPClearFontCacheCallbackInit = false;
 //---------------------------------------------------------------------------
+void TVPResetLayerBitmapImplForRestart() { // 对照上游 PR#12
+    TVPUninitializeFontRasterizers();
+    TVPCurrentFontRasterizers = FONT_RASTER_FREE_TYPE;
+    TVPGlobalFontStateMagic = 0;
+    TVPClearFontCache();
+    TVPClearFontCacheCallbackInit = false;
+    TVPUnmapAllPrerenderedFonts();
+    TVPPrerenderedFonts.Clear();
+}
+//---------------------------------------------------------------------------
 static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
                                           tTVPNativeBaseBitmap *bmp,
                                           tTVPPrerenderedFont *pfont,

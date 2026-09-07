@@ -100,14 +100,18 @@
 >   undefined behavior（hang），是此前退出即静默卡死的根因（参考 `SysInitImpl.cpp`
 >   `TVPTerminateSync` 注释）。打点顺序已按上游重排：OnExit→TVPSystemUninit→
 >   scene·EngineLoop→Reset 链→Bootstrap::Shutdown→`g_runtime_started_once=false`。
-> - ⏳ **仍未移植（对照上游，本地无实现；接入即编译失败，先用注释占位、待补后放开）**：
->   `TVPResetWindowListForRestart`（WindowManager）、`TVPResetLayerBitmapImplForRestart`、
->   `TVPResetFontImplForRestart`、`TVPResetTransIntfForRestart`、
->   `tTVPBitmapBitsAlloc::ResetForRestart`、`TVPResetPluginSystemForRestart`、
->   `TVPUnregisterInternalPluginsForRestart`（PluginImpl/ncbind，还涉及二次 AllRegist
->   重复注册器与 LoadAllModules 守卫）。
-> - ✅ **保留打点**，待真机验证：退出不再静默卡死（进度能走到 `runtime teardown complete`）
->   且不杀进程能再开另一款游戏。
+> - ✅ **已全部对照上游移植（本轮）**：`TVPResetWindowListForRestart`（WindowIntf）、
+>   `TVPResetLayerBitmapImplForRestart`（LayerBitmapImpl）、`TVPResetFontImplForRestart`
+>   （FontImpl，并把 `TVPFontNamesInit` 提升为文件作用域）、`TVPResetTransIntfForRestart`
+>   （TransIntf）、`tTVPBitmapBitsAlloc::ResetForRestart`（BitmapBitsAlloc）、
+>   `TVPResetPluginSystemForRestart` + `TVPUnregisterInternalPluginsForRestart`
+>   （PluginImpl/ncbind，含 `ncbAutoRegister::ResetModuleStateForRestart`）。
+>   本地适配：本地无 `s_ProxyStorageMedia`（`TVPRegisterProxyFsStub` 不保存 media
+>   句柄），故 `TVPResetPluginFallbackStubsForRestart` 只复位 `s_ProxyStorageMap`。
+> - ✅ **打点保留，engine_destroy 复位链严格对照上游顺序**
+>   （Unregister→OnExit→TVPSystemUninit→scene·EngineLoop→13 项 Reset→Bootstrap→started_once）。
+> - ⏳ **待真机**：编译通过 + 退出不再静默卡死（走到 `runtime teardown complete`）+
+>   不杀进程能再开另一款游戏。
 > **C 端根因已定位**（这篇日志复现确认）：`engine_api.cpp` 的 `g_runtime_started_once`
 > 一旦置 true 从不复位；`engine_destroy` 只清 `g_runtime_active/owner`，漏了它 → 第二次
 > `engine_open_game` 必命中 `runtime restart is not supported yet`。Dart shutdown 是前置，

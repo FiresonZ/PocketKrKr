@@ -55,6 +55,12 @@ extern "C" void krkr_GetSurfaceDimensions(uint32_t*, uint32_t*);
 #include "visual/ogl/angle_backend.h"
 #include "visual/impl/WindowImpl.h"
 #include "visual/RenderManager.h"
+#include "visual/WindowIntf.h"
+#include "visual/TransIntf.h"
+#include "visual/FontImpl.h"
+#include "visual/impl/LayerBitmapImpl.h"
+#include "visual/impl/BitmapBitsAlloc.h"
+#include "plugin/PluginImpl.h"
 #include "psbfile/PSBMedia.h"
 #include "engine_options.h"
 
@@ -833,9 +839,14 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     // OnExit 前置规避，随后 TVPSystemUninit 中 TVPUninitScriptEngine 因守卫标志
     // 已置为 no-op。
 
-    // 1. 注销内部插件（需在脚本引擎销毁前）。已移植则不调用即编译失败 ← 本地未实现。
-    //    TODO(对照上游 PluginImpl/ncbind)：TVPUnregisterInternalPluginsForRestart()
-    //    待移植后放开本行，避免二次 AllRegist 重复 append 注册器。
+    // 1. 注销内部插件（需在脚本引擎销毁前），避免二次 AllRegist 重复 append 注册器。
+    try {
+      spdlog::info("engine_destroy: TVPUnregisterInternalPluginsForRestart begin");
+      TVPUnregisterInternalPluginsForRestart();
+      spdlog::info("engine_destroy: TVPUnregisterInternalPluginsForRestart end");
+    } catch(...) {
+      spdlog::error("engine_destroy: TVPUnregisterInternalPluginsForRestart threw");
+    }
 
     // 2. 安全卸载脚本引擎：OnExit → TVPUninitScriptEngine + delete TVPSystemControl。
     try {
@@ -869,26 +880,21 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     }
 
     // 5. 复位各子系统静态标志位与缓存，确保二次初始化干净。
-    //    已接入：runtime/scriptEngine/sysInitImpl/application/storage/extensionClass/
-    //            graphicCache/renderManager。
-    //    未移植（对照上游，本地无实现，接入会导致编译失败；待补后放开）：
-    //            TVPResetWindowListForRestart（WindowManager）、
-    //            TVPResetLayerBitmapImplForRestart（LayerBitmapImpl）、
-    //            TVPResetFontImplForRestart（FontSystem）、
-    //            TVPResetTransIntfForRestart（TransIntf）、
-    //            tTVPBitmapBitsAlloc::ResetForRestart（LayerBitmapImpl/BitmapBits）、
-    //            TVPResetPluginSystemForRestart（Plugin）。
+    //    （顺序严格对照上游 PR#12 的复位链。）
     try {
       TVPResetRuntimeForRestart();
       TVPResetScriptEngineForRestart();
       TVPResetSysInitImplForRestart();
       TVPResetApplicationForRestart();
       TVPResetStorageImplForRestart();
-      TVPResetExtensionClassInstallStateForRestart();
-      // visual 级：清图形缓存（公开、二次可重建）+ 复位 RenderManager 单例，
-      // 使二次 open_game 能干净重建渲染器（tTVPAtExit 清理进程只注册一次、二次不重跑）。
-      TVPClearGraphicCache();
       TVPResetRenderManagerForRestart();
+      TVPResetWindowListForRestart();
+      TVPResetLayerBitmapImplForRestart();
+      TVPResetFontImplForRestart();
+      TVPResetTransIntfForRestart();
+      tTVPBitmapBitsAlloc::ResetForRestart();
+      TVPResetExtensionClassInstallStateForRestart();
+      TVPResetPluginSystemForRestart();
       spdlog::info("engine_destroy: reset-for-restart done");
     } catch (...) {
       spdlog::error("engine_destroy: reset-for-restart threw");

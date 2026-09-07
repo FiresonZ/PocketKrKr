@@ -350,6 +350,11 @@ static tTVPAtExit
     TVPClearTransHandlerProviderAtExit(TVP_ATEXIT_PRI_SHUTDOWN,
                                        TVPClearTransHandlerProvider);
 //---------------------------------------------------------------------------
+void TVPResetTransIntfForRestart() { // 对照上游 PR#12
+    TVPClearTransHandlerProvider();
+    TVPTransHandlerProviderInit = true;
+}
+//---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
 // Cross fade transition handler
