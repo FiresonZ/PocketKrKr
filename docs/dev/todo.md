@@ -7,7 +7,45 @@
 
 ## 进行中 / 待验证
 
-### 1. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
+### 0. Android 点开即闪退 — 缺 SDL Java 层（org.libsdl.app）【修复待真机复验】
+- **现象**（Redmi K70 真机 logcat）：点开应用即闪退，`Process ... has crashed too many times, killing`。
+  崩溃栈 `Fatal signal` 在 `libengine_api.so (JNI_OnLoad)`，
+  Abort message: `No pending exception expected: java.lang.ClassNotFoundException: org.libsdl.app.SDLActivity`。
+- **根因**：`libengine_api.so` 静态链入 SDL2（引擎确实用 SDL API：`WaveMixer.cpp` 的
+  `SDL_BuildAudioCVT/SDL_OpenAudioDevice`、`EngineBootstrap.cpp` 的 `SDL_SetMainReady`）。
+  SDL2 的安卓原生 `src/core/android/SDL_android.c` 在 `JNI_OnLoad` 里
+  `FindClass("org/libsdl/app/SDLActivity")`，但工程缺该 Java 层 → FindClass 留下
+  pending exception，`System.loadLibrary("engine_api")` 返回时 ART `AssertNoPendingException`
+  → `abort()`。这就是启动即闪退，不是 Flutter 层。
+- **修复**：从上游 `reAAAq/KrKr2-Next` 补入
+  `apps/flutter_app/android/app/src/main/java/org/libsdl/app/` 共 9 个 Java 源：
+  `HIDDevice(HIDDeviceManager/HIDDeviceUSB/HIDDeviceBLESteamController)`、
+  `SDL`、`SDLActivity`、`SDLAudioManager`、`SDLControllerManager`、`SDLSurface`。
+  SDLActivity 版本常量 = 2.32.10，与 vcpkg `sdl2 2.32.10` 一致，native 签名匹配。
+- **待验证**：重打 APK 真机启动不再闪退、主界面正常。
+
+### 1. 对齐上游 Android 实现 — 完整嵌入 JNI 平台层【构建待 CI 验证】
+- **背景**：早期重构把上游安卓端精简为 POSIX/空桩（存储路径空、语言硬编码 en、无对话框、
+  无 AppContext/JavaVM）。本次按上游 `reAAAq/KrKr2-Next` 完整嵌入待复验。
+- **嵌入内容**：
+  - `cpp/core/environ/android/KrkrJniHelper.*` + `AndroidUtils.cpp`：JNI 平台实现
+    （存储路径 getStoragePath、设备 ID、语言、版本、对话框 ShowMessageBox/ShowInputBox、
+    文件操作等），Android 编译；原 `platform_android.cpp` 删除；`stubs/platform_linux.cpp` 保留仅非 Android。
+  - `bridge/engine_api/src/engine_api_android_jni.cpp`：补 `JNI_OnLoad`（存 JavaVM +
+    `krkr::JniHelper::setJavaVM`）、`krkr_GetJavaVM/krkr_GetJNIEnv/krkr_GetApplicationContext`、
+    `nativeSetApplicationContext`（对齐上游 krkr2_android.cpp）。
+  - `apps/.../kotlin/org/tvp/kirikiri2/KR2Activity.kt`（上游原样）+ `MainActivity` 改为继承
+    KR2Activity；app `build.gradle` 加 `material:1.12.0`。
+  - `flutter_engine_bridge` Android 插件：加 `nativeSetApplicationContext`、外部存储权限
+    （has/requestManageExternalStorage）、SAF 文件选择（pickFile/resolveContentUri）、
+    `ActivityAware`；保留本地 `SurfaceProducer` 零拷贝路径。
+  - app `AndroidManifest`：加 `MANAGE_EXTERNAL_STORAGE`/`READ_EXTERNAL_STORAGE` +
+    `requestLegacyExternalStorage=true`。
+- **未复用的上游文件**：`linux/Platform.cpp`（`#ifdef LINUX`、依赖 gtk，不适用移动端；Linux 仍用
+  `stubs/platform_linux.cpp`）。
+- **待验证**：CI 编译通过；真机启动不崩、可读外部存储/共享目录、游戏/存档路径正确、系统对话框可用。
+
+### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 - **现象**（真机日志 `sabbat_kr`/魔女的夜宴，目录版）：游戏正常启动到
   `startup→Initialize→first.ks→title.ks`，XP3 全挂载，脚本/图层照常（事件 2 万对象、
   9k ICC、内存 230MB+），但合成源纹理始终 `(0,0,0,255)` 纯黑、draw 计数卡死不再增长。

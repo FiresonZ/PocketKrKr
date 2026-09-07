@@ -155,7 +155,8 @@ environ/DumpSend.cpp          // 崩溃转储发送
 environ/DetectCPU.*           // CPU 特性检测（决定 SIMD 派发）
 environ/XP3ArchiveRepack.*    // XP3 重打包工具
 environ/Platform.h            // 平台抽象头
-environ/android/platform_android.cpp // Android 平台实现
+environ/android/AndroidUtils.cpp // Android 平台实现（JNI 桥：存储/设备ID/语言/对话框/文件）
+environ/android/KrkrJniHelper.* // JNI 工具（JavaVM/AppEnv 管理，AndroidUtils 地基，对齐上游）
 environ/apple/ios/platform.mm        // iOS 平台实现（Objective-C++）
 environ/apple/macos/platform.mm      // macOS 平台实现
 environ/sdl/tvpsdl.cpp        // SDL 平台实现（CI/Linux 宿主、SDL 窗口）
