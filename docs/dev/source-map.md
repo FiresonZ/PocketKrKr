@@ -1,9 +1,9 @@
-# PocketKrKr — 源代码结构地图（CPP + Flutter 速查）
+# 源代码结构地图
 
 > 目标读者：想**学习本项目并参与开发**的个人开发者。
 > 用法：先看下方整体树抓住骨架，再按模块深入；每段"树 + 说明"告诉你**这个目录/文件负责什么、该怎么读**。
 > 建议搭配：[architecture.md](architecture.md)（数据流/桥接）、[key-references.md](key-references.md)（关键符号）、
-> [for-beginners.md](for-beginners.md)（小白入门）、[build.md](build.md)（构建）。
+> [getting-started.md](getting-started.md)（入门）、[build.md](build.md)（构建）。
 > 树中 `//` 后的文字是对该目录/文件职责的速记。
 
 ## 0. 顶层一览

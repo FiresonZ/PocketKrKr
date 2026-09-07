@@ -98,8 +98,7 @@ nav:
       - 支持的游戏: support_games.md
   - 开发文档:
       - 开发文档索引: dev/README.md
-      - 小白开发指引: dev/for-beginners.md
-      - 开发者入门: dev/developers-guide.md
+      - 入门指南: dev/getting-started.md
       - 技术栈: dev/tech-stack.md
       - 待办 / 已知问题: dev/todo.md
   - 架构与源码:
