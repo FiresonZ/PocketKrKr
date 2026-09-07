@@ -29,15 +29,21 @@
 
 ## 进行中 / 待验证
 
-### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 首屏后点击退出的兼容根因【已修，待真机复验】
-- 现象（千恋万花高压 真机日志 21:17:22）：开场播放 yuzulogo logo 后，`custom.ks:89`
-  访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`）报
-  `Member "D3DAdaptor" does not exist` → 脚本致命错误 → 主循环终止 → 首屏后点击退出。
+### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 首屏后点击退出的兼容根因
+- 旧现象（千恋万花高压 真机日志）：开场播放 yuzulogo logo 后，`custom.ks:89`
+  访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`），早期报
+  `Member "D3DAdaptor" does not exist` → 脚本致命错误。
 - 根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
   我们 motionplayer 未实现。
-- 修复：`Motion` 类补只读 `D3DAdaptor` getter，返回 undefined → 脚本 `typeof` 走 CPU/GL 分支
-  （motionplayer.hpp/main.cpp），消除致命错误。已改 `cpp/plugins/motionplayer/main.cpp`。
-- 待验证：真机确认首屏后点击不再退出、logo/正文能正常推进。
+- **新增现象（2026-09-08 00:32 日志）**：给 `D3DAdaptor` 返回 `undefined` 后，`Member
+  does not exist` 消失，但 krkrz 的 `affinesourcemotion.tjs drawAffine` 把
+  `Motion.D3DAdaptor` **当作 Object 传参/赋值**（`new MotionXX(D3DAdaptor, …)`）→ 报
+  `Cannot convert the variable type (() to Object)`，`custom.ks:89` 致命 → logo 后崩溃+卡死。
+- 修复（本轮，`cpp/plugins/motionplayer/main.cpp`）：`getD3DAdaptor` 改为返回 **stub 字典
+  对象**（与 `Motion.enableD3D` 的 `getEnableD3D` 同一模式）而非 undefined，避免
+  `() → Object` 转换错误。后续若脚本访问 stub 的具体成员再逐项补。
+- 待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor / 相关
+  motionplayer 成员的 stub。
 
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 > 移植清单/参考源：见 [krkrz-compat.md](krkrz-compat.md)（已确认各插件源码来源，含
@@ -75,6 +81,16 @@
   `iTVPVideoOverlay::PresentVideoImage` / `GetFrontBuffer` 契约。
 
 ### 3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
+> **❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治**。日志
+> `pocketkrkr_engine(1).log` 里 IINCHO-Re.co（krkr2）到 title 屏后退出：第一个游戏的最后一行
+> 日志停在 `00:31:46 journal title.ks:@s`，其后**完全没有 engine_destroy / TVPSystemUninit 任何
+> 日志**，也**没有 `runtime teardown complete`** → `engine_destroy` 在 `OnDeactivate` /
+> `TVPSystemUninit` / `scene·loop delete` / `Bootstrap::Shutdown` 之一处**静默挂死**（Flutter
+> UI 线程 await engineDestroy 阻塞 → 整机无响应）。
+> **本轮动作**：给 `engine_destroy` 逐级打点（进入/OnDeactivate/TVPSystemUninit/MainScene/
+> EngineLoop/Bootstrap/Reset 链/完成），下次真机退出即可据最后的点定位卡在哪一步。
+> 注意：engine_api 有 `#if ENGINE_API_USE_KRKR2_RUNTIME` 双实现，Android 联动 krkr2core/
+> plugin 走的是**带完整 teardown 的那份**（engine_api.cpp:757 附近），打点也加在这份。
 > **C 端根因已定位**（这篇日志复现确认）：`engine_api.cpp` 的 `g_runtime_started_once`
 > 一旦置 true 从不复位；`engine_destroy` 只清 `g_runtime_active/owner`，漏了它 → 第二次
 > `engine_open_game` 必命中 `runtime restart is not supported yet`。Dart shutdown 是前置，

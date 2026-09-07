@@ -800,14 +800,18 @@ engine_result_t engine_destroy(engine_handle_t handle) {
   }
 
   if (owned_runtime) {
+    spdlog::info("engine_destroy: entering runtime teardown (owned_runtime=1)");
     try {
       Application->OnDeactivate();
+      spdlog::info("engine_destroy: Application::OnDeactivate done");
     } catch (...) {
+      spdlog::error("engine_destroy: Application::OnDeactivate threw");
     }
     Application->FilterUserMessage(
         [](std::vector<std::tuple<void*, int, tTVPApplication::tMsg>>& queue) {
           queue.clear();
         });
+    spdlog::info("engine_destroy: FilterUserMessage done");
 
     // Avoid triggering platform exit() path in the host process.
     TVPTerminated = false;
@@ -820,22 +824,31 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     // 第二次 engine_open_game 必命中 "runtime restart is not supported yet"。
     // 现在做到完整卸载：TVPSystemUninit + 销毁引擎单例 + Bootstrap::Shutdown
     // + 复位 started_once，使不杀进程也能再次 create/open。
+    // （逐级打点，便于真机定位 exit 卡死的具体阶段。）
+    spdlog::info("engine_destroy: calling TVPSystemUninit...");
     try {
       TVPSystemUninit();
+      spdlog::info("engine_destroy: TVPSystemUninit done");
     } catch (...) {
       spdlog::error("engine_destroy: TVPSystemUninit threw");
     }
 
     if (auto* scene = TVPMainScene::GetInstance()) {
+      spdlog::info("engine_destroy: deleting TVPMainScene...");
       delete scene;
+      spdlog::info("engine_destroy: TVPMainScene deleted");
     }
     if (auto* loop = EngineLoop::GetInstance()) {
+      spdlog::info("engine_destroy: deleting EngineLoop...");
       delete loop;
+      spdlog::info("engine_destroy: EngineLoop deleted");
     }
 
     if (g_engine_bootstrapped) {
+      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown...");
       TVPEngineBootstrap::Shutdown();
       g_engine_bootstrapped = false;
+      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown done");
     }
 
     // 允许下一次 engine_open_game 再次启动。
@@ -854,6 +867,7 @@ engine_result_t engine_destroy(engine_handle_t handle) {
       // 使二次 open_game 能干净重建渲染器（tTVPAtExit 清理进程只注册一次、二次不重跑）。
       TVPClearGraphicCache();
       TVPResetRenderManagerForRestart();
+      spdlog::info("engine_destroy: reset-for-restart done");
     } catch (...) {
       spdlog::error("engine_destroy: reset-for-restart threw");
     }
