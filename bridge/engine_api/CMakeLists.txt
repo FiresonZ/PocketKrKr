@@ -52,6 +52,12 @@ if(TARGET krkr2core AND TARGET krkr2plugin)
         target_link_libraries(engine_api PRIVATE krkr2core krkr2plugin)
         # ANativeWindow (libandroid) + __android_log_print (liblog)
         target_link_libraries(engine_api PRIVATE android log)
+        # engine_api_so 既含我们自己的 JNI_OnLoad（存 JavaVM + krkr::JniHelper::setJavaVM，
+        # 供 AndroidUtils.cpp 用），又静态链入 SDL2——SDL 的安卓原生 SDL_android.c 也定义
+        # JNI_OnLoad，二者强符号重复导致 ld.lld duplicate symbol。用 allow-multiple-definition
+        # 让先出现的源码 object（engine_api 源，先于静态库）的 JNI_OnLoad 生效，SDL 的被忽略；
+        # SDL 在此仅作音频格式转换/SetMainReady 用，不依赖其安卓 JNI 初始化。
+        target_link_options(engine_api PRIVATE "LINKER:--allow-multiple-definition")
     else()
         target_link_libraries(engine_api PRIVATE krkr2core krkr2plugin)
     endif()
