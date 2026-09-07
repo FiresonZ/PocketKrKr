@@ -45,6 +45,7 @@ extern "C" void krkr_GetSurfaceDimensions(uint32_t*, uint32_t*);
 #include "environ/MainScene.h"
 #include "base/StorageIntf.h"
 #include "base/SysInitIntf.h"
+#include "base/ScriptMgnIntf.h"
 #include "base/impl/SysInitImpl.h"
 #include "visual/GraphicsLoaderIntf.h"
 #include "visual/ogl/ogl_common.h"
@@ -837,6 +838,17 @@ engine_result_t engine_destroy(engine_handle_t handle) {
 
     // 允许下一次 engine_open_game 再次启动。
     g_runtime_started_once = false;
+
+    // 复位各子系统静态标志位与缓存，确保二次初始化干净
+    // （普通链接下必要，否则这些 Reset 无引用会被 GC 掉）。
+    try {
+      TVPResetRuntimeForRestart();
+      TVPResetScriptEngineForRestart();
+      TVPResetSysInitImplForRestart();
+    } catch (...) {
+      spdlog::error("engine_destroy: reset-for-restart threw");
+    }
+
     spdlog::info("engine_destroy: runtime teardown complete (restartable)");
     spdlog::default_logger()->flush();
   }
