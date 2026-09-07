@@ -29,6 +29,16 @@
 
 ## 进行中 / 待验证
 
+### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 首屏后点击退出的兼容根因【已修，待真机复验】
+- 现象（千恋万花高压 真机日志 21:17:22）：开场播放 yuzulogo logo 后，`custom.ks:89`
+  访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`）报
+  `Member "D3DAdaptor" does not exist` → 脚本致命错误 → 主循环终止 → 首屏后点击退出。
+- 根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
+  我们 motionplayer 未实现。
+- 修复：`Motion` 类补只读 `D3DAdaptor` getter，返回 undefined → 脚本 `typeof` 走 CPU/GL 分支
+  （motionplayer.hpp/main.cpp），消除致命错误。已改 `cpp/plugins/motionplayer/main.cpp`。
+- 待验证：真机确认首屏后点击不再退出、logo/正文能正常推进。
+
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 > 移植清单/参考源：见 [krkrz-compat.md](krkrz-compat.md)（已确认各插件源码来源，含
 > krkrz/krkr2/Kirikiroid2 本地参考副本）。
