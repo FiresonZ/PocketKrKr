@@ -822,16 +822,18 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     // 修"不杀后台无法再开游戏"的真正根因：此前 engine_destroy 只重置
     // g_runtime_active/g_runtime_owner，却从不复位 g_runtime_started_once，
     // 第二次 engine_open_game 必命中 "runtime restart is not supported yet"。
-    // 现在做到完整卸载：TVPSystemUninit + 销毁引擎单例 + Bootstrap::Shutdown
+    // 现在做到可重启：销毁引擎单例 + Bootstrap::Shutdown + 各子系统状态复位
     // + 复位 started_once，使不杀进程也能再次 create/open。
-    // （逐级打点，便于真机定位 exit 卡死的具体阶段。）
-    spdlog::info("engine_destroy: calling TVPSystemUninit...");
-    try {
-      TVPSystemUninit();
-      spdlog::info("engine_destroy: TVPSystemUninit done");
-    } catch (...) {
-      spdlog::error("engine_destroy: TVPSystemUninit threw");
-    }
+    //
+    // 注意：**有意跳过 TVPSystemUninit()（不再销毁脚本引擎）**。
+    // 原因：TVPSystemUninit 内部会走 TVPUninitScriptEngine → 在 TJS 调用栈内
+    // 销毁脚本引擎；krkrz host（Flutter）模式下引擎自声明这种做法即
+    // "undefined behavior (hang)"（见 SysInitImpl.cpp TVPTerminateSync 注释），
+    // 真机表现为退出即静默卡死、无任何 engine_destroy 日志。因此按"不销毁引擎"
+    // 决策移除该步，只靠下方 TVPReset*ForRestart（仅复位标志/缓存、不销毁对象）
+    // + 复位 g_runtime_started_once 来允许二次 open_game 重启。
+    // 若后续需要更彻底卸载（参照上游 PR#12：先 Application->OnExit() 让脚本引擎
+    // 安全退出、再 TVPSystemUninit），再按该顺序补回，而不要在栈内直接销毁。
 
     if (auto* scene = TVPMainScene::GetInstance()) {
       spdlog::info("engine_destroy: deleting TVPMainScene...");
