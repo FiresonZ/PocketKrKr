@@ -605,6 +605,17 @@ public:
         return TJS_E_INVALIDPARAM;
     }
 
+    // Z（KIRIKIRI Z）游戏脚本会访问 Motion.D3DAdaptor（(property getter) motionD3DAdaptor）。
+    // 它是 D3D 版 motionplayer（drawdeviceD3DZ / motionplayer_nod3d）专有成员；移动端无
+    // D3D，且我们已用 CPU/GL motion（Player::play 正常播 logo）。返回 undefined 让脚本的
+    // `typeof Motion.D3DAdaptor === "Object"` 走 else 的 CPU 兼容分支，避免
+    // `Member "D3DAdaptor" does not exist` 致命异常导致首屏后点击退出。
+    static tjs_error getD3DAdaptor(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                   iTJSDispatch2 *) {
+        if(r) *r = tTJSVariant(); // undefined → 无 D3D
+        return TJS_S_OK;
+    }
+
     static tjs_error getEnableD3D(tTJSVariant *r, tjs_int, tTJSVariant **,
                                   iTJSDispatch2 *) {
         iTJSDispatch2 *obj = TJSCreateDictionaryObject();
@@ -624,6 +635,7 @@ private:
 NCB_REGISTER_CLASS(Motion) {
     NCB_PROPERTY_RAW_CALLBACK(enableD3D, Motion::getEnableD3D,
                               Motion::setEnableD3D, TJS_STATICMEMBER);
+    NCB_PROPERTY_RAW_CALLBACK_RO(D3DAdaptor, Motion::getD3DAdaptor, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(PlayFlagForce, Motion::getPlayFlagForce, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypePoint, Motion::getShapeTypePoint, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypeCircle, Motion::getShapeTypeCircle, TJS_STATICMEMBER);

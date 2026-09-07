@@ -29,7 +29,19 @@
 
 ## 进行中 / 待验证
 
+### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 首屏后点击退出的兼容根因【已修，待真机复验】
+- 现象（千恋万花高压 真机日志 21:17:22）：开场播放 yuzulogo logo 后，`custom.ks:89`
+  访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`）报
+  `Member "D3DAdaptor" does not exist` → 脚本致命错误 → 主循环终止 → 首屏后点击退出。
+- 根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
+  我们 motionplayer 未实现。
+- 修复：`Motion` 类补只读 `D3DAdaptor` getter，返回 undefined → 脚本 `typeof` 走 CPU/GL 分支
+  （motionplayer.hpp/main.cpp），消除致命错误。已改 `cpp/plugins/motionplayer/main.cpp`。
+- 待验证：真机确认首屏后点击不再退出、logo/正文能正常推进。
+
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
+> 移植清单/参考源：见 [krkrz-compat.md](krkrz-compat.md)（已确认各插件源码来源，含
+> krkrz/krkr2/Kirikiroid2 本地参考副本）。
 - **现象**（真机日志 `sabbat_kr`/魔女的夜宴，目录版）：游戏正常启动到
   `startup→Initialize→first.ks→title.ks`，XP3 全挂载，脚本/图层照常（事件 2 万对象、
   9k ICC、内存 230MB+），但合成源纹理始终 `(0,0,0,255)` 纯黑、draw 计数卡死不再增长。
@@ -44,8 +56,9 @@
 - **下一步**：
   1. 用 **Windows**（我们 CMakePresets 有 Windows MinGW 预设）跑同一游戏二分：
      Windows 也黑 → 引擎/Z 层问题；Windows 正常 → 才转 iOS 纹理链路。
-  2. 在 `ncbAutoRegister` 内部编表里给 Z 插件**挂名**（先能 link 成功），再定位
-     到底是 `drawdeviceD3DZ` / Z 主层合成缺哪一环导致主 DrawBuffer 不被合成。
+  2. 对照 **Kirikiroid2** `src/core/visual/RenderManager_ogl.cpp` + `BasicDrawDevice.cpp`
+     与我们的 `cpp/core/visual/RenderManager.*`，定位 Z 主层 `DrawBuffer` 未合成原因。
+  3. 在 `ncbAutoRegister` 内部编表里给 Z 插件**挂名**（先能 link 成功），再实现功能。
 - 参考：引擎主合成链 `BasicDrawDevice::Show→GetDrawBuffer→UpdateDrawBuffer`、
   `CompleteForWindow→InternalComplete2(_GPU)`、`__captureBaseDrawDevice` 包装挂点
   （见 `cpp/plugins/drawDeviceD2DCompat.cpp`）。
@@ -57,10 +70,25 @@
 - 备注：**已证实不是魔女的夜宴黑屏的原因**（`VideoOverlay total=0`）；保留为通用待办，
   供真正的视频 OP/影片游戏使用。
 - 待办：评估并把解码帧 RGBA 合成到引擎场景（Mixer/Layer）或 Flutter 纹理。
+- 参考实现：Kirikiroid2 `src/core/movie/krmovie.cpp` + `ffmpeg/KRMovie*.{h,cpp}`、krkrz `movie/win32/krmovie.cpp`（见 [krkrz-compat.md](krkrz-compat.md)）。
 - 参考：`cpp/core/visual/impl/VideoOvlImpl.cpp` 的 `EC_UPDATE` 处理与
   `iTVPVideoOverlay::PresentVideoImage` / `GetFrontBuffer` 契约。
 
 ### 3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
+> **C 端根因已定位**（这篇日志复现确认）：`engine_api.cpp` 的 `g_runtime_started_once`
+> 一旦置 true 从不复位；`engine_destroy` 只清 `g_runtime_active/owner`，漏了它 → 第二次
+> `engine_open_game` 必命中 `runtime restart is not supported yet`。Dart shutdown 是前置，
+> 绕不过这个 C 端标志。
+>
+> **进度**：engine_api.cpp `engine_destroy` 已按 PR#12 加入热重启 teardown
+> （TVPSystemUninit + 销毁 MainScene/EngineLoop 单例 + Bootstrap::Shutdown +
+> `g_runtime_started_once=false`）。**剩余待移植的 Reset 函数**（PR#12 C++ 侧，保证重初始化干净）：
+> `TVPResetScriptEngineForRestart`（ScriptMgnIntf）、`TVPResetRuntimeForRestart`（SysInitIntf）、
+> `TVPResetSysInitImplForRestart`（SysInitImpl）、`TVPResetApplicationForRestart`（Application）、
+> `TVPResetStorageImplForRestart`（StorageImpl，改 TVPGetAppPath 缓存）、
+> `TVPResetExtensionClassInstallStateForRestart`（Extension）、`TVPResetPluginSystemForRestart`/
+> `TVPUnregisterInternalPluginsForRestart`/`ncbAutoRegister::ResetModuleStateForRestart`（Plugin/ncbind）；
+> visual 级（RenderManager/Font/Trans/Window/Bitmap/LayerBitmap/OpenGL）为第二批。
 - 现象：首次开游戏正常；不杀进程、退出后再开另一款游戏报
   `Engine Error engine_open_game_async failed: result=-3, error=runtime restart is not supported yet`。
 - 已做：Dart 侧 `_exitGame` 现在先 `engineDestroy()` 等销毁完成再 `pop`。
