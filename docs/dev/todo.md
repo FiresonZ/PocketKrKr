@@ -190,8 +190,18 @@
   demote 前 `&0xFF` 复现 uchar 截断），并在 `MAKE_PS_4V` 的 NORM/_o 加 rgb_mask 置
   alpha=0（HDA 走 ApplyHDA 保留 dst alpha）。`out/p5_check/check2.c` 20M 全一致。
   `tvpgl_simd_init.cpp` 已放回 Overlay/HardLight。
-- 待办：Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 的 core（溢出/alpha 分支）
-  未逐一核对，仍回退标量；逐个核对后放回。
+- **P6 ✅（剩余 9 个 PS 模式全部核对放回）**：Alpha/Add/Sub/Mul/Screen/Lighten/Darken/
+  Diff/Exclusion 的 core（溢出/alpha 分支）逐一与标量 `tvpgl.cpp` 宏逐位核对，已全部
+  `REGISTER_PS_BLEND_4V` 放回（`tvpgl_simd_init.cpp`）。
+  - 验证：`out/simd9_check/check.c`（自包含，标量 packed 复刻 vs per-channel u16-wrap
+    复刻，9 模式 × 4 变体 × 30M 随机像素）**0 mismatch**；Exclusion 定向借位 case 亦一致。
+  - 发现并修复一个真实 bug：`PsScreenBlend_o_HWY` 缺 `rgb_mask`（`_o` 的 alpha 字节
+    未被清零，而标量 `_o` 写 alpha=0）——已补（`tvpgl_simd_ps_blend.cpp`）。
+  - 关键结论：标量 Screen 的 alpha 段是 `((s-sd)*a>>8)+d`（**非**标准 alpha blend
+    `((blended-d)*a>>8)+d`），SIMD 实现已按此对齐；`sd<s` 恒成立故无跨通道借位。
+- ✅ 全部 16 种 PS 模式（含表驱动 5 种保持标量）已定案：8 个已核对 + Overlay/HardLight/
+  Exclusion 已放回，SoftLight/ColorDodge/ColorBurn/ColorDodge5/Diff5 因查表无 SIMD
+  收益保留标量（注释内）。待 CI（`tvpgl_simd_compare`）真机确认无回归。
 
 ### 5. KAGEX / KAG 差异兼容（kagexopt 相关）
 - 待办：调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（确切需求待明确）。
