@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="https://raw.githubusercontent.com/FiresonZ/KrKr2-Next-Mobile/main/docs/resources/logo.png" alt="PocketKrKr" width="96">
   <h1 align="center">PocketKrKr</h1>
   <p align="center">A Next-Generation KiriKiri2 Runtime for Mobile (iOS + Android)</p>
 </p>
