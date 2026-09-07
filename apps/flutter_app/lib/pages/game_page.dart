@@ -96,6 +96,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   int? _playRunningSinceEpochMs;
   bool _playSessionFinalized = false;
 
+  // runtime-restart 支持：退出/重试时对引擎做一次严格有序的 shutdown
+  // （参考上游 vcdlk PR#12「make runtime restartable after engine_destroy」）。
+  // _shutdownRequested：置位后不再新建引擎；_shutdownFuture：对并发 shutdown 去重。
+  bool _shutdownRequested = false;
+  Future<void>? _shutdownFuture;
+
   @override
   void initState() {
     super.initState();
@@ -190,17 +196,89 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     }
   }
 
-  @override
-  void dispose() {
-    if (widget.gameManager != null) {
-      unawaited(_finalizePlaySession());
+  Future<void> _shutdownEngine({
+    bool restoreOrientation = true,
+    bool finalizePlaySession = true,
+  }) {
+    final existing = _shutdownFuture;
+    if (existing != null) {
+      return existing;
     }
+
+    _shutdownRequested = true;
+    final future = _performShutdownEngine(
+      restoreOrientation: restoreOrientation,
+      finalizePlaySession: finalizePlaySession,
+    );
+    _shutdownFuture = future;
+    return future;
+  }
+
+  Future<void> _performShutdownEngine({
+    required bool restoreOrientation,
+    required bool finalizePlaySession,
+  }) async {
     _stopStartupPolling();
     _stopMemoryStatsPolling();
+    _stopTickLoop(notify: false);
+    _autoPausedByLifecycle = false;
+    _resumeTickAfterLifecycle = false;
+    _pendingLifecycleResumed = false;
+    _lifecycleTransitionInFlight = false;
+
+    try {
+      await _surfaceKey.currentState?.release();
+    } catch (e) {
+      _log('surface release failed: $e');
+    }
+
+    final int destroyResult = await _bridge.engineDestroy();
+    if (destroyResult != _engineResultOk) {
+      _log(
+        'engine_destroy failed: result=$destroyResult, '
+        'error=${_bridge.engineGetLastError()}',
+      );
+    } else {
+      _log('engine_destroy => OK');
+    }
+
+    if (finalizePlaySession && widget.gameManager != null) {
+      await _finalizePlaySession();
+    }
+
+    if (restoreOrientation) {
+      _restoreOrientation();
+    }
+  }
+
+  Future<void> _retryAutoStart() async {
+    await _shutdownEngine();
+    if (!mounted) {
+      return;
+    }
+
+    _shutdownRequested = false;
+    _shutdownFuture = null;
+    setState(() {
+      _phase = _EnginePhase.initializing;
+      _errorMessage = null;
+      _tickCount = 0;
+      _showOverlay = false;
+      _showDebug = false;
+    });
+    _bridge = widget.engineBridgeBuilder(ffiLibraryPath: widget.ffiLibraryPath);
+    unawaited(_autoStart());
+  }
+
+  @override
+  void dispose() {
+    // 退出/销毁统一走严格有序 shutdown（surface release → engineDestroy →
+    // finalizePlaySession）；restoreOrientation=false，因为这里立即同步恢复朝向。
+    unawaited(
+      _shutdownEngine(restoreOrientation: false, finalizePlaySession: true),
+    );
     _bootLogScrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    _stopTickLoop(notify: false);
-    unawaited(_bridge.engineDestroy());
     _restoreOrientation();
     super.dispose();
   }
@@ -377,6 +455,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   }
 
   Future<void> _autoStart() async {
+    if (_shutdownRequested) {
+      return;
+    }
     if (Platform.isAndroid) {
       final granted = await _ensureAndroidAllFilesAccess();
       if (!granted) {
@@ -396,6 +477,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     await Future<void>.delayed(Duration.zero);
 
     final int createResult = await _bridge.engineCreate();
+    if (_shutdownRequested) {
+      return;
+    }
     if (createResult != _engineResultOk) {
       _fail(
         'engine_create failed: result=$createResult, '
@@ -457,7 +541,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
 
     await _applyMemoryGovernorOptions();
 
-    if (!mounted) return;
+    if (!mounted || _shutdownRequested) return;
     setState(() => _phase = _EnginePhase.opening);
     _stopStartupPolling();
     var normalizedGamePath = _normalizeGamePath(widget.gamePath);
@@ -479,6 +563,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     final int openResult = await _bridge.engineOpenGameAsync(
       normalizedGamePath,
     );
+    if (_shutdownRequested) {
+      return;
+    }
     if (openResult != _engineResultOk) {
       _fail(
         'engine_open_game_async failed: result=$openResult, '
