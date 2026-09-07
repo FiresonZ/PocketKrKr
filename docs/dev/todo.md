@@ -110,3 +110,35 @@
   只给 pkg-config、不给 CMake config，不能用 `find_package(oboe CONFIG)`）。**别因"上游没加"就移除**。
 - **arm64 triplet ABI 修复是我们独有**（`VCPKG_CMAKE_CONFIGURE_OPTIONS -DANDROID_ABI=arm64-v8a`、
   `CMAKE_ANDROID_ARCH_ABI`/`CMAKE_SYSTEM_PROCESSOR=aarch64`），上游 triplet 是原版，别覆盖。
+
+### 10. Android 主界面"永久转圈"待真机日志定根【进行中】🏷 新增
+- 现象：Android APK 编译成功，但进入主界面后 `CircularProgressIndicator` 一直转，
+  停在 `_HomePage` 的 `_loading=true`。
+- 已排查（静态逻辑上 Android 不存在必然死循环）：
+  - 转圈唯一来源 `home_page.dart _loading`（L864）；`games` 为空会显示空态，不是转圈。
+  - `_loadGames()` 依赖链：`SharedPreferences.getInstance`（悬念，平台通道）、
+    `_gameManager.load()`（`listFromJsonString` 有 try-catch 安全）、
+    `applyPendingPlaySession()`（jsonDecode 有 try-catch 安全）、
+    `_initIosGamesDir()`（Android 被 `Platform.isIOS` 排除，不执行）。
+  - 结论：若早先真的转圈，是**某 await 在平台通道上静默挂起/抛异步异常**，非静态死循环。
+- 已做加固：`_loadGames()` 包 try-catch-finally（`debugPrint` + `finally` 强制 `_loading=false`），
+  不再静默永久转圈。提交 `63b8537`。
+- 待办：等用户连安卓设备贴 `adb logcat`（过滤
+  `Flutter|HomePage|SharedPreferences|krkr|engine`）核对：
+  1. 是否有 `HomePage._loadGames error:` 异常堆栈；
+  2. SharedPreferences 平台通道是否就绪（app 早期 getInstance 可能挂）；
+  3. 引擎是否被提前启动/阻塞初始化。
+
+### 11. Android「添加文件/压缩包」死代码 bug + 目录访问平台差异 🏷 新增
+- 问题 1（死代码）：`home_page.dart _addGameArchive()` Android 分支调用
+  `_platformChannel.invokeMethod('pickFile')`（`flutter_engine_bridge` channel），但
+  **Android `FlutterEngineBridgePlugin.onMethodCall` 与 iOS Swift 均无 `pickFile` 实现**
+  → 必抛 `MissingPluginException`，「添加压缩包/XP3」在 Android 上直接失败。
+- 问题 2（平台差异）：Android 用 SAF（`file_picker.getDirectoryPath`）拿 `content://` URI +
+  持久授权，iOS/macOS 拿真实路径。这是**权限模型差异，不是"目录不能访问"**，但依赖
+  `file_picker` SAF 授权机制，需真机确认「添加文件夹」在 Android 可用。
+- 待办：
+  1. 在 Android 原生补 `pickFile`（`ACTION_OPEN_DOCUMENT` + SAF + 持久 URI 授权并 copy 到
+     app 私有目录，或改为 `FilePicker.pickFiles` + SAF），修复死代码；
+  2. 真机验证「添加文件夹」`content://` 路径能否被引擎打开（需 SAF 权限持续/落盘）；
+  3. 若走 copy 方案，注意 APK 体积与引擎只认真实路径的读取方式。
