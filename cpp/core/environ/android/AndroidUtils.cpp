@@ -28,7 +28,10 @@
 #include "EventIntf.h"
 #include "RenderManager.h"
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <sched.h>
 #include <cerrno>
+#include <fstream>
 
 using JniHelper = krkr::JniHelper;
 using JniMethodInfo = krkr::JniHelper::MethodInfo;
@@ -36,9 +39,9 @@ using JniMethodInfo = krkr::JniHelper::MethodInfo;
 #define KR2ActJavaPath "org/tvp/kirikiri2/KR2Activity"
 // #define KR2EntryJavaPath "org/tvp/kirikiri2/Kirikiroid2"
 
-// Declared in krkr2_android.cpp – provides the Flutter Application Context
-// as a fallback when KR2Activity is not available.
-extern jobject krkr_GetApplicationContext();
+// Defined (extern "C") in bridge/engine_api/src/engine_api_android_jni.cpp –
+// provides the Flutter Application Context as a fallback when KR2Activity is not available.
+extern "C" jobject krkr_GetApplicationContext();
 
 extern unsigned int __page_size = getpagesize();
 
@@ -89,6 +92,45 @@ tjs_int TVPGetSelfUsedMemory() {
     updateMemoryInfo();
     return usedMemory;
 }
+
+// /proc 内存信息辅助（bionic 提供 /proc/meminfo 与 /proc/self/status，与各平台语义一致，单位 kB）
+static unsigned long _meminfo_value(const char *key) {
+    std::ifstream f("/proc/meminfo");
+    std::string line, k;
+    unsigned long v = 0;
+    while(std::getline(f, line)) {
+        std::istringstream is(line);
+        is >> k >> v; // 值单位为 kB
+        if(k == key)
+            return v;
+    }
+    return 0;
+}
+
+// /proc/self/status 中的 VmRSS/VmSize（单位 kB）
+static tjs_int _proc_self_mem(const char *key) {
+    std::ifstream f("/proc/self/status");
+    std::string line, k;
+    long v = 0, unit = 1;
+    while(std::getline(f, line)) {
+        std::istringstream is(line);
+        is >> k >> v >> unit;
+        if(k == key)
+            break;
+    }
+    return static_cast<tjs_int>(v);
+}
+
+void TVPGetMemoryInfo(TVPMemoryInfo &m) {
+    m.MemTotal = _meminfo_value("MemTotal:");
+    m.MemFree = _meminfo_value("MemFree:");
+    m.SwapTotal = _meminfo_value("SwapTotal:");
+    m.SwapFree = _meminfo_value("SwapFree:");
+    m.VirtualTotal = m.MemTotal; // 近似：物理内存总量
+    m.VirtualUsed = static_cast<unsigned long>(_proc_self_mem("VmRSS:"));
+}
+
+void TVPRelinquishCPU() { sched_yield(); }
 
 void TVPForceSwapBuffer() {
     // Use the engine's EGL context manager instead of eglGetCurrentDisplay(),
@@ -1103,6 +1145,13 @@ bool TVP_stat(const char *name, tTVP_stat &s) {
     s.st_mtime = t.st_mtim.tv_sec;
     s.st_ctime = t.st_ctim.tv_sec;
     return ret;
+}
+
+bool TVP_utime(const char *name, time_t modtime) {
+    timeval mt[2] = {};
+    mt[0].tv_sec = modtime;
+    mt[1].tv_sec = modtime;
+    return utimes(name, mt) == 0;
 }
 
 void TVPSendToOtherApp(const std::string &filename) {}
