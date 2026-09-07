@@ -1631,14 +1631,15 @@
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>environ/DetectCPU.*           // CPU 特性检测（决定 SIMD 派发）
 <a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>environ/XP3ArchiveRepack.*    // XP3 重打包工具
 <a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>environ/Platform.h            // 平台抽象头
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>environ/android/platform_android.cpp // Android 平台实现
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>environ/apple/ios/platform.mm        // iOS 平台实现（Objective-C++）
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>environ/apple/macos/platform.mm      // macOS 平台实现
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>environ/sdl/tvpsdl.cpp        // SDL 平台实现（CI/Linux 宿主、SDL 窗口）
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>environ/stubs/platform_linux.cpp    // Linux CI 宿主验证用 stub
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>environ/stubs/ui_stubs.cpp    // 无窗口 stub：探针上报（UpdateDrawBuffer → draw 状态）
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>environ/win32/                // Win32 共享实现（音频/线程/系统控制，跨平台复用，勿删）
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>environ/typedefine.h / cpu_types.h / vkdefine.h / combase.h  // 基础类型/平台宏
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>environ/android/AndroidUtils.cpp // Android 平台实现（JNI 桥：存储/设备ID/语言/对话框/文件）
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>environ/android/KrkrJniHelper.* // JNI 工具（JavaVM/AppEnv 管理，AndroidUtils 地基，对齐上游）
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>environ/apple/ios/platform.mm        // iOS 平台实现（Objective-C++）
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>environ/apple/macos/platform.mm      // macOS 平台实现
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>environ/sdl/tvpsdl.cpp        // SDL 平台实现（CI/Linux 宿主、SDL 窗口）
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>environ/stubs/platform_linux.cpp    // Linux CI 宿主验证用 stub
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>environ/stubs/ui_stubs.cpp    // 无窗口 stub：探针上报（UpdateDrawBuffer → draw 状态）
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>environ/win32/                // Win32 共享实现（音频/线程/系统控制，跨平台复用，勿删）
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>environ/typedefine.h / cpu_types.h / vkdefine.h / combase.h  // 基础类型/平台宏
 </code></pre></div>
 <blockquote>
 <p><code>ui_stubs.cpp</code> 里能看到黑屏探针（<code>SourceSample/PostBlit/draw/BlackScreen</code> 上报），排查黑屏从这里入手。</p>
