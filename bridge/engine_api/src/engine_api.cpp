@@ -160,6 +160,58 @@ std::mutex g_logfile_mutex;
 std::string g_log_file_path;
 std::shared_ptr<spdlog::sinks::sink> g_file_sink;
 
+#if defined(__ANDROID__)
+// Android: spdlog 默认 sink 是 stdout/stderr（stdout_color_mt），而 Android 的
+// stderr 默认不进 logcat，导致引擎内部日志（含 TJS Console / debug 输出）在
+// adb logcat 中不可见（与 iOS 的 Console 差异）。提供专用 sink 把 spdlog 全部
+// 日志重定向到 __android_log_*，tag 统一 "krkr2"，severity 对齐到 ANDROID_LOG_*。
+class AndroidLogSink final : public spdlog::sinks::sink {
+ public:
+  void log(const spdlog::details::log_msg& msg) override {
+    if (msg.payload.empty()) {
+      return;
+    }
+    std::string formatted;
+    spdlog::memory_buf_t formatted_buf;
+    formatter_->format(msg, formatted_buf);
+    formatted.assign(formatted_buf.data(), formatted_buf.size());
+    if (!formatted.empty() && formatted.back() == '\n') {
+      formatted.pop_back();
+    }
+    android_LogPriority prio;
+    switch (msg.level) {
+      case spdlog::level::trace:
+      case spdlog::level::debug:
+        prio = ANDROID_LOG_DEBUG;
+        break;
+      case spdlog::level::warn:
+        prio = ANDROID_LOG_WARN;
+        break;
+      case spdlog::level::err:
+      case spdlog::level::critical:
+        prio = ANDROID_LOG_ERROR;
+        break;
+      default:
+        prio = ANDROID_LOG_INFO;
+        break;
+    }
+    __android_log_print(prio, "krkr2", "%s", formatted.c_str());
+  }
+  void flush() override {}
+  void set_pattern(const std::string& pattern) override {
+    set_formatter(std::make_unique<spdlog::pattern_formatter>(pattern));
+  }
+  void set_formatter(std::unique_ptr<spdlog::formatter> sink_formatter) override {
+    formatter_ = std::move(sink_formatter);
+  }
+  const char* name() const override { return "android_logcat"; }
+
+ private:
+  std::unique_ptr<spdlog::formatter> formatter_{
+      std::make_unique<spdlog::pattern_formatter>()};
+};
+#endif  // __ANDROID__
+
 void PushRuntimeSpdlogToStartupQueue(const spdlog::details::log_msg& msg);
 
 class StartupLogSink final : public spdlog::sinks::sink {
@@ -177,7 +229,13 @@ std::shared_ptr<spdlog::logger> EnsureNamedLogger(const char* name) {
   if (auto logger = spdlog::get(name); logger != nullptr) {
     return logger;
   }
+#if defined(__ANDROID__)
+  // Android：用 logcat sink，让引擎内部日志在 adb logcat（tag krkr2）可见。
+  auto sink = std::make_shared<AndroidLogSink>();
+  return std::make_shared<spdlog::logger>(name, sink);
+#else
   return spdlog::stdout_color_mt(name);
+#endif
 }
 
 void CrashSignalHandler(int sig) {
