@@ -237,6 +237,13 @@ void SubBlend_o_HWY(tjs_uint32 *dest, const tjs_uint32 *src,
     const size_t N_PIXELS = hn::Lanes(d8) / 4;
     const auto vopa16 = hn::Set(d16, static_cast<uint16_t>(opa));
     const auto v255 = hn::Set(d16, static_cast<uint16_t>(255));
+    // Scalar TVPSubBlend_o_c scales only bytes 0..2 by opa and resets the alpha
+    // byte to 0xFF: the saturating subtract then yields dest alpha unchanged.
+    const auto alpha_mask = hn::Dup128VecFromValues(
+        d8,
+        0, 0, 0, 0xFF,  0, 0, 0, 0xFF,
+        0, 0, 0, 0xFF,  0, 0, 0, 0xFF
+    );
 
     tjs_int i = 0;
     for (; i + static_cast<tjs_int>(N_PIXELS) <= len; i += N_PIXELS) {
@@ -259,6 +266,7 @@ void SubBlend_o_HWY(tjs_uint32 *dest, const tjs_uint32 *src,
         auto r_hi = hn::IfThenElse(hn::Gt(sum_hi, v255), hn::Sub(sum_hi, v255),
                                    hn::Zero(d16));
         auto result = hn::OrderedDemote2To(d8, r_lo, r_hi);
+        result = hn::Or(hn::AndNot(alpha_mask, result), hn::And(alpha_mask, vd));
         hn::StoreU(result, d8, reinterpret_cast<uint8_t*>(dest + i));
     }
 
@@ -495,6 +503,13 @@ void ScreenBlend_HWY(tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len) {
     const hn::ScalableTag<uint8_t> d8;
     const hn::Repartition<uint16_t, decltype(d8)> d16;
     const size_t N_PIXELS = hn::Lanes(d8) / 4;
+    // Scalar TVPScreenBlend_c forces alpha byte = 0xFF (its packed product only
+    // covers bytes 0..2; the alpha byte is never written, so ~(0) = 0xFF).
+    const auto alpha_ff = hn::Dup128VecFromValues(
+        d8,
+        0, 0, 0, 0xFF,  0, 0, 0, 0xFF,
+        0, 0, 0, 0xFF,  0, 0, 0, 0xFF
+    );
 
     tjs_int i = 0;
     for (; i + static_cast<tjs_int>(N_PIXELS) <= len; i += N_PIXELS) {
@@ -514,7 +529,7 @@ void ScreenBlend_HWY(tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len) {
         auto r_lo = hn::ShiftRight<8>(hn::Mul(di_lo, si_lo));
         auto r_hi = hn::ShiftRight<8>(hn::Mul(di_hi, si_hi));
 
-        auto result = hn::Not(hn::OrderedDemote2To(d8, r_lo, r_hi));
+        auto result = hn::Or(hn::Not(hn::OrderedDemote2To(d8, r_lo, r_hi)), alpha_ff);
         hn::StoreU(result, d8, reinterpret_cast<uint8_t*>(dest + i));
     }
 

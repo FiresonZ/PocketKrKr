@@ -158,10 +158,9 @@ void TVPGL_SIMD_Init() {
 
     TVPSubBlend       = TVPSubBlend_hwy;
     TVPSubBlend_HDA   = TVPSubBlend_HDA_hwy;
-    // TODO(SIMD-vs-scalar): TVPPSubBlend_o 的 SIMD 与 *_c 位级不一致
-    // （alpha 通道偏离，tests/tvpgl_simd_compare 证实）。先回退到标量保正确，
-    // 修到位级一致后放回：TVPSubBlend_o = TVPSubBlend_o_hwy;
-    // TVPSubBlend_o     = TVPSubBlend_o_hwy;
+    // P3 已修：SIMD SubBlend_o 强制 src alpha=0xFF（与标量一致），饱和减后 alpha
+    // 保留 dst 原值。out/p34_check/check.c 对拍 30M 全一致。
+    TVPSubBlend_o     = TVPSubBlend_o_hwy;
     TVPSubBlend_HDA_o = TVPSubBlend_HDA_o_hwy;
 
     TVPMulBlend       = TVPMulBlend_hwy;
@@ -169,9 +168,8 @@ void TVPGL_SIMD_Init() {
     TVPMulBlend_o     = TVPMulBlend_o_hwy;
     TVPMulBlend_HDA_o = TVPMulBlend_HDA_o_hwy;
 
-    // TODO(SIMD-vs-scalar): TVPScreenBlend（非 HDA/o）的 SIMD 与 *_c 位级不一致
-    // （alpha 通道偏离）。先回退标量，修到位级一致后放回：TVPScreenBlend = TVPScreenBlend_hwy;
-    // TVPScreenBlend       = TVPScreenBlend_hwy;
+    // P4 已修：SIMD ScreenBlend base 强制 alpha=0xFF（与标量一致）。对拍 30M 全一致。
+    TVPScreenBlend       = TVPScreenBlend_hwy;
     TVPScreenBlend_HDA   = TVPScreenBlend_HDA_hwy;
     TVPScreenBlend_o     = TVPScreenBlend_o_hwy;
     TVPScreenBlend_HDA_o = TVPScreenBlend_HDA_o_hwy;
@@ -209,11 +207,11 @@ void TVPGL_SIMD_Init() {
     TVPPs##Name##Blend_HDA_o = TVPPs##Name##Blend_HDA_o_hwy;
 
     // ---------------------------------------------------------------
-    // TODO(SIMD-vs-scalar): PS 混合全部先回退到标量 *_c。
-    // tests/tvpgl_simd_compare 证实 Alpha/Add/Sub/Mul/Screen(o)/Overlay/HardLight/
-    // Lighten/Darken/Diff/Exclusion 的 SIMD 与 *_c 位级不一致（共享 PsApplyAlpha
-    // 舍入序差异 + 各模式 alpha/溢出分支错误）。标量为准，逐模式修到位级一致后
-    // 逐个放回。当前全部注释掉，保持出厂标量默认。
+    // TODO(SIMD-vs-scalar): PS 混合逐步放回。
+    // P2 已修 PsApplyAlpha 舍入序((s-d)*a>>8)+d；P5 已修 Overlay/HardLight 的
+    // NORM/_o alpha 清零 + core 用精确 /255（out/p5_check 20M 全一致），已放回。
+    // Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 的 core 未逐一验证
+    // 溢出/alpha 分支，仍回退标量待后续逐模式核对。
     // REGISTER_PS_BLEND_4V(Alpha)
     // REGISTER_PS_BLEND_4V(Add)
     // REGISTER_PS_BLEND_4V(Sub)
@@ -222,8 +220,8 @@ void TVPGL_SIMD_Init() {
     // REGISTER_PS_BLEND_4V(Lighten)
     // REGISTER_PS_BLEND_4V(Darken)
     // REGISTER_PS_BLEND_4V(Diff)
-    // REGISTER_PS_BLEND_4V(Overlay)
-    // REGISTER_PS_BLEND_4V(HardLight)
+    REGISTER_PS_BLEND_4V(Overlay)
+    REGISTER_PS_BLEND_4V(HardLight)
     // REGISTER_PS_BLEND_4V(Exclusion)
     // Table-based modes: keep original C (pure scalar, no SIMD benefit)
     // REGISTER_PS_BLEND_4V(SoftLight)

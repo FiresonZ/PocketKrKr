@@ -138,10 +138,21 @@
   `tvpgl_simd_ps_blend.cpp` 与 `tvpgl_simd_ps_blend2.cpp` 的 `PsApplyAlpha`。
   → evaluation：Alpha/Add/Sub/Mul/Lighten/Darken/Diff/Exclusion（P 系）+ Overlay/HardLight
   的 alpha 应用段已校正。
-- 待办：P3 `TVPSubBlend_o`（`tvpgl_simd_arithmetic_blend.cpp`，独立于 PsApplyAlpha）、
-  P4 `TVPScreenBlend` base alpha（同文件，非 P 系，仍回退）、P5 PsOverlay/PsHardLight
-  的 core 分支（`tvpgl_simd_ps_blend2.cpp` OverlayCore/HardLightCore，alpha 段已随 P2 修）。
-  逐个修到位级一致后放回 SIMD 派发。
+- **P3 ✅（TVPSubBlend_o）**：标量 `TVPSubBlend_o_c` 只按 opa 缩放字节0-2 并把 alpha
+  强制为 0xFF，饱和减后 alpha 保留 dst 原值；SIMD 原对 alpha 也做缩放 => 偏离。已在
+  `SubBlend_o_HWY` 加 alpha_mask 保留 dst alpha（`tvpgl_simd_arithmetic_blend.cpp`），
+  `out/p34_check/check.c` 30M 全一致；`tvpgl_simd_init.cpp` 已放回。
+- **P4 ✅（TVPScreenBlend base）**：标量 `TVPScreenBlend_c` 的 packed 乘积只写字节0-2，
+  alpha 字节恒为 0xFF；SIMD base 原来对所有 4 字节做 screen。已在 `ScreenBlend_HWY`
+  OR 上 alpha_ff=0xFF，`out/p34_check/check.c` 30M 全一致；`tvpgl_simd_init.cpp` 已放回。
+- **P5 ✅（PsOverlay/PsHardLight core）**：标量表是 `unsigned char`（精确 `/255`），
+  SIMD 原用 `>>7`(≈/128) 且 NORM/_o 不写 alpha。已把 `OverlayCore`/`HardLightCore`
+  改为精确 `floor(2*s*d/255)`（p=s*d, k=p>>7, t=k+2*(p&127), m=k+(t>=255)+(t>=510)，
+  demote 前 `&0xFF` 复现 uchar 截断），并在 `MAKE_PS_4V` 的 NORM/_o 加 rgb_mask 置
+  alpha=0（HDA 走 ApplyHDA 保留 dst alpha）。`out/p5_check/check2.c` 20M 全一致。
+  `tvpgl_simd_init.cpp` 已放回 Overlay/HardLight。
+- 待办：Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 的 core（溢出/alpha 分支）
+  未逐一核对，仍回退标量；逐个核对后放回。
 
 ### 5. KAGEX / KAG 差异兼容（kagexopt 相关）
 - 待办：调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（确切需求待明确）。
