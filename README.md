@@ -143,11 +143,6 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 > 已存在的 tag 再次运行：不会重复建 Release，只会补充/覆盖上传该产物。
 > 建议用 `release` 构建类型做正式发布；`debug` 仅用于测试，即使发布也是 debug 包。
 
-### 参考
-
-- 分平台 tag/Release 风格参考：
-  <https://github.com/FiresonZ/mindustry-ios-builder/releases/tag/ios-v159.7>
-
 ## 开发进度
 
 | 模块 | 状态 | 说明 |
