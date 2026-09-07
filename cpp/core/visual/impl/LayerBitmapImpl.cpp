@@ -87,6 +87,10 @@ void TVPUninitializeFontRasterizers() {
         delete TVPFontSystem;
         TVPFontSystem = nullptr;
     }
+    // 复位初始化标志，使 runtime-restart 二次 open_game 时能重新走
+    // TVPInializeFontRasterizers 重建栅格化器与 FontSystem。
+    TVPFontRasterizersInit = false;
+    TVPCurrentFontRasterizers = FONT_RASTER_FREE_TYPE;
 }
 static tTVPAtExit TVPUninitializeFontRaster(TVP_ATEXIT_PRI_RELEASE,
                                             TVPUninitializeFontRasterizers);

@@ -97,6 +97,18 @@
 >   二次 init 的 AllRegist 会重复 append 注册器、需随 LoadAllModules 守卫校验）；本地
 >   沙箱无 vcpkg 不能直接编译，暂缓待真机确认前三批是否已根治再评估。
 > - visual 级（RenderManager/Font/Trans/Window/Bitmap/LayerBitmap/OpenGL）为第二批。
+> - ✅ visual 级部分（`TVPResetVisualForRestart` 等价，接入 engine_destroy）：
+>   - 修 `TVPCauseAtExit` 空指针（二次 destroy 时 `TVPAtExitInfos` 已删，tTVPAtExit
+>     static 进程只注册一次）——`SysInitIntf.cpp`。
+>   - `TVPUninitializeFontRasterizers` 复位 `TVPFontRasterizersInit` 标志，使二次
+>     open_game 重建 FontSystem（否则二次绘制文字崩）——`LayerBitmapImpl.cpp`。
+>   - `_RenderManager` 由函数局部 static 提升文件作用域，新增
+>     `TVPResetRenderManagerForRestart()` 清主单例+释放已建渲染器——`RenderManager.{h,cpp}`。
+>   - `engine_destroy` 复位链末尾调 `TVPClearGraphicCache()` + `TVPResetRenderManagerForRestart()`。
+>   - 未处理（评估低风险/需真机验证）：Trans provider、位图分配器、Texture2D 回收队列、
+>     OpenGL 扩展探测 static、`TVPGetSoftwareRenderManager` 软件单例。
+>   - 参考：Kirikiroid2 无 Reset*ForRestart 批函数，靠 TVPSystemUninit 全量拆；我们的
+>     visual Reset 是自研，针对 tTVPAtExit 一次性注册的二次不重跑问题。
 - 现象：首次开游戏正常；不杀进程、退出后再开另一款游戏报
   `Engine Error engine_open_game_async failed: result=-3, error=runtime restart is not supported yet`。
 - 已做：Dart 侧 `_exitGame` 现在先 `engineDestroy()` 等销毁完成再 `pop`。

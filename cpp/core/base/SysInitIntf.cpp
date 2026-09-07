@@ -123,7 +123,10 @@ void TVPAddAtExitHandler(tjs_int pri, void (*handler)()) {
 
 //---------------------------------------------------------------------------
 static void TVPCauseAtExit() {
-    if(TVPAtExitShutdown)
+    // 修正 runtime-restart：tTVPAtExit 文件级 static 对象只在进程启动注册一次，
+    // 首次 engine_destroy 的 TVPCauseAtExit 已把 TVPAtExitInfos delete 置空；二次
+    // engine_destroy（TVPResetRuntimeForRestart 复位后会再次进入）时为空，不能解引用。
+    if(TVPAtExitShutdown || !TVPAtExitInfos)
         return;
     TVPAtExitShutdown = true;
 
