@@ -13,7 +13,7 @@ theme:
   name: material
   language: zh
   favicon: resources/favicon.svg
-  logo: resources/favicon.svg
+  logo: resources/logo.png
   icon:
     repo: fontawesome/brands/github
   palette:

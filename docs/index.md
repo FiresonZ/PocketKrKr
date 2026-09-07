@@ -5,6 +5,10 @@ hide:
 
 # 口袋里的吉里吉里2
 
+<p align="center">
+    <img src="resources/logo.png" alt="PocketKrKr 双鱼 Logo" width="120">
+</p>
+
 **PocketKrKr** 是一个基于 [Flutter](https://flutter.dev) 与 [ANGLE](https://github.com/google/angle)（Metal / Vulkan）重构的
 [KiriKiri2（吉里吉里2）](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎运行环境，
 **专注移动端：iOS + Android**（macOS 保留为 Apple 开发/调试目标）。
