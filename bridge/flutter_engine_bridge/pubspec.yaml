@@ -40,7 +40,7 @@ flutter:
       macos:
         pluginClass: FlutterEngineBridgePlugin
       android:
-        package: dev.krkr2.flutter_engine_bridge
+        package: dev.pocketkrkr.flutter_engine_bridge
         pluginClass: FlutterEngineBridgePlugin
 
   # To add assets to your plugin package, add an assets section, like this:

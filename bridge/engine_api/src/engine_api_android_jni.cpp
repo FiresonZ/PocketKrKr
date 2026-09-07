@@ -56,12 +56,12 @@ void krkr_GetSurfaceDimensions(uint32_t* out_width, uint32_t* out_height) {
 }
 
 /*
- * Java package: dev.krkr2.flutter_engine_bridge
- * JNI symbol:   Java_dev_krkr2_flutter_1engine_1bridge_FlutterEngineBridgePlugin_nativeSetSurface
+ * Java package: dev.pocketkrkr.flutter_engine_bridge
+ * JNI symbol:   Java_dev_pocketkrkr_flutter_1engine_1bridge_FlutterEngineBridgePlugin_nativeSetSurface
  * Pass null surface to detach.
  */
 JNIEXPORT void JNICALL
-Java_dev_krkr2_flutter_1engine_1bridge_FlutterEngineBridgePlugin_nativeSetSurface(
+Java_dev_pocketkrkr_flutter_1engine_1bridge_FlutterEngineBridgePlugin_nativeSetSurface(
     JNIEnv* env, jobject /*thiz*/, jobject surface, jint width, jint height) {
   ANativeWindow* window =
       surface != nullptr ? ANativeWindow_fromSurface(env, surface) : nullptr;
@@ -76,7 +76,7 @@ Java_dev_krkr2_flutter_1engine_1bridge_FlutterEngineBridgePlugin_nativeSetSurfac
 }
 
 JNIEXPORT void JNICALL
-Java_dev_krkr2_flutter_1engine_1bridge_FlutterEngineBridgePlugin_nativeDetachSurface(
+Java_dev_pocketkrkr_flutter_1engine_1bridge_FlutterEngineBridgePlugin_nativeDetachSurface(
     JNIEnv* /*env*/, jobject /*thiz*/) {
   std::lock_guard<std::mutex> lock(g_window_mutex);
   if (g_native_window) {

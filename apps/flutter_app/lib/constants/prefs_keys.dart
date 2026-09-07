@@ -6,22 +6,22 @@ class PrefsKeys {
   PrefsKeys._(); // Prevent instantiation
 
   // ── SharedPreferences keys ──────────────────────────────────────
-  static const String dylibPath = 'krkr2_dylib_path';
-  static const String engineMode = 'krkr2_engine_mode';
-  static const String perfOverlay = 'krkr2_perf_overlay';
-  static const String fpsLimitEnabled = 'krkr2_fps_limit_enabled';
-  static const String targetFps = 'krkr2_target_fps';
-  static const String renderer = 'krkr2_renderer';
-  static const String angleBackend = 'krkr2_angle_backend';
-  static const String locale = 'krkr2_locale';
-  static const String themeMode = 'krkr2_theme_mode';
-  static const String forceLandscape = 'krkr2_force_landscape';
+  static const String dylibPath = 'pocketkrkr_dylib_path';
+  static const String engineMode = 'pocketkrkr_engine_mode';
+  static const String perfOverlay = 'pocketkrkr_perf_overlay';
+  static const String fpsLimitEnabled = 'pocketkrkr_fps_limit_enabled';
+  static const String targetFps = 'pocketkrkr_target_fps';
+  static const String renderer = 'pocketkrkr_renderer';
+  static const String angleBackend = 'pocketkrkr_angle_backend';
+  static const String locale = 'pocketkrkr_locale';
+  static const String themeMode = 'pocketkrkr_theme_mode';
+  static const String forceLandscape = 'pocketkrkr_force_landscape';
 
   /// Pending play session: JSON { "path": "...", "startTime": "ISO8601" }. Cleared on normal exit or applied on next launch.
-  static const String pendingPlaySession = 'krkr2_pending_play_session';
+  static const String pendingPlaySession = 'pocketkrkr_pending_play_session';
 
   /// Recently settled play session IDs. Used to avoid duplicate crediting.
-  static const String settledPlaySessionIds = 'krkr2_settled_play_session_ids';
+  static const String settledPlaySessionIds = 'pocketkrkr_settled_play_session_ids';
 
   // ── Engine option keys (must match C++ ENGINE_OPTION_* constants) ─
   static const String optionAngleBackend = 'angle_backend';

@@ -1,4 +1,4 @@
-group = "dev.krkr2.flutter_engine_bridge"
+group = "dev.pocketkrkr.flutter_engine_bridge"
 version = "1.0"
 
 buildscript {
@@ -26,7 +26,7 @@ apply plugin: "kotlin-android"
 
 android {
     // Namespace is mandatory starting from AGP 8.
-    namespace = "dev.krkr2.flutter_engine_bridge"
+    namespace = "dev.pocketkrkr.flutter_engine_bridge"
     compileSdk = 34
 
     compileOptions {

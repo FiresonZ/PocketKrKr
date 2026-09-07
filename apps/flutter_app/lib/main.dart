@@ -12,31 +12,31 @@ void main() {
     baseUrl: statsBaseUrl,
     version: '1.0.0',
   );
-  runApp(const Krkr2App());
+  runApp(const PocketKrKrApp());
 }
 
-class Krkr2App extends StatefulWidget {
-  const Krkr2App({super.key});
+class PocketKrKrApp extends StatefulWidget {
+  const PocketKrKrApp({super.key});
 
   /// Change the app locale at runtime. Pass null to follow system default.
   static void setLocale(BuildContext context, Locale? locale) {
-    final state = context.findAncestorStateOfType<_Krkr2AppState>();
+    final state = context.findAncestorStateOfType<_AppState>();
     state?._setLocale(locale);
   }
 
   /// Change the app theme mode at runtime.
   static void setThemeMode(BuildContext context, ThemeMode mode) {
-    final state = context.findAncestorStateOfType<_Krkr2AppState>();
+    final state = context.findAncestorStateOfType<_AppState>();
     state?._setThemeMode(mode);
   }
 
   @override
-  State<Krkr2App> createState() => _Krkr2AppState();
+  State<PocketKrKrApp> createState() => _AppState();
 }
 
-class _Krkr2AppState extends State<Krkr2App> {
-  static const String _localeKey = 'krkr2_locale';
-  static const String _themeModeKey = 'krkr2_theme_mode';
+class _AppState extends State<PocketKrKrApp> {
+  static const String _localeKey = 'pocketkrkr_locale';
+  static const String _themeModeKey = 'pocketkrkr_theme_mode';
   Locale? _locale; // null = follow system
   ThemeMode _themeMode = ThemeMode.dark; // default to dark
 
@@ -83,7 +83,7 @@ class _Krkr2AppState extends State<Krkr2App> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'KrKr2 Next Mobile',
+      title: 'PocketKrKr',
       debugShowCheckedModeBanner: false,
       locale: _locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

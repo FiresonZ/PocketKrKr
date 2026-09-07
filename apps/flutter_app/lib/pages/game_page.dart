@@ -405,11 +405,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     }
     _log('engine_create => OK');
 
-    // 把引擎 spdlog 同时写入沙盒 Documents/krkr2_engine.log，
+    // 把引擎 spdlog 同时写入沙盒 Documents/pocketkrkr_engine.log，
     // 便于定位问题时在手机上读取（idevicesyslog 不捕获 app stdout）。
     try {
       final docDir = await getApplicationDocumentsDirectory();
-      final logFile = '${docDir.path}/krkr2_engine.log';
+      final logFile = '${docDir.path}/pocketkrkr_engine.log';
       final logResult = await _bridge.engineSetLogFilePath(logFile);
       _log('engine_set_log_file_path($logFile) => $logResult');
     } catch (e) {

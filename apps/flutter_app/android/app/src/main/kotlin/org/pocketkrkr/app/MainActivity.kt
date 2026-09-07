@@ -1,4 +1,4 @@
-package org.github.krkr2.flutter_app
+package org.pocketkrkr.app
 
 import io.flutter.embedding.android.FlutterActivity
 

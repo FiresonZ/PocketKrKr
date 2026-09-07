@@ -1,19 +1,19 @@
 {
   "@@locale": "en",
 
-"appTitle": "KrKr2 Next Mobile",
+"appTitle": "PocketKrKr",
   "settings": "Settings",
   "addGame": "Add Game",
   "refresh": "Refresh",
   "howToImport": "How to Import",
   "noGamesYet": "No games added yet",
   "noGamesHintDesktop": "Click \"Add Game\" to select a game directory",
-  "noGamesHintIos": "Use the Files app to copy game folders to:\nOn My iPhone > Krkr2 > Games\nThen tap \"Refresh\"",
+  "noGamesHintIos": "Use the Files app to copy game folders to:\nOn My iPhone > PocketKrKr > Games\nThen tap \"Refresh\"",
 
   "importGames": "Import Games",
   "importGamesDesc": "Please copy your game folders to this app's directory using the Files app:",
   "importStep1": "1. Open the \"Files\" app on your iPhone",
-  "importStep2": "2. Go to: On My iPhone > Krkr2 > Games",
+  "importStep2": "2. Go to: On My iPhone > PocketKrKr > Games",
   "importStep3": "3. Copy your game folder into the Games directory",
   "importStep4": "4. Come back and tap \"Refresh\" to detect new games",
   "macosImportTip": "Note: Please select the folder containing the XP3 file first before select the target XP3 file due to macOS sandbox restrictions",

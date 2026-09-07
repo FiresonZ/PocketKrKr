@@ -1,19 +1,19 @@
 {
   "@@locale": "ja",
 
-"appTitle": "KrKr2 Next Mobile",
+"appTitle": "PocketKrKr",
   "settings": "設定",
   "addGame": "ゲームを追加",
   "refresh": "更新",
   "howToImport": "インポート方法",
   "noGamesYet": "ゲームがまだ追加されていません",
   "noGamesHintDesktop": "「ゲームを追加」をクリックしてゲームディレクトリを選択してください",
-  "noGamesHintIos": "「ファイル」アプリでゲームフォルダをコピーしてください：\niPhone内 > Krkr2 > Games\nその後「更新」をタップ",
+  "noGamesHintIos": "「ファイル」アプリでゲームフォルダをコピーしてください：\niPhone内 > PocketKrKr > Games\nその後「更新」をタップ",
 
   "importGames": "ゲームをインポート",
   "importGamesDesc": "「ファイル」アプリを使用して、ゲームフォルダをこのアプリのディレクトリにコピーしてください：",
   "importStep1": "1. iPhoneの「ファイル」アプリを開く",
-  "importStep2": "2. iPhone内 > Krkr2 > Games に移動",
+  "importStep2": "2. iPhone内 > PocketKrKr > Games に移動",
   "importStep3": "3. ゲームフォルダをGamesディレクトリにコピー",
   "importStep4": "4. アプリに戻り「更新」をタップして新しいゲームを検出",
   "macosImportTip": "注意：macOS サンドボックス制限のため、まず XP3 ファイルを含むフォルダを選択し、その後対象の XP3 ファイルを選択してください",
