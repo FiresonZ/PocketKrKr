@@ -95,7 +95,7 @@ nav:
   - 项目简介:
       - FAQ: FAQ.md
       - 插件清单: plugins.md
-      - 支持的游戏: support_games.txt
+      - 支持的游戏: support_games.md
   - 开发文档:
       - 开发文档索引: dev/README.md
       - 小白开发指引: dev/for-beginners.md
