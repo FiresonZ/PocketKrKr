@@ -26,7 +26,7 @@
  * Thread-safety: stored values are guarded by mutexes.
  */
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(ANDROID)
 
 #include <jni.h>
 #include <android/log.h>

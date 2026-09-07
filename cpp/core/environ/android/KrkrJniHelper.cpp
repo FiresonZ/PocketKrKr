@@ -13,8 +13,8 @@
 #define LOG_TAG "krkr2"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-// Declared in platforms/android/cpp/krkr2_android.cpp
-extern jobject krkr_GetApplicationContext();
+// Defined (extern "C") in bridge/engine_api/src/engine_api_android_jni.cpp.
+extern "C" jobject krkr_GetApplicationContext();
 
 namespace krkr {
 
