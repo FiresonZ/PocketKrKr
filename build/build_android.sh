@@ -233,6 +233,54 @@ mkdir -p "$JNI_LIBS_DIR"
 cp -f "$ENGINE_LIB" "$JNI_LIBS_DIR/libengine_api.so"
 log_info "Copied -> $JNI_LIBS_DIR/libengine_api.so"
 
+# 解析 libengine_api.so 的动态依赖（DT_NEEDED），把缺失的 NDK 运行时库
+# （典型是 libomp.so / libc++_shared.so）一并拷进 jniLibs。
+# 若漏拷，Android 启动时 dlopen 会报 "library ... not found needed by libengine_api.so"，
+# 引擎加载失败 → 主界面一直转圈（见真机日志 nativeloader)。
+copy_ndk_runtime_deps() {
+    local so="$1"
+    local abi_dir="$2"
+
+    # 优先 llvm-readelf / readelf 之一
+    local readelf_tool=""
+    for t in llvm-readelf readelf; do
+        if command -v "$t" &>/dev/null; then readelf_tool="$t"; break; fi
+    done
+    if [[ -z "$readelf_tool" ]]; then
+        log_warn "No readelf/llvm-readelf found; skipping NDK runtime dependency copy."
+        return 0
+    fi
+
+    # DT_NEEDED 里属于 NDK 运行时、且未随 libengine_api.so 一起打包进 jniLibs 的库
+    local needed_libs=0
+    while IFS= read -r dep; do
+        [[ -z "$dep" ]] && continue
+        case "$dep" in
+            libomp.so|libc++_shared.so|libgomp.so|libatomic.so)
+                if [[ -f "$abi_dir/$dep" ]]; then
+                    continue
+                fi
+                # 在 NDK 树里按 ABI 目录命中对应库（libomp 位于 clang 的 lib/linux 等）
+                local src
+                src="$(find "$NDK_ROOT" -name "$dep" \( -path "*/lib/linux/*" -o -path "*/${ANDROID_ABI}/*" \) 2>/dev/null | head -n1 || true)"
+                if [[ -n "$src" ]]; then
+                    cp -f "$src" "$abi_dir/$dep"
+                    log_info "Copied NDK runtime -> $abi_dir/$dep (from $src)"
+                else
+                    log_warn "NDK runtime library '$dep' not found under NDK; may fail at runtime."
+                fi
+                needed_libs=1
+                ;;
+        esac
+    done < <("$readelf_tool" -d "$so" 2>/dev/null | sed -n 's/.*(NEEDED).*\[\(.*\)\]/\1/p')
+
+    if [[ "$needed_libs" == 0 ]]; then
+        log_info "No missing NDK runtime dependencies to copy."
+    fi
+}
+
+copy_ndk_runtime_deps "$ENGINE_LIB" "$JNI_LIBS_DIR"
+
 # ============================================================
 # Step 3: Build Flutter Android app
 # ============================================================
