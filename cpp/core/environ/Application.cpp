@@ -293,6 +293,35 @@ tTVPApplication::~tTVPApplication() {
     delete image_load_thread_;
 }
 
+void tTVPApplication::Reset() {
+    // 复位应用层状态，使 engine_destroy 后二次 StartApplication 干净启动。
+    // image_load_thread_ 下次 StartApplication 会重建（Application.cpp:345）。
+    delete image_load_thread_;
+    image_load_thread_ = nullptr;
+
+    {
+        std::lock_guard<std::mutex> cs(m_msgQueueLock);
+        m_lstUserMsg.clear();
+    }
+    m_activeEvents.clear();
+
+    title_.Clear();
+    console_title_.Clear();
+    is_attach_console_ = false;
+    application_activating_ = true;
+    tarminate_ = false;
+    TVPTerminated = false;
+    has_map_report_process_ = false;
+}
+
+// 统一的对外入口，同时复位 Application 文件作用域静态与成员状态。
+void TVPResetApplicationForRestart() {
+    _project_startup = false;
+    _warnLowMem = true;
+    if(Application)
+        Application->Reset();
+}
+
 bool tTVPApplication::StartApplication(ttstr path) {
     //	_set_se_translator(se_translator_function);
 

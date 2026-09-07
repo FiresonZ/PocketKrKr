@@ -30,3 +30,6 @@ TVPCreateNativeClass_ClassFoo,TJS_W("Window,Layer"));
 登録時依存クラスを3番目に指定可能ですが、現在のところ無視されています。
 */
 extern void TVPCauseAtInstallExtensionClass(iTJSDispatch2 *global);
+
+// 复位「待安装扩展类」登记状态，使 engine_destroy 后可干净二次启动（runtime-restart）。
+extern void TVPResetExtensionClassInstallStateForRestart();

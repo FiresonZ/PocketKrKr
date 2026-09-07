@@ -47,6 +47,7 @@ extern "C" void krkr_GetSurfaceDimensions(uint32_t*, uint32_t*);
 #include "base/SysInitIntf.h"
 #include "base/ScriptMgnIntf.h"
 #include "base/impl/SysInitImpl.h"
+#include "base/impl/StorageImpl.h"
 #include "visual/GraphicsLoaderIntf.h"
 #include "visual/ogl/ogl_common.h"
 #include "visual/ogl/krkr_egl_context.h"
@@ -845,6 +846,9 @@ engine_result_t engine_destroy(engine_handle_t handle) {
       TVPResetRuntimeForRestart();
       TVPResetScriptEngineForRestart();
       TVPResetSysInitImplForRestart();
+      TVPResetApplicationForRestart();
+      TVPResetStorageImplForRestart();
+      TVPResetExtensionClassInstallStateForRestart();
     } catch (...) {
       spdlog::error("engine_destroy: reset-for-restart threw");
     }

@@ -582,9 +582,22 @@ bool TVPRemoveFolder(const ttstr &name) {
 //---------------------------------------------------------------------------
 // TVPGetAppPath
 //---------------------------------------------------------------------------
+// apppath 缓存提升到文件作用域，使 TVPResetStorageImplForRestart 可复位
+// （TVPProjectDir 在 runtime-restart 时被清空，旧缓存必须重建）。
+static ttstr TVPAppPathCache;
+static bool TVPAppPathCacheValid = false;
+
 ttstr TVPGetAppPath() {
-    static ttstr apppath(TVPExtractStoragePath(TVPProjectDir));
-    return apppath;
+    if(!TVPAppPathCacheValid) {
+        TVPAppPathCache = TVPExtractStoragePath(TVPProjectDir);
+        TVPAppPathCacheValid = true;
+    }
+    return TVPAppPathCache;
+}
+
+void TVPResetStorageImplForRestart() {
+    TVPAppPathCache.Clear();
+    TVPAppPathCacheValid = false;
 }
 //---------------------------------------------------------------------------
 

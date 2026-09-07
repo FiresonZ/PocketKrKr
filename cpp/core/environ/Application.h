@@ -95,6 +95,7 @@ public:
     tTVPApplication();
     ~tTVPApplication();
     bool StartApplication(ttstr path);
+    void Reset();
     void Run();
     void ProcessMessages();
 
@@ -207,5 +208,8 @@ std::vector<std::string> *LoadLinesFromFile(const ttstr &path);
 // inline HINSTANCE GetHInstance() { return
 // ((HINSTANCE)GetModuleHandle(0)); }
 extern class tTVPApplication *Application;
+
+// 复位应用层状态，使 engine_destroy 后可干净二次启动（runtime-restart）。
+extern void TVPResetApplicationForRestart();
 
 #endif // __T_APPLICATION_H__

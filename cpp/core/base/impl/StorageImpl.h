@@ -187,4 +187,7 @@ void TVPListDir(const std::string &folder,
 bool TVPSaveStreamToFile(tTJSBinaryStream *st, tjs_uint64 offset,
                          tjs_uint64 size, const ttstr &outpath);
 
+// 复位 Storage 层缓存，使 engine_destroy 后可干净二次启动（runtime-restart）。
+void TVPResetStorageImplForRestart();
+
 #endif
