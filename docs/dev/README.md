@@ -1,4 +1,4 @@
-# KrKr2 Next — 开发文档（AI Agent 速查）
+# PocketKrKr — 开发文档（AI Agent 速查）
 
 > 本目录面向 **AI Agent 与开发者**，用于快速掌握项目技术栈、架构与关键位置，
 > 避免每次从头扫描整个代码库浪费上下文与 token。
@@ -10,7 +10,7 @@
 
 ## 项目一句话
 
-**KrKr2 Next**：KiriKiri2（吉里吉里2）视觉小说引擎的现代化运行环境。
+**PocketKrKr**：KiriKiri2（吉里吉里2）视觉小说引擎的现代化运行环境。
 C++ 引擎（TVP/TJS2）离屏渲染 → IOSurface / SurfaceTexture 零拷贝 → Flutter 纹理显示，
 Flutter 壳应用提供 UI。当前**面向移动端**（iOS + Android 为主目标，macOS 为 Apple 开发目标）。
 

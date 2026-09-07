@@ -5,7 +5,7 @@
 
 ## 项目一句话
 
-**KrKr2 Next** = [KiriKiri2（吉里吉里2）](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎的现代化运行环境，**面向移动端（iOS + Android）**，macOS 为 Apple 开发目标，Linux 仅作 CI 宿主验证。
+**PocketKrKr** = [KiriKiri2（吉里吉里2）](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎的现代化运行环境，**面向移动端（iOS + Android）**，macOS 为 Apple 开发目标，Linux 仅作 CI 宿主验证。
 
 - **架构**：C++ 引擎（TVP/TJS2）离屏渲染（ANGLE：iOS/macOS=Metal 后端、Android=Vulkan 后端）→ IOSurface / SurfaceTexture 零拷贝 → Flutter 纹理显示；Dart 优先 FFI，MethodChannel 兜底。
 - **本项目主页**：<https://github.com/FiresonZ/KrKr2-Next-Mobile>（fork 自 KrKr2-Next 二次开发）

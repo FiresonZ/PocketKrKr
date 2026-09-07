@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">KrKr2 Next</h1>
+  <h1 align="center">PocketKrKr</h1>
   <p align="center">A Next-Generation KiriKiri2 Runtime for Mobile (iOS + Android)</p>
 </p>
 
@@ -16,7 +16,7 @@
 
 **Language / 语言**: [中文](README.md) | English
 
-> 🙏 This project, **KrKr2 Next Mobile** (<https://github.com/FiresonZ/KrKr2-Next-Mobile>), is a
+> 🙏 This project, **PocketKrKr** (<https://github.com/FiresonZ/KrKr2-Next-Mobile>), is a
 > **fork-based secondary development** of [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next),
 > which is itself a refactor built on the source code of [krkr2](https://github.com/2468785842/krkr2).
 > This project's code is inherited directly from KrKr2-Next and ultimately traces back to krkr2.
@@ -28,7 +28,7 @@
 
 ## Overview
 
-**KrKr2 Next** is a modern runtime for the [KiriKiri2](https://en.wikipedia.org/wiki/KiriKiri) visual novel engine, **focused on mobile: iOS + Android** (macOS is kept as the Apple development/debug host). It is fully compatible with original game scripts, uses ANGLE (Metal backend on iOS/macOS, Vulkan backend on Android) with zero-copy texture sharing (IOSurface / SurfaceTexture) for hardware-accelerated rendering, and includes numerous optimizations for both rendering performance and script execution.
+**PocketKrKr** is a modern runtime for the [KiriKiri2](https://en.wikipedia.org/wiki/KiriKiri) visual novel engine, **focused on mobile: iOS + Android** (macOS is kept as the Apple development/debug host). It is fully compatible with original game scripts, uses ANGLE (Metal backend on iOS/macOS, Vulkan backend on Android) with zero-copy texture sharing (IOSurface / SurfaceTexture) for hardware-accelerated rendering, and includes numerous optimizations for both rendering performance and script execution.
 
 The project follows a "C++ engine + Flutter shell" architecture: the C++ engine renders offscreen to an IOSurface (iOS/macOS) or SurfaceTexture (Android), Flutter displays it via a native texture with zero-copy transfer, and the UI is fully built with Flutter.
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">KrKr2 Next</h1>
+  <h1 align="center">PocketKrKr</h1>
   <p align="center">面向移动端的下一代 KiriKiri2（吉里吉里2）运行环境</p>
 </p>
 
@@ -16,7 +16,7 @@
 
 **语言 / Language**: 中文 | [English](README_EN.md)
 
-> 🙏 本项目 **KrKr2 Next Mobile**（<https://github.com/FiresonZ/KrKr2-Next-Mobile>）是
+> 🙏 本项目 **PocketKrKr**（<https://github.com/FiresonZ/KrKr2-Next-Mobile>）是
 > [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next) 的 **fork 二次开发**；而 KrKr2-Next 基于
 > [krkr2](https://github.com/2468785842/krkr2) 源代码重构。本项目的代码直接继承自 KrKr2-Next，
 > 最终追溯至 krkr2，感谢上游作者们的贡献。
@@ -26,7 +26,7 @@
 
 ## 简介
 
-**KrKr2 Next** 是 [KiriKiri2 (吉里吉里2)](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎的现代化运行环境，**专注移动端：iOS + Android**（macOS 保留为 Apple 开发/调试目标）。它完全兼容原版游戏脚本，通过 ANGLE（iOS/macOS 用 Metal 后端，Android 用 Vulkan 后端）+ 零拷贝纹理共享（IOSurface / SurfaceTexture）实现硬件加速渲染，并在渲染性能与脚本执行效率上做了大量优化。
+**PocketKrKr** 是 [KiriKiri2 (吉里吉里2)](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎的现代化运行环境，**专注移动端：iOS + Android**（macOS 保留为 Apple 开发/调试目标）。它完全兼容原版游戏脚本，通过 ANGLE（iOS/macOS 用 Metal 后端，Android 用 Vulkan 后端）+ 零拷贝纹理共享（IOSurface / SurfaceTexture）实现硬件加速渲染，并在渲染性能与脚本执行效率上做了大量优化。
 
 项目采用「C++ 引擎 + Flutter 壳」架构：C++ 引擎离屏渲染到 IOSurface（iOS/macOS）或 SurfaceTexture（Android），Flutter 以原生纹理零拷贝显示，UI 完全由 Flutter 构建。
 

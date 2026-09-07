@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KrKr2 Next — 面向移动端的 KiriKiri2 运行环境</title>
-  <meta name="description" content="KrKr2 Next：基于 Flutter 与 ANGLE(Metal/Vulkan) 重构的 KiriKiri2 视觉小说引擎运行环境，专注移动端 iOS + Android（macOS 开发目标）。">
+  <title>PocketKrKr — 面向移动端的 KiriKiri2 运行环境</title>
+  <meta name="description" content="PocketKrKr：基于 Flutter 与 ANGLE(Metal/Vulkan) 重构的 KiriKiri2（吉里吉里2）视觉小说引擎运行环境，专注移动端 iOS + Android（macOS 开发目标）。">
+  <meta name="theme-color" content="#0f1117">
+  <meta property="og:title" content="PocketKrKr">
+  <meta property="og:description" content="口袋里的吉里吉里2 —— 移动端 KiriKiri2 视觉小说引擎运行环境 · C++ 引擎 + Flutter 壳，零拷贝渲染">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎒</text></svg>">
   <style>
     :root {
       --bg: #0f1117;
@@ -29,29 +34,31 @@
       line-height: 1.65;
       -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
 
     /* ---------- hero ---------- */
     header {
-      padding: 96px 0 56px;
+      padding: 104px 0 64px;
       text-align: center;
       background:
-        radial-gradient(900px 380px at 50% -80px, rgba(94,168,255,.18), transparent 70%),
-        radial-gradient(700px 320px at 85% 0%, rgba(143,123,255,.12), transparent 70%);
+        radial-gradient(920px 420px at 50% -90px, rgba(94,168,255,.20), transparent 70%),
+        radial-gradient(760px 360px at 88% 0%, rgba(143,123,255,.14), transparent 70%),
+        radial-gradient(600px 320px at 8% 0%, rgba(244,164,96,.10), transparent 70%);
     }
     .logo {
-      display: inline-flex; align-items: center; gap: 12px;
-      font-weight: 800; font-size: 40px; letter-spacing: -.5px;
+      display: inline-flex; align-items: center; gap: 14px;
+      font-weight: 800; font-size: 46px; letter-spacing: -.5px;
     }
-    .logo .dot { color: var(--accent); }
-    .tagline { margin-top: 14px; font-size: 17px; color: var(--muted); }
-    .badges { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .logo .mark { font-style: normal; }
+    .logo .dot { color: var(--accent-2); }
+    .tagline { margin-top: 16px; font-size: 17px; color: var(--muted); }
+    .badges { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
     .badge {
       font-size: 12.5px; padding: 4px 12px; border-radius: 999px;
       border: 1px solid var(--border); background: var(--card); color: var(--muted);
     }
     .badge i { color: var(--accent); font-style: normal; }
-    .cta { margin-top: 32px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cta { margin-top: 34px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .btn {
       display: inline-block; padding: 11px 22px; border-radius: 10px;
       font-weight: 600; text-decoration: none; font-size: 14.5px; transition: transform .15s ease, opacity .15s;
@@ -98,12 +105,12 @@
     .link-card .t { font-weight: 600; font-size: 14px; }
     .link-card .d { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
 
-    footer { padding: 40px 0 56px; color: var(--muted); font-size: 13px; text-align: center; }
+    footer { padding: 44px 0 60px; color: var(--muted); font-size: 13px; text-align: center; }
     footer a { color: var(--accent); text-decoration: none; }
 
     @media (max-width: 560px) {
-      header { padding: 72px 0 40px; }
-      .logo { font-size: 30px; }
+      header { padding: 76px 0 42px; }
+      .logo { font-size: 32px; }
     }
   </style>
 </head>
@@ -111,8 +118,8 @@
 
 <header>
   <div class="wrap">
-    <div class="logo"><span class="dot">◆</span> KrKr2 Next</div>
-    <p class="tagline">面向移动端的 KiriKiri2（吉里吉里2）视觉小说引擎运行环境 · C++ 引擎 + Flutter 壳</p>
+    <div class="logo"><span class="mark">🎒</span><span class="dot">PocketKrKr</span></div>
+    <p class="tagline">口袋里的吉里吉里2 —— 面向移动端的 KiriKiri2（吉里吉里2）视觉小说引擎运行环境 · C++ 引擎 + Flutter 壳</p>
     <div class="badges">
       <span class="badge"><i>●</i> In Development</span>
       <span class="badge"><i>●</i> iOS · Android · macOS</span>
@@ -122,9 +129,9 @@
       <span class="badge"><i>●</i> GPL-3.0</span>
     </div>
     <div class="cta">
-      <a class="btn btn-primary" href="https://github.com/reAAAq/KrKr2-Next" target="_blank" rel="noopener">直接上游</a>
-      <a class="btn btn-ghost" href="https://github.com/FiresonZ/KrKr2-Next-Mobile#readme" target="_blank" rel="noopener">README</a>
+      <a class="btn btn-primary" href="https://github.com/FiresonZ/KrKr2-Next-Mobile#readme" target="_blank" rel="noopener">📖 阅读 README</a>
       <a class="btn btn-ghost" href="https://github.com/FiresonZ/KrKr2-Next-Mobile/tree/main/docs/dev" target="_blank" rel="noopener">开发文档</a>
+      <a class="btn btn-ghost" href="https://github.com/FiresonZ/KrKr2-Next-Mobile" target="_blank" rel="noopener">GitHub 仓库</a>
     </div>
   </div>
 </header>
@@ -133,7 +140,7 @@
 
   <section id="about">
     <h2>关于本项目</h2>
-    <p class="sub">基于上游 krkr2 重构的独立项目，专注移动端（iOS + Android）。</p>
+    <p class="sub">在手机上畅玩经典吉里吉里2（KiriKiri2）视觉小说。基于上游 krkr2 重构的独立项目，专注移动端（iOS + Android）。</p>
     <div class="cards">
       <div class="card">
         <span class="ico">🎮</span>
@@ -251,7 +258,7 @@ $ ./build.sh macos debug     <span class="cmt"># 构建 macOS（开发）</span>
     <div class="links">
       <a class="link-card" href="https://github.com/FiresonZ/KrKr2-Next-Mobile#readme" target="_blank" rel="noopener">
         <span class="t">📘 README</span>
-        <span class="d">项目简介、架构、平台与进度（本 fork）</span>
+        <span class="d">项目简介、架构、平台与进度</span>
       </a>
       <a class="link-card" href="https://github.com/FiresonZ/KrKr2-Next-Mobile/tree/main/docs/dev" target="_blank" rel="noopener">
         <span class="t">🧭 开发文档</span>
@@ -263,7 +270,7 @@ $ ./build.sh macos debug     <span class="cmt"># 构建 macOS（开发）</span>
       </a>
       <a class="link-card" href="https://github.com/2468785842/krkr2" target="_blank" rel="noopener">
         <span class="t">⬆ 代码来源</span>
-        <span class="d">krkr2 · KrKr2-Next 的源代码重构基础</span>
+        <span class="d">krkr2 · 重构基础</span>
       </a>
       <a class="link-card" href="https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/LICENSE" target="_blank" rel="noopener">
         <span class="t">📄 许可证</span>
@@ -276,7 +283,7 @@ $ ./build.sh macos debug     <span class="cmt"># 构建 macOS（开发）</span>
 
 <footer>
   <div class="wrap">
-    KrKr2 Next Mobile · fork 自 <a href="https://github.com/reAAAq/KrKr2-Next" target="_blank" rel="noopener">KrKr2-Next</a>，
+    PocketKrKr · fork 自 <a href="https://github.com/reAAAq/KrKr2-Next" target="_blank" rel="noopener">KrKr2-Next</a>，
     其基于 <a href="https://github.com/2468785842/krkr2" target="_blank" rel="noopener">krkr2</a> 源代码重构 ·
     以 <a href="https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0</a> 协议开源
   </div>
