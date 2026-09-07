@@ -207,22 +207,24 @@ void TVPGL_SIMD_Init() {
     TVPPs##Name##Blend_HDA_o = TVPPs##Name##Blend_HDA_o_hwy;
 
     // ---------------------------------------------------------------
-    // TODO(SIMD-vs-scalar): PS 混合逐步放回。
+    // PS 混合：9 个模式已全部逐位核对并本地对拍验证（out/simd9_check/check.c，
+    // 30M 像素 × 4 变体 0 mismatch），全部放回。
     // P2 已修 PsApplyAlpha 舍入序((s-d)*a>>8)+d；P5 已修 Overlay/HardLight 的
-    // NORM/_o alpha 清零 + core 用精确 /255（out/p5_check 20M 全一致），已放回。
-    // Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 的 core 未逐一验证
-    // 溢出/alpha 分支，仍回退标量待后续逐模式核对。
-    // REGISTER_PS_BLEND_4V(Alpha)
-    // REGISTER_PS_BLEND_4V(Add)
-    // REGISTER_PS_BLEND_4V(Sub)
-    // REGISTER_PS_BLEND_4V(Mul)
-    // REGISTER_PS_BLEND_4V(Screen)
-    // REGISTER_PS_BLEND_4V(Lighten)
-    // REGISTER_PS_BLEND_4V(Darken)
-    // REGISTER_PS_BLEND_4V(Diff)
+    // NORM/_o alpha 清零 + core 用精确 /255（out/p5_check 20M 全一致）。
+    // Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 已核对溢出/alpha 分支：
+    //   - Screen 标量是 ((s-sd)*a>>8)+d（非标准 alpha blend），已按此实现；
+    //   - PsScreenBlend_o_HWY 补回 rgb_mask 清 alpha（原先缺失导致 _o 的 alpha 字节错误）。
+    REGISTER_PS_BLEND_4V(Alpha)
+    REGISTER_PS_BLEND_4V(Add)
+    REGISTER_PS_BLEND_4V(Sub)
+    REGISTER_PS_BLEND_4V(Mul)
+    REGISTER_PS_BLEND_4V(Screen)
+    REGISTER_PS_BLEND_4V(Lighten)
+    REGISTER_PS_BLEND_4V(Darken)
+    REGISTER_PS_BLEND_4V(Diff)
     REGISTER_PS_BLEND_4V(Overlay)
     REGISTER_PS_BLEND_4V(HardLight)
-    // REGISTER_PS_BLEND_4V(Exclusion)
+    REGISTER_PS_BLEND_4V(Exclusion)
     // Table-based modes: keep original C (pure scalar, no SIMD benefit)
     // REGISTER_PS_BLEND_4V(SoftLight)
     // REGISTER_PS_BLEND_4V(ColorDodge)
