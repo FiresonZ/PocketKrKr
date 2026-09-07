@@ -84,6 +84,8 @@
 > （TVPSystemUninit + 销毁 MainScene/EngineLoop 单例 + Bootstrap::Shutdown +
 > `g_runtime_started_once=false`）。
 > **Reset 函数移植进度**（PR#12 C++ 侧，保证重初始化干净）：
+> **🟡 已编译通过（Android + iOS），待真机验证**：三批 Reset 函数已全部接入
+> `engine_destroy`，两平台编译均绿；下一步真机复验"不杀进程退出→再开另一款游戏"。
 > - ✅ 已提交并接入 `engine_destroy`（`05d1254` + `682d87e`，codex 分支）：
 >   `TVPResetScriptEngineForRestart`（ScriptMgnIntf）、
 >   `TVPResetRuntimeForRestart`（SysInitIntf，含 TVPProjectDir/DataPath 清空）、
