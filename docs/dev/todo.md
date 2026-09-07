@@ -5,45 +5,29 @@
 > 目录索引中保持本文件引用。
 > 完成某项并验证后，请同步更新根目录 [AGENTS.md](https://github.com/FiresonZ/PocketKrKr/blob/main/AGENTS.md) 的「当前状态」。
 
+## ✅ 已解决（保留经验摘记）
+
+### Android 启动即闪退（缺 SDL Java 层）— 已修复并真机复验
+- 根因：`libengine_api.so` 静态链入 SDL2，其安卓原生 `JNI_OnLoad` 里 `FindClass("org/libsdl/app/SDLActivity")`
+  失败留下 pending exception → ART `abort()`。
+- 修复：补 `apps/flutter_app/android/app/src/main/java/org/libsdl/app/` 9 个 Java 源
+  （SDL/SDLActivity/…，版本常量 2.32.10 与 vcpkg sdl2 一致）；engine_api 链接加
+  `--allow-multiple-definition` 让我们的 `JNI_OnLoad` 生效。
+- 状态：真机不再闪退、主界面正常。
+
+### 对齐上游 Android JNI 平台层 — 已通过并可跑
+- 完整嵌入 `KrkrJniHelper`/`AndroidUtils`/`engine_api_android_jni.cpp`/`KR2Activity` 等。
+- 本次补齐此前缺失的 Android 平台符号：`TVPGetMemoryInfo`/`TVPRelinquishCPU`/`TVP_utime`
+  （`AndroidUtils.cpp` 用 bionic 实现）+ `krkr_GetApplicationContext`（引用声明改 `extern "C"`
+  对齐定义），提交 `a2d8d75`。
+- 状态：CI 编译通过、APK 可跑，进入真机日志筛查游戏兼容性阶段。
+
+### Android 主界面永久转圈 — 已修复
+- 根因：静态排查无死循环，怀疑某 await 在平台通道静默挂起。
+- 修复：`_loadGames()` 包 try-catch-finally 强制 `_loading=false`（提交 `63b8537`）。
+- 状态：真机不再永久转圈，可进入游戏。
+
 ## 进行中 / 待验证
-
-### 0. Android 点开即闪退 — 缺 SDL Java 层（org.libsdl.app）【修复待真机复验】
-- **现象**（Redmi K70 真机 logcat）：点开应用即闪退，`Process ... has crashed too many times, killing`。
-  崩溃栈 `Fatal signal` 在 `libengine_api.so (JNI_OnLoad)`，
-  Abort message: `No pending exception expected: java.lang.ClassNotFoundException: org.libsdl.app.SDLActivity`。
-- **根因**：`libengine_api.so` 静态链入 SDL2（引擎确实用 SDL API：`WaveMixer.cpp` 的
-  `SDL_BuildAudioCVT/SDL_OpenAudioDevice`、`EngineBootstrap.cpp` 的 `SDL_SetMainReady`）。
-  SDL2 的安卓原生 `src/core/android/SDL_android.c` 在 `JNI_OnLoad` 里
-  `FindClass("org/libsdl/app/SDLActivity")`，但工程缺该 Java 层 → FindClass 留下
-  pending exception，`System.loadLibrary("engine_api")` 返回时 ART `AssertNoPendingException`
-  → `abort()`。这就是启动即闪退，不是 Flutter 层。
-- **修复**：从上游 `reAAAq/KrKr2-Next` 补入
-  `apps/flutter_app/android/app/src/main/java/org/libsdl/app/` 共 9 个 Java 源：
-  `HIDDevice(HIDDeviceManager/HIDDeviceUSB/HIDDeviceBLESteamController)`、
-  `SDL`、`SDLActivity`、`SDLAudioManager`、`SDLControllerManager`、`SDLSurface`。
-  SDLActivity 版本常量 = 2.32.10，与 vcpkg `sdl2 2.32.10` 一致，native 签名匹配。
-- **待验证**：重打 APK 真机启动不再闪退、主界面正常。
-
-### 1. 对齐上游 Android 实现 — 完整嵌入 JNI 平台层【构建待 CI 验证】
-- **背景**：早期重构把上游安卓端精简为 POSIX/空桩（存储路径空、语言硬编码 en、无对话框、
-  无 AppContext/JavaVM）。本次按上游 `reAAAq/KrKr2-Next` 完整嵌入待复验。
-- **嵌入内容**：
-  - `cpp/core/environ/android/KrkrJniHelper.*` + `AndroidUtils.cpp`：JNI 平台实现
-    （存储路径 getStoragePath、设备 ID、语言、版本、对话框 ShowMessageBox/ShowInputBox、
-    文件操作等），Android 编译；原 `platform_android.cpp` 删除；`stubs/platform_linux.cpp` 保留仅非 Android。
-  - `bridge/engine_api/src/engine_api_android_jni.cpp`：补 `JNI_OnLoad`（存 JavaVM +
-    `krkr::JniHelper::setJavaVM`）、`krkr_GetJavaVM/krkr_GetJNIEnv/krkr_GetApplicationContext`、
-    `nativeSetApplicationContext`（对齐上游 krkr2_android.cpp）。
-  - `apps/.../kotlin/org/tvp/kirikiri2/KR2Activity.kt`（上游原样）+ `MainActivity` 改为继承
-    KR2Activity；app `build.gradle` 加 `material:1.12.0`。
-  - `flutter_engine_bridge` Android 插件：加 `nativeSetApplicationContext`、外部存储权限
-    （has/requestManageExternalStorage）、SAF 文件选择（pickFile/resolveContentUri）、
-    `ActivityAware`；保留本地 `SurfaceProducer` 零拷贝路径。
-  - app `AndroidManifest`：加 `MANAGE_EXTERNAL_STORAGE`/`READ_EXTERNAL_STORAGE` +
-    `requestLegacyExternalStorage=true`。
-- **未复用的上游文件**：`linux/Platform.cpp`（`#ifdef LINUX`、依赖 gtk，不适用移动端；Linux 仍用
-  `stubs/platform_linux.cpp`）。
-- **待验证**：CI 编译通过；真机启动不崩、可读外部存储/共享目录、游戏/存档路径正确、系统对话框可用。
 
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 - **现象**（真机日志 `sabbat_kr`/魔女的夜宴，目录版）：游戏正常启动到
@@ -148,24 +132,6 @@
   只给 pkg-config、不给 CMake config，不能用 `find_package(oboe CONFIG)`）。**别因"上游没加"就移除**。
 - **arm64 triplet ABI 修复是我们独有**（`VCPKG_CMAKE_CONFIGURE_OPTIONS -DANDROID_ABI=arm64-v8a`、
   `CMAKE_ANDROID_ARCH_ABI`/`CMAKE_SYSTEM_PROCESSOR=aarch64`），上游 triplet 是原版，别覆盖。
-
-### 10. Android 主界面"永久转圈"待真机日志定根【进行中】🏷 新增
-- 现象：Android APK 编译成功，但进入主界面后 `CircularProgressIndicator` 一直转，
-  停在 `_HomePage` 的 `_loading=true`。
-- 已排查（静态逻辑上 Android 不存在必然死循环）：
-  - 转圈唯一来源 `home_page.dart _loading`（L864）；`games` 为空会显示空态，不是转圈。
-  - `_loadGames()` 依赖链：`SharedPreferences.getInstance`（悬念，平台通道）、
-    `_gameManager.load()`（`listFromJsonString` 有 try-catch 安全）、
-    `applyPendingPlaySession()`（jsonDecode 有 try-catch 安全）、
-    `_initIosGamesDir()`（Android 被 `Platform.isIOS` 排除，不执行）。
-  - 结论：若早先真的转圈，是**某 await 在平台通道上静默挂起/抛异步异常**，非静态死循环。
-- 已做加固：`_loadGames()` 包 try-catch-finally（`debugPrint` + `finally` 强制 `_loading=false`），
-  不再静默永久转圈。提交 `63b8537`。
-- 待办：等用户连安卓设备贴 `adb logcat`（过滤
-  `Flutter|HomePage|SharedPreferences|krkr|engine`）核对：
-  1. 是否有 `HomePage._loadGames error:` 异常堆栈；
-  2. SharedPreferences 平台通道是否就绪（app 早期 getInstance 可能挂）；
-  3. 引擎是否被提前启动/阻塞初始化。
 
 ### 11. Android「添加文件/压缩包」死代码 bug + 目录访问平台差异 🏷 新增
 - 问题 1（死代码）：`home_page.dart _addGameArchive()` Android 分支调用
