@@ -405,11 +405,29 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     }
     _log('engine_create => OK');
 
-    // 把引擎 spdlog 同时写入沙盒 Documents/pocketkrkr_engine.log，
-    // 便于定位问题时在手机上读取（idevicesyslog 不捕获 app stdout）。
+    // 把引擎 spdlog 同时写入 pocketkrkr_engine.log，便于定位问题时在手机上读取
+    // （idevicesyslog 不捕获 app stdout）。
+    // iOS/macOS：写 Documents，用户可直接用文件 App / Finder 访问；
+    // Android：getApplicationDocumentsDirectory() 返回 app 私有目录用户拿不到，
+    //   改写到公共存储 /storage/emulated/0/PocketKrKrLogs（_autoStart 已强制申请
+    //   All files access），可用文件管理器直接打开。
     try {
-      final docDir = await getApplicationDocumentsDirectory();
-      final logFile = '${docDir.path}/pocketkrkr_engine.log';
+      final Directory logDir;
+      if (Platform.isAndroid) {
+        final external = await getExternalStorageDirectory();
+        if (external != null) {
+          logDir = Directory('${external.path}/PocketKrKrLogs');
+        } else {
+          final docDir = await getApplicationDocumentsDirectory();
+          logDir = Directory('${docDir.path}/PocketKrKrLogs');
+        }
+      } else {
+        logDir = await getApplicationDocumentsDirectory();
+      }
+      if (!await logDir.exists()) {
+        await logDir.create(recursive: true);
+      }
+      final logFile = '${logDir.path}/pocketkrkr_engine.log';
       final logResult = await _bridge.engineSetLogFilePath(logFile);
       _log('engine_set_log_file_path($logFile) => $logResult');
     } catch (e) {
