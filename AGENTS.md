@@ -58,7 +58,7 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 |---|---|
 | iOS 构建 + CI 打包 | ✅ 可出无签名 IPA（nosign.ipa 供 AltStore/Sideloadly）；已出测试版骨架，准备预发布 |
 | iOS 黑屏诊断 | 🔬 探针已加，真机日志排除视频后根因转向 **Z 插件兼容**（缺 drawdeviceD3DZ/kztouch/k2compat 等，主 DrawBuffer 从未被合成、源纹理保持初始黑） |
-| Android 构建链路 | 🛠 已出 `libengine_api.so`，现卡 Flutter/Gradle 打包（wrapper 升 8.14.3） |
+| Android 构建链路 | ✅ APK 可出、真机不再闪退/不转圈；SDL Java 层 + 上游 JNI 平台层已补齐（`a2d8d75`），引擎日志写公共存储 `PocketKrKrLogs`（`c312272`），已进入真机日志筛查游戏兼容性 |
 | vcpkg meson × Android | ⚠️ glib 等 meson 端口与 arm64 错配；修法见 `vcpkg/ports/glib/portfile.cmake` |
 | Linux 引擎验证 CI | ✅ 绿灯 |
 | SIMD 公式 | ⚠️ 23 处 SIMD≠标量，已回退标量保正确，待逐模式修到位级一致放回 |
@@ -67,6 +67,6 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 
 1. 重跑 Linux engine_verify CI，确认回退后 ctest 全绿。
 2. 读 iOS 真机日志，按 `BlackScreen` 探针结论决定是否先做 krmovie Present（见 todo.md）。
-3. 构 Android APK + iOS nosign IPA 真机实测。
+3. Android 已进入日志筛查游戏兼容性阶段；iOS 出 nosign IPA 真机实测；核心待办转向 **Z 插件兼容黑屏**（见 todo「已解决 / 进行中」）。
 4. 逐模式修 SIMD 到位级一致（PsApplyAlpha 舍入序 + SubBlend_o/ScreenBlend alpha + Overlay/HardLight 分支），tests 验证后放回。
 5. 真机问题修复后进入游戏兼容性测试（[docs/dev/compatibility.md](docs/dev/compatibility.md)）。
