@@ -108,8 +108,8 @@ Built-in packaging workflows:
 - Automatic: push a `v*` tag (e.g. `v1.0.0`)
 
 **Artifacts**:
-- iOS: `KrKr2-Next-iOS-<release|debug>.zip` (unsigned `Runner.app`, kept for 14 days)
-- Android: `KrKr2-Next-Android-<release|debug>.apk` (kept for 14 days)
+- iOS: `PocketKrKr-iOS-<release|debug>.zip` (unsigned `Runner.app`, kept for 14 days)
+- Android: `PocketKrKr-Android-<release|debug>.apk` (kept for 14 days)
 
 **Install on device**:
 - iOS: download the zip → extract `Runner.app` → sign with your own Apple developer certificate

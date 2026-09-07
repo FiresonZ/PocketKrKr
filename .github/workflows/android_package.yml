@@ -195,7 +195,7 @@ jobs:
             find apps/flutter_app/build -name "*.apk" 2>/dev/null || true
             exit 1
           fi
-          ZIP="KrKr2-Next-Android-${BUILD_TYPE}.apk"
+          ZIP="PocketKrKr-Android-${BUILD_TYPE}.apk"
           cp "$APK" "$ZIP"
           echo "已生成: $ZIP"
           ls -lh "$ZIP"
@@ -204,7 +204,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: KrKr2-Next-Android-${{ env.BUILD_TYPE }}
+          name: PocketKrKr-Android-${{ env.BUILD_TYPE }}
           path: ${{ env.artifact }}
           if-no-files-found: error
           retention-days: 14
@@ -216,7 +216,7 @@ jobs:
           set -euo pipefail
           VERSION="$RELEASE_VERSION"
           TAG="android-v${VERSION}"
-          NOTES=$(printf 'KrKr2 Next Android 构建，直接安装 APK（Android 7.0 / API 24+，arm64-v8a）。\n\n版本：v%s\n产物：%s\n\n> 版本号标准见仓库 README《版本号 / 发布标准》。' "$VERSION" "$(basename "${{ env.artifact }}")")
+          NOTES=$(printf 'PocketKrKr Android 构建，直接安装 APK（Android 7.0 / API 24+，arm64-v8a）。\n\n版本：v%s\n产物：%s\n\n> 版本号标准见仓库 README《版本号 / 发布标准》。' "$VERSION" "$(basename "${{ env.artifact }}")")
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             # tag 已存在：补充上传产物，不重复建 Release
             echo "Release $TAG 已存在，上传产物：${{ env.artifact }}"
@@ -225,7 +225,7 @@ jobs:
             gh release create "$TAG" \
               "${{ env.artifact }}" \
               --repo "$GITHUB_REPOSITORY" \
-              --title "KrKr2 Next Android v${VERSION}" \
+              --title "PocketKrKr Android v${VERSION}" \
               --notes "$NOTES"
           fi
           echo "已发布：https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"

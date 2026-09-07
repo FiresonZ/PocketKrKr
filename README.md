@@ -103,8 +103,8 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 - 自动：推送 `v*` 标签（如 `v1.0.0`）
 
 **产物**：
-- iOS：`KrKr2-Next-iOS-<release|debug>.zip`（未签名的 `Runner.app`，保留 14 天）
-- Android：`KrKr2-Next-Android-<release|debug>.apk`（保留 14 天）
+- iOS：`PocketKrKr-iOS-<release|debug>.zip`（未签名的 `Runner.app`，保留 14 天）
+- Android：`PocketKrKr-Android-<release|debug>.apk`（保留 14 天）
 
 **安装到真机**：
 - iOS：下载 zip → 解压出 `Runner.app` → 用自己的 Apple 开发者证书签名

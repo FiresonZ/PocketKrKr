@@ -81,7 +81,7 @@
 ## macOS 构建步骤（build/build\_macos.sh 内部）
 
 1. CMake `MacOS <Debug|Release> Config` → 构建 → `out/macos/<type>/bridge/engine_api/libengine_api.dylib`。
-2. `flutter build macos --<mode>` → `build/macos/Build/Products/<Debug|Release>/KrKr2 Next.app`。
+2. `flutter build macos --<mode>` → `build/macos/Build/Products/<Debug|Release>/Runner.app`。
 3. 把 dylib 拷入 `Contents/Frameworks/`，`install_name_tool` 设 `@executable_path/../Frameworks/`，ad-hoc 重签。
 
 ## Android 构建步骤（build/build\_android.sh 内部）
@@ -120,7 +120,7 @@
 | ----- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | iOS   | `out/ios/{debug,release}/bridge/engine_api/libengine_api.a`       | `apps/flutter_app/build/ios/iphoneos/Runner.app`                             |
 | Android | `out/android/{debug,release}/bridge/engine_api/libengine_api.so` | `apps/flutter_app/build/app/outputs/flutter-apk/app-{debug,release}.apk`      |
-| macOS | `out/macos/{debug,release}/bridge/engine_api/libengine_api.dylib` | `apps/flutter_app/build/macos/Build/Products/{Debug,Release}/KrKr2 Next.app` |
+| macOS | `out/macos/{debug,release}/bridge/engine_api/libengine_api.dylib` | `apps/flutter_app/build/macos/Build/Products/{Debug,Release}/Runner.app` |
 
 ## 常用操作
 

@@ -9,7 +9,7 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
-  String get appTitle => 'KrKr2 Next Mobile';
+  String get appTitle => 'PocketKrKr';
 
   @override
   String get settings => '設定';
