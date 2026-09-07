@@ -48,6 +48,7 @@ extern "C" void krkr_GetSurfaceDimensions(uint32_t*, uint32_t*);
 #include "base/ScriptMgnIntf.h"
 #include "base/impl/SysInitImpl.h"
 #include "base/impl/StorageImpl.h"
+#include "extension/Extension.h"
 #include "visual/GraphicsLoaderIntf.h"
 #include "visual/ogl/ogl_common.h"
 #include "visual/ogl/krkr_egl_context.h"
