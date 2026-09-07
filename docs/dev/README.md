@@ -28,6 +28,7 @@ Flutter 壳应用提供 UI。当前**面向移动端**（iOS + Android 为主目
 | [developers-guide.md](developers-guide.md) | **人类开发者入门**：30 分钟上手，核心概念/目录地图/代码路径/调试 |
 | [tech-stack.md](tech-stack.md) | 技术栈、语言、关键三方库、vcpkg 依赖 |
 | [architecture.md](architecture.md) | 模块架构、渲染数据流、桥接层设计、GPU 管线现状 |
+| [source-map.md](source-map.md) | **源代码结构地图**：按目录树的 CPP + Flutter 源码逐模块讲解（学习/开发用） |
 | [key-references.md](key-references.md) | 关键文件 / 符号 / C API 索引（改代码先看这里） |
 | [build.md](build.md) | 构建与工具链（iOS / Android / macOS / Linux 验证）、产物、CI、排错 |
 | [conventions.md](conventions.md) | 目录命名、平台约定、历史陷阱、SIMD 审计记录（重要） |
