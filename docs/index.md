@@ -69,6 +69,5 @@ Dart 优先走 FFI，MethodChannel 为兜底。
 
 ## 致谢
 
-本项目是 [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next) 的 fork 二次开发，其基于
-[krkr2](https://github.com/2468785842/krkr2) 源代码重构。感谢所有上游作者与贡献者。
+本项目基于 [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next) 二次开发而成，感谢所有上游作者与贡献者。
 本项目以 [GPL-3.0](https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/LICENSE) 协议开源。

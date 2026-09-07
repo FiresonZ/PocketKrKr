@@ -14,9 +14,8 @@
 C++ 引擎（TVP/TJS2）离屏渲染 → IOSurface / SurfaceTexture 零拷贝 → Flutter 纹理显示，
 Flutter 壳应用提供 UI。当前**面向移动端**（iOS + Android 为主目标，macOS 为 Apple 开发目标）。
 
-- 项目主页（本 fork）：<https://github.com/FiresonZ/KrKr2-Next-Mobile>（fork 自 KrKr2-Next 二次开发）
-- 直接上游（fork 来源）：<https://github.com/reAAAq/KrKr2-Next>（基于 krkr2 源代码重构）
-- 代码来源（重构基础）：<https://github.com/2468785842/krkr2>
+- 本项目主页：<https://github.com/FiresonZ/KrKr2-Next-Mobile>
+- 直接上游（基于 KrKr2-Next 二次开发）：<https://github.com/reAAAq/KrKr2-Next>
 - 许可证：GPL-3.0
 
 ## 目录索引

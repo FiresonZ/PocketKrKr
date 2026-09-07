@@ -8,9 +8,8 @@
 **PocketKrKr** = [KiriKiri2（吉里吉里2）](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎的现代化运行环境，**面向移动端（iOS + Android）**，macOS 为 Apple 开发目标，Linux 仅作 CI 宿主验证。
 
 - **架构**：C++ 引擎（TVP/TJS2）离屏渲染（ANGLE：iOS/macOS=Metal 后端、Android=Vulkan 后端）→ IOSurface / SurfaceTexture 零拷贝 → Flutter 纹理显示；Dart 优先 FFI，MethodChannel 兜底。
-- **本项目主页**：<https://github.com/FiresonZ/KrKr2-Next-Mobile>（fork 自 KrKr2-Next 二次开发）
-- **直接上游（fork 来源）**：<https://github.com/reAAAq/KrKr2-Next>
-- **代码来源（重构基础）**：<https://github.com/2468785842/krkr2>
+- **本项目主页**：<https://github.com/FiresonZ/KrKr2-Next-Mobile>
+- **直接上游（基于 KrKr2-Next 二次开发）**：<https://github.com/reAAAq/KrKr2-Next>
 - **说明**：本项目有大批量代码由 AI Agent 协作编写，文档体系（`docs/dev/`）专为 AI/开发者设计，请保持其与代码同步。
 
 ## 仓库结构速览

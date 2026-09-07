@@ -16,10 +16,8 @@
 
 **Language / 语言**: [中文](README.md) | English
 
-> 🙏 This project, **PocketKrKr** (<https://github.com/FiresonZ/KrKr2-Next-Mobile>), is a
-> **fork-based secondary development** of [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next),
-> which is itself a refactor built on the source code of [krkr2](https://github.com/2468785842/krkr2).
-> This project's code is inherited directly from KrKr2-Next and ultimately traces back to krkr2.
+> 🙏 **PocketKrKr** (<https://github.com/FiresonZ/KrKr2-Next-Mobile>) is built as a
+> **secondary development based on [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next)**.
 > Thanks to all upstream authors.
 
 > 🤖 **AI-agent collaboration note**: a large portion of this project's code was written by AI agents.
@@ -141,9 +139,8 @@ so subsequent runs restore dependencies quickly.
 
 - AI-agent first-screen instructions: [AGENTS.md](AGENTS.md)
 - Development docs (AI-agent quick reference): [docs/dev/](docs/dev/README.md)
-- Project home (this fork): <https://github.com/FiresonZ/KrKr2-Next-Mobile>
-- Direct upstream (fork source): <https://github.com/reAAAq/KrKr2-Next>
-- Code source (refactor base): <https://github.com/2468785842/krkr2>
+- Project home: <https://github.com/FiresonZ/KrKr2-Next-Mobile>
+- Direct upstream (secondary development of KrKr2-Next): <https://github.com/reAAAq/KrKr2-Next>
 
 ## License
 
