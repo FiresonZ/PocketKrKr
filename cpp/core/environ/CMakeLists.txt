@@ -35,7 +35,7 @@ set(ENVIRON_SOURCE_FILES
     # 不复用上游 linux/Platform.cpp：其 #ifdef LINUX 在 Android 下为空且强依赖 gtk，不适合移动端。
     $<$<BOOL:${ANDROID}>:${ENVIRON_PATH}/android/KrkrJniHelper.cpp>
     $<$<BOOL:${ANDROID}>:${ENVIRON_PATH}/android/AndroidUtils.cpp>
-    $<$<NOT:ANDROID>:${ENVIRON_PATH}/stubs/platform_linux.cpp>
+    $<$<NOT:$<BOOL:${ANDROID}>>:${ENVIRON_PATH}/stubs/platform_linux.cpp>
 
     ${ENVIRON_PATH}/win32/SystemControl.cpp
 )
