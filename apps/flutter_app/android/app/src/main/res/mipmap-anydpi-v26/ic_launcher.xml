@@ -2,6 +2,6 @@
 <!-- PocketKrKr 自适应启动图标（Android 8.0+ / API 26+）
      background 用与图标一致的浅粉色，foreground 为抠出的双鱼主体 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background" />
+    <background android:drawable="@drawable/ic_launcher_background" />
     <foreground android:drawable="@mipmap/ic_launcher_foreground" />
 </adaptive-icon>
