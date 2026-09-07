@@ -1586,6 +1586,8 @@ krkrz/krkr2/Kirikiroid2 本地参考副本）。
 （TVPSystemUninit + 销毁 MainScene/EngineLoop 单例 + Bootstrap::Shutdown +
 <code>g_runtime_started_once=false</code>）。
 <strong>Reset 函数移植进度</strong>（PR#12 C++ 侧，保证重初始化干净）：
+<strong>🟡 已编译通过（Android + iOS），待真机验证</strong>：三批 Reset 函数已全部接入
+<code>engine_destroy</code>，两平台编译均绿；下一步真机复验"不杀进程退出→再开另一款游戏"。
 - ✅ 已提交并接入 <code>engine_destroy</code>（<code>05d1254</code> + <code>682d87e</code>，codex 分支）：
   <code>TVPResetScriptEngineForRestart</code>（ScriptMgnIntf）、
   <code>TVPResetRuntimeForRestart</code>（SysInitIntf，含 TVPProjectDir/DataPath 清空）、
@@ -1634,8 +1636,28 @@ krkrz/krkr2/Kirikiroid2 本地参考副本）。
 <li>背景：<code>tests/tvpgl_simd_compare</code> 已证实 <strong>23 处 SIMD ≠ 标量</strong>；
   PS 全系混合 / SubBlend_o / ScreenBlend 已先回退到 <code>*_c</code> 标量保证正确
   （<code>tvpgl_simd_init.cpp</code> 已注释对应注册）。</li>
-<li>待办：逐模式修 <code>PsApplyAlpha</code> 舍入序、SubBlend_o/ScreenBlend alpha、Overlay/HardLight
-  分支到与 <code>*_c</code> 位级一致，tests 逐模式验证后放回 SIMD 派发。</li>
+<li><strong>P2 ✅（PsApplyAlpha 舍入序已修）</strong>：标量 <code>TVPPS_ALPHABLEND</code>（tvpps.inc）实际是
+  <code>result = ((s - d) * a &gt;&gt; 8) + d</code>；旧 SIMD 用了 <code>(s*a&gt;&gt;8) + (d*(255-a)&gt;&gt;8)</code>，30M
+  随机矢量 29.85M 不一致。已改为 <code>((s-d)*a &gt;&gt; 8) + d</code>（u16 包减/包乘，<code>OrderedDemote2To</code>
+  只留低字节故无碍），<code>out/p2_check/check.c</code> 验证 30M 全一致（0 mismatch）。修在
+  <code>tvpgl_simd_ps_blend.cpp</code> 与 <code>tvpgl_simd_ps_blend2.cpp</code> 的 <code>PsApplyAlpha</code>。
+  → evaluation：Alpha/Add/Sub/Mul/Lighten/Darken/Diff/Exclusion（P 系）+ Overlay/HardLight
+  的 alpha 应用段已校正。</li>
+<li><strong>P3 ✅（TVPSubBlend_o）</strong>：标量 <code>TVPSubBlend_o_c</code> 只按 opa 缩放字节0-2 并把 alpha
+  强制为 0xFF，饱和减后 alpha 保留 dst 原值；SIMD 原对 alpha 也做缩放 =&gt; 偏离。已在
+  <code>SubBlend_o_HWY</code> 加 alpha_mask 保留 dst alpha（<code>tvpgl_simd_arithmetic_blend.cpp</code>），
+  <code>out/p34_check/check.c</code> 30M 全一致；<code>tvpgl_simd_init.cpp</code> 已放回。</li>
+<li><strong>P4 ✅（TVPScreenBlend base）</strong>：标量 <code>TVPScreenBlend_c</code> 的 packed 乘积只写字节0-2，
+  alpha 字节恒为 0xFF；SIMD base 原来对所有 4 字节做 screen。已在 <code>ScreenBlend_HWY</code>
+  OR 上 alpha_ff=0xFF，<code>out/p34_check/check.c</code> 30M 全一致；<code>tvpgl_simd_init.cpp</code> 已放回。</li>
+<li><strong>P5 ✅（PsOverlay/PsHardLight core）</strong>：标量表是 <code>unsigned char</code>（精确 <code>/255</code>），
+  SIMD 原用 <code>&gt;&gt;7</code>(≈/128) 且 NORM/_o 不写 alpha。已把 <code>OverlayCore</code>/<code>HardLightCore</code>
+  改为精确 <code>floor(2*s*d/255)</code>（p=s<em>d, k=p&gt;&gt;7, t=k+2</em>(p&amp;127), m=k+(t&gt;=255)+(t&gt;=510)，
+  demote 前 <code>&amp;0xFF</code> 复现 uchar 截断），并在 <code>MAKE_PS_4V</code> 的 NORM/_o 加 rgb_mask 置
+  alpha=0（HDA 走 ApplyHDA 保留 dst alpha）。<code>out/p5_check/check2.c</code> 20M 全一致。
+  <code>tvpgl_simd_init.cpp</code> 已放回 Overlay/HardLight。</li>
+<li>待办：Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 的 core（溢出/alpha 分支）
+  未逐一核对，仍回退标量；逐个核对后放回。</li>
 </ul>
 <h3 id="5-kagex-kag-kagexopt">5. KAGEX / KAG 差异兼容（kagexopt 相关）<a class="headerlink" href="#5-kagex-kag-kagexopt" title="Permanent link">&para;</a></h3>
 <ul>
