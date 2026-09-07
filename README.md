@@ -38,14 +38,7 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
         └─ Android:  SurfaceTexture ─┴──────────────────┘ 显示
 ```
 
-- **渲染管线**：引擎通过 ANGLE 的 EGL Pbuffer Surface 离屏渲染（OpenGL ES 2.0），
-  结果经 **IOSurface**（iOS/macOS）或 **SurfaceTexture**（Android）零拷贝传递给
-  Flutter 纹理显示；CPU 回读（`engineReadFrameRgba`）作为兜底路径。
-- **桥接层**：`bridge/engine_api` 提供稳定 C ABI（`engine_create` / `engine_tick` / `engine_destroy` 等）；
-  iOS 以静态库链接进 Runner，Android 以 `libengine_api.so` 共享库打包进 APK；
-  Dart 优先走 FFI，MethodChannel 为兜底。
-
-> 📖 面向开发者/AI Agent 的完整技术文档见 **[docs/dev/](docs/dev/README.md)**（技术栈、架构、关键引用、构建、约定陷阱）。
+> 📖 渲染管线、桥接层等技术细节见 **[docs/dev/](docs/dev/README.md)**（技术栈、架构、关键引用、构建、约定陷阱）。
 
 ## 平台支持
 
@@ -55,32 +48,16 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 | Android | 🚧 主目标，开发中 | Vulkan | SurfaceTexture | `libengine_api.so` 打包进 APK |
 | macOS | ✅ 开发目标 | Metal | IOSurface | dylib 打包进 Frameworks |
 
-> 本地无 macOS 时：Android APK 可在 Windows 上直接构建；iOS 打包通过 GitHub Actions 的 macOS runner 完成。
-
 ## 系统要求
 
-### iOS
+| 平台 | 系统版本 | 架构 | 备注 |
+|------|----------|------|------|
+| iOS | iOS / iPadOS 15.0+ | arm64 | 需支持 iOS 15 的 64 位设备 |
+| Android | Android 7.0（API 24）+ | arm64-v8a | 需支持 Vulkan 的 GPU |
+| macOS | macOS（开发目标） | arm64 | — |
 
-| 项 | 要求 |
-|----|------|
-| 系统版本 | **iOS / iPadOS 15.0 及以上** |
-| 架构 | 仅 64 位（**arm64**） |
-| 设备 | iPhone 6s 及以上；iPad Air 2 / iPad mini 4 及以上；iPod touch（第 7 代） |
-| 芯片 | A8 / A9 及以上（即所有支持 iOS 15 的 64 位设备） |
-
-> 构建与运行链路（引擎静态库、vcpkg 依赖、Flutter）均按 `arm64`、部署目标 `iOS 15.0` 配置，
-> 见 `CMakePresets.json`、`vcpkg/triplets/arm64-ios.cmake` 与 `ios/Podfile`。
-
-### Android
-
-| 项 | 要求 |
-|----|------|
-| 系统版本 | **Android 7.0（API 24）及以上** |
-| 架构 | 仅 64 位（**arm64-v8a**） |
-| 图形 | 支持 Vulkan 的 GPU（ANGLE Vulkan 后端） |
-
-> 引擎按 `arm64-v8a`、API 24 配置（`vcpkg/triplets/arm64-android.cmake`）；
-> 构建需 Android NDK（设置 `ANDROID_NDK_HOME`）。
+> 引擎（静态库/vcpkg 依赖/Flutter）均按 `arm64`、对应最低系统版本配置，见
+> `CMakePresets.json`、`vcpkg/triplets/arm64-ios.cmake`、`vcpkg/triplets/arm64-android.cmake`。
 
 ## 构建
 
@@ -92,56 +69,11 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 
 详见 [docs/dev/build.md](docs/dev/build.md) 与 [build.sh](build.sh)。
 
-## CI 打包（GitHub Actions）
+## 获取/安装
 
-仓库内置在线打包工作流：
-
-- **iOS**：[ios_package.yml](.github/workflows/ios_package.yml)（macOS runner）
-- **Android**：[android_package.yml](.github/workflows/android_package.yml)（Ubuntu runner）
-
-**触发方式**（两者一致）：
-- 手动：Actions → 对应打包工作流 → Run workflow（可选 debug / release）
-- 自动：推送 `v*` 标签（如 `v1.0.0`）
-
-**产物**：
-- iOS：`PocketKrKr-iOS-<release|debug>.zip`（未签名的 `Runner.app`，保留 14 天）
-- Android：`PocketKrKr-Android-<release|debug>.apk`（保留 14 天）
-
-**安装到真机**：
-- iOS：下载 zip → 解压出 `Runner.app` → 用自己的 Apple 开发者证书签名
-  （推荐用 Xcode 打开 `apps/flutter_app/ios/Runner.xcworkspace` 配置 Team 后运行），
-  或用 `flutter run -d <device>` 开发调试。
-- Android：直接安装 APK（`adb install` 或拷贝到手机点击安装）。
-
-**首次构建**：vcpkg 需全量编译目标平台依赖（FFmpeg/OpenCV/ANGLE 等），耗时较长；
-已启用 vcpkg 二进制缓存，后续运行秒级还原。
-
-## CI 发布/版本号标准
-
-主仓库用 GitHub Actions 手动触发即可**自动打 tag + 建 Release + 挂产物**，无需本地操作。
-
-### 版本号（X.Y.Z 三段式）
-
-- 格式：`主.次.修订`，如 `0.1.4`；递增修订号即可，主/次号在破坏性改动/新特性时递增。
-- 一个版本号**同时控制**四处，保持一致：
-  - Git tag / Release：`ios-vX.Y.Z`（iOS）、`android-vX.Y.Z`（Android），**分平台各自 Release**；
-  - 原生 app 版本：iOS `CFBundleShortVersionString`、Android `versionName`（`--build-name`）；
-  - 原生构建号：Android `versionCode`、iOS `CFBundleVersion`（`--build-number`），自动取
-    `major*10000 + minor*100 + patch`（如 `0.1.4` → `104`）；
-  - 软件内版本显示：设置 → 版本，副标题显示该版本号（`--dart-define=APP_VERSION` 注入）。
-
-### 手动发布步骤（推荐）
-
-1. Actions → 对应打包工作流 → Run workflow；
-2. 填 `build_type=release`，填 **`发布版本号`**（`X.Y.Z`），勾选 **`发布 Release`**；
-3. 跑完会自动：建 tag `ios-vX.Y.Z` / `android-vX.Y.Z` → 建对应 GitHub Release → 挂产物；
-   - iOS 产物为**未签名 .ipa**，需自行用 Apple 证书签名侧载（AltStore / Sideloadly）；
-   - Android 产物为 APK，直接安装（Android 7.0 / API 24+，arm64-v8a）。
-
-> 只测不发布：不勾「发布 Release」即可，产物仍会以 workflow artifact 保留 14 天。
-> 勾了发布但没填版本号（或格式不对）：构建前就报错中断，避免白等编译。
-> 已存在的 tag 再次运行：不会重复建 Release，只会补充/覆盖上传该产物。
-> 建议用 `release` 构建类型做正式发布；`debug` 仅用于测试，即使发布也是 debug 包。
+在线构建产物由 GitHub Actions 打包（iOS 未签名、Android 为 APK），并支持自动打 tag +
+建 Release 挂产物。具体触发方式、产物命名、真机安装与版本号规范见
+**[docs/dev/build.md](docs/dev/build.md)**。本地无 macOS 时，Android APK 可在 Windows 上直接构建。
 
 ## 开发进度
 

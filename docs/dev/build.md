@@ -153,6 +153,21 @@ JOBS=16 ./build.sh ios release
 
 - iOS 真机安装需自行用 Apple 开发者证书签名；Android 可直接安装 APK。
 
+### 版本号与发布（GitHub Actions）
+
+- **版本号规则（X.Y.Z 三段式）**：一个版本号同时控制四处，需保持一致——
+  - Git tag / Release：`ios-vX.Y.Z`（iOS）、`android-vX.Y.Z`（Android），**分平台各自 Release**；
+  - 原生 app 版本：iOS `CFBundleShortVersionString`、Android `versionName`（`--build-name`）；
+  - 原生构建号：Android `versionCode`、iOS `CFBundleVersion`（`--build-number`），自动取
+    `major*10000 + minor*100 + patch`（如 `0.1.4` → `104`）；
+  - 软件内版本显示：设置 → 版本，副标题显示该版本号（`--dart-define=APP_VERSION` 注入）。
+- **手动发布（推荐）**：
+  1. Actions → 对应打包工作流 → Run workflow；
+  2. 填 `build_type=release`，填 **`发布版本号`**（`X.Y.Z`），勾选 **`发布 Release`**；
+  3. 跑完自动建 tag `ios-vX.Y.Z` / `android-vX.Y.Z` → 建对应 GitHub Release → 挂产物。
+- **注意**：只测不发布则不勾「发布 Release」（产物仍保留 14 天）；已存在 tag 再跑不会重复建
+  Release，只补充/覆盖产物；`debug` 类型即使发布也是 debug 包，正式发布请用 `release`。
+
 ## 常见问题
 
 - **找不到 bison**：Homebrew 安装后路径在 `HINTS` 里已列（tjs2/CMakeLists.txt）。
