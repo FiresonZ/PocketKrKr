@@ -4,10 +4,10 @@
 site_name: PocketKrKr
 site_description: 口袋里的吉里吉里2 —— 面向移动端的 KiriKiri2 视觉小说引擎运行环境（C++ 引擎 + Flutter 壳）
 site_url: https://krkr2next.com/
-repo_url: https://github.com/FiresonZ/KrKr2-Next-Mobile
-repo_name: FiresonZ/KrKr2-Next-Mobile
+repo_url: https://github.com/FiresonZ/PocketKrKr
+repo_name: FiresonZ/PocketKrKr
 edit_uri: edit/main/docs/
-copyright: Copyright &copy; 2026 PocketKrKr Contributors · <a href="https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/LICENSE">GPL-3.0</a>
+copyright: Copyright &copy; 2026 PocketKrKr Contributors · <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/LICENSE">GPL-3.0</a>
 
 theme:
   name: material
@@ -49,7 +49,7 @@ extra:
   generator: false
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/FiresonZ/KrKr2-Next-Mobile
+      link: https://github.com/FiresonZ/PocketKrKr
 
 plugins:
   - search:

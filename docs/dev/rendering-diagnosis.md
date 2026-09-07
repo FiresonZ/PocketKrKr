@@ -31,7 +31,7 @@ cmake -DENABLE_RENDER_PROBE=ON <其余参数>          # 打开
 cmake -DENABLE_RENDER_PROBE=OFF <其余参数>         # 关闭（默认）
 cmake -DKRKR_LOG_LEVEL=debug <其余参数>            # 单独指定日志级别(trace|debug|info|warn|err|critical|off)
 ```
-（在 [CMakeLists.txt](https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/CMakeLists.txt) 顶层 `add_compile_definitions(KRKR_RENDER_PROBE)`；
+（在 [CMakeLists.txt](https://github.com/FiresonZ/PocketKrKr/blob/main/CMakeLists.txt) 顶层 `add_compile_definitions(KRKR_RENDER_PROBE)`；
 日志级别经 `KRKR_LOG_LEVEL_NUM` 注入 engine_api.cpp，可独立于 debug/release。）
 
 方式二（临时，直接在某处全局定义）：
@@ -84,7 +84,7 @@ cmake -DKRKR_LOG_LEVEL=debug <其余参数>            # 单独指定日志级�
 ## 五、日志文件会"拉屎"吗？
 
 不会无限涨。日志文件是**旋转文件**：写满 **4 MiB 自动轮转，保留 3 份**（约 12 MiB 封顶，
-见 [engine_api.h](https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/bridge/engine_api/include/engine_api.h) `engine_set_log_file_path`）。
+见 [engine_api.h](https://github.com/FiresonZ/PocketKrKr/blob/main/bridge/engine_api/include/engine_api.h) `engine_set_log_file_path`）。
 
 另外 release 默认日志级别 = **info**（`bridge/engine_api/src/engine_api.cpp`
 `EnsureRuntimeLoggersInitialized`），把之前 `[debug]` 级别的刷屏（如每次文件探测的

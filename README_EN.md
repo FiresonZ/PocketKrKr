@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/FiresonZ/KrKr2-Next-Mobile/main/docs/resources/logo.png" alt="PocketKrKr" width="96">
+  <img src="https://raw.githubusercontent.com/FiresonZ/PocketKrKr/main/docs/resources/logo.png" alt="PocketKrKr" width="96">
   <h1 align="center">PocketKrKr</h1>
   <p align="center">A Next-Generation KiriKiri2 Runtime for Mobile (iOS + Android)</p>
 </p>
@@ -17,7 +17,7 @@
 
 **Language / 语言**: [中文](README.md) | English
 
-> 🙏 **PocketKrKr** (<https://github.com/FiresonZ/KrKr2-Next-Mobile>) is built as a
+> 🙏 **PocketKrKr** (<https://github.com/FiresonZ/PocketKrKr>) is built as a
 > **secondary development based on [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next)**.
 > Thanks to all upstream authors.
 
@@ -140,7 +140,7 @@ so subsequent runs restore dependencies quickly.
 
 - AI-agent first-screen instructions: [AGENTS.md](AGENTS.md)
 - Development docs (AI-agent quick reference): [docs/dev/](docs/dev/README.md)
-- Project home: <https://github.com/FiresonZ/KrKr2-Next-Mobile>
+- Project home: <https://github.com/FiresonZ/PocketKrKr>
 - Direct upstream (secondary development of KrKr2-Next): <https://github.com/reAAAq/KrKr2-Next>
 
 ## License

@@ -9,7 +9,7 @@
 ## 0. 顶层一览
 
 ```
-KrKr2-Next-Mobile/            (= PocketKrKr)
+PocketKrKr/            (= 仓库根目录)
 ├── apps/flutter_app/         // Flutter 壳应用（UI、游戏管理、本地化）
 │   └── lib/                  //   Dart 前端源码（main + pages/services/...）
 ├── bridge/

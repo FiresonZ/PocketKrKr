@@ -588,7 +588,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: const Icon(Icons.code),
                     title: const Text('GitHub'),
                     subtitle: const Text(
-                      'github.com/FiresonZ/KrKr2-Next-Mobile',
+                      'github.com/FiresonZ/PocketKrKr',
                       style: TextStyle(fontSize: 12),
                     ),
                     trailing: Icon(
@@ -598,7 +598,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     onTap: () {
                       launchUrl(
-                        Uri.parse('https://github.com/FiresonZ/KrKr2-Next-Mobile'),
+                        Uri.parse('https://github.com/FiresonZ/PocketKrKr'),
                         mode: LaunchMode.externalApplication,
                       );
                     },

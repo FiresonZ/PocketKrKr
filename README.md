@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/FiresonZ/KrKr2-Next-Mobile/main/docs/resources/logo.png" alt="PocketKrKr" width="96">
+  <img src="https://raw.githubusercontent.com/FiresonZ/PocketKrKr/main/docs/resources/logo.png" alt="PocketKrKr" width="96">
   <h1 align="center">PocketKrKr</h1>
   <p align="center">面向移动端的下一代 KiriKiri2（吉里吉里2）运行环境</p>
 </p>
@@ -17,7 +17,7 @@
 
 **语言 / Language**: 中文 | [English](README_EN.md)
 
-> 🙏 本项目 **PocketKrKr**（<https://github.com/FiresonZ/KrKr2-Next-Mobile>）基于
+> 🙏 本项目 **PocketKrKr**（<https://github.com/FiresonZ/PocketKrKr>）基于
 > [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next) 二次开发而成，感谢上游作者的贡献。
 
 > 🤖 **AI Agent 协作说明**：本项目有大批量代码由 AI Agent 编写。新 AI Agent 请先阅读根目录
@@ -166,7 +166,7 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 
 - AI Agent 首屏指令：[AGENTS.md](AGENTS.md)
 - 开发文档（AI Agent 速查）：[docs/dev/](docs/dev/README.md)
-- 项目主页：<https://github.com/FiresonZ/KrKr2-Next-Mobile>
+- 项目主页：<https://github.com/FiresonZ/PocketKrKr>
 - 直接上游（基于 KrKr2-Next 二次开发）：<https://github.com/reAAAq/KrKr2-Next>
 
 ## 许可证
