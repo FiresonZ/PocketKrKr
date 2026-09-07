@@ -16,7 +16,7 @@
         <link rel="prev" href="../support_games/">
       
       
-        <link rel="next" href="for-beginners/">
+        <link rel="next" href="getting-started/">
       
       
         
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pocketkrkr-ai-agent" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -459,8 +459,6 @@
       
         
       
-        
-      
     
     
     
@@ -522,42 +520,14 @@
   
   
     <li class="md-nav__item">
-      <a href="for-beginners/" class="md-nav__link">
+      <a href="getting-started/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    小白开发指引
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="developers-guide/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    开发者入门
+    入门指南
   
 
     
@@ -1084,7 +1054,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         项目一句话
@@ -1095,7 +1065,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         目录索引
@@ -1136,7 +1106,7 @@
   
 
 
-<h1 id="pocketkrkr-ai-agent">PocketKrKr — 开发文档（AI Agent 速查）<a class="headerlink" href="#pocketkrkr-ai-agent" title="Permanent link">&para;</a></h1>
+<h1 id="_1">开发文档索引<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>本目录面向 <strong>AI Agent 与开发者</strong>，用于快速掌握项目技术栈、架构与关键位置，
 避免每次从头扫描整个代码库浪费上下文与 token。
@@ -1145,7 +1115,7 @@
 → <a href="conventions/">conventions.md</a>（约定与陷阱，最重要）→ <a href="key-references/">key-references.md</a>（关键文件/符号）。
 本项目有大批量代码由 AI Agent 编写，请沿用本目录的文档约定并保持同步。</p>
 </blockquote>
-<h2 id="_1">项目一句话<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h2 id="_2">项目一句话<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p><strong>PocketKrKr</strong>：KiriKiri2（吉里吉里2）视觉小说引擎的现代化运行环境。
 C++ 引擎（TVP/TJS2）离屏渲染 → IOSurface / SurfaceTexture 零拷贝 → Flutter 纹理显示，
 Flutter 壳应用提供 UI。当前<strong>面向移动端</strong>（iOS + Android 为主目标，macOS 为 Apple 开发目标）。</p>
@@ -1154,7 +1124,7 @@ Flutter 壳应用提供 UI。当前<strong>面向移动端</strong>（iOS + Andr
 <li>直接上游（基于 KrKr2-Next 二次开发）：<a href="https://github.com/reAAAq/KrKr2-Next">https://github.com/reAAAq/KrKr2-Next</a></li>
 <li>许可证：GPL-3.0</li>
 </ul>
-<h2 id="_2">目录索引<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_3">目录索引<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1164,16 +1134,12 @@ Flutter 壳应用提供 UI。当前<strong>面向移动端</strong>（iOS + Andr
 </thead>
 <tbody>
 <tr>
-<td><a href="for-beginners/">for-beginners.md</a></td>
-<td><strong>小白开发指引</strong>：目录用途 / 内置功能 / 上手指南 / 排错 / 教学向（新开发者先读这个）</td>
+<td><a href="getting-started/">getting-started.md</a></td>
+<td><strong>入门指南</strong>：项目是什么 / 目录地图 / 构建运行 / 装游戏 / 渲染原理 / 改代码调试（新开发者先读这个）</td>
 </tr>
 <tr>
 <td><a href="rendering-diagnosis/">rendering-diagnosis.md</a></td>
 <td><strong>渲染/黑屏诊断方法（探针）</strong>：怎么开探针、怎么读日志二分定位、日志文件会不会膨胀</td>
-</tr>
-<tr>
-<td><a href="developers-guide/">developers-guide.md</a></td>
-<td><strong>人类开发者入门</strong>：30 分钟上手，核心概念/目录地图/代码路径/调试</td>
 </tr>
 <tr>
 <td><a href="tech-stack/">tech-stack.md</a></td>
@@ -1292,13 +1258,13 @@ Dart FFI 直接加载。
         
         
           
-          <a href="for-beginners/" class="md-footer__link md-footer__link--next" aria-label="下一页: 小白开发指引">
+          <a href="getting-started/" class="md-footer__link md-footer__link--next" aria-label="下一页: 入门指南">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一页
               </span>
               <div class="md-ellipsis">
-                小白开发指引
+                入门指南
               </div>
             </div>
             <div class="md-footer__button md-icon">

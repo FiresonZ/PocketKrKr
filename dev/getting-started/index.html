@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://krkr2next.com/dev/for-beginners/">
+        <link rel="canonical" href="https://krkr2next.com/dev/getting-started/">
       
       
         <link rel="prev" href="../">
       
       
-        <link rel="next" href="../developers-guide/">
+        <link rel="next" href="../tech-stack/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>小白开发指引 - PocketKrKr</title>
+        <title>入门指南 - PocketKrKr</title>
       
     
     
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              小白开发指引
+              入门指南
             
           </span>
         </div>
@@ -459,8 +459,6 @@
       
         
       
-        
-      
     
     
     
@@ -538,7 +536,7 @@
   <span class="md-ellipsis">
     
   
-    小白开发指引
+    入门指南
   
 
     
@@ -556,7 +554,7 @@
   <span class="md-ellipsis">
     
   
-    小白开发指引
+    入门指南
   
 
     
@@ -582,163 +580,63 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 项目是什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 目录地图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 引擎内置功能
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 构建与运行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 构建与运行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        一、这个项目到底是什么？
+        环境
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        二、仓库目录都是干嘛的？（小白地图）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="二、仓库目录都是干嘛的？（小白地图）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#appsflutter_applib" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你要改"界面" → 去 apps/flutter_app/lib/
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cppcore" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你要改"引擎逻辑/兼容性" → 去 cpp/core/
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vcpkgjson-vcpkgtriplets-vcpkgports" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你要处理"依赖装不上" → 去 vcpkg.json + vcpkg/triplets/ + vcpkg/ports/
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        三、引擎内置了哪些功能？（装了什么"料"）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="三、引擎内置了哪些功能？（装了什么&#34;料&#34;）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.1 脚本与存档
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.2 渲染
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-cppplugins" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.3 内置插件（cpp/plugins）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#34" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.4 音频 / 视频
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#35-z" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.5 尚未内置（Z 时代插件缺口）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        四、怎么把它跑起来？
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="四、怎么把它跑起来？">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        环境要求
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         一键构建
@@ -749,10 +647,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#ci" class="md-nav__link">
     <span class="md-ellipsis">
       
-        手动 / 平台预设
+        手动 / 平台预设（CI 用、够快）
       
     </span>
   </a>
@@ -765,10 +663,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
+  <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        五、怎么往里面装一款游戏？
+        5. 装一款游戏
       
     </span>
   </a>
@@ -776,88 +674,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        六、怎么排错？（小白最先学的三件事）
+        6. 渲染原理：一帧怎么画出来的
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="六、怎么排错？（小白最先学的三件事）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 日志在哪看
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 一个常见套路：先看"能不能走到标题"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 用探针
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_10" class="md-nav__link">
+  <a href="#7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        七、开发指导（改代码的正确姿势）
+        7. 改代码与调试
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="七、开发指导（改代码的正确姿势）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_11" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        常用"入口文件"速查
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_12" class="md-nav__link">
+  <a href="#8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        八、理解原理：一帧是怎么画出来的（教学向）
+        8. 进阶路线
       
     </span>
   </a>
@@ -868,34 +710,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../developers-guide/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    开发者入门
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1414,163 +1228,63 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 项目是什么
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 目录地图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 引擎内置功能
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 构建与运行
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. 构建与运行">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        一、这个项目到底是什么？
+        环境
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        二、仓库目录都是干嘛的？（小白地图）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="二、仓库目录都是干嘛的？（小白地图）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#appsflutter_applib" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你要改"界面" → 去 apps/flutter_app/lib/
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cppcore" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你要改"引擎逻辑/兼容性" → 去 cpp/core/
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vcpkgjson-vcpkgtriplets-vcpkgports" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你要处理"依赖装不上" → 去 vcpkg.json + vcpkg/triplets/ + vcpkg/ports/
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        三、引擎内置了哪些功能？（装了什么"料"）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="三、引擎内置了哪些功能？（装了什么&#34;料&#34;）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.1 脚本与存档
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.2 渲染
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-cppplugins" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.3 内置插件（cpp/plugins）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#34" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.4 音频 / 视频
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#35-z" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3.5 尚未内置（Z 时代插件缺口）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        四、怎么把它跑起来？
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="四、怎么把它跑起来？">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        环境要求
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         一键构建
@@ -1581,10 +1295,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#ci" class="md-nav__link">
     <span class="md-ellipsis">
       
-        手动 / 平台预设
+        手动 / 平台预设（CI 用、够快）
       
     </span>
   </a>
@@ -1597,10 +1311,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
+  <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        五、怎么往里面装一款游戏？
+        5. 装一款游戏
       
     </span>
   </a>
@@ -1608,88 +1322,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        六、怎么排错？（小白最先学的三件事）
+        6. 渲染原理：一帧怎么画出来的
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="六、怎么排错？（小白最先学的三件事）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 日志在哪看
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 一个常见套路：先看"能不能走到标题"
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 用探针
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_10" class="md-nav__link">
+  <a href="#7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        七、开发指导（改代码的正确姿势）
+        7. 改代码与调试
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="七、开发指导（改代码的正确姿势）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_11" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        常用"入口文件"速查
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_12" class="md-nav__link">
+  <a href="#8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        八、理解原理：一帧是怎么画出来的（教学向）
+        8. 进阶路线
       
     </span>
   </a>
@@ -1716,126 +1374,62 @@
   
 
 
-<h1 id="pocketkrkr">PocketKrKr — 版主小白开发指引（用途 / 内置功能 / 上手指南）<a class="headerlink" href="#pocketkrkr" title="Permanent link">&para;</a></h1>
+<h1 id="pocketkrkr">PocketKrKr — 程序员入门指南<a class="headerlink" href="#pocketkrkr" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>本文面向<strong>刚接触本项目的开发者</strong>（尤其是"小白"）：把每个目录/文件是干什么的、
-引擎内置了哪些功能、怎么把它跑起来、怎么往里面加游戏、怎么做简单排错，一一讲清楚。
-想了解更深入的技术细节，请继续读：
-<a href="../developers-guide/">developers-guide.md</a>（人类开发入门）、<a href="../architecture/">architecture.md</a>（架构）、
-<a href="../build/">build.md</a>（构建）、<a href="../key-references/">key-references.md</a>（关键文件索引）。</p>
+<p>面向<strong>刚接触本项目的开发者</strong>：怎么理解项目、代码在哪、怎么跑起来、怎么装游戏、
+怎么改代码与调试。适合"小白"，也适合会 C++ 的开发者 30 分钟上手。
+深入内容见 <a href="../architecture/">architecture.md</a>（架构）、<a href="../source-map/">source-map.md</a>（源码地图）、
+<a href="../key-references/">key-references.md</a>（关键符号）、<a href="../build/">build.md</a>（构建）、
+<a href="../conventions/">conventions.md</a>（约定与陷阱，<strong>改代码前必读</strong>）。</p>
 </blockquote>
 <hr />
-<h2 id="_1">一、这个项目到底是什么？<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>一句话：<strong>PocketKrKr = 一个能在手机（iOS/Android）上运行"吉里吉里2"游戏引擎的现代运行环境。</strong></p>
-<p>吉里吉里2（KiriKiri2 / TVP）是日式视觉小说（Galgame）最常用的引擎，很多老游戏
-（魔女的夜宴、Clover Days 等）就是用它写的。本项目的目标：
-- 让这些 PC 游戏能直接搬到手机上玩；
-- 用 Flutter 做外壳（界面、文件选择、纹理显示）；
-- 用 C++ 引擎（TJS2 + 渲染）做核心，保持与原版脚本 100% 兼容。</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>你选一个游戏目录/XP3 → Flutter 壳 → C++ 引擎解析脚本并渲染 → 通过纹理共享显示到屏幕
+<h2 id="1">1. 项目是什么<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>一句话：<strong>PocketKrKr = 在手机（iOS/Android）上运行"吉里吉里2"游戏引擎的现代运行环境。</strong></p>
+<ul>
+<li><strong>引擎</strong>（C++，<code>cpp/core/</code>）：运行游戏脚本（TJS2）、解码图片/音频/视频、图层合成，输出逐帧像素。</li>
+<li><strong>壳</strong>（Flutter，<code>apps/flutter_app/</code>）：窗口、界面、文件选择、游戏库管理，把引擎帧显示到屏幕。</li>
+<li><strong>桥</strong>（<code>bridge/engine_api/</code>，C ABI + FFI）：引擎与壳之间的管道。</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>游戏目录/XP3 → Flutter 壳 → C++ 引擎解析脚本并渲染 → 纹理共享 → 屏幕
 </code></pre></div>
-<hr />
-<h2 id="_2">二、仓库目录都是干嘛的？（小白地图）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>/workspace
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── apps/flutter_app/              ← 🎨 Flutter 外壳应用（你打开 App 看到的界面都在这里）
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│   ├── ios/ android/ macos/      ←   各平台工程（Info.plist、build.gradle、签名配置）
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│   └── lib/                      ←   Dart 代码（Home 选游戏、Settings、游戏页、l10n 文案）
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>├── bridge/engine_api/            ← 🔌 C ABI 桥（引擎的门面：engine_create / tick / destroy）
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>├── bridge/flutter_engine_bridge/ ← 🔌 Flutter 平台插件（iOS IOSurface / Android SurfaceTexture
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│                                    + Dart FFI，负责把引擎渲染的帧"零拷贝"送上屏幕）
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>├── cpp/core/                     ← ⚙️ C++ 引擎核心（最重要的部分）
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│   ├── tjs2/                     ←   TJS2 脚本引擎（游戏里 .tjs/.ks 就是它来解释执行）
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│   ├── base/                     ←   基础：存储、XP3 解包、KAG 标签解析、系统接口、消息
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   ├── visual/                   ←   渲染：图层、图像解码、drawdevice、OpenGL 合成
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│   ├── environ/                  ←   平台层：iOS/macOS/Android/Linux/Windows 适配、UI stub
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── sound/                    ←   声音：波形、BGM、解码（vorbis/opus 等）
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   ├── movie/ffmpeg/             ←   🎬 krmovie 视频播放（基于 ffmpeg）
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│   └── plugin/                   ←   插件系统（ncbAutoRegister / ncbind）
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>├── cpp/plugins/                  ← 🧩 内置 TJS 插件（psb/psd/layerex/motionplayer/fstat/cubism…）
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>├── build.sh + build/*.sh         ← 🛠 一键构建脚本（iOS / Android / macOS）
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>├── CMakeLists.txt + CMakePresets.json  ← 各平台构建预设（Windows/MinGW 等也在这）
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>├── vcpkg.json + vcpkg/           ← 📦 三方依赖管理（vcpkg manifest + 自订 triplet/overlay 端口）
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>├── docs/                         ← 📚 对外文档（GitHub Pages 落地页 + FAQ/插件清单）
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│   └── dev/                      ←   开发文档（给开发者/AI Agent 看的，含本文件）
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>└── .github/workflows/            ← 🤖 CI（iOS 打 IPA、Android 打 APK、Linux 引擎验证）
+<p>吉里吉里2（KiriKiri2 / TVP）是日式视觉小说最常用的引擎，很多老游戏用它编写。目标：让这些
+PC 游戏能直接搬到手机上跑，并保持与原版脚本 100% 兼容。</p>
+<h2 id="2">2. 目录地图<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>apps/flutter_app/              Flutter 壳（Dart）。lib/pages 页面、lib/engine 引擎封装
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>bridge/engine_api/             桥核心 C ABI：include/engine_api.h 接口清单，src/engine_api.cpp 实现
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>bridge/flutter_engine_bridge/  Flutter 平台插件：Dart FFI + iOS/macOS Swift / Android Kotlin 纹理
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>cpp/core/                      引擎核心（最重要）
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  tjs2/       TJS2 脚本引擎（bison 生成 parser）
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  base/       存储/归档/事件/消息（XP3、7z、zip 解包）
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  visual/     渲染：图层合成、图像编解码、字体、SIMD 像素混合
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  environ/    平台抽象 + 主循环（iOS/macOS 在 environ/apple/）
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  sound/      音频（OpenAL）
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  movie/      视频（FFmpeg）
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>  plugin/     插件框架（ncbind 把 C++ 类暴露给 TJS）
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>cpp/plugins/  TJS 插件：PSB/PSD/Live2D(layerex/motionplayer/fstat…) 等
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>build.sh      一键构建（ios / android / macos）
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>vcpkg.json    依赖管理（manifest + overlay ports/triplets）
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>docs/         对外文档（GitHub Pages + dev/ 开发文档）
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>.github/workflows/   CI（iOS 打 IPA、Android 打 APK、Linux 引擎验证）
 </code></pre></div>
-<h3 id="appsflutter_applib">你要改"界面" → 去 <code>apps/flutter_app/lib/</code><a class="headerlink" href="#appsflutter_applib" title="Permanent link">&para;</a></h3>
-<p>App 长什么样、按钮文案（比如之前的"打包为 XP3"）、导入游戏流程，都在这里。纯 Dart。</p>
-<h3 id="cppcore">你要改"引擎逻辑/兼容性" → 去 <code>cpp/core/</code><a class="headerlink" href="#cppcore" title="Permanent link">&para;</a></h3>
-<p>解析脚本对不对、渲染对不对、xp3 能不能打开，都在这里。纯 C++。</p>
-<h3 id="vcpkgjson-vcpkgtriplets-vcpkgports">你要处理"依赖装不上" → 去 <code>vcpkg.json</code> + <code>vcpkg/triplets/</code> + <code>vcpkg/ports/</code><a class="headerlink" href="#vcpkgjson-vcpkgtriplets-vcpkgports" title="Permanent link">&para;</a></h3>
-<p>Android 交叉编译那些坑（boost 32 位、glib meson）就是在这里解决的。</p>
-<hr />
-<h2 id="_3">三、引擎内置了哪些功能？（装了什么"料"）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="31">3.1 脚本与存档<a class="headerlink" href="#31" title="Permanent link">&para;</a></h3>
+<p><strong>按需改哪：</strong>
+- 改<strong>界面</strong> → <code>apps/flutter_app/lib/</code>
+- 改<strong>引擎逻辑/兼容性</strong> → <code>cpp/core/</code>
+- 处理<strong>依赖装不上</strong> → <code>vcpkg.json</code> + <code>vcpkg/triplets/</code> + <code>vcpkg/ports/</code></p>
+<h2 id="3">3. 引擎内置功能<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>TJS2 脚本引擎</strong>（<code>cpp/core/tjs2</code>）：解释 KiriKiri 的游戏脚本，含类、闭包、正则等完整特性。</li>
-<li><strong>KAG 标签解析器</strong>（<code>cpp/core/base</code>，<code>KAGParser</code>）：把 <code>.ks</code> 里的 <code>[tag]</code> 转成引擎动作。</li>
-<li><strong>XP3 资源解包</strong>：游戏资源包 <code>.xp3</code>；支持目录散装 + 同目录多个 xp3 自动挂载
-  （<code>TVPAutoMountProjectXP3Archives</code>）。</li>
+<li><strong>脚本与存档</strong>：TJS2 脚本引擎（<code>cpp/core/tjs2</code>）；KAG 标签解析（<code>cpp/core/base</code>，<code>KAGParser</code>）；
+  XP3 解包支持目录散装 + 同目录多 xp3 自动挂载（<code>TVPAutoMountProjectXP3Archives</code>）。</li>
+<li><strong>渲染</strong>：图层（Layer）系统；图像解码 PNG/JPEG/BMP/TLG(TLG5/6)/PSB；OpenGL 离屏合成（ANGLE）。</li>
+<li><strong>音频/视频</strong>：WAV/OGG/Opus 解码；<code>krmovie</code>（ffmpeg）解码链路就绪，画面合成 Present 待办
+  （见 <a href="../todo/">todo.md</a>，仅播 OP/影片相关）。</li>
+<li><strong>内置插件</strong>（<code>cpp/plugins</code>）：<code>psb</code>/<code>psd</code>/<code>layerex</code>/<code>motionplayer</code>/<code>fstat</code>/<code>cubism</code>(Live2D，
+  按 SDK 存在性编译)/<code>drawDeviceD2DCompat</code>/<code>krkrgles</code>。</li>
+<li><strong>尚未内置（Z 时代缺口）</strong>：<code>drawdeviceD3DZ</code>/<code>kztouch</code>/<code>k2compat</code>/<code>kagexopt</code>/<code>multiimage</code>/
+  <code>squirrel</code> 会提示 <code>Failed</code>，属"与 Z 持平"目标，见 <a href="../todo/">todo.md</a>。</li>
 </ul>
-<h3 id="32">3.2 渲染<a class="headerlink" href="#32" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>图层（Layer）系统</strong>：视觉小说的背景/立绘/对话框/文字都是一层层叠上去的。</li>
-<li><strong>图像解码</strong>：PNG / JPEG / BMP / TLG(TLG5/TLG6) / PSB（捆绑在 layer 解码链路里）。</li>
-<li><strong>OpenGL 离屏合成</strong>（ANGLE）：引擎合成到一张纹理，再零拷贝丢给 Flutter 显示。</li>
-</ul>
-<h3 id="33-cppplugins">3.3 内置插件（<code>cpp/plugins</code>）<a class="headerlink" href="#33-cppplugins" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>插件</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>psb</code></td>
-<td>PSB 图层动画（吉里吉里独有的动画文件）</td>
-</tr>
-<tr>
-<td><code>psd</code></td>
-<td>读取/解析 PSD 文件</td>
-</tr>
-<tr>
-<td><code>layerex</code> / <code>layerExDraw</code></td>
-<td>KAGEX 图层扩展</td>
-</tr>
-<tr>
-<td><code>motionplayer</code></td>
-<td>逐帧动画播放</td>
-</tr>
-<tr>
-<td><code>fstat</code></td>
-<td>文件状态查询（部分游戏脚本需要）</td>
-</tr>
-<tr>
-<td><code>cubism</code> (Live2D)</td>
-<td>按 SDK 是否在磁盘选择性编译</td>
-</tr>
-<tr>
-<td><code>drawDeviceD2DCompat</code></td>
-<td>"包装型 draw device"范例（<code>__captureBaseDrawDevice</code> 挂点）</td>
-</tr>
-<tr>
-<td><code>krkrgles</code></td>
-<td>EGL/GLES 平台兼容插件</td>
-</tr>
-</tbody>
-</table>
-<h3 id="34">3.4 音频 / 视频<a class="headerlink" href="#34" title="Permanent link">&para;</a></h3>
-<ul>
-<li>音频：WAV / OGG(Vorbis) / Opus 解码，BGM、SE、语音。</li>
-<li>视频：<code>krmovie</code>（基于 ffmpeg），解码链路已就位，画面合成 Present 尚在待办（见
-  <a href="../todo/">todo.md</a>）——大多数游戏用不到，只在播 OP/影片时相关。</li>
-</ul>
-<h3 id="35-z">3.5 尚未内置（Z 时代插件缺口）<a class="headerlink" href="#35-z" title="Permanent link">&para;</a></h3>
-<p>这是一款 KRKRZ（吉里吉里Z）游戏可能会需要的，我们<strong>还没做</strong>、目前会提示 <code>Failed</code>：
-<code>drawdeviceD3DZ</code>、<code>kztouch</code>、<code>k2compat</code>、<code>kagexopt</code>、<code>multiimage</code>、<code>squirrel</code>。
-这正是"与 Z 闭源版兼容持平"的目标项，详见 <a href="../todo/">todo.md</a>。</p>
-<hr />
-<h2 id="_4">四、怎么把它跑起来？<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="_5">环境要求<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<h2 id="4">4. 构建与运行<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<h3 id="_1">环境<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1845,124 +1439,80 @@
 </thead>
 <tbody>
 <tr>
-<td>iOS</td>
+<td>iOS / macOS</td>
 <td>macOS + Xcode</td>
 </tr>
 <tr>
 <td>Android</td>
-<td>Windows/macOS/Linux + <strong>ANDROID_NDK_HOME</strong></td>
+<td>Windows/macOS/Linux + <code>ANDROID_NDK_HOME</code></td>
 </tr>
 <tr>
-<td>macOS</td>
-<td>macOS + Xcode</td>
-</tr>
-<tr>
-<td>Windows 调试</td>
-<td>Windows + MinGW（CMakePresets 里有 <code>Windows MinGW Config</code>）</td>
+<td>Linux / Windows 引擎验证</td>
+<td>用 CMake 预设（无 App 产物，最快）</td>
 </tr>
 </tbody>
 </table>
-<h3 id="_6">一键构建<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./build.sh<span class="w"> </span>ios<span class="w"> </span>release<span class="w">     </span><span class="c1"># iOS → 无签名 IPA（侧载测试用）</span>
+<h3 id="_2">一键构建<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./build.sh<span class="w"> </span>ios<span class="w"> </span>release<span class="w">     </span><span class="c1"># iOS → 无签名 IPA（侧载测试）</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>./build.sh<span class="w"> </span>android<span class="w"> </span>debug<span class="w">   </span><span class="c1"># Android → APK</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>./build.sh<span class="w"> </span>macos<span class="w"> </span>debug<span class="w">     </span><span class="c1"># macOS → App</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>./build.sh<span class="w"> </span>macos<span class="w"> </span>debug<span class="w">     </span><span class="c1"># macOS → App（开发最快）</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nv">JOBS</span><span class="o">=</span><span class="m">16</span><span class="w"> </span>./build.sh<span class="w"> </span>ios<span class="w"> </span>release<span class="w">   </span><span class="c1"># 多核加速</span>
 </code></pre></div>
-<h3 id="_7">手动 / 平台预设<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Linux 引擎验证（CI 用）</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cmake<span class="w"> </span>--preset<span class="w"> </span><span class="s2">"Linux Debug Config"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>cmake<span class="w"> </span>--build<span class="w"> </span>--preset<span class="w"> </span><span class="s2">"Linux Debug Build"</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Windows（MinGW 宿主跑引擎，做对照/调试黑屏等很好用）</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>cmake<span class="w"> </span>--preset<span class="w"> </span><span class="s2">"Windows MinGW Config"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>cmake<span class="w"> </span>--build<span class="w"> </span>--preset<span class="w"> </span><span class="s2">"Windows MinGW Config"</span>
+<h3 id="ci">手动 / 平台预设（CI 用、够快）<a class="headerlink" href="#ci" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cmake<span class="w"> </span>--preset<span class="w"> </span><span class="s2">"Linux Debug Config"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>cmake<span class="w"> </span>--build<span class="w"> </span>--preset<span class="w"> </span><span class="s2">"Linux Debug Build"</span>
 </code></pre></div>
 <blockquote>
-<p>💡 <strong>小白提示</strong>：如果只想快速"能不能跑"，优先用 <strong>Windows MinGW 或 Linux 预设</strong>编译引擎，
-比开 iOS/Android 快得多，也方便对比"同一款游戏在 PC 上黑不黑"。</p>
+<p>💡 只想快速验证"能不能跑/黑不黑"，优先用 Linux 或 Windows MinGW 预设编译引擎，
+比 iOS/Android 快得多。完整构建说明见 <a href="../build/">build.md</a>。</p>
 </blockquote>
-<hr />
-<h2 id="_8">五、怎么往里面装一款游戏？<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
-<p>在 App 里（<code>apps/flutter_app/lib/pages/home_page.dart</code>）：
-1. <strong>导入</strong>：选一个游戏<strong>目录</strong> 或 一个 <code>.xp3</code> 文件。
-   - 目录型：目录里要有启动脚本（<code>startup.tjs</code>），或者至少含 <code>.xp3</code> 包（引擎会自动挂载）。
-   - 单包型：直接选那个 <code>xxx.xp3</code>。
-2. <strong>目录 ⇄ 单包互转</strong>（工具按钮）：目录可"打包为 XP3"，<code>.xp3</code> 可"解包 XP3"。
-   - "打包为 XP3" = 把整个游戏目录递归收进一个 <code>.xp3</code>（<strong>不压缩/RAW</strong>，仅聚合）。
-   - "解包 XP3" = 把 <code>.xp3</code> 还原成一个目录。两者互为逆操作。
-3. 点进游戏，引擎启动并开始渲染。</p>
-<hr />
-<h2 id="_9">六、怎么排错？（小白最先学的三件事）<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
-<h3 id="1">1. 日志在哪看<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
-<p>引擎会把日志写到沙盒内的日志文件（iOS 在 Documents 下，如 <code>krkr2_engine.log</code>）。
-每一行格式大致：
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[时间] [core|tjs2] [info|debug|warning|error] 消息内容
+<h2 id="5">5. 装一款游戏<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>在 <code>apps/flutter_app/lib/pages/home_page.dart</code>：
+1. <strong>导入</strong>：选一个<strong>游戏目录</strong>（需含 <code>startup.tjs</code> 或 <code>.xp3</code>），或一个 <strong><code>.xp3</code> 文件</strong>。
+2. <strong>目录 ⇄ 单包互转</strong>：目录可"打包为 XP3"（RAW 聚合不压缩），<code>.xp3</code> 可"解包 XP3"，互为逆操作。
+3. 点进游戏，引擎启动并渲染。</p>
+<h2 id="6">6. 渲染原理：一帧怎么画出来的<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>每帧：
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>1. TJS 脚本改图层（背景/立绘/文字/位置）
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>2. 引擎把图层合成到一块内存纹理（主 DrawBuffer）
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>3. BasicDrawDevice::Show() 交给窗口
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>4. FlutterWindowLayer::UpdateDrawBuffer() blit 到 IOSurface/纹理 → Flutter 显示
 </code></pre></div>
-- <code>[info] ... Loading Plugin: x.dll Success/Failed</code> —— 哪个插件成/败。
-- <code>[error] Cannot open storage ...</code> —— 文件打不开。
-- 探针日志（黑屏诊断）：<code>FlutterWindowLayer::BlackScreen ...</code>、<code>SourceSample</code>、<code>PostBlit</code>。</p>
-<h3 id="2">2. 一个常见套路：先看"能不能走到标题"<a class="headerlink" href="#2" title="Permanent link">&para;</a></h3>
-<p>游戏卡黑屏/白屏时，先看日志有没有走到：
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>startup.tjs → system/Initialize.tjs → first.ks → title.ks
-</code></pre></div>
-走到 title.ks 表示脚本没问题；之后才需要查渲染/插件（如 Z 兼容黑屏）。</p>
-<h3 id="3">3. 用探针<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
-<p>我们在关键渲染点<strong>内置了可开关的采样探针</strong>（<code>SourceSample/PostBlit/draw/BlackScreen</code>，默认关闭，
-<code>cmake -DENABLE_RENDER_PROBE=ON</code> 打开），专门用来区分"引擎没画" vs "画了但没进纹理"。
-黑屏/渲染问题排查请看 <a href="../rendering-diagnosis/">rendering-diagnosis.md</a>。</p>
-<hr />
-<h2 id="_10">七、开发指导（改代码的正确姿势）<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
-<ol>
-<li><strong>先读文档</strong>：根目录 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/AGENTS.md">AGENTS.md</a>（AI 首屏指令）→
-   <a href="../">docs/dev/README.md</a>（索引）→ <a href="../conventions/">conventions.md</a>（约定与陷阱，<strong>最重要</strong>）。</li>
-<li><strong>改动前先看约定</strong>：尤其"平台守卫别删""<code>win32/</code> 是共享实现不能删""SIMD 以标量为准"。</li>
-<li><strong>改完要同步文档</strong>：本项目的文档和代码是绑定的，改代码请一并更新相关 md。</li>
-<li><strong>改动请标注理由 + 手动 git commit</strong>（语气是为协作分支准备的，提交信息写清楚"为什么"）。</li>
-<li><strong>待办看 <a href="../todo/">todo.md</a></strong>：动手前先看有没有现成条目，避免重复。</li>
-</ol>
-<h3 id="_11">常用"入口文件"速查<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>想干嘛</th>
-<th>看哪</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>找关键函数/符号在哪</td>
-<td><a href="../key-references/">key-references.md</a></td>
-</tr>
-<tr>
-<td>构建/CI/产物</td>
-<td><a href="../build/">build.md</a></td>
-</tr>
-<tr>
-<td>渲染数据流</td>
-<td><a href="../architecture/">architecture.md</a></td>
-</tr>
-<tr>
-<td>当前没做完的事</td>
-<td><a href="../todo/">todo.md</a></td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="_12">八、理解原理：一帧是怎么画出来的（教学向）<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>事件循环每帧：
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>1. TJS 脚本改图层（改背景/立绘/文字/位置）
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>2. 引擎把这些图层"合成"到一块内存纹理（主 DrawBuffer）
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>   └─ UpdateToDrawDevice → CompleteForWindow → 把图层子树依次 blit 进 DrawBuffer
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>3. BasicDrawDevice::Show() 把 DrawBuffer 的纹理交给窗口
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>4. FlutterWindowLayer::UpdateDrawBuffer() 把它 blit 到 IOSurface/纹理 → Flutter 显示
-</code></pre></div>
+桥的调用链（Dart→C++）：<code>FlutterEngineBridge.engineTick(deltaMs)</code> →
+<code>engine_tick(handle, deltaMs)</code> → 引擎主循环 <code>Application-&gt;Run()</code> →
+<code>engineGetFrameRenderedFlag()</code> → <code>notifyFrameAvailable(textureId)</code>。</p>
 <ul>
 <li><strong>零拷贝</strong>：移动端走 GPU 直通（<code>GetNativeGLTextureId()</code> 非 0），省去 CPU 来回搬像素。</li>
-<li><strong>黑屏判断</strong>：一块从未被合成过的 DrawBuffer 初始就是<strong>不透明黑（0xFF000000）</strong>——
-  如果你在日志里看到源纹理始终是 <code>(0,0,0,255)</code> 且 draw 计数不涨，说明"合成这一步没发生"，
-  往往是绘图设备/插件（如 Z 的 drawdevice）没接上，而不是普通渲染 bug。</li>
+<li><strong>黑屏判断</strong>：未被合成过的 DrawBuffer 初始是<strong>不透明黑（0xFF000000）</strong>——若源纹理始终
+  <code>(0,0,0,255)</code> 且 draw 计数不涨，是"合成没发生"，多为绘图设备/插件未接上，而非普通渲染 bug。
+  详见 <a href="../rendering-diagnosis/">rendering-diagnosis.md</a>。</li>
 </ul>
-<hr />
-<blockquote>
-<p>🔗 下一篇：<a href="../developers-guide/">developers-guide.md</a>（人类开发者入门）。</p>
-</blockquote>
+<h2 id="7">7. 改代码与调试<a class="headerlink" href="#7" title="Permanent link">&para;</a></h2>
+<p><strong>姿势</strong>：
+1. 先读 <a href="../">README.md</a>（索引）→ <a href="../conventions/">conventions.md</a>（约定，<strong>最重要</strong>）。
+2. 尤其注意：平台守卫别删、<code>win32/</code> 是共享实现不能删、SIMD 以标量为准、改代码同步更新文档。
+3. 改动请标注理由 + 手动 <code>git commit</code>（提交信息写清"为什么"）。
+4. 待办先看 <a href="../todo/">todo.md</a>，避免重复。</p>
+<p><strong>常见入口</strong>：
+| 想做什么 | 改哪 |
+|---------|------|
+| 修混合/滤镜 | <code>cpp/core/visual/simd/</code> 或 <code>tvpgl.cpp</code>（标量参考） |
+| 修脚本引擎行为 | <code>cpp/core/tjs2/</code> |
+| 加 TJS 可调用的类/函数 | <code>cpp/core/plugin/</code>（ncbind）或 <code>cpp/plugins/</code> |
+| 改 iOS 平台行为 | <code>cpp/core/environ/apple/ios/platform.mm</code> |
+| 改 Flutter UI | <code>apps/flutter_app/lib/pages/</code> |
+| 加桥接 API | <code>engine_api.h</code> + <code>engine_api.cpp</code> + <code>bridge/flutter_engine_bridge/lib/src/ffi/engine_bindings.dart</code> |</p>
+<p><strong>调试三板斧</strong>：
+1. <strong>日志</strong>：C++ 用 <code>spdlog</code>，Dart 用 <code>debugPrint</code>；启动日志可用 <code>engineDrainStartupLogs</code> 拉取。
+2. <strong>开关</strong>：<code>tvpgl_simd_init.cpp</code> 里 <code>TVPGL_SIMD_Init()</code> 决定是否启用 SIMD——想对比标量 vs SIMD
+   就注释掉注册行。
+3. <strong>真机</strong>：<code>./build.sh ios debug</code> 后用 Xcode 打开 <code>apps/flutter_app/ios/Runner.xcworkspace</code> 跑真机。</p>
+<h2 id="8">8. 进阶路线<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<ol>
+<li>读 <a href="../architecture/">architecture.md</a>（架构图 + 渲染数据流）。</li>
+<li>读 <a href="../key-references/">key-references.md</a>（关键文件/符号）。</li>
+<li>读 <a href="../conventions/">conventions.md</a>（尤其 SIMD 审计记录，已知缺陷）。</li>
+<li>从一个小 bug 练手（如 SIMD 审计里 SubBlend 公式错误）。</li>
+</ol>
 
 
 
@@ -2017,13 +1567,13 @@
         
         
           
-          <a href="../developers-guide/" class="md-footer__link md-footer__link--next" aria-label="下一页: 开发者入门">
+          <a href="../tech-stack/" class="md-footer__link md-footer__link--next" aria-label="下一页: 技术栈">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一页
               </span>
               <div class="md-ellipsis">
-                开发者入门
+                技术栈
               </div>
             </div>
             <div class="md-footer__button md-icon">
