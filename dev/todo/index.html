@@ -698,6 +698,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2a-motionplayer-motiond3dadaptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2a. motionplayer 缺 Motion.D3DAdaptor — 首屏后点击退出的兼容根因【已修，待真机复验】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2-zkrkrzkirikiri-z" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1340,6 +1351,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2a-motionplayer-motiond3dadaptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2a. motionplayer 缺 Motion.D3DAdaptor — 首屏后点击退出的兼容根因【已修，待真机复验】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2-zkrkrzkirikiri-z" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1506,28 +1528,42 @@
 <li>状态：真机不再永久转圈，可进入游戏。</li>
 </ul>
 <h2 id="_3">进行中 / 待验证<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="2-zkrkrzkirikiri-z">2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】<a class="headerlink" href="#2-zkrkrzkirikiri-z" title="Permanent link">&para;</a></h3>
+<h3 id="2a-motionplayer-motiond3dadaptor">2a. motionplayer 缺 <code>Motion.D3DAdaptor</code> — 首屏后点击退出的兼容根因【已修，待真机复验】<a class="headerlink" href="#2a-motionplayer-motiond3dadaptor" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>现象</strong>（真机日志 <code>sabbat_kr</code>/魔女的夜宴，目录版）：游戏正常启动到
-  <code>startup→Initialize→first.ks→title.ks</code>，XP3 全挂载，脚本/图层照常（事件 2 万对象、
-  9k ICC、内存 230MB+），但合成源纹理始终 <code>(0,0,0,255)</code> 纯黑、draw 计数卡死不再增长。</li>
-<li><strong>已排除</strong>：黑屏探针 <code>VideoOverlay: total=0 active=0 playing=0</code> → <strong>不是视频/krmovie</strong>。
-  源纹理 = 主 LayerManager 的 <code>DrawBuffer</code>（初始即 <code>0xFF000000</code>），等于<strong>从未被合成过</strong>
-  → Z 游戏主画面走的是 Z 那条路径（D3D drawdevice / Z 层），我们没接入。</li>
-<li><strong>关联插件缺口</strong>（real 游戏 <code>plugin/</code> 里这些全部 <code>Failed</code>，引擎无任何实现/stub）：
-  <code>drawdeviceD3D.dll</code>、<code>drawdeviceD3DZ.dll</code>、<code>kztouch.dll</code>、<code>k2compat.dll</code>、
-  <code>kagexopt.dll</code>、<code>multiimage.dll</code>、<code>squirrel.dll</code>、<code>PackinOne.dll</code>。</li>
-<li><strong>与主线目标的关联</strong>：这正是 AGENTS 里"补全解析引擎、插件，目标与 Z 闭源版兼容持平"
-  的核心项。</li>
-<li><strong>下一步</strong>：</li>
-<li>用 <strong>Windows</strong>（我们 CMakePresets 有 Windows MinGW 预设）跑同一游戏二分：
-     Windows 也黑 → 引擎/Z 层问题；Windows 正常 → 才转 iOS 纹理链路。</li>
-<li>在 <code>ncbAutoRegister</code> 内部编表里给 Z 插件<strong>挂名</strong>（先能 link 成功），再定位
-     到底是 <code>drawdeviceD3DZ</code> / Z 主层合成缺哪一环导致主 DrawBuffer 不被合成。</li>
-<li>参考：引擎主合成链 <code>BasicDrawDevice::Show→GetDrawBuffer→UpdateDrawBuffer</code>、
-  <code>CompleteForWindow→InternalComplete2(_GPU)</code>、<code>__captureBaseDrawDevice</code> 包装挂点
-  （见 <code>cpp/plugins/drawDeviceD2DCompat.cpp</code>）。</li>
+<li>现象（千恋万花高压 真机日志 21:17:22）：开场播放 yuzulogo logo 后，<code>custom.ks:89</code>
+  访问 <code>Motion.D3DAdaptor</code>（<code>(property getter) motionD3DAdaptor</code>）报
+  <code>Member "D3DAdaptor" does not exist</code> → 脚本致命错误 → 主循环终止 → 首屏后点击退出。</li>
+<li>根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
+  我们 motionplayer 未实现。</li>
+<li>修复：<code>Motion</code> 类补只读 <code>D3DAdaptor</code> getter，返回 undefined → 脚本 <code>typeof</code> 走 CPU/GL 分支
+  （motionplayer.hpp/main.cpp），消除致命错误。已改 <code>cpp/plugins/motionplayer/main.cpp</code>。</li>
+<li>待验证：真机确认首屏后点击不再退出、logo/正文能正常推进。</li>
 </ul>
+<h3 id="2-zkrkrzkirikiri-z">2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】<a class="headerlink" href="#2-zkrkrzkirikiri-z" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>移植清单/参考源：见 <a href="../krkrz-compat/">krkrz-compat.md</a>（已确认各插件源码来源，含
+krkrz/krkr2/Kirikiroid2 本地参考副本）。
+- <strong>现象</strong>（真机日志 <code>sabbat_kr</code>/魔女的夜宴，目录版）：游戏正常启动到
+  <code>startup→Initialize→first.ks→title.ks</code>，XP3 全挂载，脚本/图层照常（事件 2 万对象、
+  9k ICC、内存 230MB+），但合成源纹理始终 <code>(0,0,0,255)</code> 纯黑、draw 计数卡死不再增长。
+- <strong>已排除</strong>：黑屏探针 <code>VideoOverlay: total=0 active=0 playing=0</code> → <strong>不是视频/krmovie</strong>。
+  源纹理 = 主 LayerManager 的 <code>DrawBuffer</code>（初始即 <code>0xFF000000</code>），等于<strong>从未被合成过</strong>
+  → Z 游戏主画面走的是 Z 那条路径（D3D drawdevice / Z 层），我们没接入。
+- <strong>关联插件缺口</strong>（real 游戏 <code>plugin/</code> 里这些全部 <code>Failed</code>，引擎无任何实现/stub）：
+  <code>drawdeviceD3D.dll</code>、<code>drawdeviceD3DZ.dll</code>、<code>kztouch.dll</code>、<code>k2compat.dll</code>、
+  <code>kagexopt.dll</code>、<code>multiimage.dll</code>、<code>squirrel.dll</code>、<code>PackinOne.dll</code>。
+- <strong>与主线目标的关联</strong>：这正是 AGENTS 里"补全解析引擎、插件，目标与 Z 闭源版兼容持平"
+  的核心项。
+- <strong>下一步</strong>：
+  1. 用 <strong>Windows</strong>（我们 CMakePresets 有 Windows MinGW 预设）跑同一游戏二分：
+     Windows 也黑 → 引擎/Z 层问题；Windows 正常 → 才转 iOS 纹理链路。
+  2. 对照 <strong>Kirikiroid2</strong> <code>src/core/visual/RenderManager_ogl.cpp</code> + <code>BasicDrawDevice.cpp</code>
+     与我们的 <code>cpp/core/visual/RenderManager.*</code>，定位 Z 主层 <code>DrawBuffer</code> 未合成原因。
+  3. 在 <code>ncbAutoRegister</code> 内部编表里给 Z 插件<strong>挂名</strong>（先能 link 成功），再实现功能。
+- 参考：引擎主合成链 <code>BasicDrawDevice::Show→GetDrawBuffer→UpdateDrawBuffer</code>、
+  <code>CompleteForWindow→InternalComplete2(_GPU)</code>、<code>__captureBaseDrawDevice</code> 包装挂点
+  （见 <code>cpp/plugins/drawDeviceD2DCompat.cpp</code>）。</p>
+</blockquote>
 <h3 id="2-krmovie-present">2. krmovie Present 未实现（视频解码 → 画面合成）【一般，非本次黑屏根因】<a class="headerlink" href="#2-krmovie-present" title="Permanent link">&para;</a></h3>
 <ul>
 <li>现状：ffmpeg 解码链路完整（<code>cpp/core/movie/ffmpeg/</code>），但
@@ -1536,29 +1572,43 @@
 <li>备注：<strong>已证实不是魔女的夜宴黑屏的原因</strong>（<code>VideoOverlay total=0</code>）；保留为通用待办，
   供真正的视频 OP/影片游戏使用。</li>
 <li>待办：评估并把解码帧 RGBA 合成到引擎场景（Mixer/Layer）或 Flutter 纹理。</li>
+<li>参考实现：Kirikiroid2 <code>src/core/movie/krmovie.cpp</code> + <code>ffmpeg/KRMovie*.{h,cpp}</code>、krkrz <code>movie/win32/krmovie.cpp</code>（见 <a href="../krkrz-compat/">krkrz-compat.md</a>）。</li>
 <li>参考：<code>cpp/core/visual/impl/VideoOvlImpl.cpp</code> 的 <code>EC_UPDATE</code> 处理与
   <code>iTVPVideoOverlay::PresentVideoImage</code> / <code>GetFrontBuffer</code> 契约。</li>
 </ul>
 <h3 id="3-runtime-restart-pr12">3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12<a class="headerlink" href="#3-runtime-restart-pr12" title="Permanent link">&para;</a></h3>
-<ul>
-<li>现象：首次开游戏正常；不杀进程、退出后再开另一款游戏报
-  <code>Engine Error engine_open_game_async failed: result=-3, error=runtime restart is not supported yet</code>。</li>
-<li>已做：Dart 侧 <code>_exitGame</code> 现在先 <code>engineDestroy()</code> 等销毁完成再 <code>pop</code>。</li>
-<li><strong>上游参考（vcdlk PR#12「make runtime restartable after engine_destroy」,
+<blockquote>
+<p><strong>C 端根因已定位</strong>（这篇日志复现确认）：<code>engine_api.cpp</code> 的 <code>g_runtime_started_once</code>
+一旦置 true 从不复位；<code>engine_destroy</code> 只清 <code>g_runtime_active/owner</code>，漏了它 → 第二次
+<code>engine_open_game</code> 必命中 <code>runtime restart is not supported yet</code>。Dart shutdown 是前置，
+绕不过这个 C 端标志。</p>
+<p><strong>进度</strong>：engine_api.cpp <code>engine_destroy</code> 已按 PR#12 加入热重启 teardown
+（TVPSystemUninit + 销毁 MainScene/EngineLoop 单例 + Bootstrap::Shutdown +
+<code>g_runtime_started_once=false</code>）。<strong>剩余待移植的 Reset 函数</strong>（PR#12 C++ 侧，保证重初始化干净）：
+<code>TVPResetScriptEngineForRestart</code>（ScriptMgnIntf）、<code>TVPResetRuntimeForRestart</code>（SysInitIntf）、
+<code>TVPResetSysInitImplForRestart</code>（SysInitImpl）、<code>TVPResetApplicationForRestart</code>（Application）、
+<code>TVPResetStorageImplForRestart</code>（StorageImpl，改 TVPGetAppPath 缓存）、
+<code>TVPResetExtensionClassInstallStateForRestart</code>（Extension）、<code>TVPResetPluginSystemForRestart</code>/
+<code>TVPUnregisterInternalPluginsForRestart</code>/<code>ncbAutoRegister::ResetModuleStateForRestart</code>（Plugin/ncbind）；
+visual 级（RenderManager/Font/Trans/Window/Bitmap/LayerBitmap/OpenGL）为第二批。
+- 现象：首次开游戏正常；不杀进程、退出后再开另一款游戏报
+  <code>Engine Error engine_open_game_async failed: result=-3, error=runtime restart is not supported yet</code>。
+- 已做：Dart 侧 <code>_exitGame</code> 现在先 <code>engineDestroy()</code> 等销毁完成再 <code>pop</code>。
+- <strong>上游参考（vcdlk PR#12「make runtime restartable after engine_destroy」,
   reAAAq/KrKr2-Next，2026-06-16）</strong>：此 PR 正是修"杀后台/无法重启"的根因。
   病根是我们本地 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/apps/flutter_app/lib/pages/game_page.dart">game_page.dart</a>：
   <code>_exitGame()</code> 直接 <code>pop</code> 不完整释放；Retry 把 <code>engineDestroy()</code> 用 <code>unawaited()</code> 丢出、
-  立刻 <code>engineCreate()</code> → 引擎未销毁完就 recreate，全局状态残留 → 下次起不来，只能杀进程。</li>
-<li>PR#12 的改法（纯 Dart）：</li>
-<li><code>_shutdownEngine()</code> 用 <code>_shutdownRequested</code> + <code>_shutdownFuture</code> 去重，严格 await 顺序：
-     <code>surface.release() → engineDestroy() → finalizePlaySession → restoreOrientation</code>。</li>
-<li><code>_autoStart()</code>/<code>_exitGame</code>/<code>_retryAutoStart</code> 全程检查 <code>_shutdownRequested</code>，
-     销毁未完就不再重新 create。</li>
-<li>Retry 改走 <code>_retryAutoStart()</code>（完整 shutdown 后再重建 bridge + autoStart）。</li>
-<li>待办（真机阶段）：已移植 PR#12 中 <code>game_page.dart</code> 的 shutdown 重构（只搬这段，不整体
+  立刻 <code>engineCreate()</code> → 引擎未销毁完就 recreate，全局状态残留 → 下次起不来，只能杀进程。
+- PR#12 的改法（纯 Dart）：
+  1. <code>_shutdownEngine()</code> 用 <code>_shutdownRequested</code> + <code>_shutdownFuture</code> 去重，严格 await 顺序：
+     <code>surface.release() → engineDestroy() → finalizePlaySession → restoreOrientation</code>。
+  2. <code>_autoStart()</code>/<code>_exitGame</code>/<code>_retryAutoStart</code> 全程检查 <code>_shutdownRequested</code>，
+     销毁未完就不再重新 create。
+  3. Retry 改走 <code>_retryAutoStart()</code>（完整 shutdown 后再重建 bridge + autoStart）。
+- 待办（真机阶段）：已移植 PR#12 中 <code>game_page.dart</code> 的 shutdown 重构（只搬这段，不整体
   cherry-pick——该 PR 还夹带 launch_args/归档/.gitignore/CMake <code>TVP_SOURCE_ROOT</code> 等噪声）。
-  移植后真机验证是否根治"杀后台/无法再开游戏"。若仍失败，再评估引擎热重启或新进程形态。</li>
-</ul>
+  移植后真机验证是否根治"杀后台/无法再开游戏"。若仍失败，再评估引擎热重启或新进程形态。</p>
+</blockquote>
 <h3 id="4-simd">4. SIMD 公式逐模式修到位级一致（保正确回归）<a class="headerlink" href="#4-simd" title="Permanent link">&para;</a></h3>
 <ul>
 <li>背景：<code>tests/tvpgl_simd_compare</code> 已证实 <strong>23 处 SIMD ≠ 标量</strong>；
