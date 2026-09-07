@@ -127,6 +127,16 @@ class EngineSurfaceState extends State<EngineSurface> {
     await _disposeSurfaceTexture();
   }
 
+  /// Tear down the render target / textures before the engine is destroyed.
+  /// Called by the parent page's shutdown flow (game_page `_shutdownEngine`),
+  /// so that a subsequent engineCreate for another game starts clean.
+  /// Idempotent — safe to call alongside [dispose].
+  Future<void> release() async {
+    _vsyncScheduled = false;
+    _frameInFlight = false;
+    await _disposeAllTextures();
+  }
+
   void _reconcilePolling() {
     if (!widget.active || widget.externalTickDriven) {
       _vsyncScheduled = false;

@@ -75,7 +75,7 @@
   2. `_autoStart()`/`_exitGame`/`_retryAutoStart` 全程检查 `_shutdownRequested`，
      销毁未完就不再重新 create。
   3. Retry 改走 `_retryAutoStart()`（完整 shutdown 后再重建 bridge + autoStart）。
-- 待办（真机阶段）：移植 PR#12 中 `game_page.dart` 的 shutdown 重构（只搬这段，不整体
+- 待办（真机阶段）：已移植 PR#12 中 `game_page.dart` 的 shutdown 重构（只搬这段，不整体
   cherry-pick——该 PR 还夹带 launch_args/归档/.gitignore/CMake `TVP_SOURCE_ROOT` 等噪声）。
   移植后真机验证是否根治"杀后台/无法再开游戏"。若仍失败，再评估引擎热重启或新进程形态。
 
