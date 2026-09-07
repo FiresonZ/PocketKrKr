@@ -81,33 +81,39 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadGames() async {
-    final prefs = await SharedPreferences.getInstance();
-    _builtInDylibPath = _resolveBuiltInDylibPath();
-    _builtInAvailable = _builtInDylibPath != null;
-    if (Platform.isAndroid || Platform.isIOS) {
-      // Mobile platforms always use the bundled engine; skip mode loading.
-      _engineMode = EngineMode.builtIn;
-      _customDylibPath = null;
-    } else {
-      final modeStr = prefs.getString(PrefsKeys.engineMode);
-      _engineMode = modeStr == PrefsKeys.engineModeCustom ? EngineMode.custom : EngineMode.builtIn;
-      _customDylibPath = prefs.getString(PrefsKeys.dylibPath);
-    }
-    _perfOverlay = prefs.getBool(PrefsKeys.perfOverlay) ?? false;
-    _fpsLimitEnabled = prefs.getBool(PrefsKeys.fpsLimitEnabled) ?? false;
-    _targetFps = prefs.getInt(PrefsKeys.targetFps) ?? PrefsKeys.defaultFps;
-    if (!PrefsKeys.fpsOptions.contains(_targetFps)) _targetFps = PrefsKeys.defaultFps;
-    _renderer = prefs.getString(PrefsKeys.renderer) ?? PrefsKeys.rendererOpengl;
-    _angleBackend = prefs.getString(PrefsKeys.angleBackend) ?? PrefsKeys.angleBackendGles;
-    _forceLandscape = prefs.getBool(PrefsKeys.forceLandscape) ?? true;
-    await _gameManager.load();
-    await _gameManager.applyPendingPlaySession();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _builtInDylibPath = _resolveBuiltInDylibPath();
+      _builtInAvailable = _builtInDylibPath != null;
+      if (Platform.isAndroid || Platform.isIOS) {
+        // Mobile platforms always use the bundled engine; skip mode loading.
+        _engineMode = EngineMode.builtIn;
+        _customDylibPath = null;
+      } else {
+        final modeStr = prefs.getString(PrefsKeys.engineMode);
+        _engineMode =
+            modeStr == PrefsKeys.engineModeCustom ? EngineMode.custom : EngineMode.builtIn;
+        _customDylibPath = prefs.getString(PrefsKeys.dylibPath);
+      }
+      _perfOverlay = prefs.getBool(PrefsKeys.perfOverlay) ?? false;
+      _fpsLimitEnabled = prefs.getBool(PrefsKeys.fpsLimitEnabled) ?? false;
+      _targetFps = prefs.getInt(PrefsKeys.targetFps) ?? PrefsKeys.defaultFps;
+      if (!PrefsKeys.fpsOptions.contains(_targetFps)) _targetFps = PrefsKeys.defaultFps;
+      _renderer = prefs.getString(PrefsKeys.renderer) ?? PrefsKeys.rendererOpengl;
+      _angleBackend = prefs.getString(PrefsKeys.angleBackend) ?? PrefsKeys.angleBackendGles;
+      _forceLandscape = prefs.getBool(PrefsKeys.forceLandscape) ?? true;
+      await _gameManager.load();
+      await _gameManager.applyPendingPlaySession();
 
-    if (Platform.isIOS) {
-      await _initIosGamesDir();
+      if (Platform.isIOS) {
+        await _initIosGamesDir();
+      }
+    } catch (e, stack) {
+      // 避免初始化异常导致主界面永久转圈：记录并继续显示主页。
+      debugPrint('HomePage._loadGames error: $e\n$stack');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
-
-    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _initIosGamesDir() async {
