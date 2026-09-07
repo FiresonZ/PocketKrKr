@@ -131,8 +131,17 @@
 - 背景：`tests/tvpgl_simd_compare` 已证实 **23 处 SIMD ≠ 标量**；
   PS 全系混合 / SubBlend_o / ScreenBlend 已先回退到 `*_c` 标量保证正确
   （`tvpgl_simd_init.cpp` 已注释对应注册）。
-- 待办：逐模式修 `PsApplyAlpha` 舍入序、SubBlend_o/ScreenBlend alpha、Overlay/HardLight
-  分支到与 `*_c` 位级一致，tests 逐模式验证后放回 SIMD 派发。
+- **P2 ✅（PsApplyAlpha 舍入序已修）**：标量 `TVPPS_ALPHABLEND`（tvpps.inc）实际是
+  `result = ((s - d) * a >> 8) + d`；旧 SIMD 用了 `(s*a>>8) + (d*(255-a)>>8)`，30M
+  随机矢量 29.85M 不一致。已改为 `((s-d)*a >> 8) + d`（u16 包减/包乘，`OrderedDemote2To`
+  只留低字节故无碍），`out/p2_check/check.c` 验证 30M 全一致（0 mismatch）。修在
+  `tvpgl_simd_ps_blend.cpp` 与 `tvpgl_simd_ps_blend2.cpp` 的 `PsApplyAlpha`。
+  → evaluation：Alpha/Add/Sub/Mul/Lighten/Darken/Diff/Exclusion（P 系）+ Overlay/HardLight
+  的 alpha 应用段已校正。
+- 待办：P3 `TVPSubBlend_o`（`tvpgl_simd_arithmetic_blend.cpp`，独立于 PsApplyAlpha）、
+  P4 `TVPScreenBlend` base alpha（同文件，非 P 系，仍回退）、P5 PsOverlay/PsHardLight
+  的 core 分支（`tvpgl_simd_ps_blend2.cpp` OverlayCore/HardLightCore，alpha 段已随 P2 修）。
+  逐个修到位级一致后放回 SIMD 派发。
 
 ### 5. KAGEX / KAG 差异兼容（kagexopt 相关）
 - 待办：调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（确切需求待明确）。

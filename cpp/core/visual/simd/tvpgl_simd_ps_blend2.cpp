@@ -62,20 +62,19 @@ static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> PsApplyAlpha(
     hn::Vec<hn::ScalableTag<uint8_t>> va) {
     const hn::Repartition<uint16_t, decltype(d8)> d16;
     const auto half = hn::Half<decltype(d8)>();
-    const auto v255 = hn::Set(d16, static_cast<uint16_t>(255));
     auto s_lo = hn::PromoteTo(d16, hn::LowerHalf(half, vs_blended));
     auto d_lo = hn::PromoteTo(d16, hn::LowerHalf(half, vd));
     auto a_lo = hn::PromoteTo(d16, hn::LowerHalf(half, va));
     auto s_hi = hn::PromoteUpperTo(d16, vs_blended);
     auto d_hi = hn::PromoteUpperTo(d16, vd);
     auto a_hi = hn::PromoteUpperTo(d16, va);
-    // result = (s * a >> 8) + (d * (255 - a) >> 8), split to avoid u16 overflow
-    auto inv_a_lo = hn::Sub(v255, a_lo);
-    auto inv_a_hi = hn::Sub(v255, a_hi);
-    auto r_lo = hn::Add(hn::ShiftRight<8>(hn::Mul(s_lo, a_lo)),
-                        hn::ShiftRight<8>(hn::Mul(d_lo, inv_a_lo)));
-    auto r_hi = hn::Add(hn::ShiftRight<8>(hn::Mul(s_hi, a_hi)),
-                        hn::ShiftRight<8>(hn::Mul(d_hi, inv_a_hi)));
+    // result = ((s - d) * a >> 8) + d   (bit-identical to scalar *_c packed alpha
+    // blend). u16 wrap in Sub/Mul is harmless: ordered demote keeps only the low
+    // byte, and floor((diff * a) mod 65536 >> 8) == floor(diff * a >> 8) mod 256.
+    auto diff_lo = hn::Sub(s_lo, d_lo);
+    auto diff_hi = hn::Sub(s_hi, d_hi);
+    auto r_lo = hn::Add(hn::ShiftRight<8>(hn::Mul(diff_lo, a_lo)), d_lo);
+    auto r_hi = hn::Add(hn::ShiftRight<8>(hn::Mul(diff_hi, a_hi)), d_hi);
     return hn::OrderedDemote2To(d8, r_lo, r_hi);
 }
 
