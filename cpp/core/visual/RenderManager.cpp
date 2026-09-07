@@ -4952,17 +4952,13 @@ iTVPRenderManager *TVPGetRenderManager() {
 }
 
 void TVPResetRenderManagerForRestart() {
+    // 渲染器是"undeletable"进程级单例（iTVPRenderManager 析构 protected），
+    // 进程生命周期内从不销毁。runtime-restart 时只需清掉主单例指针与初始化
+    // 标志，让二次 open_game 的 TVPGetRenderManager() 沿 factory 机制复用同一
+    // 渲染器实例（其 Initialize() 幂等）。绝不在此 delete，否则触发 protected
+    // 析构编译错误，并向引擎 teardown 引入悬垂。
     _RenderManager = nullptr;
     _RenderManagerInitialized = false;
-    if(_RenderManagerFactory) {
-        // 释放已创建的渲染器实例，使二次 TVPGetRenderManager(name) 重建
-        for(auto &kv : *_RenderManagerFactory) {
-            if(kv.second.second) {
-                delete kv.second.second;
-                kv.second.second = nullptr;
-            }
-        }
-    }
 }
 
 bool TVPIsSoftwareRenderManager() {
