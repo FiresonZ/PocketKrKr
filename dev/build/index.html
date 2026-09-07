@@ -1540,7 +1540,7 @@
 <h2 id="macos-buildbuild_macossh">macOS 构建步骤（build/build_macos.sh 内部）<a class="headerlink" href="#macos-buildbuild_macossh" title="Permanent link">&para;</a></h2>
 <ol>
 <li>CMake <code>MacOS &lt;Debug|Release&gt; Config</code> → 构建 → <code>out/macos/&lt;type&gt;/bridge/engine_api/libengine_api.dylib</code>。</li>
-<li><code>flutter build macos --&lt;mode&gt;</code> → <code>build/macos/Build/Products/&lt;Debug|Release&gt;/KrKr2 Next.app</code>。</li>
+<li><code>flutter build macos --&lt;mode&gt;</code> → <code>build/macos/Build/Products/&lt;Debug|Release&gt;/Runner.app</code>。</li>
 <li>把 dylib 拷入 <code>Contents/Frameworks/</code>，<code>install_name_tool</code> 设 <code>@executable_path/../Frameworks/</code>，ad-hoc 重签。</li>
 </ol>
 <h2 id="android-buildbuild_androidsh">Android 构建步骤（build/build_android.sh 内部）<a class="headerlink" href="#android-buildbuild_androidsh" title="Permanent link">&para;</a></h2>
@@ -1604,7 +1604,7 @@
 <tr>
 <td>macOS</td>
 <td><code>out/macos/{debug,release}/bridge/engine_api/libengine_api.dylib</code></td>
-<td><code>apps/flutter_app/build/macos/Build/Products/{Debug,Release}/KrKr2 Next.app</code></td>
+<td><code>apps/flutter_app/build/macos/Build/Products/{Debug,Release}/Runner.app</code></td>
 </tr>
 </tbody>
 </table>
