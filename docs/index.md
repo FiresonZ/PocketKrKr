@@ -65,7 +65,7 @@ Dart 优先走 FFI，MethodChannel 为兜底。
 
 ## 文档地图
 
-- :material-school-outline: **新手**：[小白开发指引](dev/for-beginners.md) · [开发者入门](dev/developers-guide.md)
+- :material-school-outline: **新手**：[入门指南](dev/getting-started.md)
 - :material-sitemap-outline: **架构与源码**：[架构](dev/architecture.md) · [源代码结构地图](dev/source-map.md) · [关键引用](dev/key-references.md)
 - :material-hammer-wrench-outline: **构建与约定**：[构建](dev/build.md) · [约定与陷阱](dev/conventions.md)
 - :material-debug-step-over: **排查与优化**：[渲染/黑屏诊断](dev/rendering-diagnosis.md) · [兼容性](dev/compatibility.md) · [性能优化](dev/perf-optimization.md)

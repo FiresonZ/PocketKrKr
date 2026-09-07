@@ -1,4 +1,4 @@
-# PocketKrKr — 开发文档（AI Agent 速查）
+# 开发文档索引
 
 > 本目录面向 **AI Agent 与开发者**，用于快速掌握项目技术栈、架构与关键位置，
 > 避免每次从头扫描整个代码库浪费上下文与 token。
@@ -22,9 +22,8 @@ Flutter 壳应用提供 UI。当前**面向移动端**（iOS + Android 为主目
 
 | 文档 | 内容 |
 |------|------|
-| [for-beginners.md](for-beginners.md) | **小白开发指引**：目录用途 / 内置功能 / 上手指南 / 排错 / 教学向（新开发者先读这个） |
+| [getting-started.md](getting-started.md) | **入门指南**：项目是什么 / 目录地图 / 构建运行 / 装游戏 / 渲染原理 / 改代码调试（新开发者先读这个） |
 | [rendering-diagnosis.md](rendering-diagnosis.md) | **渲染/黑屏诊断方法（探针）**：怎么开探针、怎么读日志二分定位、日志文件会不会膨胀 |
-| [developers-guide.md](developers-guide.md) | **人类开发者入门**：30 分钟上手，核心概念/目录地图/代码路径/调试 |
 | [tech-stack.md](tech-stack.md) | 技术栈、语言、关键三方库、vcpkg 依赖 |
 | [architecture.md](architecture.md) | 模块架构、渲染数据流、桥接层设计、GPU 管线现状 |
 | [source-map.md](source-map.md) | **源代码结构地图**：按目录树的 CPP + Flutter 源码逐模块讲解（学习/开发用） |
