@@ -91,6 +91,23 @@
 > EngineLoop/Bootstrap/Reset 链/完成），下次真机退出即可据最后的点定位卡在哪一步。
 > 注意：engine_api 有 `#if ENGINE_API_USE_KRKR2_RUNTIME` 双实现，Android 联动 krkr2core/
 > plugin 走的是**带完整 teardown 的那份**（engine_api.cpp:757 附近），打点也加在这份。
+>
+> **最新决策（2026-09-08）：按上游 PR#12 完全对照做「安全退出」**（`engine_api.cpp` engine_destroy）。
+> - 关键修正：不再跳过 `TVPSystemUninit`，而是**先 `Application->OnExit()`**（内部
+>   `TVPUninitScriptEngine` + delete `TVPSystemControl`，让脚本引擎在安全上下文退出），
+>   再调 `TVPSystemUninit()`（其内部 `TVPUninitScriptEngine` 因守卫标志变 no-op）。
+>   裸调 `TVPSystemUninit` 会在 TJS 栈内销毁脚本引擎 = krkrz host 模式自声明的
+>   undefined behavior（hang），是此前退出即静默卡死的根因（参考 `SysInitImpl.cpp`
+>   `TVPTerminateSync` 注释）。打点顺序已按上游重排：OnExit→TVPSystemUninit→
+>   scene·EngineLoop→Reset 链→Bootstrap::Shutdown→`g_runtime_started_once=false`。
+> - ⏳ **仍未移植（对照上游，本地无实现；接入即编译失败，先用注释占位、待补后放开）**：
+>   `TVPResetWindowListForRestart`（WindowManager）、`TVPResetLayerBitmapImplForRestart`、
+>   `TVPResetFontImplForRestart`、`TVPResetTransIntfForRestart`、
+>   `tTVPBitmapBitsAlloc::ResetForRestart`、`TVPResetPluginSystemForRestart`、
+>   `TVPUnregisterInternalPluginsForRestart`（PluginImpl/ncbind，还涉及二次 AllRegist
+>   重复注册器与 LoadAllModules 守卫）。
+> - ✅ **保留打点**，待真机验证：退出不再静默卡死（进度能走到 `runtime teardown complete`）
+>   且不杀进程能再开另一款游戏。
 > **C 端根因已定位**（这篇日志复现确认）：`engine_api.cpp` 的 `g_runtime_started_once`
 > 一旦置 true 从不复位；`engine_destroy` 只清 `g_runtime_active/owner`，漏了它 → 第二次
 > `engine_open_game` 必命中 `runtime restart is not supported yet`。Dart shutdown 是前置，

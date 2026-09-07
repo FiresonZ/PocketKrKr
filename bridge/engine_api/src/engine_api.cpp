@@ -818,23 +818,45 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     TVPTerminateCode = 0;
 
     // ---- runtime-restart（热重启）teardown ----
-    // 参考上游 vcdlk PR#12「make runtime restartable after engine_destroy」。
-    // 修"不杀后台无法再开游戏"的真正根因：此前 engine_destroy 只重置
-    // g_runtime_active/g_runtime_owner，却从不复位 g_runtime_started_once，
-    // 第二次 engine_open_game 必命中 "runtime restart is not supported yet"。
-    // 现在做到可重启：销毁引擎单例 + Bootstrap::Shutdown + 各子系统状态复位
-    // + 复位 started_once，使不杀进程也能再次 create/open。
+    // 参考上游 vcdlk PR#12「make runtime restartable after engine_destroy」
+    // （reAAAq/KrKr2-Next，2026-06-16）。修"不杀后台无法再开游戏"的真根因：
+    // 此前 engine_destroy 只清 g_runtime_active/g_runtime_owner，却从不复位
+    // g_runtime_started_once，第二次 engine_open_game 必命中
+    // "runtime restart is not supported yet"。现改为完整卸载 + 复位各子系统，
+    // 并复位 started_once，使不杀进程也能再次 create/open。逐级打点便于真机定位。
     //
-    // 注意：**有意跳过 TVPSystemUninit()（不再销毁脚本引擎）**。
-    // 原因：TVPSystemUninit 内部会走 TVPUninitScriptEngine → 在 TJS 调用栈内
-    // 销毁脚本引擎；krkrz host（Flutter）模式下引擎自声明这种做法即
-    // "undefined behavior (hang)"（见 SysInitImpl.cpp TVPTerminateSync 注释），
-    // 真机表现为退出即静默卡死、无任何 engine_destroy 日志。因此按"不销毁引擎"
-    // 决策移除该步，只靠下方 TVPReset*ForRestart（仅复位标志/缓存、不销毁对象）
-    // + 复位 g_runtime_started_once 来允许二次 open_game 重启。
-    // 若后续需要更彻底卸载（参照上游 PR#12：先 Application->OnExit() 让脚本引擎
-    // 安全退出、再 TVPSystemUninit），再按该顺序补回，而不要在栈内直接销毁。
+    // 安全退出的关键（对照上游顺序）：**先 Application->OnExit() 让脚本引擎在
+    // 安全上下文退出**（OnExit 内部 TVPUninitScriptEngine + delete TVPSystemControl），
+    // 再 TVPSystemUninit()。裸调 TVPSystemUninit 会在 TJS 调用栈内销毁脚本引擎，
+    // 是 krkrz host（Flutter）模式自声明的 undefined behavior（hang），真机表现为
+    // 退出即静默卡死（详见 SysInitImpl.cpp TVPTerminateSync 注释）。上游正是靠
+    // OnExit 前置规避，随后 TVPSystemUninit 中 TVPUninitScriptEngine 因守卫标志
+    // 已置为 no-op。
 
+    // 1. 注销内部插件（需在脚本引擎销毁前）。已移植则不调用即编译失败 ← 本地未实现。
+    //    TODO(对照上游 PluginImpl/ncbind)：TVPUnregisterInternalPluginsForRestart()
+    //    待移植后放开本行，避免二次 AllRegist 重复 append 注册器。
+
+    // 2. 安全卸载脚本引擎：OnExit → TVPUninitScriptEngine + delete TVPSystemControl。
+    try {
+      spdlog::info("engine_destroy: Application->OnExit begin");
+      Application->OnExit();
+      spdlog::info("engine_destroy: Application->OnExit end");
+    } catch (...) {
+      spdlog::error("engine_destroy: Application->OnExit threw");
+    }
+
+    // 3. TVPSystemUninit → TVPUninitTVPGL + TVPCauseAtExit(at-exit handlers)；
+    //    其内部 TVPUninitScriptEngine 已被步骤 2 调过（守卫标志）→ no-op。
+    try {
+      spdlog::info("engine_destroy: TVPSystemUninit begin");
+      TVPSystemUninit();
+      spdlog::info("engine_destroy: TVPSystemUninit end");
+    } catch (...) {
+      spdlog::error("engine_destroy: TVPSystemUninit threw");
+    }
+
+    // 4. 销毁 EngineLoop / MainScene 单例。
     if (auto* scene = TVPMainScene::GetInstance()) {
       spdlog::info("engine_destroy: deleting TVPMainScene...");
       delete scene;
@@ -846,18 +868,16 @@ engine_result_t engine_destroy(engine_handle_t handle) {
       spdlog::info("engine_destroy: EngineLoop deleted");
     }
 
-    if (g_engine_bootstrapped) {
-      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown...");
-      TVPEngineBootstrap::Shutdown();
-      g_engine_bootstrapped = false;
-      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown done");
-    }
-
-    // 允许下一次 engine_open_game 再次启动。
-    g_runtime_started_once = false;
-
-    // 复位各子系统静态标志位与缓存，确保二次初始化干净
-    // （普通链接下必要，否则这些 Reset 无引用会被 GC 掉）。
+    // 5. 复位各子系统静态标志位与缓存，确保二次初始化干净。
+    //    已接入：runtime/scriptEngine/sysInitImpl/application/storage/extensionClass/
+    //            graphicCache/renderManager。
+    //    未移植（对照上游，本地无实现，接入会导致编译失败；待补后放开）：
+    //            TVPResetWindowListForRestart（WindowManager）、
+    //            TVPResetLayerBitmapImplForRestart（LayerBitmapImpl）、
+    //            TVPResetFontImplForRestart（FontSystem）、
+    //            TVPResetTransIntfForRestart（TransIntf）、
+    //            tTVPBitmapBitsAlloc::ResetForRestart（LayerBitmapImpl/BitmapBits）、
+    //            TVPResetPluginSystemForRestart（Plugin）。
     try {
       TVPResetRuntimeForRestart();
       TVPResetScriptEngineForRestart();
@@ -873,6 +893,17 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     } catch (...) {
       spdlog::error("engine_destroy: reset-for-restart threw");
     }
+
+    // 6. EngineBootstrap 关闭（上游置于复位链之后）。
+    if (g_engine_bootstrapped) {
+      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown...");
+      TVPEngineBootstrap::Shutdown();
+      g_engine_bootstrapped = false;
+      spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown done");
+    }
+
+    // 7. 允许下一次 engine_open_game 再次启动。
+    g_runtime_started_once = false;
 
     spdlog::info("engine_destroy: runtime teardown complete (restartable)");
     spdlog::default_logger()->flush();
