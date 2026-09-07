@@ -82,13 +82,21 @@
 >
 > **进度**：engine_api.cpp `engine_destroy` 已按 PR#12 加入热重启 teardown
 > （TVPSystemUninit + 销毁 MainScene/EngineLoop 单例 + Bootstrap::Shutdown +
-> `g_runtime_started_once=false`）。**剩余待移植的 Reset 函数**（PR#12 C++ 侧，保证重初始化干净）：
-> `TVPResetScriptEngineForRestart`（ScriptMgnIntf）、`TVPResetRuntimeForRestart`（SysInitIntf）、
-> `TVPResetSysInitImplForRestart`（SysInitImpl）、`TVPResetApplicationForRestart`（Application）、
-> `TVPResetStorageImplForRestart`（StorageImpl，改 TVPGetAppPath 缓存）、
-> `TVPResetExtensionClassInstallStateForRestart`（Extension）、`TVPResetPluginSystemForRestart`/
-> `TVPUnregisterInternalPluginsForRestart`/`ncbAutoRegister::ResetModuleStateForRestart`（Plugin/ncbind）；
-> visual 级（RenderManager/Font/Trans/Window/Bitmap/LayerBitmap/OpenGL）为第二批。
+> `g_runtime_started_once=false`）。
+> **Reset 函数移植进度**（PR#12 C++ 侧，保证重初始化干净）：
+> - ✅ 已提交并接入 `engine_destroy`（`05d1254` + `682d87e`，codex 分支）：
+>   `TVPResetScriptEngineForRestart`（ScriptMgnIntf）、
+>   `TVPResetRuntimeForRestart`（SysInitIntf，含 TVPProjectDir/DataPath 清空）、
+>   `TVPResetSysInitImplForRestart`（SysInitImpl，含 TVPSystemControlAlive 复位）、
+>   `TVPResetApplicationForRestart`（Application：删图像线程/清事件队列/复位标志）、
+>   `TVPResetStorageImplForRestart`（StorageImpl：TVPGetAppPath 缓存提文件作用域再清）、
+>   `TVPResetExtensionClassInstallStateForRestart`（Extension：复位待装类标志）。
+> - ⏳ 剩余待移植：Plugin/ncbind 类 `TVPResetPluginSystemForRestart`/
+>   `TVPUnregisterInternalPluginsForRestart`/`ncbAutoRegister::ResetModuleStateForRestart`
+>   （仅清 `TVPRegisteredPlugins` 集合放行重新 Regist，勿清 `_internal_plugins`，且
+>   二次 init 的 AllRegist 会重复 append 注册器、需随 LoadAllModules 守卫校验）；本地
+>   沙箱无 vcpkg 不能直接编译，暂缓待真机确认前三批是否已根治再评估。
+> - visual 级（RenderManager/Font/Trans/Window/Bitmap/LayerBitmap/OpenGL）为第二批。
 - 现象：首次开游戏正常；不杀进程、退出后再开另一款游戏报
   `Engine Error engine_open_game_async failed: result=-3, error=runtime restart is not supported yet`。
 - 已做：Dart 侧 `_exitGame` 现在先 `engineDestroy()` 等销毁完成再 `pop`。

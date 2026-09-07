@@ -586,6 +586,18 @@ void TVPRestartScriptEngine() {
 //---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
+// TVPResetScriptEngineForRestart
+//---------------------------------------------------------------------------
+void TVPResetScriptEngineForRestart() {
+    // After TVPUninitScriptEngine has already been called (via
+    // TVPSystemUninit in engine_destroy), reset the guard variables so the
+    // script engine can be re-initialized on the next engine_open_game cycle.
+    TVPScriptEngineInit = false;
+    TVPScriptEngineUninit = false;
+}
+//---------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------
 // TVPGetScriptEngine
 //---------------------------------------------------------------------------
 tTJS *TVPGetScriptEngine() { return TVPScriptEngine; }

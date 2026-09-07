@@ -68,3 +68,12 @@ void TVPCauseAtInstallExtensionClass(iTJSDispatch2 *global) {
     }
 }
 //---------------------------------------------------------------------------
+void TVPResetExtensionClassInstallStateForRestart() {
+    // 二次初始化前复位「已触发安装 / 待装类列表」状态。
+    // TVPAtClassInstallInfos 在 TVPCauseAtInstallExtensionClass 里已被 delete 置空，
+    // 这里只需复位标志，使下次 TVPAddClassHandler / TVPCauseAtInstallExtensionClass
+    // 可再次登记并安装。
+    TVPAtInstallClass = false;
+    TVPAtClassInstallInfos = nullptr;
+}
+//---------------------------------------------------------------------------
