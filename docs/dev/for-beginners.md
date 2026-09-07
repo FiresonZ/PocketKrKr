@@ -171,7 +171,7 @@ startup.tjs → system/Initialize.tjs → first.ks → title.ks
 
 ## 七、开发指导（改代码的正确姿势）
 
-1. **先读文档**：根目录 [AGENTS.md](../../AGENTS.md)（AI 首屏指令）→
+1. **先读文档**：根目录 [AGENTS.md](https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/AGENTS.md)（AI 首屏指令）→
    [docs/dev/README.md](README.md)（索引）→ [conventions.md](conventions.md)（约定与陷阱，**最重要**）。
 2. **改动前先看约定**：尤其"平台守卫别删""`win32/` 是共享实现不能删""SIMD 以标量为准"。
 3. **改完要同步文档**：本项目的文档和代码是绑定的，改代码请一并更新相关 md。

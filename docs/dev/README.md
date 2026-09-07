@@ -4,7 +4,7 @@
 > 避免每次从头扫描整个代码库浪费上下文与 token。
 > 请保持本目录内容与代码库现状同步；平台结构调整后务必更新。
 >
-> **新 AI Agent 上手顺序**：根目录 [AGENTS.md](../../AGENTS.md)（首屏指令）→ 本文档（索引）
+> **新 AI Agent 上手顺序**：根目录 [AGENTS.md](https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/AGENTS.md)（首屏指令）→ 本文档（索引）
 > → [conventions.md](conventions.md)（约定与陷阱，最重要）→ [key-references.md](key-references.md)（关键文件/符号）。
 > 本项目有大批量代码由 AI Agent 编写，请沿用本目录的文档约定并保持同步。
 

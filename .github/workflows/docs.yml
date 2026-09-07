@@ -1,0 +1,44 @@
+name: docs
+
+# 构建 MkDocs（Material 主题，OI-Wiki 风格）并部署到 GitHub Pages。
+# 启用方式：Settings → Pages → Source 选 "Deploy from a branch" → 分支选 gh-pages → /(root)。
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mkdocs.yml'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install MkDocs Material
+        run: pip install --quiet mkdocs-material
+
+      - name: Build site
+        run: mkdocs build --strict
+
+      # 关闭 GitHub Pages 对静态站点的 Jekyll 处理
+      - name: Add .nojekyll
+        run: touch site/.nojekyll
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages

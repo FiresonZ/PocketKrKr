@@ -3,7 +3,7 @@
 > 本文件维护当前未完成或待验证的工程事项，供 AI Agent 与开发者交接。
 > 每完成一项，把该条目移到「已完成」或直接删除，并在 [README.md](README.md) 的
 > 目录索引中保持本文件引用。
-> 完成某项并验证后，请同步更新根目录 [AGENTS.md](../../AGENTS.md) 的「当前状态」。
+> 完成某项并验证后，请同步更新根目录 [AGENTS.md](https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/AGENTS.md) 的「当前状态」。
 
 ## 进行中 / 待验证
 
@@ -44,7 +44,7 @@
 - 已做：Dart 侧 `_exitGame` 现在先 `engineDestroy()` 等销毁完成再 `pop`。
 - **上游参考（vcdlk PR#12「make runtime restartable after engine_destroy」,
   reAAAq/KrKr2-Next，2026-06-16）**：此 PR 正是修"杀后台/无法重启"的根因。
-  病根是我们本地 [game_page.dart](apps/flutter_app/lib/pages/game_page.dart)：
+  病根是我们本地 [game_page.dart](https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/apps/flutter_app/lib/pages/game_page.dart)：
   `_exitGame()` 直接 `pop` 不完整释放；Retry 把 `engineDestroy()` 用 `unawaited()` 丢出、
   立刻 `engineCreate()` → 引擎未销毁完就 recreate，全局状态残留 → 下次起不来，只能杀进程。
 - PR#12 的改法（纯 Dart）：

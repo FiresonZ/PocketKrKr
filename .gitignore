@@ -5,6 +5,10 @@
 /**/bin/
 vcpkg_installed/
 
+# MkDocs / docs 站构建输出
+site/
+__pycache__/
+
 # IDE / tooling
 .idea/
 .vscode/

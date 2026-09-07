@@ -1,0 +1,115 @@
+# PocketKrKr — 文档站配置（MkDocs + Material，OI-Wiki 风格）
+# 本地预览：mkdocs serve   构建：mkdocs build   站点输出在 site/
+
+site_name: PocketKrKr
+site_description: 口袋里的吉里吉里2 —— 面向移动端的 KiriKiri2 视觉小说引擎运行环境（C++ 引擎 + Flutter 壳）
+site_url: https://krkr2next.com/
+repo_url: https://github.com/FiresonZ/KrKr2-Next-Mobile
+repo_name: FiresonZ/KrKr2-Next-Mobile
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2026 PocketKrKr Contributors · <a href="https://github.com/FiresonZ/KrKr2-Next-Mobile/blob/main/LICENSE">GPL-3.0</a>
+
+theme:
+  name: material
+  language: zh
+  favicon: resources/favicon.svg
+  logo: resources/favicon.svg
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: 切换为深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: 切换为浅色模式
+  features:
+    - navigation.top
+    - navigation.sections
+    - navigation.indexes
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.tabs.link
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/FiresonZ/KrKr2-Next-Mobile
+
+plugins:
+  - search:
+      lang:
+        - zh
+        - en
+      separator: '[\s\u200b\-_,:！？\[\]（）()]+'
+
+markdown_extensions:
+  - admonition
+  - abbr
+  - attr_list
+  - md_in_html
+  - def_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.keys
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - 首页: index.md
+  - 项目简介:
+      - FAQ: FAQ.md
+      - 插件清单: plugins.md
+      - 支持的游戏: support_games.txt
+  - 开发文档:
+      - 开发文档索引: dev/README.md
+      - 小白开发指引: dev/for-beginners.md
+      - 开发者入门: dev/developers-guide.md
+      - 技术栈: dev/tech-stack.md
+      - 待办 / 已知问题: dev/todo.md
+  - 架构与源码:
+      - 架构: dev/architecture.md
+      - 源代码结构地图: dev/source-map.md
+      - 关键引用: dev/key-references.md
+  - 构建与约定:
+      - 构建与工具链: dev/build.md
+      - 约定与历史陷阱: dev/conventions.md
+      - 渲染 / 黑屏诊断: dev/rendering-diagnosis.md
+  - 兼容与性能:
+      - 游戏兼容性: dev/compatibility.md
+      - 性能优化候选: dev/perf-optimization.md
