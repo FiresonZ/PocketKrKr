@@ -62,20 +62,19 @@ static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> PsApplyAlpha(
     hn::Vec<hn::ScalableTag<uint8_t>> va) {
     const hn::Repartition<uint16_t, decltype(d8)> d16;
     const auto half = hn::Half<decltype(d8)>();
-    const auto v255 = hn::Set(d16, static_cast<uint16_t>(255));
     auto s_lo = hn::PromoteTo(d16, hn::LowerHalf(half, vs_blended));
     auto d_lo = hn::PromoteTo(d16, hn::LowerHalf(half, vd));
     auto a_lo = hn::PromoteTo(d16, hn::LowerHalf(half, va));
     auto s_hi = hn::PromoteUpperTo(d16, vs_blended);
     auto d_hi = hn::PromoteUpperTo(d16, vd);
     auto a_hi = hn::PromoteUpperTo(d16, va);
-    // result = (s * a >> 8) + (d * (255 - a) >> 8), split to avoid u16 overflow
-    auto inv_a_lo = hn::Sub(v255, a_lo);
-    auto inv_a_hi = hn::Sub(v255, a_hi);
-    auto r_lo = hn::Add(hn::ShiftRight<8>(hn::Mul(s_lo, a_lo)),
-                        hn::ShiftRight<8>(hn::Mul(d_lo, inv_a_lo)));
-    auto r_hi = hn::Add(hn::ShiftRight<8>(hn::Mul(s_hi, a_hi)),
-                        hn::ShiftRight<8>(hn::Mul(d_hi, inv_a_hi)));
+    // result = ((s - d) * a >> 8) + d   (bit-identical to scalar *_c packed alpha
+    // blend). u16 wrap in Sub/Mul is harmless: ordered demote keeps only the low
+    // byte, and floor((diff * a) mod 65536 >> 8) == floor(diff * a >> 8) mod 256.
+    auto diff_lo = hn::Sub(s_lo, d_lo);
+    auto diff_hi = hn::Sub(s_hi, d_hi);
+    auto r_lo = hn::Add(hn::ShiftRight<8>(hn::Mul(diff_lo, a_lo)), d_lo);
+    auto r_hi = hn::Add(hn::ShiftRight<8>(hn::Mul(diff_hi, a_hi)), d_hi);
     return hn::OrderedDemote2To(d8, r_lo, r_hi);
 }
 
@@ -125,8 +124,10 @@ static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> ApplyHDA(
 }
 
 // =========================================================================
-// Overlay core: per channel, if d < 128: 2*d*s/255, else: 2*(d+s) - 2*d*s/255 - 255
-// SIMD: use comparison mask
+// Overlay core: per channel, if d < 128: (2*d*s)/255, else: 2*(d+s) - (2*d*s)/255 - 255
+// (exact integer /255, matching TVPPsTableOverlay built in TVPPsMakeTable)
+// SIMD: compute m = floor(2*s*d/255) exactly via
+//   p = s*d ; k = p>>7 ; t = k + 2*(p & 127) ; m = k + (t>=255) + (t>=510)
 // =========================================================================
 static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> OverlayCore(
     hn::ScalableTag<uint8_t> d8,
@@ -136,33 +137,41 @@ static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> OverlayCore(
     const hn::Repartition<uint16_t, decltype(d8)> d16;
     const auto half = hn::Half<decltype(d8)>();
     const auto v128 = hn::Set(d8, 128);
-    const auto v255_16 = hn::Set(d16, 255);
+    const auto v255 = hn::Set(d16, 255);
+    const auto v510 = hn::Set(d16, 510);
+    const auto v127 = hn::Set(d16, 127);
+    const auto v1   = hn::Set(d16, 1);
 
     // mask: d < 128 → true
     auto mask = hn::Lt(vd, v128);
 
-    // Compute both paths in u16
     auto d_lo = hn::PromoteTo(d16, hn::LowerHalf(half, vd));
     auto s_lo = hn::PromoteTo(d16, hn::LowerHalf(half, vs));
     auto d_hi = hn::PromoteUpperTo(d16, vd);
     auto s_hi = hn::PromoteUpperTo(d16, vs);
 
-    // Path 1 (d < 128): 2*d*s/255 ≈ (d*s) >> 7
-    // d*s max=65025 fits u16, >>7 max=507, saturates to 255 on demote
-    auto p1_lo = hn::ShiftRight<7>(hn::Mul(d_lo, s_lo));
-    auto p1_hi = hn::ShiftRight<7>(hn::Mul(d_hi, s_hi));
-    auto path1 = hn::OrderedDemote2To(d8, p1_lo, p1_hi);
+    // m = floor(2*s*d/255), all in u16 (p = s*d <= 65025)
+    auto p_lo = hn::Mul(d_lo, s_lo);
+    auto p_hi = hn::Mul(d_hi, s_hi);
+    auto k_lo = hn::ShiftRight<7>(p_lo);
+    auto k_hi = hn::ShiftRight<7>(p_hi);
+    auto t_lo = hn::Add(k_lo, hn::ShiftLeft<1>(hn::And(p_lo, v127)));
+    auto t_hi = hn::Add(k_hi, hn::ShiftLeft<1>(hn::And(p_hi, v127)));
+    auto m_lo = hn::Add(k_lo, hn::Add(hn::IfThenElse(hn::Not(hn::Lt(t_lo, v255)), v1, hn::Zero(d16)),
+                                      hn::IfThenElse(hn::Not(hn::Lt(t_lo, v510)), v1, hn::Zero(d16))));
+    auto m_hi = hn::Add(k_hi, hn::Add(hn::IfThenElse(hn::Not(hn::Lt(t_hi, v255)), v1, hn::Zero(d16)),
+                                      hn::IfThenElse(hn::Not(hn::Lt(t_hi, v510)), v1, hn::Zero(d16))));
 
-    // Path 2 (d >= 128): 2*(d+s) - 2*d*s/255 - 255
-    // = 2*(d+s) - 2*(d*s>>8) - 255
-    auto ds_lo = hn::Add(d_lo, s_lo);  // d+s, max 510
+    // Path 1 (d < 128): m  (& 0xFF so demote truncates like the uchar table)
+    auto path1 = hn::OrderedDemote2To(d8, hn::And(m_lo, v255), hn::And(m_hi, v255));
+
+    // Path 2 (d >= 128): 2*(d+s) - m - 255  (& 0xFF reproduces the unsigned-char
+    // scalar table truncation when the value exceeds 255)
+    auto ds_lo = hn::Add(d_lo, s_lo);
     auto ds_hi = hn::Add(d_hi, s_hi);
-    auto mul_lo = hn::ShiftRight<7>(hn::Mul(d_lo, s_lo));  // 2*d*s/256
-    auto mul_hi = hn::ShiftRight<7>(hn::Mul(d_hi, s_hi));
-    // 2*(d+s) - 2*d*s/256 - 255
-    auto p2_lo = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_lo), mul_lo), v255_16);
-    auto p2_hi = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_hi), mul_hi), v255_16);
-    auto path2 = hn::OrderedDemote2To(d8, p2_lo, p2_hi);
+    auto p2_lo = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_lo), m_lo), v255);
+    auto p2_hi = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_hi), m_hi), v255);
+    auto path2 = hn::OrderedDemote2To(d8, hn::And(p2_lo, v255), hn::And(p2_hi, v255));
 
     return hn::IfThenElse(mask, path1, path2);
 }
@@ -176,9 +185,12 @@ static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> HardLightCore(
     const hn::Repartition<uint16_t, decltype(d8)> d16;
     const auto half = hn::Half<decltype(d8)>();
     const auto v128 = hn::Set(d8, 128);
-    const auto v255_16 = hn::Set(d16, 255);
+    const auto v255 = hn::Set(d16, 255);
+    const auto v510 = hn::Set(d16, 510);
+    const auto v127 = hn::Set(d16, 127);
+    const auto v1   = hn::Set(d16, 1);
 
-    // HardLight: condition on s (not d)
+    // HardLight: condition on s (not d); value formula identical (product symmetric)
     auto mask = hn::Lt(vs, v128);
 
     auto d_lo = hn::PromoteTo(d16, hn::LowerHalf(half, vd));
@@ -186,19 +198,24 @@ static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> HardLightCore(
     auto d_hi = hn::PromoteUpperTo(d16, vd);
     auto s_hi = hn::PromoteUpperTo(d16, vs);
 
-    // Path 1 (s < 128): 2*d*s/255 ≈ (d*s) >> 7
-    auto p1_lo = hn::ShiftRight<7>(hn::Mul(d_lo, s_lo));
-    auto p1_hi = hn::ShiftRight<7>(hn::Mul(d_hi, s_hi));
-    auto path1 = hn::OrderedDemote2To(d8, p1_lo, p1_hi);
+    auto p_lo = hn::Mul(d_lo, s_lo);
+    auto p_hi = hn::Mul(d_hi, s_hi);
+    auto k_lo = hn::ShiftRight<7>(p_lo);
+    auto k_hi = hn::ShiftRight<7>(p_hi);
+    auto t_lo = hn::Add(k_lo, hn::ShiftLeft<1>(hn::And(p_lo, v127)));
+    auto t_hi = hn::Add(k_hi, hn::ShiftLeft<1>(hn::And(p_hi, v127)));
+    auto m_lo = hn::Add(k_lo, hn::Add(hn::IfThenElse(hn::Not(hn::Lt(t_lo, v255)), v1, hn::Zero(d16)),
+                                      hn::IfThenElse(hn::Not(hn::Lt(t_lo, v510)), v1, hn::Zero(d16))));
+    auto m_hi = hn::Add(k_hi, hn::Add(hn::IfThenElse(hn::Not(hn::Lt(t_hi, v255)), v1, hn::Zero(d16)),
+                                      hn::IfThenElse(hn::Not(hn::Lt(t_hi, v510)), v1, hn::Zero(d16))));
 
-    // Path 2 (s >= 128): 2*(d+s) - 2*d*s/256 - 255
+    auto path1 = hn::OrderedDemote2To(d8, hn::And(m_lo, v255), hn::And(m_hi, v255));
+
     auto ds_lo = hn::Add(d_lo, s_lo);
     auto ds_hi = hn::Add(d_hi, s_hi);
-    auto mul_lo = hn::ShiftRight<7>(hn::Mul(d_lo, s_lo));
-    auto mul_hi = hn::ShiftRight<7>(hn::Mul(d_hi, s_hi));
-    auto p2_lo = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_lo), mul_lo), v255_16);
-    auto p2_hi = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_hi), mul_hi), v255_16);
-    auto path2 = hn::OrderedDemote2To(d8, p2_lo, p2_hi);
+    auto p2_lo = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_lo), m_lo), v255);
+    auto p2_hi = hn::Sub(hn::Sub(hn::ShiftLeft<1>(ds_hi), m_hi), v255);
+    auto path2 = hn::OrderedDemote2To(d8, hn::And(p2_lo, v255), hn::And(p2_hi, v255));
 
     return hn::IfThenElse(mask, path1, path2);
 }
@@ -240,13 +257,21 @@ void Ps##Name##Blend_HWY(tjs_uint32 *dest, const tjs_uint32 *src,            \
                           tjs_int len) {                                       \
     const hn::ScalableTag<uint8_t> d8;                                        \
     const size_t N_PIXELS = hn::Lanes(d8) / 4;                               \
+    /* scalar NORM writes the alpha byte as-is (partial ps_alpha_blend only    \
+       touches RGB); the overlay/hardlight core leaves alpha = 0, so the       \
+       result alpha is 0, and only the 0x00 ff000000... -> force alpha=0 */    \
+    const auto rgb_mask = hn::Dup128VecFromValues(                            \
+        d8,                                                                    \
+        0xFF, 0xFF, 0xFF, 0x00,  0xFF, 0xFF, 0xFF, 0x00,                      \
+        0xFF, 0xFF, 0xFF, 0x00,  0xFF, 0xFF, 0xFF, 0x00                       \
+    );                                                                         \
     tjs_int i = 0;                                                            \
     for (; i + (tjs_int)N_PIXELS <= len; i += N_PIXELS) {                     \
         auto vs = hn::LoadU(d8, reinterpret_cast<const uint8_t*>(src + i));   \
         auto vd = hn::LoadU(d8, reinterpret_cast<const uint8_t*>(dest + i)); \
         auto va = ExtractAlpha(d8, vs);                                       \
         auto vb = simd_blend_expr;                                            \
-        auto result = PsApplyAlpha(d8, vd, vb, va);                           \
+        auto result = hn::And(PsApplyAlpha(d8, vd, vb, va), rgb_mask);        \
         hn::StoreU(result, d8, reinterpret_cast<uint8_t*>(dest + i));         \
     }                                                                          \
     for (; i < len; i++) {                                                    \
@@ -260,13 +285,18 @@ void Ps##Name##Blend_o_HWY(tjs_uint32 *dest, const tjs_uint32 *src,          \
     const hn::Repartition<uint16_t, decltype(d8)> d16;                        \
     const size_t N_PIXELS = hn::Lanes(d8) / 4;                               \
     const auto vopa16 = hn::Set(d16, static_cast<uint16_t>(opa));             \
+    const auto rgb_mask = hn::Dup128VecFromValues(                            \
+        d8,                                                                    \
+        0xFF, 0xFF, 0xFF, 0x00,  0xFF, 0xFF, 0xFF, 0x00,                      \
+        0xFF, 0xFF, 0xFF, 0x00,  0xFF, 0xFF, 0xFF, 0x00                       \
+    );                                                                         \
     tjs_int i = 0;                                                            \
     for (; i + (tjs_int)N_PIXELS <= len; i += N_PIXELS) {                     \
         auto vs = hn::LoadU(d8, reinterpret_cast<const uint8_t*>(src + i));   \
         auto vd = hn::LoadU(d8, reinterpret_cast<const uint8_t*>(dest + i)); \
         auto va = ScaleAlpha(d8, ExtractAlpha(d8, vs), vopa16);               \
         auto vb = simd_blend_expr;                                            \
-        auto result = PsApplyAlpha(d8, vd, vb, va);                           \
+        auto result = hn::And(PsApplyAlpha(d8, vd, vb, va), rgb_mask);        \
         hn::StoreU(result, d8, reinterpret_cast<uint8_t*>(dest + i));         \
     }                                                                          \
     for (; i < len; i++) {                                                    \

@@ -84,6 +84,8 @@
 > （TVPSystemUninit + 销毁 MainScene/EngineLoop 单例 + Bootstrap::Shutdown +
 > `g_runtime_started_once=false`）。
 > **Reset 函数移植进度**（PR#12 C++ 侧，保证重初始化干净）：
+> **🟡 已编译通过（Android + iOS），待真机验证**：三批 Reset 函数已全部接入
+> `engine_destroy`，两平台编译均绿；下一步真机复验"不杀进程退出→再开另一款游戏"。
 > - ✅ 已提交并接入 `engine_destroy`（`05d1254` + `682d87e`，codex 分支）：
 >   `TVPResetScriptEngineForRestart`（ScriptMgnIntf）、
 >   `TVPResetRuntimeForRestart`（SysInitIntf，含 TVPProjectDir/DataPath 清空）、
@@ -131,8 +133,28 @@
 - 背景：`tests/tvpgl_simd_compare` 已证实 **23 处 SIMD ≠ 标量**；
   PS 全系混合 / SubBlend_o / ScreenBlend 已先回退到 `*_c` 标量保证正确
   （`tvpgl_simd_init.cpp` 已注释对应注册）。
-- 待办：逐模式修 `PsApplyAlpha` 舍入序、SubBlend_o/ScreenBlend alpha、Overlay/HardLight
-  分支到与 `*_c` 位级一致，tests 逐模式验证后放回 SIMD 派发。
+- **P2 ✅（PsApplyAlpha 舍入序已修）**：标量 `TVPPS_ALPHABLEND`（tvpps.inc）实际是
+  `result = ((s - d) * a >> 8) + d`；旧 SIMD 用了 `(s*a>>8) + (d*(255-a)>>8)`，30M
+  随机矢量 29.85M 不一致。已改为 `((s-d)*a >> 8) + d`（u16 包减/包乘，`OrderedDemote2To`
+  只留低字节故无碍），`out/p2_check/check.c` 验证 30M 全一致（0 mismatch）。修在
+  `tvpgl_simd_ps_blend.cpp` 与 `tvpgl_simd_ps_blend2.cpp` 的 `PsApplyAlpha`。
+  → evaluation：Alpha/Add/Sub/Mul/Lighten/Darken/Diff/Exclusion（P 系）+ Overlay/HardLight
+  的 alpha 应用段已校正。
+- **P3 ✅（TVPSubBlend_o）**：标量 `TVPSubBlend_o_c` 只按 opa 缩放字节0-2 并把 alpha
+  强制为 0xFF，饱和减后 alpha 保留 dst 原值；SIMD 原对 alpha 也做缩放 => 偏离。已在
+  `SubBlend_o_HWY` 加 alpha_mask 保留 dst alpha（`tvpgl_simd_arithmetic_blend.cpp`），
+  `out/p34_check/check.c` 30M 全一致；`tvpgl_simd_init.cpp` 已放回。
+- **P4 ✅（TVPScreenBlend base）**：标量 `TVPScreenBlend_c` 的 packed 乘积只写字节0-2，
+  alpha 字节恒为 0xFF；SIMD base 原来对所有 4 字节做 screen。已在 `ScreenBlend_HWY`
+  OR 上 alpha_ff=0xFF，`out/p34_check/check.c` 30M 全一致；`tvpgl_simd_init.cpp` 已放回。
+- **P5 ✅（PsOverlay/PsHardLight core）**：标量表是 `unsigned char`（精确 `/255`），
+  SIMD 原用 `>>7`(≈/128) 且 NORM/_o 不写 alpha。已把 `OverlayCore`/`HardLightCore`
+  改为精确 `floor(2*s*d/255)`（p=s*d, k=p>>7, t=k+2*(p&127), m=k+(t>=255)+(t>=510)，
+  demote 前 `&0xFF` 复现 uchar 截断），并在 `MAKE_PS_4V` 的 NORM/_o 加 rgb_mask 置
+  alpha=0（HDA 走 ApplyHDA 保留 dst alpha）。`out/p5_check/check2.c` 20M 全一致。
+  `tvpgl_simd_init.cpp` 已放回 Overlay/HardLight。
+- 待办：Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 的 core（溢出/alpha 分支）
+  未逐一核对，仍回退标量；逐个核对后放回。
 
 ### 5. KAGEX / KAG 差异兼容（kagexopt 相关）
 - 待办：调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（确切需求待明确）。

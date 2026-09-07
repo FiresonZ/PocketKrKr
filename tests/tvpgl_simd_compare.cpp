@@ -36,7 +36,12 @@ static uint32_t NextRng() {
 
 // 一张测试图像的长度（16 的倍数，便于 SIMD 多 lane 对齐路径覆盖）
 static const tjs_int kLen = 2048;
-static const tjs_int kOpa = 128; // 半透明强度，覆盖 (255-opa) 支路
+// 多轮随机（每轮独立填像素），增大位型/分支覆盖——尤其 Overlay/HardLight 的
+// (2*s*d)/255 截断支路与 /255 分解阈值在个别 (s,d) 才触发，单批次 2048 像素不足以覆盖。
+static const tjs_int kRounds = 8;
+// 覆盖多种 opacity：半透明/临界/全不透明，逼近 &0xFF 截断与 scale 舍入边界
+static const tjs_int kOpas[] = {1, 64, 128, 191, 254, 255};
+static const int kNumOpas = sizeof(kOpas) / sizeof(kOpas[0]);
 
 static int g_failures = 0;
 
@@ -47,38 +52,46 @@ using OpaFn = void (*)(tjs_uint32 *, const tjs_uint32 *, tjs_int, tjs_int);
 
 static void ComparePlain(const char *name, PlainFn scalarFn, PlainFn simdFn) {
     std::vector<tjs_uint32> src(kLen), ref(kLen), got(kLen);
-    for (tjs_int i = 0; i < kLen; ++i) {
-        src[i] = NextRng();
-        ref[i] = NextRng();
-        got[i] = ref[i];
-    }
-    scalarFn(ref.data(), src.data(), kLen);
-    simdFn(got.data(), src.data(), kLen);
-    for (tjs_int i = 0; i < kLen; ++i) {
-        if (ref[i] != got[i]) {
-            std::fprintf(stderr, "[MISMATCH] %s idx=%d scalar=%08X simd=%08X\n",
-                         name, i, ref[i], got[i]);
-            ++g_failures;
-            return;
+    for (int r = 0; r < kRounds; ++r) {
+        for (tjs_int i = 0; i < kLen; ++i) {
+            src[i] = NextRng();
+            ref[i] = NextRng();
+            got[i] = ref[i];
+        }
+        scalarFn(ref.data(), src.data(), kLen);
+        simdFn(got.data(), src.data(), kLen);
+        for (tjs_int i = 0; i < kLen; ++i) {
+            if (ref[i] != got[i]) {
+                std::fprintf(stderr, "[MISMATCH] %s round=%d idx=%d scalar=%08X simd=%08X\n",
+                             name, r, i, ref[i], got[i]);
+                ++g_failures;
+                return;
+            }
         }
     }
 }
 
 static void CompareOpa(const char *name, OpaFn scalarFn, OpaFn simdFn) {
     std::vector<tjs_uint32> src(kLen), ref(kLen), got(kLen);
-    for (tjs_int i = 0; i < kLen; ++i) {
-        src[i] = NextRng();
-        ref[i] = NextRng();
-        got[i] = ref[i];
-    }
-    scalarFn(ref.data(), src.data(), kLen, kOpa);
-    simdFn(got.data(), src.data(), kLen, kOpa);
-    for (tjs_int i = 0; i < kLen; ++i) {
-        if (ref[i] != got[i]) {
-            std::fprintf(stderr, "[MISMATCH] %s idx=%d scalar=%08X simd=%08X\n",
-                         name, i, ref[i], got[i]);
-            ++g_failures;
-            return;
+    for (int oi = 0; oi < kNumOpas; ++oi) {
+        const tjs_int opa = kOpas[oi];
+        for (int r = 0; r < kRounds; ++r) {
+            for (tjs_int i = 0; i < kLen; ++i) {
+                src[i] = NextRng();
+                ref[i] = NextRng();
+                got[i] = ref[i];
+            }
+            scalarFn(ref.data(), src.data(), kLen, opa);
+            simdFn(got.data(), src.data(), kLen, opa);
+            for (tjs_int i = 0; i < kLen; ++i) {
+                if (ref[i] != got[i]) {
+                    std::fprintf(stderr,
+                                 "[MISMATCH] %s opa=%d round=%d idx=%d scalar=%08X simd=%08X\n",
+                                 name, opa, r, i, ref[i], got[i]);
+                    ++g_failures;
+                    return;
+                }
+            }
         }
     }
 }
