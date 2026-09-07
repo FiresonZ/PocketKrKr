@@ -45,6 +45,13 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 8. 改 vcpkg 依赖 → CI 缓存 key 变 + 首次全量重编（半小时级）属正常。
 9. **待办在 [docs/dev/todo.md](docs/dev/todo.md)**，动手前先看是否已有条目。
 
+## Git 协作规则（务必遵守）
+
+1. **只改 `codex` 分支**，绝不动 `main`。
+2. **手动 `git add` + `git commit`**，commit message 写明改动文件及原因。
+3. **绝不 `push`**、**不建 PR**、**不 `amend`**、**不 `rebase`**、**不 `force push`**、**不改任何历史**（历史提交只增不改）。
+4. 完成后把提交留给用户手动推送/合并。
+
 ## 当前状态（2026-09，详见 todo.md）
 
 | 平台/模块 | 状态 |
