@@ -121,6 +121,40 @@
 且日志仍存在重复问题见 `engine_api.cpp` 4e47e97 修复），则先到 `LayerBitmapIntf.cpp`/
 `PassThroughDrawDevice.cpp` 定位"主 DrawBuffer 从未被合成"的调用缺失一环，再据候选 A/B 修正。
 
+## 探针实测结论（2026-09-08，先开 IINCHO-Re.co 后开 千恋万花）
+
+> 开 `KRKR_RENDER_PROBE` 抓 `pocketkrkr_engine(8).log`（修复日志重复前）。长 3347 行，
+> 两次 `engine_open_game` 各一段。关键在 `FlutterWindowLayer::UpdateDrawBuffer/SourceSample/PostBlit`。
+
+### 证据
+| 项目 | 第一游戏 IINCHO-Re.co（正常） | 第二游戏 千恋万花（黑屏） |
+|---|---|---|
+| UpdateDrawBuffer | `nativeTex=83 srcTex=83 blitTex=84 1280x720 layers=69 draw=15`，持续 | `nativeTex=3 srcTex=3 blitTex=7 1920x1080 layers=215 draw=5`，仅 1 帧 |
+| SourceSample | `nonBlack=25/25` 全程健康，颜色随时间渐变 | `nonBlack=0/25 avg=(0,0,0,255)`（全黑） |
+| PostBlit center | 非黑 | `(0,0,0,255)`（黑） |
+| 渲染频率 | 持续 ~20 采样/秒 | 首帧后 **2.8s 无任何 frame 采样**（探针每 5 帧必打）→ present/渲染循环停摆 |
+| 插件 | — | `k2compat/kztouch/krmovie/kagexopt/menu/yuzuex/lzfs/multiimage/win32ole/motionplayer_nod3d/PackinOne/extNagano/krkrsteam` 全 **Failed** |
+| 启动脚本 | 正常 | `startup.tjs` 正常跑完，`layers=215`，无崩溃 |
+
+### 结论（纠正方向，重要）
+- **这次黑屏是 runtime-restart（二次打开）专属问题，不是 drawdeviceD3DZ 的 Z 引擎根本缺口。**
+  依据：千恋万花作为**第一个游戏**已被真机验证能正常出画面；探针也证明第一游戏合成+blit
+  全链路正常，仅重启后的第二游戏出问题。
+- **黑屏现象两异常**：
+  1. 第二游戏 `draw=5`（引擎发起了合成）但 `SourceSample` 全黑 → **合成没画进 blit 源纹理
+     srcTex=3**。→ 对应候选 A（`krkr::gl` FBO/state 在重启后的语义错配）。
+  2. 首帧后 2.8s 无任何 frame → **游戏逻辑/定时器或 present 循环重启后未恢复**（与"第二次
+     打开日志比第一次少"观察吻合）。
+- **插件大量 Failed 不是本次黑屏主因**：它们缺但游戏能作为第一游戏跑起来，故 Z 插件兼容属
+  独立问题（见本文档清单），与本次二次打开黑屏脱钩。
+
+### 下一步（替换原 drawdeviceD3DZ 首选）
+不再先做 drawdeviceD3DZ。转向重启状态排查：
+1. 定位第二游戏 `draw` 的合成为何没进 `srcTex`（`krkr::gl` FBO bind / FlutterWindowLayer
+   `blitSrcTexture` 在重启后的解析）→ 候选 A。
+2. 定位第二游戏渲染循环为何停摆：`EngineLoop` tick 调度 / 连续处理器 / present 未随二次
+   `StartApplication` 重新拉起。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
