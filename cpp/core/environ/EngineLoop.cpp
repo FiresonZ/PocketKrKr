@@ -9,6 +9,7 @@
 
 #include "EngineLoop.h"
 
+#include <cstring>
 #include <spdlog/spdlog.h>
 
 #include "Application.h"
@@ -102,6 +103,9 @@ EngineLoop::~EngineLoop() {
     if (s_instance == this) {
         s_instance = nullptr;
     }
+    // 复位静态输入/贴图回调状态，使下一个 EngineLoop 实例干净启动（对照上游 PR#12）。
+    s_postUpdate = nullptr;
+    std::memset(s_scancode, 0, sizeof(s_scancode));
 }
 
 EngineLoop* EngineLoop::GetInstance() {
