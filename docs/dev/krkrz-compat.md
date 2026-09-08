@@ -254,6 +254,21 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
   - 2nd 段 `DeliverWinUpdate` 持续打印、但无 RTProbe/blit → **投递→Show 段坏**（Show guard/Managers 空）；
   - 2nd 段 `DeliverWinUpdate` 根本不打印 → **游戏/脚本未请求重绘**（RequestUpdate 未发生，指向脚本/连续处理器未恢复）。
 
+### 二次黑屏探针矩阵（一次 release+probe 日志即可定死整条链）
+
+| 链路节点 | 探针 | 打印内容 | 判定 |
+|---|---|---|---|
+| 游戏请求重绘 | `RequestUpdate`（WindowIntf.cpp） | `RequestUpdate: repaint requested (cum=N)`，每 60 次 | 有=游戏在画；无=脚本/连续处理器没恢复 |
+| 重绘事件投递 | `TVPDeliverWindowUpdateEvents`（EventIntf.cpp） | `DeliverWinUpdate: queue=N -> UpdateContent`（queue 非空） | 有=投递发生 |
+| Show 被调但没 blit | `tTVPBasicDrawDevice::Show`（BasicDrawDevice.cpp） | `BasicShow: skip (buf=null \| form/Managers)` | 有=Show 守卫生效（Managers 空等） |
+| blit 是否到纹理 | `RTProbe`（ui_stubs.cpp） | `blitSrcTex=… engineCurFbo=… [SAME/DIFF]` | 有 blit 则每帧；`SAME/DIFF` 定合成目标 |
+| 引擎帧驱动 | `Application::Run enter/return`（engine_api.cpp） | 每 15 tick | 每 tick 有=引擎在跑 |
+
+组合判：
+- `RequestUpdate` 无 + 全部其他无 → 游戏/脚本未推进（脚本引擎/连续处理器重启问题）。
+- `RequestUpdate`/`DeliverWinUpdate` 有 + `BasicShow: skip` 打法 → Show 段（主层 Manager 空）。
+- `DeliverWinUpdate` 无但 `RequestUpdate` 有 → 投递链（DeliverEvents）坏。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
