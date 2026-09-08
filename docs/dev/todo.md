@@ -92,11 +92,17 @@
 > 装真机复验（01:51）两游戏（krkr2 IINCHO-Re.co 与 Z 千恋万花）退出均**永久卡死在
 > `TVPSystemUninit begin` 之后的 `TVPCauseAtExit()` 内某个 at-exit handler**；项 C 端
 > `g_runtime_started_once` 不复位的根因已修。已给 `TVPCauseAtExit()` 循环加逐 handler 打点
-> （`SysInitIntf.cpp`，每 handler `begin/end` + flush）。**下一步只需一次真机退出**，据最后
-> 一条 `TVPCauseAtExit: handler[N]... begin`（无对应 `end`）即定位卡在哪个 handler。
-> 已审计的 on-device handler：线程 join 类（`TVPWatchThreadUninit`/`ContinuousHandlerCallLimit`）
-> 构造安全；**设备态相关候选**：`TVPShutdownVideoOverlay`（PREPARE，最先）与
-> `TVPReleaseTexture2D glFlush`（RELEASE+500，teardown 跑 Flutter UI 线程可能无 EGL 上下文）。
+> （`SysInitIntf.cpp`，每 handler `begin/end` + flush）。
+> **最新一轮（09:35 安卓日志）定位**：卡在 `TVPCauseAtExit: handler[2] pri=10 begin`
+> （有 begin 无 end）——即 **`PREPARE(10)` 优先级的一个 at-exit handler**。Android 上
+> `pri=10` 共 4 个：`TVPDestroyEventQueue`、`TVPDestroyContinuousHandlerVector`、
+> `TVPShutdownVideoOverlay`、`TVPUnmapAllPrerenderedFonts`；`std::sort` 不稳定，handler[2]
+> 具体是哪一个无法仅凭 index 判定。三个是纯 Release 循环（事件/连续 handler/字体），
+> 唯一与线程/媒体交互的是 `TVPShutdownVideoOverlay`（疑点最大：teardown 跑 Flutter UI 线程，
+> 视频/渲染子线程若仍在等主循环推进可死锁）。
+> **本轮动作**：`TVPCauseAtExit` 打点改用 `dladdr` 附带 handler **符号名**（
+> `<dlfcn.h>`，debug 构建可解析；与 `DrawDeviceGLESModule.h` 已用的 `dlsym` 同一库，各平台可链）。
+> **下一步只需再次真机退出**，`sym=` 字段直接给出卡死的 handler 函数名，即可对症修。
 > 盲改任一候选有破坏二次重启的风险，故等真机日志对症下药。
 >
 > **❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治**。日志

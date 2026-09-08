@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <functional>
 
+#include <dlfcn.h> // dladdr：把 at-exit handler 函数指针解析为符号名，便于真机定位
+
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
 #endif
@@ -138,12 +140,18 @@ static void TVPCauseAtExit() {
     tjs_uint idx = 0;
     for(auto i = TVPAtExitInfos->begin(); i != TVPAtExitInfos->end();
         ++i, ++idx) {
-        spdlog::info("TVPCauseAtExit: handler[{}] pri={} begin", idx,
-                     i->Priority);
+        // dladdr 把 handler 函数指针解析为符号名（release/strip 后可能为 "?"）
+        const char *sym = "?";
+        Dl_info inf;
+        if(dladdr(reinterpret_cast<void *>(i->Handler), &inf) &&
+           inf.dli_sname && inf.dli_sname[0])
+            sym = inf.dli_sname;
+        spdlog::info("TVPCauseAtExit: handler[{}] pri={} sym={} begin", idx,
+                     i->Priority, sym);
         spdlog::default_logger()->flush();
         i->Handler();
-        spdlog::info("TVPCauseAtExit: handler[{}] pri={} end", idx,
-                     i->Priority);
+        spdlog::info("TVPCauseAtExit: handler[{}] pri={} sym={} end", idx,
+                     i->Priority, sym);
         spdlog::default_logger()->flush();
     }
 
