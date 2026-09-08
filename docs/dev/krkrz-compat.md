@@ -521,6 +521,7 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
   116+323+502+83+101+480+17+1462）；兄弟 xp3 扫描两者均 "No sibling"（xp3 在各游戏目录内，父目录无裸 xp3）。
 - **修复**：`TVPResetRuntimeForRestart`（engine_destroy 复位链）中调用 `TVPClearScnearioCache()`，
   换游戏/复开前清空跨游戏残留的场景缓存。同游戏复开仅损失一次场景解压。
+- **✅ 真机复验通过（2026-09-09）**：Kemomusu → 退出 → IINCHO 换游戏后正常出画面，黑屏根治。
 
 ### PR#12 剩余差异全量扫描（2026-09-08/09）
 - ✅ **已对齐且保留**：全部 `TVPReset*ForRestart` + `TVPUnregisterInternalPluginsForRestart` +
