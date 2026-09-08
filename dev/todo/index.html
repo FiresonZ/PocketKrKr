@@ -1634,8 +1634,14 @@ krkrz/krkr2/Kirikiroid2 本地参考副本）。
 stripped，真机 <code>sym=?</code> 解析不出（10:16 日志）。<strong>改在各 PREPARE(10) handler 内部打显式标记</strong>
 （<code>at-exit PREPARE[1/4] DestroyEventQueue / [2/4] DestroyContinuousHandlerVector /
 [3/4] ShutdownVideoOverlay / [4/4] UnmapAllPrerenderedFonts</code>，与 stripped 无关）。
-<strong>下一步只需再次真机退出</strong>，日志里最后一条 <code>at-exit PREPARE[k/4]: … begin</code> 无 end 即为
-卡死 handler。
+<strong>10:56 日志已基本排除到单个 handler</strong>：handler[0]=DestEventQueue、handler[1]=
+DestroyContinuousHandlerVector 均完成；handler[2] 卡死，且<strong>既无 video 也无 font 的标记</strong>
+（它们是第一句就打标记）→ 排除二者。pri=10 还有第 5 个未被标记的
+<strong><code>TVPDestroyLoggingHandlerVector</code>（DebugIntf.cpp，释放日志 handler 闭包，归零跑 TJS
+finalizer）</strong>，判定它就是卡死的 handler[2]。
+<strong>本轮</strong>：给 <code>TVPDestroyLoggingHandlerVector</code> 加标记 + 逐 closure 打点
+（<code>at-exit PREPARE LoggingHandler begin(count=N)</code> / <code>release closure[k] begin/end</code>），下次
+真机退出即可确认并定位到具体闭包/finalizer。
 盲改任一候选有破坏二次重启的风险，故等真机日志对症下药。</p>
 <p><strong>❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治</strong>。日志
 <code>pocketkrkr_engine(1).log</code> 里 IINCHO-Re.co（krkr2）到 title 屏后退出：第一个游戏的最后一行
