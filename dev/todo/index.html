@@ -1262,6 +1262,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1590,6 +1617,17 @@ krkrz/krkr2/Kirikiroid2 本地参考副本）。
 </ul>
 <h3 id="3-runtime-restart-pr12">3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12<a class="headerlink" href="#3-runtime-restart-pr12" title="Permanent link">&para;</a></h3>
 <blockquote>
+<p><strong>📍当前状态（2026-09-08）</strong>：teardown 已按上游 PR#12 完整对照（engine_api.cpp：
+<code>OnExit→TVPSystemUninit→删 scene/loop→13 项 Reset→Bootstrap→g_runtime_started_once=false</code>）。
+装真机复验（01:51）两游戏（krkr2 IINCHO-Re.co 与 Z 千恋万花）退出均<strong>永久卡死在
+<code>TVPSystemUninit begin</code> 之后的 <code>TVPCauseAtExit()</code> 内某个 at-exit handler</strong>；项 C 端
+<code>g_runtime_started_once</code> 不复位的根因已修。已给 <code>TVPCauseAtExit()</code> 循环加逐 handler 打点
+（<code>SysInitIntf.cpp</code>，每 handler <code>begin/end</code> + flush）。<strong>下一步只需一次真机退出</strong>，据最后
+一条 <code>TVPCauseAtExit: handler[N]... begin</code>（无对应 <code>end</code>）即定位卡在哪个 handler。
+已审计的 on-device handler：线程 join 类（<code>TVPWatchThreadUninit</code>/<code>ContinuousHandlerCallLimit</code>）
+构造安全；<strong>设备态相关候选</strong>：<code>TVPShutdownVideoOverlay</code>（PREPARE，最先）与
+<code>TVPReleaseTexture2D glFlush</code>（RELEASE+500，teardown 跑 Flutter UI 线程可能无 EGL 上下文）。
+盲改任一候选有破坏二次重启的风险，故等真机日志对症下药。</p>
 <p><strong>❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治</strong>。日志
 <code>pocketkrkr_engine(1).log</code> 里 IINCHO-Re.co（krkr2）到 title 屏后退出：第一个游戏的最后一行
 日志停在 <code>00:31:46 journal title.ks:@s</code>，其后<strong>完全没有 engine_destroy / TVPSystemUninit 任何
@@ -1685,10 +1723,26 @@ plugin 走的是<strong>带完整 teardown 的那份</strong>（engine_api.cpp:7
   移植后真机验证是否根治"杀后台/无法再开游戏"。若仍失败，再评估引擎热重启或新进程形态。</p>
 </blockquote>
 <h3 id="4-simd">4. SIMD 公式逐模式修到位级一致（保正确回归）<a class="headerlink" href="#4-simd" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>❗更正（2026-09-08，CI 实证）</strong>：下方 P2–P6 的「已放回 0 mismatch」对 <strong>11 个 PS 混合
+模式不成立</strong>。这些模式的 SIMD 用<strong>逐字节 u16 + <code>OrderedDemote2To</code></strong>，而标量
+<code>ps_alpha_blend_func</code> 用 <strong>32 位打包 R/B 算术（跨字节借位，<code>%2^32</code>）</strong>：
+  - <code>OrderedDemote2To</code> 对 16 位中间值<strong>饱和</strong>到 0xFF，标量是 <code>&amp;0xFF</code> <strong>截断</strong>；
+  - 标量打包算术里 B 通道下溢会<strong>借位</strong>影响 R 通道，逐字节通道无法复现。
+二者<strong>结构性不等</strong>。Linux CI <code>tvpgl_simd_compare</code> 实测 <strong>16 处 mismatch</strong>
+（如 <code>PsAlphaBlend scalar=005E8946 simd=00FF8946</code>、<code>PsMulBlend scalar=00752B57 simd=00FFFFFF</code>）。</p>
+<p><strong>对策（已提交 8ff8760）</strong>：把 Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/
+HardLight/Exclusion 共 11 个 PS 模式在 <code>tvpgl_simd_init.cpp</code> <strong>不再注册</strong>（回退生产标量），
+与 conventions §9「SIMD≠标量→回退标量保正确」一致。修复后 Linux CI <code>tvpgl_simd_compare</code>
+<strong>全绿</strong>。</p>
+<p>待办（放回前提）：已用 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp">harness_ps.cpp</a> 实证<strong>唯一能位级一致</strong>的算法
+= <strong>u8 混合核心 + u32 打包 alpha</strong>（每像素 32 位打包复现标量跨字节借位，再 <code>&amp;0xFF</code> 截断），
+11 模式 × 4 变体 × 2M 随机矢量 0 mismatch。需把它改写成 Highway <strong>u32 lane</strong> 后再放回注册。
+功能正确性已由标量保证；性能上 PS 混合暂为标量（VN 中少用，可接受）。</p>
+</blockquote>
 <ul>
-<li>背景：<code>tests/tvpgl_simd_compare</code> 已证实 <strong>23 处 SIMD ≠ 标量</strong>；
-  PS 全系混合 / SubBlend_o / ScreenBlend 已先回退到 <code>*_c</code> 标量保证正确
-  （<code>tvpgl_simd_init.cpp</code> 已注释对应注册）。</li>
+<li>背景：<code>tests/tvpgl_simd_compare</code> 用于标量 vs SIMD 逐像素比对；早期证实
+  PS 全系混合 / SubBlend_o / ScreenBlend 等 SIMD ≠ 标量。&lt;以下保留各模式修复历史/经验摘记&gt;</li>
 <li><strong>P2 ✅（PsApplyAlpha 舍入序已修）</strong>：标量 <code>TVPPS_ALPHABLEND</code>（tvpps.inc）实际是
   <code>result = ((s - d) * a &gt;&gt; 8) + d</code>；旧 SIMD 用了 <code>(s*a&gt;&gt;8) + (d*(255-a)&gt;&gt;8)</code>，30M
   随机矢量 29.85M 不一致。已改为 <code>((s-d)*a &gt;&gt; 8) + d</code>（u16 包减/包乘，<code>OrderedDemote2To</code>

@@ -1234,6 +1234,33 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    下载
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -1604,6 +1631,18 @@
 <p>结论：<strong>无语法错误</strong>（Highway foreach_target 模式、HWY_EXPORT/HWY_DYNAMIC_DISPATCH 结构正确），
 但存在<strong>多处向量公式与标量参考不一致</strong>的缺陷。修复时务必逐函数对照
 <code>cpp/core/visual/tvpgl.cpp</code> 中 <code>*_c</code> 标量实现。</p>
+<p><strong>✅ 最新定案（2026-09-08，Linux CI <code>tvpgl_simd_compare</code> 已全绿）</strong>：
+- 11 个 PS 混合模式（Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/HardLight/Exclusion）
+  在 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/cpp/core/visual/simd/tvpgl_simd_init.cpp">tvpgl_simd_init.cpp</a> <strong>不再注册，回退标量</strong>
+  （提交 <code>8ff8760</code>）。
+- <strong>回退根因（结构性，非符号级）</strong>：这些模式最终步骤 <code>ps_alpha_blend_func</code> 标量用
+  <strong>32 位打包 R/B 算术（跨字节借位 <code>%2^32</code>，B 下溢借 R）</strong>；SIMD 用逐字节 u16 通道 +
+  <code>OrderedDemote2To</code>（对 16 位中间值<strong>饱和</strong>到 0xFF，标量是 <code>&amp;0xFF</code> <strong>截断</strong>）。二者<strong>无法</strong>逐位一致。
+- 待办（放回前提）：用 <strong>u32 lane</strong> 复现标量打包算术（每像素 32 位）+ <code>&amp;0xFF</code> 截断；
+  算法已由 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp">harness_ps.cpp</a> 实证位级一致（u8 核心 + u32 打包 alpha），
+  尚需改写为 Highway u32 lane 并注册回放。
+- 其余 SIMD（copy/fill、Alpha/Add/Sub/Mul/Screen blend、AdditiveAlphaBlend、convert、misc、blur）
+  保持注册且与标量逐位一致（CI 覆盖）。</p>
 </blockquote>
 <h3 id="_2">高危（输出明显错误）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
 <ol>
