@@ -349,11 +349,20 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
 - 时间线证据（与重启无关的判据在此不成立）：错误发生在二次 `StartApplication` 的 KAG 场景解析期，
   而引擎 tick / 定时器 / 连续 handler 仍照常运转——说明**驱动没停，是 KAG 层注册态坏了**。
 - 结论修正：黑屏真根因仍指向**脚本引擎/连续处理器/全局脚本态的 runtime-restart 复位缺失**
-  （候选①方向复活），具体到 KAG 为"二次启动时标签/宏注册表未重建"。
-- **下一步复核实验**：抓一份 IINCHO 作为**第一游戏、全新进程**的日志，与本节日志对比——
-  若全新 IINCHO 无 `[linemode]` 错误（标签齐全）而二次打开报错 ⇒ 证实是重启注册表残留，
-  差异点即修复目标。
-- `[linemode]` 未在本项目 C++ 源码定义（仅脚本侧 KAG 注册），引擎源码仅一处无关 MultilineMode。
+  （候选①方向复活）。
+- **日志里最具体的重启签名（`[linemode]` 由 KAG 的 LineMode 模块定义）：**
+  - game1（Kemomusu）KAG 模块表**加载了 `LineMode.tjs`+`LineModeEx.tjs`**（本 log 行 233-234，
+    在 DefaultMover 之后、MainWindow 之前）→ `[linemode]` 有定义，场景正常画。
+  - game2（IINCHO）KAG 模块表**从 DefaultMover 直接到 MainWindow，全程未加载 LineMode.tjs**
+    （行 1307-1308）→ `first.ks` 第 1 行 `[linemode]` 未定义报错 → 画停 → 黑屏。
+  - 若 IINCHO 全新启动能正常游玩（KAG 里本应有 LineMode/`[linemode]`），则"作为第二游戏时
+    LineMode 没被加载"就是重启残留的具体表现——KAG 模块/脚本加载链在二次启动少加载了模块。
+- **复核实验（无需改代码即可定死）**：抓一份 IINCHO 作为**第一游戏、全新进程**的日志，对比
+  其 KAG 模块表是否包含 `LineMode.tjs`：
+  - 全新 IINCHO 含 LineMode 但二次打开不含 ⇒ 重启下 KAG 模块/脚本加载丢失，修复目标锁定该加载链。
+  - 全新 IINCHO 也不含 LineMode 但能玩 ⇒ `[linemode]` 由别处（宏/override）定义，二次打开该处失效，
+    继续追宏/override 的加载。
+- `[linemode]` 未在本项目 C++ 源码定义（仅脚本/KAG 侧注册），引擎源码仅一处无关 MultilineMode。
 
 记录此日志文件名供后续对照：`.uploads/29c5fff9-...-pocketkrkr_engine(12).log`
 
