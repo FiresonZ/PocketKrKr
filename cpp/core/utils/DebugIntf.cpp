@@ -120,6 +120,17 @@ static void TVPDestroyLoggingHandlerVector() {
     spdlog::info("at-exit PREPARE LoggingHandler end");
 }
 
+void TVPClearLoggingHandlers() {
+    // 供 tTVPApplication::OnExit 在脚本引擎销毁前提前释放日志闭包
+    // （TVPDestroyLoggingHandlerVector 此时再跑应为空/无闭包，作兜底）。
+    if(!TVPLoggingHandlerVector.empty()) {
+        spdlog::info("TVPClearLoggingHandlers begin (count={})",
+                     (int)TVPLoggingHandlerVector.size());
+        TVPDestroyLoggingHandlerVector();
+        spdlog::info("TVPClearLoggingHandlers end");
+    }
+}
+
 static tTVPAtExit
     TVPDestroyLoggingHandlerAtExit(TVP_ATEXIT_PRI_PREPARE,
                                    TVPDestroyLoggingHandlerVector);
