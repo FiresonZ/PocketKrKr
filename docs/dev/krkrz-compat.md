@@ -93,15 +93,27 @@
 - 当前最大阻塞仍是 P0 两个**引擎能力**（drawdeviceZ 主 buffer 合成 + krmovie Present），
   不靠写插件解决。
 
-### Z 插件挂名（2026-09-09，`cpp/plugins/zcompat/zcompat_plugin.cpp`）
-- 用 `ncbCallbackAutoRegister`（空回调 `ZCompatStub`）在内部注册表挂名，让
-  `Plugins.link` 不再 Failed：drawdeviceD3DZ / drawdeviceD3D / kztouch / k2compat /
-  kagexopt / multiimage / squirrel / menu / yuzuex / lzfs / win32ole /
-  motionplayer_nod3d / PackinOne / extNagano / pkutil / xpzdec。
+### Z 插件兼容现状（2026-09-09，`cpp/plugins/zcompat/zcompat_plugin.cpp`）
+
+> 关键认知（Kirikiroid2 实证）：**移动端没有"加载 Z 插件 DLL"这回事**。Kirikiroid2 的
+> `TVPLoadPlugin` 密封所有 DLL 加载（`return; // seal all plugins`），`Plugins.link`
+> 只查内部注册表，功能全部内建在引擎核心。因此"真正兼容"= **功能内建引擎 + link 命中**，
+> 与"挂名"在形态上同构，差异只在"功能是否真的在"。
+
+按状态分四类：
+
+| 状态 | 插件 | 说明 |
+|---|---|---|
+| 功能已内建 | drawdeviceD3DZ / drawdeviceD3D | 主 DrawBuffer 由 core/visual 渲染管线合成（Kirikiroid2 RenderManager_ogl 同思路），非独立插件 |
+| 功能已内建 | kztouch | 移动端触摸类已内建（Window.getTouchPoint 等，WindowImpl.cpp） |
+| 功能已内建 | menu | MenuItem 类核心全局注册（ScriptMgnIntf.cpp registerObject），link 即用 |
+| 真实现 | k2compat | **内嵌 Krkr2Compat 纯 TJS 兼容层**（`zcompat/k2compat_scripts.cpp`，10 个脚本按依赖序在 link/预加载时 `tTJS::ExecScript`），非挂名 |
+| 名字映射 | motionplayer_nod3d | PluginImpl.cpp `TVPLoadPlugin` 映射到 motionplayer.dll，复用已有实现 |
+| 挂名（暂不可实现） | kagexopt / multiimage / squirrel / yuzuex / lzfs / win32ole / PackinOne / extNagano / pkutil / xpzdec | 源码不可得（multiimage 闭源）/ 桌面概念（win32ole）/ 待移植（squirrel 源码可得，VM 在 krkr2 trunk），挂名消除 Failed，调用缺类仍会抛错 |
+
 - **刻意不挂名**：krmovie（P0 引擎工作，挂名会让游戏期待视频能力而实际 Present 未实现）；
   KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。
-- 挂名只是「先可 link」：游戏若 `Plugins.isAvailable()` 为 true 后调用对应类/函数，
-  仍会抛「类不存在」——逐个实现的顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat）推进。
+- 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ## drawdeviceD3DZ 深挖（2026-09-08）
 
