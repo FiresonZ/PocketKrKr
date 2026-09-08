@@ -335,3 +335,7 @@ bool TVPIsSoftwareRenderManager();
 // 复位 RenderManager 单例与已创建的渲染器实例，使 runtime-restart
 // 二次 open_game 时能干净重建。
 void TVPResetRenderManagerForRestart();
+
+// 复位 OpenGL 渲染器的进程级全局态（扩展/纹理格式/shader/回调缓存），
+// runtime-restart 二次 open_game 时避免复用上一游戏的 GL 状态。
+void TVPResetOpenGLRenderManagerForRestart();

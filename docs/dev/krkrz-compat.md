@@ -422,6 +422,37 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
 
 记录此日志文件名供后续对照：`.uploads/29c5fff9-...-pocketkrkr_engine(12).log`
 
+### 决定性 A/B：换游戏黑屏是 restart 专属（engine(14)/(15).log，2026-09-08）
+> 用两份"同一进程多开"日志把换游戏黑屏定性为**纯 restart 残留**，并排除三个假说。
+
+**取证（log15 = IINCHO→Kemomusu→IINCHO 同一进程）：**
+- game1 IINCHO(白)：`Config.tjs`(→118) → `KAG System スクリプトを読み込んでいます`(120) → 全 KAG 模块 →
+  `KAGMainWindow コンストラクタ`(156) → `RequestUpdate`(153) → 渲染。**但全程无 `kag:` 对象**（KAGParser.dll Failed）。
+- game3 IINCHO(黑)：插件 → 建窗 → `Startup script ended`(3950) → **无 Config/KAG-System 模块加载块** → 永不 RequestUpdate → 黑。
+- log14 game3 Kemomusu(白, 也 restart)：**同样跳过 Config/KAG-System 块**（无 LineMode 重载，`Member "kag" does not exist` L1233），
+  但 L1239 重建 `kag:` 对象、L1264 `UpdateDrawBuffer layers=207 draw=12` → 照样渲染。
+
+**结论：**
+1. 黑屏 = restart 后游戏 startup 的"KAG System 模块加载块"被跳过，KAGMainWindow/层从未建立 → 永不 RequestUpdate。
+2. 该"跳过"是重启共性；Kemomusu 因能重建 KAG 解析器对象照常渲染，IINCHO 依赖该块致致命。
+3. **排除假说**：① KAGParser.dll 缺失 —— IINCHO 首次也 Failed 却正常；② 全局 `kag` 缺失 —— IINCHO 首次就无它却正常；
+   ③ TVPScenarioCache 残留 —— 重启 IINCHO 连 `first.ks` 也未加载，清缓存不会重新触发被跳过的 boot 块。
+4. 门控状态来源：Global 每次新建(tTJS `new`)、原生类每次重注册，均排除；**剩余为某跨 restart 未复位的
+   C++ 进程级状态** —— 触发点尚未从日志单钉死，待加"KAG boot 每步探针/抓首个抛错点"定位。
+
+**记录对比日志**：`.uploads/0f0103b2-...-engine(14).log`（Kemomusu→IINCHO→Kemomusu）、
+`.uploads/77a31787-...-engine(15).log`（IINCHO→Kemomusu→IINCHO）。
+
+### 与上游 PR#12 的复位差异补口（2026-09-08）
+> 逐条对照 `reAAAq/KrKr2-Next#12` 后，我们的复位序列基本同位，仅缺 OpenGL 渲染器复位；已移植。
+
+- **已补（85684a8）**：`TVPResetOpenGLRenderManagerForRestart()` + `TVPResetOpenGLGlobalsForRestart()`，
+  清 `sTVPGLExtensions`/延伸探测标志/`TVPTextureFormats`/`tTVPOGLRenderMethod_Script` shader 缓存/
+  `krkr::gl` 渲染器重建回调与新状态缓存；并在 `TVPResetRenderManagerForRestart()` 里追加调用。
+  PR#12 的 `GL::glCopyImageSubData` 等函数指针本仓不存在，略去。
+  **未移植**：PR#12 的异步启动状态机（`EnsureEngineRuntimeInitialized`/`engine_get_startup_state`/
+  `engine_drain_startup_logs`）——体量大属架构改造，暂缓。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
