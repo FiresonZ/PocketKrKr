@@ -2428,6 +2428,26 @@ game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <st
 <li><strong>下一步</strong>：缺 IINCHO<strong>首开</strong>（工作态）基线。StorageExec 探针已改全量记录（exec# 累计序号），
   用同一探针包跑「IINCHO 首开」与「Kemomusu→IINCHO」，diff 两条 StorageExec 链即可钉死分支断点脚本。</li>
 </ul>
+<h3 id="diff-tvp-console-restart-bugengine19engine20log2026-09-09">链 diff 定论 + [TVP Console] 日志系统 restart bug（engine(19)/engine(20).log，2026-09-09）<a class="headerlink" href="#diff-tvp-console-restart-bugengine19engine20log2026-09-09" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>engine(19)=IINCHO 首开（工作态），engine(20)=Kemomusu→IINCHO（黑屏）</strong>。全量 StorageExec 链 diff：</li>
+<li>两条 IINCHO 链 <strong>逐条完全相同</strong>（各 67 个脚本：patch→startup→ks_system/exLayer→config/gameConfig→
+    system/Initialize.tjs→Config..exSE→savesc/savesu→AfterInit→gmPlugin..exButtonLayer）。</li>
+<li>⇒ <strong>推翻"跳过 KAG boot"假说</strong>：黑屏会话也完整加载了 KAG System。</li>
+<li><strong>首开会话 boot 尾段（可见输出）</strong>：exButtonLayer 后 → sys_load/sys_save 等 11 个系统图层加载 →
+  AfterInit 完成 → <code>Scenario loaded : first.ks</code> → <code>処理を開始します</code> → first.ks 逐 tag 处理（@call ks_system.ks
+  等）→ <code>ContinuousProbe: eventVec=0 handlerVec=2</code>（KAG 更新循环以 <code>System.addContinuousHandler</code> 注册）→
+  RequestUpdate → 渲染。</li>
+<li><strong>黑屏会话</strong>：同样 67 脚本后 <strong>无任何可见 boot 尾段输出、无 first.ks、无 ContinuousProbe（=连续事件投递从未发生，
+  <code>TVPProcessContinuousHandlerEventFlag</code> 未置位/无 handler 注册）、无 RequestUpdate</strong>。StartupProbe 仍 completed。</li>
+<li><strong>关键新发现——日志系统 restart bug（已修）</strong>：<code>DebugIntf.cpp</code> 的 <code>TVPDestroyLogObjects</code>（tTVPAtExit 注册，
+  每次 TVPSystemUninit 触发）删除 <code>TVPLogDeque</code>/<code>TVPImportantLogs</code> 后<strong>未复位 <code>TVPLogObjectsInitialized</code></strong>，
+  导致 restart 后 <code>TVPEnsureLogObjects</code> 提前返回、<code>TVPAddLog</code> 静默丢弃 → 全部 <code>[TVP Console]</code> 输出（含 KAG 场景/
+  错误信息）在 restart 会话永久消失。修复：销毁时复位标志。<strong>此 bug 同时解释了此前"KAG boot 被跳过"的误判——
+  场景处理日志在 restart 后本就不可见</strong>。</li>
+<li><strong>残余问题</strong>：修复日志后黑屏成因仍待一次复测——若 boot 尾段实际执行（图像加载/AfterInit/first.ks 只是日志被吞），
+  黑屏=连续事件投递/重绘未建立；若尾段真未执行，则看恢复后的 KAG 报错。</li>
+</ul>
 <h3 id="pr12-2026-09-0809">PR#12 剩余差异全量扫描（2026-09-08/09）<a class="headerlink" href="#pr12-2026-09-0809" title="Permanent link">&para;</a></h3>
 <ul>
 <li>✅ <strong>已对齐且保留</strong>：全部 <code>TVPReset*ForRestart</code> + <code>TVPUnregisterInternalPluginsForRestart</code> +
