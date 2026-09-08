@@ -1196,10 +1196,47 @@ static void AttachFileSinkToLoggers(const std::shared_ptr<spdlog::logger>& core,
   }
 }
 
+// runtime-restart 会二次调用 engine_set_log_file_path：spdlog logger 是进程级全局
+// 单例、不在 engine teardown 销毁，若不清旧 sink 就 push 新 sink，会得到旧+新两个
+// 文件 sink → 重启后每行日志写两遍（真机日志 duplicated，见 2026-09-08 复现）。
+// 重新设路径前用 old_sink 把旧 sink 从各 logger 移除。
+static void DetachFileSinkFromLoggers(const std::shared_ptr<spdlog::logger>& core,
+                                      const std::shared_ptr<spdlog::logger>& tjs2,
+                                      const std::shared_ptr<spdlog::logger>& plugin,
+                                      const std::shared_ptr<spdlog::sinks::sink>& old_sink) {
+  if (!old_sink) {
+    return;
+  }
+  auto detach = [&](const std::shared_ptr<spdlog::logger>& logger) {
+    if (!logger) {
+      return;
+    }
+    auto& sinks = logger->sinks();
+    for (auto it = sinks.begin(); it != sinks.end();) {
+      if (it->get() == old_sink.get()) {
+        it = sinks.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  };
+  detach(core);
+  detach(tjs2);
+  detach(plugin);
+  if (auto def = spdlog::default_logger(); def && def != core) {
+    detach(def);
+  }
+}
+
 engine_result_t engine_set_log_file_path(const char* path) {
   if (path == nullptr || path[0] == '\0') {
     std::lock_guard<std::mutex> lock(g_logfile_mutex);
     g_log_file_path.clear();
+    // 清库：通知各 logger 移除旧文件 sink，避免残留
+    DetachFileSinkFromLoggers(EnsureNamedLogger("core"),
+                              EnsureNamedLogger("tjs2"),
+                              EnsureNamedLogger("plugin"),
+                              g_file_sink);
     g_file_sink.reset();
     return ENGINE_RESULT_OK;
   }
@@ -1209,8 +1246,14 @@ engine_result_t engine_set_log_file_path(const char* path) {
 
   std::lock_guard<std::mutex> lock(g_logfile_mutex);
   g_log_file_path = path;
+  auto old_sink = g_file_sink;
   g_file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
       path, 4u * 1024u * 1024u, 3);
+  // runtime-restart 二次调用时先移除旧 sink，再挂新 sink，防日志每行重复
+  DetachFileSinkFromLoggers(EnsureNamedLogger("core"),
+                            EnsureNamedLogger("tjs2"),
+                            EnsureNamedLogger("plugin"),
+                            old_sink);
   AttachFileSinkToLoggers(EnsureNamedLogger("core"),
                           EnsureNamedLogger("tjs2"),
                           EnsureNamedLogger("plugin"));
