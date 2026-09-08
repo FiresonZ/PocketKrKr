@@ -104,8 +104,14 @@
 > stripped，真机 `sym=?` 解析不出（10:16 日志）。**改在各 PREPARE(10) handler 内部打显式标记**
 > （`at-exit PREPARE[1/4] DestroyEventQueue / [2/4] DestroyContinuousHandlerVector /
 > [3/4] ShutdownVideoOverlay / [4/4] UnmapAllPrerenderedFonts`，与 stripped 无关）。
-> **下一步只需再次真机退出**，日志里最后一条 `at-exit PREPARE[k/4]: … begin` 无 end 即为
-> 卡死 handler。
+> **10:56 日志已基本排除到单个 handler**：handler[0]=DestEventQueue、handler[1]=
+> DestroyContinuousHandlerVector 均完成；handler[2] 卡死，且**既无 video 也无 font 的标记**
+> （它们是第一句就打标记）→ 排除二者。pri=10 还有第 5 个未被标记的
+> **`TVPDestroyLoggingHandlerVector`（DebugIntf.cpp，释放日志 handler 闭包，归零跑 TJS
+> finalizer）**，判定它就是卡死的 handler[2]。
+> **本轮**：给 `TVPDestroyLoggingHandlerVector` 加标记 + 逐 closure 打点
+> （`at-exit PREPARE LoggingHandler begin(count=N)` / `release closure[k] begin/end`），下次
+> 真机退出即可确认并定位到具体闭包/finalizer。
 > 盲改任一候选有破坏二次重启的风险，故等真机日志对症下药。
 >
 > **❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治**。日志

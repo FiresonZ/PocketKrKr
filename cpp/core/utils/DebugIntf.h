@@ -23,6 +23,13 @@ extern bool TVPLoggingToFile;
 
 extern void TVPSetOnLog(void (*func)(const ttstr &line));
 
+// 释放脚本注册的全部日志闭包（tTJSVariantClosure）。
+// 必须在脚本引擎销毁（TVPUninitScriptEngine）之前调用，否则闭包 finalizer
+// 会命中已失效的 TJS 全局态导致退出卡死（runtime-restart）。由
+// tTVPApplication::OnExit 在销毁引擎前调用；TVPDestroyLoggingHandlerVector
+// at-exit handler 仍保留作兜底（届时引擎已死，向量应为空/无闭包）。
+extern void TVPClearLoggingHandlers();
+
 TJS_EXP_FUNC_DEF(void, TVPAddLog, (const ttstr &line));
 
 TJS_EXP_FUNC_DEF(void, TVPAddImportantLog, (const ttstr &line));

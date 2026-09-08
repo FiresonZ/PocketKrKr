@@ -13,6 +13,7 @@
 #include <deque>
 #include <algorithm>
 #include <ctime>
+#include <spdlog/spdlog.h>
 #include "DebugIntf.h"
 #include "MsgIntf.h"
 #include "StorageIntf.h"
@@ -104,13 +105,30 @@ static void TVPCleanupLoggingHandlerVector() {
 }
 
 static void TVPDestroyLoggingHandlerVector() {
+    spdlog::info("at-exit PREPARE LoggingHandler begin (count={})",
+                 (int)TVPLoggingHandlerVector.size());
     TVPSetOnLog(nullptr);
     std::vector<tTJSVariantClosure>::iterator i;
+    tjs_int k = 0;
     for(i = TVPLoggingHandlerVector.begin(); i != TVPLoggingHandlerVector.end();
-        i++) {
+        ++i, ++k) {
+        spdlog::info("at-exit LoggingHandler release closure[{}] begin", k);
         i->Release();
+        spdlog::info("at-exit LoggingHandler release closure[{}] end", k);
     }
     TVPLoggingHandlerVector.clear();
+    spdlog::info("at-exit PREPARE LoggingHandler end");
+}
+
+void TVPClearLoggingHandlers() {
+    // 供 tTVPApplication::OnExit 在脚本引擎销毁前提前释放日志闭包
+    // （TVPDestroyLoggingHandlerVector 此时再跑应为空/无闭包，作兜底）。
+    if(!TVPLoggingHandlerVector.empty()) {
+        spdlog::info("TVPClearLoggingHandlers begin (count={})",
+                     (int)TVPLoggingHandlerVector.size());
+        TVPDestroyLoggingHandlerVector();
+        spdlog::info("TVPClearLoggingHandlers end");
+    }
 }
 
 static tTVPAtExit

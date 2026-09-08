@@ -854,6 +854,12 @@ void tTVPApplication::OnDeactivate() {
 }
 
 void tTVPApplication::OnExit() {
+    // 必须在销毁脚本引擎前释放脚本注册的日志闭包（tTJSVariantClosure）。
+    // 若拖到 TVPSystemUninit 的 at-exit handler（TVPDestroyLoggingHandlerVector）
+    // 才释放，此时脚本引擎已被下方 TVPUninitScriptEngine 销毁，闭包 finalizer
+    // 命中已失效的 TJS 全局态 → 退出卡死（runtime-restart）。
+    TVPClearLoggingHandlers();
+
     TVPUninitScriptEngine();
 
     delete TVPSystemControl;

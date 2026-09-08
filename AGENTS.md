@@ -63,7 +63,7 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 | vcpkg meson × Android | ⚠️ glib 等 meson 端口与 arm64 错配；修法见 `vcpkg/ports/glib/portfile.cmake` |
 | Linux 引擎验证 CI | ✅ 绿灯（`tvpgl_simd_compare` 全绿） |
 | SIMD 公式 | ⚠️ 非 PS 混合已对齐标量；**11 个 PS 混合回退标量**（`8ff8760`，逐字节 u16+saturation 与标量 32 位打包借位结构性不等，已按 §9 回退保正确）；待做 u32 lane 后再放回（算法已由 harness_ps.cpp 实证） |
-| runtime-restart（退出→再开另一游戏） | ⚠️ teardown 已对齐 PR#12、C 端 `g_runtime_started_once` 已复位；但真机退出仍永久卡死在 `TVPCauseAtExit` 的**某个 `PREPARE(10)` at-exit handler**（handler[2] pri=10，stripped 包 dladdr 解不出 `sym=?`）；已给 4 个 PREPARE handler 打显式标记（DestroyEventQueue/DestroyContinuousHandlerVector/ShutdownVideoOverlay/UnmapAllPrerenderedFonts），**待一次真机日志**定位 |
+| runtime-restart（退出→再开另一游戏） | ⚠️ teardown 已对齐 PR#12、C 端 `g_runtime_started_once` 已复位；但真机退出仍永久卡死在 `TVPCauseAtExit` 的**某个 `PREPARE(10)` at-exit handler**。已用显式标记逐步排除：handler[0]/[1]=DestEventQueue/DestroyContinuousHandlerVector 完成，handler[2] 排除 video/font（有标记未打出）→ 判定为**第 5 个 pri=10 `TVPDestroyLoggingHandlerVector`**（释放日志闭包、跑 TJS finalizer）；已加标记+逐 closure 打点，**待一次真机日志**确认定位 |
 
 ## 建议的下一步
 
