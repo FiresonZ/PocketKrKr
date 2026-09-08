@@ -2115,6 +2115,83 @@ EGL context（Destroy+重建）/OpenGL 共享 <code>_FBO</code> 重建（<code>O
 - 2nd 段看到 enter/return 却无 UpdateDrawBuffer → <code>Application-&gt;Run()</code> 走不下（主窗口/绘制未恢复）。
 - 2nd 段连 enter 都没有 → host 停止调用 engine_tick。
 （此判别探针连同 RTProbe + 3 处复位卫生修复见 <code>d29009f</code>。）</p>
+<h3 id="32026-09-08engine10log-rtprobe-applicationrun-release">二次实测补充③（2026-09-08，engine(10).log，带 RTProbe + Application::Run 探针的 release 包）<a class="headerlink" href="#32026-09-08engine10log-rtprobe-applicationrun-release" title="Permanent link">&para;</a></h3>
+<p><strong>序列</strong>：Kemomusu(1st) 正常 → IINCHO(2nd) 黑 → Kemomusu(3rd)（同题）。
+<strong>决定性证据（彻底定性）</strong>：
+- 1st/3rd：<code>RTProbe</code> <strong>每帧</strong> <code>blitSrcTex=3 engineCurFbo=1 fboAttachedTex=3 [SAME]</code>，
+  <code>Application::Run</code> 每 tick 进出，合成进同一纹理、持续出帧。
+- 2nd（IINCHO，5.4s）：<code>Application::Run enter/return</code> <strong>持续每 tick 都在</strong>
+  （tick=15…600），但 <strong>RTProbe/UpdateDrawBuffer 只出现 1 帧（行1050 <code>blitSrcTex=81 [SAME]</code>）</strong>，
+  之后到 destroy 再无 blit。
+- 结论：<strong>host 一直在调 engine_tick、Application::Run 一直在跑</strong>；不是"合成画错目标"、
+  也不是"host 停摆"。回收链是 <strong><code>Application::Run → SystemWatchTimerTimer → DeliverEvents → 
+  tTVPWinUpdateEvent → Window::UpdateContent → DrawDevice-&gt;Update()+Show → UpdateDrawBuffer</code></strong>，
+  二次打开从第 1 帧起<strong>不再有窗口重绘（win update event/Show 不再触发）</strong> → 画面停在第 1 帧黑块。</p>
+<p><strong>因此根因在框架重绘调度，不在 GL/合成/目标/ host 帧回调</strong>。候选集中于：
+- <code>tTVPAtExit</code> 一次性注册失效（审计#1）→ 二次打开定时器/连续处理器未恢复，游戏不再请求重绘；
+- 或二次打开的 <code>TVPSystemControl</code>/<code>TVPTimer</code>/主窗口 update 事件投递未恢复。</p>
+<p><strong>下一步判别</strong>：在 <code>tTVPWinUpdateEvent::Deliver</code>/<code>TVPWinUpdateEventQueue</code> 或 <code>TVPTimer::ProgressAllTimer</code>
+打点，确认 2nd 段是否还有窗口重绘事件被投递/分发，从而区分"框架没投递重绘"vs"投递了但 Show 没 blit"。</p>
+<h3 id="2026-09-08-deliverwinupdate">候选排查结论（2026-09-08，静态核对 + 已加 DeliverWinUpdate 探针）<a class="headerlink" href="#2026-09-08-deliverwinupdate" title="Permanent link">&para;</a></h3>
+<ul>
+<li>已<strong>排除</strong>：<code>TVPSystemControl</code>（OnExit 时 delete、二次 open 时 <code>new</code> 重建，Application.cpp:865/412）；
+  <code>TVPEventInvoked</code>（每 tick 经 <code>_TVPDeliverAllEvents→TVPEventReceived()</code>（EventIntf.cpp:481/46）复位，
+  不易卡死）；<code>TVPContinuousHandlerCallLimitThread</code>/<code>TVPTimer</code> 由 End/BeginContinuousEvent 切换。</li>
+<li>确定性结论：二次打开从第 1 帧起<strong>不再有窗口重绘（win update 事件投递/交付）</strong>，回收链
+  <code>RequestUpdate→TVPPostWindowUpdate→TVPInvokeEvents→(Run 每tick)DeliverEvents→TVPDeliverWindowUpdateEvents
+  →UpdateContent→Show→UpdateDrawBuffer</code> 在 2nd 段断在 blit 之前。</li>
+<li><strong>已加探针</strong>（<code>EventIntf.cpp</code> TVPDeliverWindowUpdateEvents，KRKR_RENDER_PROBE）：
+  <code>DeliverWinUpdate: queue=N -&gt; UpdateContent</code>。下一轮 release+probe 日志即可判：</li>
+<li>2nd 段 <code>DeliverWinUpdate</code> 持续打印、但无 RTProbe/blit → <strong>投递→Show 段坏</strong>（Show guard/Managers 空）；</li>
+<li>2nd 段 <code>DeliverWinUpdate</code> 根本不打印 → <strong>游戏/脚本未请求重绘</strong>（RequestUpdate 未发生，指向脚本/连续处理器未恢复）。</li>
+</ul>
+<h3 id="releaseprobe">二次黑屏探针矩阵（一次 release+probe 日志即可定死整条链）<a class="headerlink" href="#releaseprobe" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>链路节点</th>
+<th>探针</th>
+<th>打印内容</th>
+<th>判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>游戏请求重绘</td>
+<td><code>RequestUpdate</code>（WindowIntf.cpp）</td>
+<td><code>RequestUpdate: repaint requested (cum=N)</code>，每 60 次</td>
+<td>有=游戏在画；无=脚本/连续处理器没恢复</td>
+</tr>
+<tr>
+<td>重绘事件投递</td>
+<td><code>TVPDeliverWindowUpdateEvents</code>（EventIntf.cpp）</td>
+<td><code>DeliverWinUpdate: queue=N -&gt; UpdateContent</code>（queue 非空）</td>
+<td>有=投递发生</td>
+</tr>
+<tr>
+<td>Show 被调但没 blit</td>
+<td><code>tTVPBasicDrawDevice::Show</code>（BasicDrawDevice.cpp）</td>
+<td><code>BasicShow: skip (buf=null \| form/Managers)</code></td>
+<td>有=Show 守卫生效（Managers 空等）</td>
+</tr>
+<tr>
+<td>blit 是否到纹理</td>
+<td><code>RTProbe</code>（ui_stubs.cpp）</td>
+<td><code>blitSrcTex=… engineCurFbo=… [SAME/DIFF]</code></td>
+<td>有 blit 则每帧；<code>SAME/DIFF</code> 定合成目标</td>
+</tr>
+<tr>
+<td>引擎帧驱动</td>
+<td><code>Application::Run enter/return</code>（engine_api.cpp）</td>
+<td>每 15 tick</td>
+<td>每 tick 有=引擎在跑</td>
+</tr>
+</tbody>
+</table>
+<p>组合判：
+- <code>RequestUpdate</code> 无 + 全部其他无 → 游戏/脚本未推进（脚本引擎/连续处理器重启问题）。
+- <code>RequestUpdate</code>/<code>DeliverWinUpdate</code> 有 + <code>BasicShow: skip</code> 打法 → Show 段（主层 Manager 空）。
+- <code>DeliverWinUpdate</code> 无但 <code>RequestUpdate</code> 有 → 投递链（DeliverEvents）坏。</p>
 <h2 id="_11">自检 / 验收<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
 <ul>
 <li>目标游戏（魔女的夜宴/sabbat_kr）启动后：主 <code>DrawBuffer</code> 被合成、源纹理非全黑、draw 计数增长。</li>
