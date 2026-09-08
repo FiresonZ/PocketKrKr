@@ -241,6 +241,19 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 **下一步判别**：在 `tTVPWinUpdateEvent::Deliver`/`TVPWinUpdateEventQueue` 或 `TVPTimer::ProgressAllTimer`
 打点，确认 2nd 段是否还有窗口重绘事件被投递/分发，从而区分"框架没投递重绘"vs"投递了但 Show 没 blit"。
 
+### 候选排查结论（2026-09-08，静态核对 + 已加 DeliverWinUpdate 探针）
+
+- 已**排除**：`TVPSystemControl`（OnExit 时 delete、二次 open 时 `new` 重建，Application.cpp:865/412）；
+  `TVPEventInvoked`（每 tick 经 `_TVPDeliverAllEvents→TVPEventReceived()`（EventIntf.cpp:481/46）复位，
+  不易卡死）；`TVPContinuousHandlerCallLimitThread`/`TVPTimer` 由 End/BeginContinuousEvent 切换。
+- 确定性结论：二次打开从第 1 帧起**不再有窗口重绘（win update 事件投递/交付）**，回收链
+  `RequestUpdate→TVPPostWindowUpdate→TVPInvokeEvents→(Run 每tick)DeliverEvents→TVPDeliverWindowUpdateEvents
+  →UpdateContent→Show→UpdateDrawBuffer` 在 2nd 段断在 blit 之前。
+- **已加探针**（`EventIntf.cpp` TVPDeliverWindowUpdateEvents，KRKR_RENDER_PROBE）：
+  `DeliverWinUpdate: queue=N -> UpdateContent`。下一轮 release+probe 日志即可判：
+  - 2nd 段 `DeliverWinUpdate` 持续打印、但无 RTProbe/blit → **投递→Show 段坏**（Show guard/Managers 空）；
+  - 2nd 段 `DeliverWinUpdate` 根本不打印 → **游戏/脚本未请求重绘**（RequestUpdate 未发生，指向脚本/连续处理器未恢复）。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
