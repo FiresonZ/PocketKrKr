@@ -730,6 +730,14 @@ void TVPExecuteStorage(const ttstr &name, iTJSDispatch2 *context,
                        tTJSVariant *result, bool isexpression,
                        const tjs_char *modestr) {
     // execute storage which contains script
+#if defined(KRKR_RENDER_PROBE)
+    { // StorageExec 探针：记录 startup 链实际执行的 storage（低频），
+        // restart 时对比首开，看"跳过 KAG boot"是从哪个脚本断的。
+        static unsigned s_exec = 0;
+        if((++s_exec % 40) == 1)
+            spdlog::info("StorageExec: name={}", name.AsStdString());
+    }
+#endif
     if(!TVPScriptEngine)
         TVPThrowInternalError;
 
@@ -973,6 +981,18 @@ void TVPExecuteStartupScript() {
 #endif
         TVPStartupSuccess = false;
 #if defined(KRKR_RENDER_PROBE)
+        { // EngineState[entry]: startup.tjs 执行前 dump 引擎状态，首开 vs restart 对照残留
+            extern bool TVPSystemControlAlive;
+            spdlog::info(
+                "EngineState[entry]: wndCount={} mainWnd={} sysUninit={} ctlAlive={} "
+                "projDirSet={} dataPathSet={} startupSuccess={} cmdArgGen={}",
+                TVPGetWindowCount(), (void *)TVPMainWindow,
+                (int)TVPSystemUninitCalled, (int)TVPSystemControlAlive,
+                (int)(!TVPProjectDir.IsEmpty()), (int)(!TVPDataPath.IsEmpty()),
+                (int)TVPStartupSuccess, (tjs_int)TVPGetCommandLineArgumentGeneration());
+            spdlog::default_logger()->flush();
+        }
+#endif
         // —— startup.tjs 执行探针：抓 restart 时 startup 提前抛错的时机/消息。
         // 黑屏特征：startup.tjs 抛异常(而 system/Initialize.tjs 存在)时被静默吞掉改走 fallback，
         // KAG boot 被绕过。此探针记录是"完成"还是"抛错"及错误内容，钉死跳 KvK boot 的具体 gate。
@@ -1042,6 +1062,19 @@ void TVPExecuteStartupScript() {
             TVPStartupSuccess = true;
         }
         spdlog::info("Startup script ended.");
+#if defined(KRKR_RENDER_PROBE)
+        { // EngineState[exit]: startup.tjs 结束后 dump，对照 entry 看状态变化
+            extern bool TVPSystemControlAlive;
+            spdlog::info(
+                "EngineState[exit]: wndCount={} mainWnd={} sysUninit={} ctlAlive={} "
+                "projDirSet={} dataPathSet={} startupSuccess={} cmdArgGen={}",
+                TVPGetWindowCount(), (void *)TVPMainWindow,
+                (int)TVPSystemUninitCalled, (int)TVPSystemControlAlive,
+                (int)(!TVPProjectDir.IsEmpty()), (int)(!TVPDataPath.IsEmpty()),
+                (int)TVPStartupSuccess, (tjs_int)TVPGetCommandLineArgumentGeneration());
+            spdlog::default_logger()->flush();
+        }
+#endif
 #if defined(__ANDROID__)
         __android_log_print(ANDROID_LOG_INFO, "krkr2",
                             "Startup script ended successfully");
