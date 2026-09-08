@@ -488,6 +488,25 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
 - **下一步**：缺 IINCHO**首开**（工作态）基线。StorageExec 探针已改全量记录（exec# 累计序号），
   用同一探针包跑「IINCHO 首开」与「Kemomusu→IINCHO」，diff 两条 StorageExec 链即可钉死分支断点脚本。
 
+### 链 diff 定论 + [TVP Console] 日志系统 restart bug（engine(19)/engine(20).log，2026-09-09）
+- **engine(19)=IINCHO 首开（工作态），engine(20)=Kemomusu→IINCHO（黑屏）**。全量 StorageExec 链 diff：
+  - 两条 IINCHO 链 **逐条完全相同**（各 67 个脚本：patch→startup→ks_system/exLayer→config/gameConfig→
+    system/Initialize.tjs→Config..exSE→savesc/savesu→AfterInit→gmPlugin..exButtonLayer）。
+  - ⇒ **推翻"跳过 KAG boot"假说**：黑屏会话也完整加载了 KAG System。
+- **首开会话 boot 尾段（可见输出）**：exButtonLayer 后 → sys_load/sys_save 等 11 个系统图层加载 →
+  AfterInit 完成 → `Scenario loaded : first.ks` → `処理を開始します` → first.ks 逐 tag 处理（@call ks_system.ks
+  等）→ `ContinuousProbe: eventVec=0 handlerVec=2`（KAG 更新循环以 `System.addContinuousHandler` 注册）→
+  RequestUpdate → 渲染。
+- **黑屏会话**：同样 67 脚本后 **无任何可见 boot 尾段输出、无 first.ks、无 ContinuousProbe（=连续事件投递从未发生，
+  `TVPProcessContinuousHandlerEventFlag` 未置位/无 handler 注册）、无 RequestUpdate**。StartupProbe 仍 completed。
+- **关键新发现——日志系统 restart bug（已修）**：`DebugIntf.cpp` 的 `TVPDestroyLogObjects`（tTVPAtExit 注册，
+  每次 TVPSystemUninit 触发）删除 `TVPLogDeque`/`TVPImportantLogs` 后**未复位 `TVPLogObjectsInitialized`**，
+  导致 restart 后 `TVPEnsureLogObjects` 提前返回、`TVPAddLog` 静默丢弃 → 全部 `[TVP Console]` 输出（含 KAG 场景/
+  错误信息）在 restart 会话永久消失。修复：销毁时复位标志。**此 bug 同时解释了此前"KAG boot 被跳过"的误判——
+  场景处理日志在 restart 后本就不可见**。
+- **残余问题**：修复日志后黑屏成因仍待一次复测——若 boot 尾段实际执行（图像加载/AfterInit/first.ks 只是日志被吞），
+  黑屏=连续事件投递/重绘未建立；若尾段真未执行，则看恢复后的 KAG 报错。
+
 ### PR#12 剩余差异全量扫描（2026-09-08/09）
 - ✅ **已对齐且保留**：全部 `TVPReset*ForRestart` + `TVPUnregisterInternalPluginsForRestart` +
   `TVPResetPluginSystemForRestart` + `ncbAutoRegister::ResetModuleStateForRestart` + FontImpl release；

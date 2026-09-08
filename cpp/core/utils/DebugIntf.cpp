@@ -70,6 +70,10 @@ static void TVPDestroyLogObjects() {
         delete TVPLogDeque, TVPLogDeque = nullptr;
     if(TVPImportantLogs)
         delete TVPImportantLogs, TVPImportantLogs = nullptr;
+    // runtime-restart 时 TVPSystemUninit 会经 tTVPAtExit 再次调用本函数，
+    // 必须复位初始化标志，否则 restart 后 TVPEnsureLogObjects 提前返回、
+    // TVPAddLog 静默丢弃全部 [TVP Console] 输出（含 KAG 场景/错误信息）。
+    TVPLogObjectsInitialized = false;
 }
 
 //---------------------------------------------------------------------------
