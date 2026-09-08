@@ -58,6 +58,41 @@
 3. **squirrel + k2compat（P1）**：恢复 Z 游戏脚本/系统逻辑。
 4. 逐一消化 P1 其余（menu、PassThroughDrawDevice、drawdeviceD3D…），P2 待源码确认。
 
+## 差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）
+
+> 背景：我们已 `git clone --depth=1` zeas2/Kirikiroid2（本地 `/tmp/Kirikiroid2`），
+> 想逐个确认缺哪些插件。
+
+### 关键认知
+
+1. **drawdeviceD3DZ 在移动端不是插件**：Kirikiroid2 用 `src/core/visual/RenderManager_ogl.cpp`
+   + `win32/DrawDevice.*`/`BasicDrawDevice.*` 作为**核心渲染管理器**直接合成 Z 主 DrawBuffer，
+   不走 `plugin/*.dll` 的 ncb 通道。魔女的夜宴等 Z 游戏黑屏根因在此，属 **core/visual 引擎能力**，
+   不是"写个插件"能解决 → P0 优先走渲染管线，勿当插件实现。
+2. **同源 fork → 插件大面积重合**：我们与 Kirikiroid2 同源，其 `src/plugins/*` 的 ncb 插件
+   （extrans/wuvorbis/wuflac/wuopus、layerEx 全家、AlphaMovie、psb/psd、xp3filter、fftgraph、
+   drawDeviceD2Dm、krkrsteam、krkrgles、json、fstat…）我们 `_internal_plugins` 基本都已注册。
+   真要补的插件很少。
+
+### 实测缺口（对照 Kirikiroid2 全仓库 `grep -rin`，区分"插件"与"引擎"）
+
+| 插件 | 态况 | 缺的是插件还是引擎 | 决策 |
+|---|---|---|---|
+| drawdeviceD3DZ | Z 主画面，**黑屏根因** | **引擎**（RenderManager_ogl） | P0，对核心渲染链路 |
+| krmovie Present | 视频回放 | **引擎**（`movie/krmovie.cpp`） | P0 |
+| squirrel | 很多 Z 存档/系统脚本 | 插件（krkr2 `squirrel`） | P1 |
+| k2compat | krkr2→Z 兼容函数 | 脚本/TJS（Krkr2Compat） | P1，内置脚本 |
+| menu / drawdeviceD3D / PassThroughDrawDevice | 常用 | 插件 | P1 |
+| **PackinOne** | 千恋万花实载 Failed；**Kirikiroid2 全仓库无此实现** | 插件（疑似闭源） | **C 级，跳过**：下载已解包游戏可跑；仅整包加密需解包 |
+| **extNagano** | 千恋万花实载 Failed；**Kirikiroid2 全仓库无此实现** | 插件（独立冷门扩展） | **C 级，跳过**：基干无它照跑 |
+| kztouch / kagexopt / multiimage | 冷门，来源待确认 | 插件 | P2，等源码 |
+
+### 结论
+- 真缺且急用的插件只有 **squirrel**（P1）；PackinOne/extNagano 多为下载解包版可跳过，
+  只做"挂名不报 Failed"或直接跳过，等有真实游戏卡在它们头上再补。
+- 当前最大阻塞仍是 P0 两个**引擎能力**（drawdeviceZ 主 buffer 合成 + krmovie Present），
+  不靠写插件解决。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
