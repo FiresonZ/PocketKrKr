@@ -85,8 +85,8 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 | Flutter 插件（零拷贝纹理） | ✅ 基本完成 | IOSurface + SurfaceTexture 零拷贝纹理 + RGBA 兼容路径 |
 | Flutter 调试 UI | ✅ 基本完成 | FPS 控制、引擎生命周期、渲染状态监控 |
 | 输入事件转发 | ✅ 基本完成 | 触控 / 指针事件坐标映射转发 |
-| Android 构建链 | 🔨 进行中 | vcpkg triplet、CMake preset、JNI 桥接、Kotlin 插件已接入，待真机验证 |
-| 引擎性能优化 | 🔨 进行中 | SIMD 像素混合（Highway，已修复公式缺陷）、GPU 合成管线等 |
+| Android 构建链 | ✅ 基本完成 | 自包含 `libengine_api.so`（含 JNI），APK 可出、真机不再闪退/不转圈；进入日志筛查游戏兼容性阶段 |
+| 引擎性能优化 | 🔨 进行中 | SIMD 像素混合（Highway）：非 PS 混合已对齐标量；**11 个 PS 混合回退标量**（待改 u32 lane 再放回）；GPU 合成管线等 |
 | 游戏兼容性优化 | 🔨 进行中 | 补全解析引擎、插件，目标与 Z 闭源版兼容持平 |
 
 ## 相关文档

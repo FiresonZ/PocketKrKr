@@ -70,6 +70,7 @@ Dart 优先走 FFI，MethodChannel 为兜底。
 - :material-hammer-wrench-outline: **构建与约定**：[构建](dev/build.md) · [约定与陷阱](dev/conventions.md)
 - :material-debug-step-over: **排查与优化**：[渲染/黑屏诊断](dev/rendering-diagnosis.md) · [兼容性](dev/compatibility.md) · [性能优化](dev/perf-optimization.md)
 - :material-format-list-checks: **协作队列**：[待办 / 已知问题](dev/todo.md)
+- :material-download: **下载最新构建**：[下载](download.md)
 
 ## 致谢
 
