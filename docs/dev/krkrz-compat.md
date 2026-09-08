@@ -507,6 +507,21 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
 - **残余问题**：修复日志后黑屏成因仍待一次复测——若 boot 尾段实际执行（图像加载/AfterInit/first.ks 只是日志被吞），
   黑屏=连续事件投递/重绘未建立；若尾段真未执行，则看恢复后的 KAG 报错。
 
+### 根因钉死：TVPScenarioCache 跨游戏同名场景碰撞（engine(21).log，2026-09-09，日志修复后复测）
+- 日志修复后黑屏会话可见完整 boot 尾段：sys_* 图层加载 → AfterInit(232ms) → `Scenario loaded : first.ks` →
+  **`first.ks : [linemode]` → `エラーが発生しました / タグ/マクロ "linemode" は存在しません`（行 1）**。
+- **首开会话（engine(19)）first.ks 从 `@eval`/`@nextskip` 开始处理，无任何错误** ⇒ 同一 `kag.loadScenario("first.ks")`
+  两次加载到了**不同的 first.ks 内容**：
+  - 首开加载 IINCHO 自己的 first.ks（KAG3 stock 结构，@eval 开头）→ 正常。
+  - restart 后加载到 **Kemomusu 的 first.ks**（`[linemode]` 开头，KAGParserEx 系）→ IINCHO 的 KAG3 无 linemode → 报错 → boot 中止 → 黑屏。
+- **机制**：`TVPGetScenario`（KAGParser.cpp:266）以**场景短名**（如 "first.ks"）为 key 存进程级
+  `TVPScenarioCache`（文件作用域 static，KAGParser.cpp:249）；restart 不随 TJS VM 销毁、`TVPClearScnearioCache`
+  仅被 `KAGParser::Clear()`（脚本调 kag.clear()）触发。前一个游戏（Kemomusu）加载 first.ks 后缓存命中即跨游戏复用。
+- **排除项**：auto-path 表无污染（IINCHO 会话重建后 Total 3084 = IINCHO 自身 8 个 xp3 文件数，恰为
+  116+323+502+83+101+480+17+1462）；兄弟 xp3 扫描两者均 "No sibling"（xp3 在各游戏目录内，父目录无裸 xp3）。
+- **修复**：`TVPResetRuntimeForRestart`（engine_destroy 复位链）中调用 `TVPClearScnearioCache()`，
+  换游戏/复开前清空跨游戏残留的场景缓存。同游戏复开仅损失一次场景解压。
+
 ### PR#12 剩余差异全量扫描（2026-09-08/09）
 - ✅ **已对齐且保留**：全部 `TVPReset*ForRestart` + `TVPUnregisterInternalPluginsForRestart` +
   `TVPResetPluginSystemForRestart` + `ncbAutoRegister::ResetModuleStateForRestart` + FontImpl release；

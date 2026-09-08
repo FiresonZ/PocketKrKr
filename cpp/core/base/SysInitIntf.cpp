@@ -23,6 +23,7 @@
 #include "tjsUtils.h"
 #include "SysInitIntf.h"
 #include "ScriptMgnIntf.h"
+#include "KAGParser.h"
 #include "tvpgl.h"
 #include <spdlog/spdlog.h>
 
@@ -171,5 +172,9 @@ void TVPResetRuntimeForRestart() {
     TVPAtExitInfos = nullptr;
     TVPProjectDir.Clear();
     TVPDataPath.Clear();
+    // TVPScenarioCache 以场景短名（如 "first.ks"）为 key 的进程级缓存，restart 不随 VM 销毁；
+    // 换游戏后下一个游戏 kag.loadScenario 会命中前一个游戏的内容（跨游戏同名场景碰撞），
+    // 此处清空。同游戏复开重读缓存为空后正常重建，仅损失一次解压。
+    TVPClearScnearioCache();
 }
 //---------------------------------------------------------------------------

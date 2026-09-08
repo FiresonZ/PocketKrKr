@@ -371,6 +371,7 @@ public:
 };
 
 extern iTJSDispatch2 *TVPCreateNativeClass_KAGParser();
+extern void TVPClearScnearioCache(); // runtime-restart 时清空跨游戏残留的场景缓存
 
 
 #endif
