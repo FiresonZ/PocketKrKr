@@ -126,9 +126,13 @@ void TVPAddAtExitHandler(tjs_int pri, void (*handler)()) {
 
 //---------------------------------------------------------------------------
 static void TVPCauseAtExit() {
-    // 修正 runtime-restart：tTVPAtExit 文件级 static 对象只在进程启动注册一次，
-    // 首次 engine_destroy 的 TVPCauseAtExit 已把 TVPAtExitInfos delete 置空；二次
-    // engine_destroy（TVPResetRuntimeForRestart 复位后会再次进入）时为空，不能解引用。
+    // runtime-restart 语义：tTVPAtExit 文件级 static 对象只在进程启动注册一次，
+    // 因此 TVPAtExitInfos 是一份**持久**的框架级 teardown 清单，须在每次
+    // engine_destroy（每次引擎生命周期结束）都重放一遍，而【不能 delete】——
+    // 否则二次及以后 engine_destroy 时静态 handler 注册永久丢失（“注册失效”），
+    // 第 2+ 个游戏的定时器/连续事件/tick/事件队列等框架单例将永不被 teardown。
+    // 这些 handler 均为“置空静态单例指针、由下次 Init 重建”的可重入 teardown，
+    // 可安全重放；TVPResetRuntimeForRestart 会把 TVPAtExitShutdown 复位为 false。
     if(TVPAtExitShutdown || !TVPAtExitInfos)
         return;
     TVPAtExitShutdown = true;
@@ -155,8 +159,8 @@ static void TVPCauseAtExit() {
         spdlog::default_logger()->flush();
     }
 
-    delete TVPAtExitInfos;
-    TVPAtExitInfos = nullptr;
+    // NOTE: 不再 delete TVPAtExitInfos / 置空。列表持久保留，供下次
+    // engine_destroy 重放；TVPAddAtExitHandler 仍受 TVPAtExitShutdown 守卫。
 }
 //---------------------------------------------------------------------------
 
@@ -166,9 +170,9 @@ static void TVPCauseAtExit() {
 void TVPResetRuntimeForRestart() {
     TVPSystemUninitCalled = false;
     TVPAtExitShutdown = false;
-    // TVPAtExitInfos was deleted by TVPCauseAtExit(); leave it null so
-    // TVPAddAtExitHandler will re-create it on next startup.
-    TVPAtExitInfos = nullptr;
+    // 保留 TVPAtExitInfos 列表不置空：静态框架 teardown handler 须在每次
+    // engine_destroy 重放（见 TVPCauseAtExit 注释）。若这里置空，首次退出后
+    // 静态注册永久丢失，第 2+ 个游戏退出将不再清理框架单例（“注册失效”）。
     TVPProjectDir.Clear();
     TVPDataPath.Clear();
 }

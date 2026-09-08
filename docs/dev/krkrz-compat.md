@@ -302,6 +302,38 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
   最可能是一次性 `tTVPAtExit` 注册失效（`TVPDestroyContinuousHandlerVector`/timer 线程）致二次打开的
   连续/定时驱动不建立（候选①强化）。
 
+### tTVPAtExit 一次性注册失效——核实 + 安全修复（2026-09-08）
+
+**核实结论：部分成立——"二次退出不跑 at-exit 清理"属实（清理卫生缺口），但它不是黑屏根因。**
+- 二次退出（open#2 的 teardown）确实不会再跑进程启动时那批 at-exit 清理（清理卫生缺口）。
+- 它**并不阻止第二游戏建立每帧驱动**，因为这些驱动都是懒重建/静态向量，二次 `StartApplication`
+  会重新建立：
+  - `TVPTimerThread`：`Add()→Init()` 懒创建（TimerImpl.cpp:307-333），游戏#2 首个 TJS 定时器即重建。
+  - `TVPContinuousHandlerCallLimitThread`：`TVPBeginContinuousEvent` 里 `if(!...)` 懒创建（EventImpl.cpp:234）。
+  - `TVPContinuousHandlerVector` / `TVPContinuousEventVector`：静态 vector，`TVPAddContinuousHandler` 重填。
+- 结论：at-exit 一次性注册失效不会让 game#2 的每帧驱动"建立不起来"；真根因仍需从脚本驱动侧实测确认。
+
+**但"清理卫生缺口"属实且有跨游戏残留风险，已按最小安全范围修复**：
+- `SysInitIntf.cpp::TVPCauseAtExit/TVPResetRuntimeForRestart`：**不再 delete/置空 `TVPAtExitInfos`**，
+  把静态 at-exit 列表变为**持久清单**，使每个 `engine_destroy` 都重放框架级 teardown
+  （定时器/连续事件/tick/事件队列等单例"置空+下次 Init 重建"，可重入）。修复前的 bugs：
+  列表首次退出后即 lost，第 2+ 个游戏退出不再 teardown 框架单例，跨游戏残留/泄漏。
+- `DebugIntf.cpp::TVPDestroyLogObjects`：销毁逻辑日志对象后**复位 `TVPLogObjectsInitialized=false`**，
+  否则重放后 `TVPEnsureLogObjects` 因 guard 已置位而跳过重建，game#3+ 的 `TVPLogDeque` 恒 null
+  （框架重要日志/历史不再累积）。这是整个 core 里唯一"销毁但没复位初始化标志"的 handler。
+
+### 已加脚本驱动侧判别探针（KRKR_RENDER_PROBE，与现有探针一次日志定死）
+
+| 探针 | 位置 | 打印 | 判 |
+|---|---|---|---|
+| `ContinuousProbe` | `EventIntf.cpp` TVPDeliverContinuousEvent | `eventVec / handlerVec` 大小，每 30 次 | 两向量空且不涨=连续驱动没建立 |
+| `TimerProbe` | `TVPTimer.cpp` ProgressAllTimer（FireNext 计数） | `cumulativeFired / delta`，每 30 次 | delta=0= TJS 定时器没推进 |
+| （已有）`RTProbe`/`RequestUpdate`/`Run`/`DeliverWinUpdate`/`BasicShow` | 见上 | — | 渲染链已证明健康 |
+
+配合判：
+- game#2 段 `TimerProbe delta=0` + `ContinuousProbe` 两向量空 → **脚本每帧驱动未建立**（即使脚本起过一次），
+  治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。

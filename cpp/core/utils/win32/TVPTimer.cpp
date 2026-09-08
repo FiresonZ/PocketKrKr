@@ -2,6 +2,10 @@
 #include "tjsCommHead.h"
 #include "TVPTimer.h"
 #include "TickCount.h"
+#if defined(KRKR_RENDER_PROBE)
+#include <spdlog/spdlog.h>
+static unsigned long long g_probeTimerFireCount = 0; // KRKR_RENDER_PROBE 下累计 TJS 定时器触发数
+#endif
 
 struct tTVPTimerImpl {
     tTVPTimerImpl *Prev = nullptr, *Next = nullptr;
@@ -100,6 +104,9 @@ void tTVPTimerImpl::FireNext() {
     Next = nullptr;
 
     p->pTimer->FireEvent();
+#if defined(KRKR_RENDER_PROBE)
+    ++g_probeTimerFireCount;
+#endif
     p->FireNext();
     _processedTimer.Add(p);
     // 	int interval = p->pTimer->GetInterval();
@@ -107,6 +114,18 @@ void tTVPTimerImpl::FireNext() {
 }
 
 void TVPTimer::ProgressAllTimer() {
+#if defined(KRKR_RENDER_PROBE)
+    {
+        // ── 定时器驱动探针：TJS 定时器是否在推进（二次打开 delta 停滞=定时器没转）。
+        static unsigned n = 0;
+        static unsigned long long lastFire = 0;
+        if((++n % 30) == 1) {
+            spdlog::info("TimerProbe: cumulativeFired={} delta={}",
+                         g_probeTimerFireCount, g_probeTimerFireCount - lastFire);
+            lastFire = g_probeTimerFireCount;
+        }
+    }
+#endif
     uint32_t curTick = TVPGetRoughTickCount32();
     int past = curTick - _timer_idx._idx;
     for(int i = 0; i < past; ++i) {

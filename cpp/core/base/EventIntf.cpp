@@ -881,6 +881,17 @@ static void _TVPDeliverContinuousEvent() // internal
 void TVPDeliverContinuousEvent() {
     if(TVPContinuousEventProcessing)
         return;
+    // ── 脚本驱动探针（仅 KRKR_RENDER_PROBE）：连续处理器/连续事件是否注册并在跑。
+    // 二次打开若两向量都空且不再增长 -> 游戏没注册每帧连续驱动（脚本推进/连续重绘未建立）。
+#if defined(KRKR_RENDER_PROBE)
+    {
+        static unsigned s_cont = 0;
+        if((++s_cont % 30) == 1)
+            spdlog::info("ContinuousProbe: eventVec={} handlerVec={}",
+                         TVPContinuousEventVector.size(),
+                         TVPContinuousHandlerVector.size());
+    }
+#endif
     TVPContinuousEventProcessing = true;
     try {
         try {

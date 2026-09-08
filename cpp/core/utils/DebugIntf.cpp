@@ -70,6 +70,10 @@ static void TVPDestroyLogObjects() {
         delete TVPLogDeque, TVPLogDeque = nullptr;
     if(TVPImportantLogs)
         delete TVPImportantLogs, TVPImportantLogs = nullptr;
+    // runtime-restart：逻辑日志对象销毁后须复位初始化标志，否则下一次框架
+    // Init（TVPEnsureLogObjects）会因 TVPLogObjectsInitialized==true 而跳过重建，
+    // 导致第 2+ 个游戏里 TVPLogDeque 恒为 null（框架重要日志/历史不再累积）。
+    TVPLogObjectsInitialized = false;
 }
 
 //---------------------------------------------------------------------------
