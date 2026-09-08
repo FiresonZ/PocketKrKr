@@ -13,6 +13,7 @@
 #include <deque>
 #include <algorithm>
 #include <ctime>
+#include <spdlog/spdlog.h>
 #include "DebugIntf.h"
 #include "MsgIntf.h"
 #include "StorageIntf.h"
@@ -104,13 +105,19 @@ static void TVPCleanupLoggingHandlerVector() {
 }
 
 static void TVPDestroyLoggingHandlerVector() {
+    spdlog::info("at-exit PREPARE LoggingHandler begin (count={})",
+                 (int)TVPLoggingHandlerVector.size());
     TVPSetOnLog(nullptr);
     std::vector<tTJSVariantClosure>::iterator i;
+    tjs_int k = 0;
     for(i = TVPLoggingHandlerVector.begin(); i != TVPLoggingHandlerVector.end();
-        i++) {
+        ++i, ++k) {
+        spdlog::info("at-exit LoggingHandler release closure[{}] begin", k);
         i->Release();
+        spdlog::info("at-exit LoggingHandler release closure[{}] end", k);
     }
     TVPLoggingHandlerVector.clear();
+    spdlog::info("at-exit PREPARE LoggingHandler end");
 }
 
 static tTVPAtExit
