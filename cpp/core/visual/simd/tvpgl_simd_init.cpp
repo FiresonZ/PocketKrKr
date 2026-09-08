@@ -196,43 +196,26 @@ void TVPGL_SIMD_Init() {
 
     // =====================================================================
     // Phase 3: Photoshop blend modes
-    // Only register modes that have true SIMD blend cores.
+    // Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/HardLight/Exclusion
+    // 回退到标量，不注册 SIMD（原因见下）。
     // Table-based modes (SoftLight, ColorDodge, ColorBurn, ColorDodge5, Diff5)
-    // are pure scalar - keep original C for better performance.
+    // 也保持纯标量。
     // =====================================================================
-#define REGISTER_PS_BLEND_4V(Name)                                            \
-    TVPPs##Name##Blend       = TVPPs##Name##Blend_hwy;                        \
-    TVPPs##Name##Blend_HDA   = TVPPs##Name##Blend_HDA_hwy;                    \
-    TVPPs##Name##Blend_o     = TVPPs##Name##Blend_o_hwy;                      \
-    TVPPs##Name##Blend_HDA_o = TVPPs##Name##Blend_HDA_o_hwy;
 
     // ---------------------------------------------------------------
-    // PS 混合：9 个模式已全部逐位核对并本地对拍验证（out/simd9_check/check.c，
-    // 30M 像素 × 4 变体 0 mismatch），全部放回。
-    // P2 已修 PsApplyAlpha 舍入序((s-d)*a>>8)+d；P5 已修 Overlay/HardLight 的
-    // NORM/_o alpha 清零 + core 用精确 /255（out/p5_check 20M 全一致）。
-    // Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Exclusion 已核对溢出/alpha 分支：
-    //   - Screen 标量是 ((s-sd)*a>>8)+d（非标准 alpha blend），已按此实现；
-    //   - PsScreenBlend_o_HWY 补回 rgb_mask 清 alpha（原先缺失导致 _o 的 alpha 字节错误）。
-    REGISTER_PS_BLEND_4V(Alpha)
-    REGISTER_PS_BLEND_4V(Add)
-    REGISTER_PS_BLEND_4V(Sub)
-    REGISTER_PS_BLEND_4V(Mul)
-    REGISTER_PS_BLEND_4V(Screen)
-    REGISTER_PS_BLEND_4V(Lighten)
-    REGISTER_PS_BLEND_4V(Darken)
-    REGISTER_PS_BLEND_4V(Diff)
-    REGISTER_PS_BLEND_4V(Overlay)
-    REGISTER_PS_BLEND_4V(HardLight)
-    REGISTER_PS_BLEND_4V(Exclusion)
-    // Table-based modes: keep original C (pure scalar, no SIMD benefit)
-    // REGISTER_PS_BLEND_4V(SoftLight)
-    // REGISTER_PS_BLEND_4V(ColorDodge)
-    // REGISTER_PS_BLEND_4V(ColorBurn)
-    // REGISTER_PS_BLEND_4V(ColorDodge5)
-    // REGISTER_PS_BLEND_4V(Diff5)
-
-#undef REGISTER_PS_BLEND_4V
+    // PS 混合：11 个模式（Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/
+    // HardLight/Exclusion）回退到标量，不注册 SIMD。
+    //
+    // 原因（2026-09 诊断）：这些模式的最终步骤 ps_alpha_blend 标量用“32 位打包
+    // R/B 通道 + 跨字节借位”的 %2^32 运算（见 blend_functor_c.h 的
+    // ps_alpha_blend_func），而本 SIMD 用逐字节 u16 通道 + OrderedDemote2To：
+    //   1) OrderedDemote2To 对 16 位中间值“饱和”到 0xFF，标量是 &0xFF 截断；
+    //   2) 标量打包算术里 B 通道下溢会借位影响 R 通道，逐字节通道无法复现。
+    // 二者结构性不等，tvpgl_simd_compare 逐位比对必然失败（scalar=005E8946
+    // vs simd=00FF8946 等 16 处）。
+    // 保持与 conventions §9 一致：SIMD 与标量不等 → 回退标量保正确。
+    // 待办：若能以 u32 lane 逐像素复现打包算术（harness 已验证该算法位级一致，
+    // 见 harness_ps.cpp），再重新注册放回。
 
     // =====================================================================
     // Phase 4: Convert functions (only truly SIMD ones)

@@ -13,6 +13,12 @@
  *   2. Apply ps_alpha_blend: result_ch = d_ch + (s_ch - d_ch) * alpha >> 8
  *
  * Phase 3 implementation.
+ *
+ * 注意（2026-09）：本文件与 tvpgl_simd_ps_blend2.cpp 的导出函数当前在
+ * TVPGL_SIMD_Init 中【未注册】，PS 混合模式回退到标量。原因见
+ * tvpgl_simd_init.cpp 的注释：ps_alpha_blend 标量是 32 位打包算术（跨字节借位），
+ * 本 SIMD 用逐字节 u16 + OrderedDemote2To，结构性无法与标量位级一致，导致
+ * tvpgl_simd_compare 失败。待用 u32 lane 逐像素重写后再放回。
  */
 
 #include "tjsTypes.h"
