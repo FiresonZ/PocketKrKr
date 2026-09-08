@@ -287,6 +287,21 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 下一步直接从"主层如何触发 RequestUpdate + 连续重绘/TJS 定时器在二次打开的复位"入手，
 而不再查渲染/投递链路（已证明健康）。
 
+### 渲染侧彻底排除 + 根因定性（2026-09-08）
+
+- `RequestUpdate` 唯一触发：主层内容变化 → `iTVPLayerManager`/`tTVPDrawDevice::NotifyLayerImageChange`
+  → `Window->RequestUpdate()`（DrawDevice.cpp:302-307）。第二游戏 `RequestUpdate=0` ⇒ **主层从未产生
+  新内容 ⇒ 游戏脚本没在画**。
+- 整条显示链已逐环节证明健康：`Application::Run` 每tick 在跑、`TVPSystemControl` 重建、
+  `TVPEventInvoked` 每tick 复位、`DeliverWinUpdate` 工作过、`RTProbe [SAME]`、`Show` 无 skip。
+  加上第 3 段同游戏复开正常 ⇒ 渲染与重启渲染机制无误。
+- **根因定性**：二次打开（open#2）的**游戏侧每帧驱动（TJS 脚本推进/定时器/连续处理/主层连续重绘）
+  未转**，脚本起了一次（startup.tjs 跑完、建 layers）后便不再产出画面 → 黑屏定格。与"第二游戏日志
+  更少"吻合。属脚本引擎/连续处理器重启问题，非渲染谱系。
+- `TVPResetScriptEngineForRestart`（ScriptMgnIntf.cpp:591）仅清 guard 标志，疑似不是此处；
+  最可能是一次性 `tTVPAtExit` 注册失效（`TVPDestroyContinuousHandlerVector`/timer 线程）致二次打开的
+  连续/定时驱动不建立（候选①强化）。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
