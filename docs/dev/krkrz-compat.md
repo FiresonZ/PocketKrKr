@@ -353,6 +353,18 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 而是 **KAG 场景宏/脚本的加载态在 in-process 重启下残留**。修复方向：定位并复位 KAG 场景/宏加载的
 进程级残留（宏注册表/场景位置/已加载脚本缓存），使二次打开时 first.ks 前奏完整重跑。
 
+**reset 链缺口核对（2026-09-08）：`TVPScenarioCache` 是唯一未纳入 reset 的进程级全局。**
+- engine_destroy 的 reset-for-restart 覆盖各子系统：存储/插件/类安装/渲染/字体/窗口/trans/drawscene/
+  extension 等均有 `TVPResetXXXForRestart()`。
+- 但 KAGParser.cpp 文件作用域的 `tTVPScenarioCache TVPScenarioCache(8)`（KAGParser.cpp:249）**只在
+  `KAGParser::Clear()` 内部经 `TVPClearScnearioCache()` 清空**，该 Clear 由脚本侧 `kag.Clear()` 触发；
+  engine 生命周期结束的 reset-for-restart **没有清它**。
+- 若二次启动的 KAG 沿用了首游戏遗留的场景缓存对象（两个游戏 first.ks 名不同本应不命中，但 cmdMacro/
+  KAGLoadScript 等共享名若在缓存中会命中首游戏残留），则前奏/宏注册场景可能被错误复用。
+- 候选修复：新增 `TVPClearScnearioCache()` 到 reset-for-restart 链（或在 teardown 时清一次），
+  与其余子系统一致。需评估脚本侧是否已自行 Clear（多数 KAG 启动会 new KAGParser，实例内各自独立，
+  全局缓存却是共享的）。
+
 ### 换游戏黑屏的实测定性（历史版本保留供追溯）——第 1 版结论已被证伪
 
 **第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"**。依据：game1=Kemomusu 渲染全健康，
