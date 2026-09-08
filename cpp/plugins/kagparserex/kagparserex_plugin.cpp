@@ -4,9 +4,16 @@
 static void LinkKAGParserCompatibility() {}
 static void UnlinkKAGParserCompatibility() {}
 
-// Register two compatibility module names:
+// Register three compatibility module names:
+// - KAGParser.dll (standard/plain name used by many distributions)
 // - KAGParserEx.dll (wamsoft)
 // - ExtKAGParser.dll (older scripts)
+static ncbCallbackAutoRegister g_kagparser_cb(
+    TJS_W("KAGParser.dll"), ncbAutoRegister::PreRegist,
+    &LinkKAGParserCompatibility, nullptr);
+static ncbCallbackAutoRegister g_kagparser_unload_cb(
+    TJS_W("KAGParser.dll"), ncbAutoRegister::PostRegist, nullptr,
+    &UnlinkKAGParserCompatibility);
 static ncbCallbackAutoRegister g_kagparserex_cb(
     TJS_W("KAGParserEx.dll"), ncbAutoRegister::PreRegist,
     &LinkKAGParserCompatibility, nullptr);
