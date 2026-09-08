@@ -313,14 +313,16 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
   - `TVPContinuousHandlerVector` / `TVPContinuousEventVector`：静态 vector，`TVPAddContinuousHandler` 重填。
 - 结论：at-exit 一次性注册失效不会让 game#2 的每帧驱动"建立不起来"；真根因仍需从脚本驱动侧实测确认。
 
-**但"清理卫生缺口"属实且有跨游戏残留风险，已按最小安全范围修复**：
-- `SysInitIntf.cpp::TVPCauseAtExit/TVPResetRuntimeForRestart`：**不再 delete/置空 `TVPAtExitInfos`**，
-  把静态 at-exit 列表变为**持久清单**，使每个 `engine_destroy` 都重放框架级 teardown
-  （定时器/连续事件/tick/事件队列等单例"置空+下次 Init 重建"，可重入）。修复前的 bugs：
-  列表首次退出后即 lost，第 2+ 个游戏退出不再 teardown 框架单例，跨游戏残留/泄漏。
-- `DebugIntf.cpp::TVPDestroyLogObjects`：销毁逻辑日志对象后**复位 `TVPLogObjectsInitialized=false`**，
-  否则重放后 `TVPEnsureLogObjects` 因 guard 已置位而跳过重建，game#3+ 的 `TVPLogDeque` 恒 null
-  （框架重要日志/历史不再累积）。这是整个 core 里唯一"销毁但没复位初始化标志"的 handler。
+**但"清理卫生缺口"曾误判为需修——实测重放会崩，已回退（终判：at-exit 是一次性进程 teardown，原设计正确）**：
+- 曾尝试把 `TVPAtExitInfos` 改为持久清单、每次 `engine_destroy` 重放全部 at-exit handler（含把
+  `TVPDestroyLogObjects` 复位 init 标志）——**真机第 2 个游戏退出时在 CLEANUP handler 上 SIGSEGV 闪退**
+  （二次 `engine_destroy` 的 `TVPCauseAtExit` 重放，`handler[15]=FreeAllocator` 之前那个 pri=10000 崩溃）。
+- 根因定性：这些 at-exit handler 是**按进程周期一次性**设计的（进程启动注册一次、进程末清理），
+  不是"置空+下次 Init 重建"的按引擎周期 teardown；跨游戏重放会触碰已按需重建的单例，导致
+  double-free/use-after-free。多 handler 都长这样，逐个修是打地鼠且高风险。
+- 终判：**回退该修复**（`SysInitIntf`/`DebugIntf` 恢复原样）。框架单例本就跨游戏安全复用
+  （timer/连续事件懒重建），不漏 teardown 不致命；原设计对 runtime-restart 是正确模型。
+- 教训：runtime-restart 下，at-exit 只该在"真进程退出前"跑一次；引擎间复用应全走 lazy-init/显式 lifecycle，别重放 at-exit。
 
 ### 已加脚本驱动侧判别探针（KRKR_RENDER_PROBE，与现有探针一次日志定死）
 
@@ -333,6 +335,45 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 配合判：
 - game#2 段 `TimerProbe delta=0` + `ContinuousProbe` 两向量空 → **脚本每帧驱动未建立**（即使脚本起过一次），
   治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
+- game#2 段 `TimerProbe delta≈4` 在转 + `[TVP Console] エラーが発生しました` → **游戏脚本/KAG 自身报错**停画，非重启状态 bug。
+
+### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log，2026-09-08）——第 1 版结论已被证伪，见修正
+
+**第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"**。依据：game1=Kemomusu 渲染全健康，
+game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "linemode" は存在しません`** 后画停。
+但用户实测确认 **IINCHO 是能正常游玩的正经游戏** ⇒ 该 KAG 错误只在"作为第二游戏重启打开"时才出现，
+**它就是 runtime-restart 残留的症状**，不是游戏本身不兼容。
+- 现象复核：全新启动的 IINCHO，`[linemode]` 标签是在的；作为第二游戏启动时该标签不见了
+  （KAG 标签/宏注册没在二次启动时重新建立 → "不存在"）。这正是"换游戏才黑、同游戏复开正常"的本质：
+  重启后脚本/KAG 全局状态残留了第一个游戏（Kemomusu）的东西，没有正确清空/重建。
+- 时间线证据（与重启无关的判据在此不成立）：错误发生在二次 `StartApplication` 的 KAG 场景解析期，
+  而引擎 tick / 定时器 / 连续 handler 仍照常运转——说明**驱动没停，是 KAG 层注册态坏了**。
+- 结论修正：黑屏真根因仍指向**脚本引擎/连续处理器/全局脚本态的 runtime-restart 复位缺失**
+  （候选①方向复活）。
+- **日志里最具体的重启签名（`[linemode]` 由 KAG 的 LineMode 模块定义）：**
+  - game1（Kemomusu）KAG 模块表**加载了 `LineMode.tjs`+`LineModeEx.tjs`**（本 log 行 233-234，
+    在 DefaultMover 之后、MainWindow 之前）→ `[linemode]` 有定义，场景正常画。
+  - game2（IINCHO）KAG 模块表**从 DefaultMover 直接到 MainWindow，全程未加载 LineMode.tjs**
+    （行 1307-1308）→ `first.ks` 第 1 行 `[linemode]` 未定义报错 → 画停 → 黑屏。
+  - 若 IINCHO 全新启动能正常游玩（KAG 里本应有 LineMode/`[linemode]`），则"作为第二游戏时
+    LineMode 没被加载"就是重启残留的具体表现——KAG 模块/脚本加载链在二次启动少加载了模块。
+- **复核实验（无需改代码即可定死）**：抓一份 IINCHO 作为**第一游戏、全新进程**的日志，对比
+  其 KAG 模块表是否包含 `LineMode.tjs`：
+  - 全新 IINCHO 含 LineMode 但二次打开不含 ⇒ 重启下 KAG 模块/脚本加载丢失，修复目标锁定该加载链。
+  - 全新 IINCHO 也不含 LineMode 但能玩 ⇒ `[linemode]` 由别处（宏/override）定义，二次打开该处失效，
+    继续追宏/override 的加载。
+- `[linemode]` 未在本项目 C++ 源码定义（仅脚本/KAG 侧注册），引擎源码仅一处无关 MultilineMode。
+
+**"reset 后还是第一个游戏的插件列表"假设——已被日志否决：**
+- game2 的 `tvpLoadPlugins` 用的是 **IINCHO 自己的插件列表**（extrans/layerExBTOA/layerExImage/wuvorbis/
+  KAGParser/menu/xpzdec），不是 Kemomusu 的（AlphaMovie/KAGParserEx/getSample/layerExDraw/psbfile/psd/windowEx）。
+- game2 挂载的也是自己的 8 个 xp3（iincho-re.co），路径/归档无 Kemomusu 残留 ⇒ 存储未泄漏。
+- reset 链本身完整：`TVPResetPluginSystemForRestart`（清自动加载计数/模块状态/ncb 注册表）、
+  `TVPResetExtensionClassInstallStateForRestart`（清全局类安装态）、`TVPResetStorageImplForRestart` 等均已实现。
+- 故"插件列表 stale"不成立；真正差异仍集中在**game2 自己的 KAG 模块表缺 LineMode.tjs**（见上），
+  待全新 IINCHO 日志定它是包配置如此还是重启加载丢失。
+
+记录此日志文件名供后续对照：`.uploads/29c5fff9-...-pocketkrkr_engine(12).log`
 
 ## 自检 / 验收
 
