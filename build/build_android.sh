@@ -294,6 +294,14 @@ log_info "Running flutter pub get..."
 FLUTTER_BUILD_MODE="$BUILD_TYPE_LOWER"
 log_info "Building Flutter Android app ($FLUTTER_BUILD_MODE)..."
 
+# 稳定签名提示：设置了 KEYSTORE_PATH 且文件存在时，release 会用固定 keystore 签名
+# （可由 CI 由 ANDROID_KEYSTORE_BASE64 Secret 注入），否则回退 debug 临时签名。
+if [[ "${FLUTTER_BUILD_MODE}" == "release" && -n "${KEYSTORE_PATH:-}" && -f "$KEYSTORE_PATH" ]]; then
+    log_info "Release 签名：使用稳定 keystore（$KEYSTORE_PATH）——签名一致，用户可覆盖更新。"
+else
+    log_info "Release 签名：未检测到稳定 keystore，回退 debug 临时签名（签名每次不同，仅可安装不可覆盖更新）。"
+fi
+
 # 版本号：优先 RELEASE_VERSION（工作流填写的发布版本号，X.Y.Z）；未填则回退读取
 # pubspec.yaml 的 version 字段。versionCode 要求整数，取 major*10000+minor*100+patch；
 # 版本号经 --dart-define=APP_VERSION 注入，供 settings 页展示实际版本号。

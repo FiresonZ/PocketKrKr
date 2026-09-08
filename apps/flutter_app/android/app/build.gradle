@@ -15,6 +15,21 @@ if (localPropertiesFile.exists()) {
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
 def flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
 
+// ---- 可选的稳定发布签名（升级一致性）----
+// 设置 Android KEYSTORE_PATH/KEYSTORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD 环境变量
+// （CI 里来自 GitHub Secrets：ANDROID_KEYSTORE_BASE64 等）时，release 用固定 keystore
+// 签名，保证每次发布的 APK 签名一致、用户可覆盖更新；未设置时回退 debug 临时签名
+// （现状，仅可安装不可覆盖更新）。
+String ksPath = System.getenv("KEYSTORE_PATH")
+String ksPass = System.getenv("KEYSTORE_PASSWORD")
+String kaAlias = System.getenv("KEY_ALIAS")
+String kaPass = System.getenv("KEY_PASSWORD")
+def hasReleaseKey = (ksPath != null && !ksPath.isEmpty()) &&
+        (ksPass != null && !ksPass.isEmpty()) &&
+        (kaAlias != null && !kaAlias.isEmpty()) &&
+        (kaPass != null && !kaPass.isEmpty()) &&
+        file(ksPath).exists()
+
 android {
     namespace = "org.pocketkrkr.app"
     compileSdk = flutter.compileSdkVersion
@@ -38,11 +53,25 @@ android {
         versionName = flutterVersionName
     }
 
+    signingConfigs {
+        release {
+            if (hasReleaseKey) {
+                storeFile file(ksPath)
+                storePassword ksPass
+                keyAlias kaAlias
+                keyPassword kaPass
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            if (hasReleaseKey) {
+                signingConfig signingConfigs.release
+            } else {
+                // 无稳定 keystore：回退 debug 签名（临时，签名每次构建不同，无法覆盖更新）。
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }

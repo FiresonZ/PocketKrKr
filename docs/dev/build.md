@@ -168,6 +168,26 @@ JOBS=16 ./build.sh ios release
 - **注意**：只测不发布则不勾「发布 Release」（产物仍保留 14 天）；已存在 tag 再跑不会重复建
   Release，只补充/覆盖产物；`debug` 类型即使发布也是 debug 包，正式发布请用 `release`。
 
+### Android 稳定签名（升级一致性，可选）
+
+Android 覆盖安装要求**同一签名**；默认 release 用 debug 临时签名，每次 CI 全新 runner 生成的
+keystore 不同 → **签名每次不一致，用户无法覆盖更新（只能卸载重装）**。为此提供**可选稳定 keystore**：
+
+- **工作方式**：在 GitHub Secrets 配置后，CI 解出 keystore 并写入 `KEYSTORE_PATH/KEYSTORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD` 环境变量，
+  `android/app/build.gradle` 检测到这些变量（且 keystore 文件存在）时用**固定 keystore** 给 release 签名；
+  未配置则回退 debug 临时签名（现状行为）。
+- **配置 Secrets**（仓库 Settings → Secrets and variables → Actions）：
+  `ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASSWORD`、`ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`。
+- **生成 keystore + base64**（本地一次，妥善保存，丢失则旧包无法更新）：
+  ```bash
+  keytool -genkeypair -v -keystore release.jks -alias release -keyalg RSA \
+    -keysize 2048 -validity 10000 -storepass <pw> -keypass <pw> -dname "CN=PocketKrKr"
+  base64 -w0 release.jks        # 全部输出即为 ANDROID_KEYSTORE_BASE64
+  ```
+- **iOS 无此问题**：iOS 产物是未签名 IPA，由用户用**自己的 Apple ID** 侧载签名；只要 bundle ID
+  （`org.pocketkrkr.app`）不变、每次用同一 Apple ID 重签，即可覆盖更新，无需 CI 签名密钥。
+- **本地构建**：随便装即可不设这些变量；要签名一致就导出上述 4 个环境变量再 `./build.sh android release`。
+
 ## 常见问题
 
 - **找不到 bison**：Homebrew 安装后路径在 `HINTS` 里已列（tjs2/CMakeLists.txt）。
