@@ -17,6 +17,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <spdlog/spdlog.h>
 #include "SystemControl.h"
 #include "DebugIntf.h"
 #include "MsgIntf.h"
@@ -1516,10 +1517,14 @@ tTVPWaveSoundBufferThread::tTVPWaveSoundBufferThread() :
 tTVPWaveSoundBufferThread::~tTVPWaveSoundBufferThread() {
     SetPriority(ttpNormal);
     Resume();
-    Event.Set();
+    // 必须**先**置结束标志再 join：Execute() 是 while(!GetTerminated()) 无限循环，
+    // 原实现在 WaitFor()（Handle.join()）之后才 Terminate()，线程永远收不到结束
+    // 标志 → join 永久阻塞。硬性进程退出时被 OS 回收掩盖，runtime-restart 的进程内
+    // 优雅 teardown（TVPShutdownWaveSoundBuffers）必然命中 -> 退出卡死。
+    Terminate();
+    Event.Set(); // 唤醒 Event.WaitFor(timeout)，让循环立刻退出
     WaitFor();
     EventQueue.Deallocate();
-    Terminate();
 }
 
 //---------------------------------------------------------------------------
@@ -1694,10 +1699,13 @@ static void TVPReleaseSoundBuffers(bool disableevent = true) {
 
 //---------------------------------------------------------------------------
 static void TVPShutdownWaveSoundBuffers() {
+    // 逐 handler 打点：真机退出卡死时据最后一条日志定位卡在哪个 at-exit handler。
+    spdlog::info("at-exit PREPARE: ShutdownWaveSoundBuffers begin");
     // clean up soundbuffers at exit
     if(TVPWaveSoundBufferThread)
         delete TVPWaveSoundBufferThread, TVPWaveSoundBufferThread = nullptr;
     TVPReleaseSoundBuffers();
+    spdlog::info("at-exit PREPARE: ShutdownWaveSoundBuffers end");
 }
 
 static tTVPAtExit
