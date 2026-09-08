@@ -54,7 +54,7 @@
 - 现况：Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/HardLight/Exclusion 在 `tvpgl_simd_init.cpp`
   **不再注册 SIMD**（回退标量）。原因：逐字节 u16+`OrderedDemote2To` 饱和 vs 标量 32 位打包跨字节借位截断，
   结构性不等（CI 曾 16 处 mismatch）；`8ff8760` 回退后 Linux CI 全绿。
-- 放回前提：用 [harness_ps.cpp](../harness_ps.cpp) 实证位级一致的算法 = u8 混合核心+u32 打包 alpha；
+- 放回前提：用 [harness_ps.cpp](https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp) 实证位级一致的算法 = u8 混合核心+u32 打包 alpha；
   改写 Highway **u32 lane** 后放回。功能已由标量保证；非 PS 混合已对齐标量。
 
 ### — §5. KAGEX / KAG 差异兼容（kagexopt 相关）
