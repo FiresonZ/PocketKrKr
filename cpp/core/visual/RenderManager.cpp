@@ -4966,9 +4966,6 @@ void TVPResetRenderManagerForRestart() {
     _RenderManagerInitialized = false;
     // 一并失效软件渲染判定缓存，避免二次打开沿用上一次的静态结果。
     s_renderManagerSoftwareCached = false;
-    // 复位 OpenGL 渲染器的扩展/纹理格式/shader/回调缓存，避免二次 open_game
-    // 复用上一游戏探测到的 GL 全局态（对照上游 PR#12）。
-    TVPResetOpenGLRenderManagerForRestart();
 }
 
 bool TVPIsSoftwareRenderManager() {

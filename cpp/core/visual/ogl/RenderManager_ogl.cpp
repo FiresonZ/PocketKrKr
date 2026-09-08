@@ -4992,25 +4992,6 @@ public:
 
 REGISTER_RENDERMANAGER(TVPRenderManager_OpenGL, opengl);
 
-//---------------------------------------------------------------------------
-// OpenGL 渲染器 runtime-restart 复位（对照上游 PR#12）
-//---------------------------------------------------------------------------
-static void TVPResetOpenGLGlobalsForRestart() {
-    // 清空本次启动探测到的 GL 扩展 / 纹理格式缓存，二次 open_game 用新 context 重建。
-    sTVPGLExtensions.clear();
-    TVPGLExtensionInfoInited = false;
-    GL_CHECK_unpack_subimage = false;
-    GL_CHECK_shader_framebuffer_fetch = false;
-    TVPTextureFormats.clear();
-}
-
-void TVPResetOpenGLRenderManagerForRestart() {
-    tTVPOGLRenderMethod_Script::ClearCache();
-    TVPResetOpenGLGlobalsForRestart();
-    krkr::gl::ClearRendererRecreatedCallbacks();
-    krkr::gl::InvalidateStateCache();
-}
-
 // Explicit registration function to force linker to include this translation unit
 // (static library dead-stripping would otherwise discard the auto-register global)
 void TVPForceRegisterOpenGLRenderManager() {

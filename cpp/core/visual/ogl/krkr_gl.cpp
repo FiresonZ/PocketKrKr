@@ -146,9 +146,5 @@ void FireRendererRecreated() {
     }
 }
 
-void ClearRendererRecreatedCallbacks() {
-    s_rendererRecreatedCallbacks.clear();
-}
-
 } // namespace gl
 } // namespace krkr
