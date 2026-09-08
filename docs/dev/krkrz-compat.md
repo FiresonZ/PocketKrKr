@@ -335,6 +335,24 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 配合判：
 - game#2 段 `TimerProbe delta=0` + `ContinuousProbe` 两向量空 → **脚本每帧驱动未建立**（即使脚本起过一次），
   治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
+- game#2 段 `TimerProbe delta≈4` 在转 + `[TVP Console] エラーが発生しました` → **游戏脚本/KAG 自身报错**停画，非重启状态 bug。
+
+### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log，2026-09-08）
+
+**这次"第二个游戏黑屏"的根因是 IINCHO 的 KAG 标签错误，不是 runtime-restart 状态 bug：**
+- game1=Kemomusu：KAG 栈完整（KAGParserEx/MainWindow/KAGLayer… 全 Success），渲染链全程健康
+  （`RequestUpdate` 增长 → `DeliverWinUpdate` → `UpdateDrawBuffer layers=69 draw=25` → `SourceSample 全非黑` → `PostBlit err=0`）。
+- game2=IINCHO：startup 后脚本执行 `first.ks` 第 1 行 `[linemode]` 抛
+  **`タグ/マクロ "linemode" は存在しません`**（KAG 未定义该标签）→ 画停。此后 `Application::Run`
+  每 tick 在跑、`TimerProbe delta≈4`、`ContinuousProbe handlerVec=2` 都正常，但主层不再变化 →
+  无 `RequestUpdate`/`DeliverWinUpdate` → 黑屏定格。
+- 判据：错误发生在**任何渲染之前**、且 KAG 报错由场景脚本解析期抛出，与重启残留无关
+  （时间线说明定时器/连续事件/引擎 tick 全部照常运转）。故这是 IINCHO 在此引擎上的 **KAG/插件兼容缺口**。
+- 注意区分：之前"同游戏复开正常、换游戏才黑"恰因从兼容游戏（Kemomusu）切到不兼容游戏（IINCHO）。
+  **复核法**：把 IINCHO 作为第一个游戏整体新开，若同样抛 `[linemode]` 错误+黑屏即证为游戏兼容问题，
+  与重启无关。`[linemode]` 未在本项目任何 KAG/override 中定义（引擎源码仅一处无关 MultilineMode）。
+
+记录此日志文件名供后续对照：`.uploads/29c5fff9-...-pocketkrkr_engine(12).log`
 
 ## 自检 / 验收
 
