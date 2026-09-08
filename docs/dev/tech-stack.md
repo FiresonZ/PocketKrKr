@@ -41,7 +41,6 @@
 | tinyxml2 / libxml2 / uchardet                      | XML/编码                                             |
 | unrar                                              | RAR 解压                                             |
 | highway                                            | SIMD 像素混合（`visual/simd/tvpgl_simd_*`）              |
-| bullet3                                            | 物理（部分插件）                                           |
 | cubism（Live2D，非 vcpkg）                             | `cpp/plugins/cubism`，SDK 需手动下载（gitignored）         |
 
 > 平台条件：`argparse` 仅 macOS（工具用）；`catch2`/`openmp` 排除 iOS；其余全平台共享。
