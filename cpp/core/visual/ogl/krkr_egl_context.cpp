@@ -223,6 +223,10 @@ bool EGLContextManager::Initialize(uint32_t width, uint32_t height,
 
 void EGLContextManager::Destroy() {
     DestroyNativeWindowResources();
+    // 在 context 仍 current 时清理 IOSurface FBO/纹理/Pbuffer 资源并复位字段，
+    // 避免 runtime-restart 二次 AttachIOSurface 沿用上一 context 的陈旧 GL 句柄。
+    // Android 走 NativeWindow，iosurface_* 恒为 0，此处 no-op。
+    DestroyIOSurfaceResources();
     if (display_ != EGL_NO_DISPLAY) {
         eglMakeCurrent(display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 

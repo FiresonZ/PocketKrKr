@@ -215,6 +215,37 @@ public:
             // TVPSetRenderTarget(0) will unbind any texture from the engine FBO.
             extern void TVPSetRenderTarget(GLuint);
 
+            // ── 决定性探针：对比 blit 源纹理(nativeGLTex) 与引擎当前合成所写的
+            // render-target 附件纹理 id。
+            //   nativeGLTex == rtTex -> 引擎写进了我们采样的同一纹理：
+            //      源黑 = 引擎画了黑/没画（问题在合成内容/脚本，非纹理脱节）。
+            //   nativeGLTex != rtTex -> 引擎画进了别的纹理：二次打开主 DrawBuffer 与
+            //      blit 源脱节（重启状态残留）。仅 KRKR_RENDER_PROBE 时编译。
+#if defined(KRKR_RENDER_PROBE)
+            {
+                GLint curFbo = 0;
+                glGetIntegerv(GL_FRAMEBUFFER_BINDING, &curFbo);
+                GLint rtTex = 0, rtType = 0;
+                if (curFbo != 0) {
+                    glGetFramebufferAttachmentParameteriv(
+                        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                        GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &rtType);
+                    if (rtType == GL_TEXTURE) {
+                        glGetFramebufferAttachmentParameteriv(
+                            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                            GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &rtTex);
+                    }
+                }
+                spdlog::info(
+                    "FlutterWindowLayer::RTProbe: blitSrcTex={} engineCurFbo={} fboAttachedTex={} rtType=0x{:x}{}",
+                    static_cast<unsigned>(nativeGLTex),
+                    static_cast<int>(curFbo),
+                    static_cast<int>(rtTex),
+                    static_cast<unsigned>(rtType),
+                    (nativeGLTex == static_cast<uint32_t>(rtTex)) ? " [SAME]" : " [DIFF]");
+            }
+#endif // KRKR_RENDER_PROBE
+
             TVPSetRenderTarget(0);
             blitSrcTexture = static_cast<GLuint>(nativeGLTex);
         } else {

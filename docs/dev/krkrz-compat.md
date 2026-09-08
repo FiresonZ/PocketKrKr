@@ -93,6 +93,115 @@
 - 当前最大阻塞仍是 P0 两个**引擎能力**（drawdeviceZ 主 buffer 合成 + krmovie Present），
   不靠写插件解决。
 
+## drawdeviceD3DZ 深挖（2026-09-08）
+
+> 对 Kirikiroid2 `RenderManager_ogl.cpp` 与本项目同文件逐环节比对（子代理 + 人工复核），
+> 结论与定位如下，防止返工。
+
+### 结论（重要）
+- **黑屏根因不在 `RenderManager_ogl.cpp` 内部合成算法**：本文件与 Kirikiroid2 逐环节
+  一一对应、逻辑等价（`SetRenderTarget/_RestoreGLStatues/InitGL/GetTempTexture2D/CopyTexture/
+  CreateTexture2D/OperateRect/OperateTriangles/OperatePerspective/Stencil` 全匹配）。
+- **场景一次绘制入口不在本文件**：合成入口在 `cpp/core/visual/LayerBitmapIntf.cpp`
+  （`TVPGetRenderManager()->OperateRect`）、`LayerIntf.cpp`、`impl/PassThroughDrawDevice.cpp`；
+  参考(Kirikiroid2)对应在它自己的 `LayerImpl.cpp`/`BitmapLayerTreeOwner.cpp`。
+- 因此 **drawdeviceD3DZ 在移动端不存在可照搬的独立"插件文件"**，它是渲染管线如何让
+  Z 主 `DrawBuffer` 被实际画入 primary texture 的问题，属 core/visual 能力，非插件。
+
+### 待实机复核的 3 处候选（按性价比排序）
+| # | 候选 | 现状 | 真机验证动作 |
+|---|---|---|---|
+| C | 渲染管理器注册/链接 | **代码已核实正确**：`EngineBootstrap.cpp:61` 在 EGL 就绪后、首次 `TVPGetRenderManager()` 前调 `TVPForceRegisterOpenGLRenderManager()`；宏在 `RenderManager.h:319-326` | 首帧打点确认 `TVPGetRenderManager()` 非空且为 OpenGL 管理器 |
+| A | `krkr::gl` 包装 vs `cocos2d::GL` 语义等价（viewport/FBO bind/blend cache/attribute enable） | 本项目相对参考新增的重写层，最可能画错/画到失效 FBO | 开 `enable_render_probe` 抓 `SourceSample`/`PostBlit`，看主 DrawBuffer 是否被写入纹理 |
+| B | Renderer-recreated/FBO 重建 | `5fd30da` 已增强重建 `_FBO`/`_stencil_FBO` 并复位状态（二次打开），系正确修复 | 两游戏不杀进程二次打开复核渲染 |
+
+### 首选下一步
+真机开 `enable_render_probe=true` 抓二次打开黑屏日志：确认主 `DrawBuffer` 的 `OperateRect`/
+合成是否真的被触发。若 `SourceSample`/draw 计数缺失（现状据 2026-09-08 日志正是如此，
+且日志仍存在重复问题见 `engine_api.cpp` 4e47e97 修复），则先到 `LayerBitmapIntf.cpp`/
+`PassThroughDrawDevice.cpp` 定位"主 DrawBuffer 从未被合成"的调用缺失一环，再据候选 A/B 修正。
+
+## 探针实测结论（2026-09-08，先开 IINCHO-Re.co 后开 千恋万花）
+
+> 开 `KRKR_RENDER_PROBE` 抓 `pocketkrkr_engine(8).log`（修复日志重复前）。长 3347 行，
+> 两次 `engine_open_game` 各一段。关键在 `FlutterWindowLayer::UpdateDrawBuffer/SourceSample/PostBlit`。
+
+### 证据
+| 项目 | 第一游戏 IINCHO-Re.co（正常） | 第二游戏 千恋万花（黑屏） |
+|---|---|---|
+| UpdateDrawBuffer | `nativeTex=83 srcTex=83 blitTex=84 1280x720 layers=69 draw=15`，持续 | `nativeTex=3 srcTex=3 blitTex=7 1920x1080 layers=215 draw=5`，仅 1 帧 |
+| SourceSample | `nonBlack=25/25` 全程健康，颜色随时间渐变 | `nonBlack=0/25 avg=(0,0,0,255)`（全黑） |
+| PostBlit center | 非黑 | `(0,0,0,255)`（黑） |
+| 渲染频率 | 持续 ~20 采样/秒 | 首帧后 **2.8s 无任何 frame 采样**（探针每 5 帧必打）→ present/渲染循环停摆 |
+| 插件 | — | `k2compat/kztouch/krmovie/kagexopt/menu/yuzuex/lzfs/multiimage/win32ole/motionplayer_nod3d/PackinOne/extNagano/krkrsteam` 全 **Failed** |
+| 启动脚本 | 正常 | `startup.tjs` 正常跑完，`layers=215`，无崩溃 |
+
+### 结论（纠正方向，重要）
+- **这次黑屏是 runtime-restart（二次打开）专属问题，不是 drawdeviceD3DZ 的 Z 引擎根本缺口。**
+  依据：千恋万花作为**第一个游戏**已被真机验证能正常出画面；探针也证明第一游戏合成+blit
+  全链路正常，仅重启后的第二游戏出问题。
+- **黑屏现象两异常**：
+  1. 第二游戏 `draw=5`（引擎发起了合成）但 `SourceSample` 全黑 → **合成没画进 blit 源纹理
+     srcTex=3**。→ 对应候选 A（`krkr::gl` FBO/state 在重启后的语义错配）。
+  2. 首帧后 2.8s 无任何 frame → **游戏逻辑/定时器或 present 循环重启后未恢复**（与"第二次
+     打开日志比第一次少"观察吻合）。
+- **插件大量 Failed 不是本次黑屏主因**：它们缺但游戏能作为第一游戏跑起来，故 Z 插件兼容属
+  独立问题（见本文档清单），与本次二次打开黑屏脱钩。
+
+### 下一步（替换原 drawdeviceD3DZ 首选）
+不再先做 drawdeviceD3DZ。转向重启状态排查：
+1. 定位第二游戏 `draw` 的合成为何没进 `srcTex`（`krkr::gl` FBO bind / FlutterWindowLayer
+   `blitSrcTexture` 在重启后的解析）→ 候选 A。
+2. 定位第二游戏渲染循环为何停摆：`EngineLoop` tick 调度 / 连续处理器 / present 未随二次
+   `StartApplication` 重新拉起。
+
+## 重启复位链静态审计（2026-09-08）
+
+> 背景：上游 KrKr2-Next master 的 `engine_destroy` 仍报 "runtime restart is not supported yet"
+> （即上游不热重启），我们这份"对照 PR#12"的重启复位链是全 fork 自写的、无上游可对照。
+> 因此改为审计我们自身复位链完整性，找出漏掉的进程级静态。
+
+### 结论
+复位链（`engine_api.cpp engine_destroy` 内）对多数子系统已彻底：脚本/存储/窗口/字体/位图/插件/
+EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreated`）均已清或重建。
+
+剩余 4 处进程级静态漏项，但**只有个别对 Android 二次黑屏成立**：
+
+| # | 漏项 | 位置 | 是否解释 Android 二次黑屏 |
+|---|---|---|---|
+| 1 | `tTVPAtExit` 一次性注册失效，二次退出静态清理不执行，跨代累积污染 | `base/SysInitIntf.cpp:114-160` | 结构性；单次重启影响弱 |
+| 2 | `TVPDrawSceneOnce` 的 `static lastTick` 不复位 | `environ/EngineLoop.cpp:62-75` | ❌ 不适用：`engine_tick` 恒 `interval=0` 调用，合成照常发生（探针 draw 增长为证） |
+| 3 | `EGLContextManager::Destroy()` 漏调 `DestroyIOSurfaceResources()` 复位 IOSurface 字段 | `visual/ogl/krkr_egl_context.cpp:224` | ❌ 仅 iOS/macOS；Android 走 NativeWindow 不受影响 |
+| 4 | `TVPIsSoftwareRenderManager` 的 `static bool ret` | `visual/RenderManager.cpp:4966` | 低危 |
+
+### 诚实结论（重要）
+静态审计**未能为 Android "第二游戏 draw=5 但 blit 源全黑 + 首帧后停摆"给出决定性单线根因**。
+#2/#3 与 Android 现象对不上。Android 高概率根因仍在：重启后 `FlutterWindowLayer` 的
+`blitSrcTexture` 与引擎实际主 DrawBuffer 未同步（此前候选 A）。要定死需一次探针日志区分
+"合成画错地方" vs "渲染循环停摆"。
+
+### 可低风险顺手修的（正确性卫生，非 Android 根因）
+- #2：显式复位 `TVPDrawSceneOnce` 的 `lastTick`（保护正 interval 内部路径）。
+- #3：`EGLContextManager::Destroy()` 内补 `DestroyIOSurfaceResources()`（iOS 干净重置）。
+- #4：失效 `static bool ret`。
+
+## 二次实测补充（2026-09-08，真机）
+
+**新证据**：第一个游戏成功跑完后，第二个不同游戏黑屏；但**不杀进程再次点开第一个游戏，仍能正常跑**。
+
+**判定（修正方向，重要）**：
+- 全局重启 teardown（EGL context 重建 + FBO 重建 + FlutterWindowLayer blit 路径）**基本健康**——
+  若全局渲染状态脏，重开同一个游戏也会黑，但实测不会。
+- 黑屏是**游戏/图层资源特定**的：同游戏复开正常、换游戏才黑 → 不同游戏走了不同的主层渲染路径。
+  IINCHO 用标准 primary layer 能出画面；千恋万花（Yuzusoft/Z 引擎）可能走 Z 型主 DrawBuffer，
+  引擎未给其合成 → 黑屏。这与"千恋万花作为第一游戏其实也只是开了 logo、未真正渲染"一致。
+- 因此**候选 A（krkr::gl 全局状态）权重下调**；问题重新指向"Z 主层 DrawBuffer 未走标准合成"——
+  即 drawdeviceD3DZ 兼容（又回到 P0 渲染管线，但性质是"不同游戏主层路径"，非"重启残留"）。
+
+**待 RTProbe 定死**：`FlutterWindowLayer::RTProbe blitSrcTex X fboAttachedTex Z [SAME]/[DIFF]`
+- 对黑屏游戏若为 `DIFF` → 其主层画进了别的纹理（非 blit 源），属游戏特定主层/渲染目标设定。
+- 对黑屏游戏若为 `SAME` 但仍黑 → 引擎对它的主层画了黑/没画，指向该游戏主层用了未接入的钻取路径。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。

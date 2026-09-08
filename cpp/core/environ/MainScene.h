@@ -56,5 +56,8 @@ private:
 // Global functions previously defined in MainScene.cpp
 void TVPSetPostUpdateEvent(void (*f)());
 int TVPDrawSceneOnce(int interval);
+// runtime-restart：复位 TVPDrawSceneOnce 内部的进程级静态节拍，避免二次打开继承
+// 上一游戏 lastTick 算出巨大 remain 而跳过合成。
+void TVPResetDrawSceneOnceTimingForRestart();
 bool TVPGetKeyMouseAsyncState(unsigned int keycode, bool getcurrent);
 bool TVPGetJoyPadAsyncState(unsigned int keycode, bool getcurrent);

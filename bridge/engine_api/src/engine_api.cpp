@@ -892,6 +892,7 @@ engine_result_t engine_destroy(engine_handle_t handle) {
       TVPResetLayerBitmapImplForRestart();
       TVPResetFontImplForRestart();
       TVPResetTransIntfForRestart();
+      TVPResetDrawSceneOnceTimingForRestart();
       tTVPBitmapBitsAlloc::ResetForRestart();
       TVPResetExtensionClassInstallStateForRestart();
       TVPResetPluginSystemForRestart();
