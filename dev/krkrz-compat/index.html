@@ -2360,6 +2360,37 @@ game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <st
 - 故"插件列表 stale"不成立；真正差异仍集中在<strong>game2 自己的 KAG 模块表缺 LineMode.tjs</strong>（见上），
   待全新 IINCHO 日志定它是包配置如此还是重启加载丢失。</p>
 <p>记录此日志文件名供后续对照：<code>.uploads/29c5fff9-...-pocketkrkr_engine(12).log</code></p>
+<h3 id="ab-restart-engine1415log2026-09-08">决定性 A/B：换游戏黑屏是 restart 专属（engine(14)/(15).log，2026-09-08）<a class="headerlink" href="#ab-restart-engine1415log2026-09-08" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>用两份"同一进程多开"日志把换游戏黑屏定性为<strong>纯 restart 残留</strong>，并排除三个假说。</p>
+</blockquote>
+<p><strong>取证（log15 = IINCHO→Kemomusu→IINCHO 同一进程）：</strong>
+- game1 IINCHO(白)：<code>Config.tjs</code>(→118) → <code>KAG System スクリプトを読み込んでいます</code>(120) → 全 KAG 模块 →
+  <code>KAGMainWindow コンストラクタ</code>(156) → <code>RequestUpdate</code>(153) → 渲染。<strong>但全程无 <code>kag:</code> 对象</strong>（KAGParser.dll Failed）。
+- game3 IINCHO(黑)：插件 → 建窗 → <code>Startup script ended</code>(3950) → <strong>无 Config/KAG-System 模块加载块</strong> → 永不 RequestUpdate → 黑。
+- log14 game3 Kemomusu(白, 也 restart)：<strong>同样跳过 Config/KAG-System 块</strong>（无 LineMode 重载，<code>Member "kag" does not exist</code> L1233），
+  但 L1239 重建 <code>kag:</code> 对象、L1264 <code>UpdateDrawBuffer layers=207 draw=12</code> → 照样渲染。</p>
+<p><strong>结论：</strong>
+1. 黑屏 = restart 后游戏 startup 的"KAG System 模块加载块"被跳过，KAGMainWindow/层从未建立 → 永不 RequestUpdate。
+2. 该"跳过"是重启共性；Kemomusu 因能重建 KAG 解析器对象照常渲染，IINCHO 依赖该块致致命。
+3. <strong>排除假说</strong>：① KAGParser.dll 缺失 —— IINCHO 首次也 Failed 却正常；② 全局 <code>kag</code> 缺失 —— IINCHO 首次就无它却正常；
+   ③ TVPScenarioCache 残留 —— 重启 IINCHO 连 <code>first.ks</code> 也未加载，清缓存不会重新触发被跳过的 boot 块。
+4. 门控状态来源：Global 每次新建(tTJS <code>new</code>)、原生类每次重注册，均排除；<strong>剩余为某跨 restart 未复位的
+   C++ 进程级状态</strong> —— 触发点尚未从日志单钉死，待加"KAG boot 每步探针/抓首个抛错点"定位。</p>
+<p><strong>记录对比日志</strong>：<code>.uploads/0f0103b2-...-engine(14).log</code>（Kemomusu→IINCHO→Kemomusu）、
+<code>.uploads/77a31787-...-engine(15).log</code>（IINCHO→Kemomusu→IINCHO）。</p>
+<h3 id="pr12-2026-09-08">与上游 PR#12 的复位差异补口（2026-09-08）<a class="headerlink" href="#pr12-2026-09-08" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>逐条对照 <code>reAAAq/KrKr2-Next#12</code> 后，我们的复位序列基本同位，仅缺 OpenGL 渲染器复位；已移植。</p>
+</blockquote>
+<ul>
+<li><strong>已补（85684a8）</strong>：<code>TVPResetOpenGLRenderManagerForRestart()</code> + <code>TVPResetOpenGLGlobalsForRestart()</code>，
+  清 <code>sTVPGLExtensions</code>/延伸探测标志/<code>TVPTextureFormats</code>/<code>tTVPOGLRenderMethod_Script</code> shader 缓存/
+  <code>krkr::gl</code> 渲染器重建回调与新状态缓存；并在 <code>TVPResetRenderManagerForRestart()</code> 里追加调用。
+  PR#12 的 <code>GL::glCopyImageSubData</code> 等函数指针本仓不存在，略去。
+  <strong>未移植</strong>：PR#12 的异步启动状态机（<code>EnsureEngineRuntimeInitialized</code>/<code>engine_get_startup_state</code>/
+  <code>engine_drain_startup_logs</code>）——体量大属架构改造，暂缓。</li>
+</ul>
 <h2 id="_11">自检 / 验收<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
 <ul>
 <li>目标游戏（魔女的夜宴/sabbat_kr）启动后：主 <code>DrawBuffer</code> 被合成、源纹理非全黑、draw 计数增长。</li>
