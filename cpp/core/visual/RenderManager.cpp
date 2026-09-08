@@ -4951,6 +4951,11 @@ iTVPRenderManager *TVPGetRenderManager() {
     return _RenderManager;
 }
 
+// 软件渲染判定缓存（进程级 static，可复位）。避免函数局部 static 在 runtime-restart
+// 后仍缓存上一游戏的 IsSoftware() 结果。
+static bool s_renderManagerSoftwareCached = false;
+static bool s_renderManagerSoftware = false;
+
 void TVPResetRenderManagerForRestart() {
     // 渲染器是"undeletable"进程级单例（iTVPRenderManager 析构 protected），
     // 进程生命周期内从不销毁。runtime-restart 时只需清掉主单例指针与初始化
@@ -4959,12 +4964,17 @@ void TVPResetRenderManagerForRestart() {
     // 析构编译错误，并向引擎 teardown 引入悬垂。
     _RenderManager = nullptr;
     _RenderManagerInitialized = false;
+    // 一并失效软件渲染判定缓存，避免二次打开沿用上一次的静态结果。
+    s_renderManagerSoftwareCached = false;
 }
 
 bool TVPIsSoftwareRenderManager() {
     if(!_RenderManagerInitialized) return true; // assume software if not yet initialized
-    static bool ret = TVPGetRenderManager()->IsSoftware();
-    return ret;
+    if (!s_renderManagerSoftwareCached) {
+        s_renderManagerSoftware = TVPGetRenderManager()->IsSoftware();
+        s_renderManagerSoftwareCached = true;
+    }
+    return s_renderManagerSoftware;
 }
 
 iTVPRenderManager *TVPGetSoftwareRenderManager() { // for province image process

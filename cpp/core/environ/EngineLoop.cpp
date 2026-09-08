@@ -39,6 +39,10 @@ extern void TVPForceSwapBuffer();
 static void (*s_postUpdate)() = nullptr;
 void TVPSetPostUpdateEvent(void (*f)()) { s_postUpdate = f; }
 
+// TVPDrawSceneOnce 的进程级节拍（含有效性标志），runtime-restart 时复位。
+static tjs_uint64 s_drawSceneLastTick = 0;
+static bool s_drawSceneLastTickValid = false;
+
 // Async key/mouse state table — indexed by Windows VK code
 // Bit 0 = currently pressed, Bit 4 = was pressed since last query
 static tjs_uint8 s_scancode[0x200] = {};
@@ -60,8 +64,15 @@ bool TVPGetJoyPadAsyncState(tjs_uint keycode, bool getcurrent) {
 }
 
 int TVPDrawSceneOnce(int interval) {
-    static tjs_uint64 lastTick = TVPGetRoughTickCount32();
     tjs_uint64 curTick = TVPGetRoughTickCount32();
+    // 进程级静态节拍，首帧惰性取基准。runtime-restart 时由
+    // TVPResetDrawSceneOnceTimingForRestart() 置回未初始化，避免二次打开沿用
+    // 上一游戏的 lastTick 算出巨大 remain 而反复跳过合成（黑屏）。
+    tjs_uint64 &lastTick = s_drawSceneLastTick;
+    if (!s_drawSceneLastTickValid) {
+        lastTick = curTick;
+        s_drawSceneLastTickValid = true;
+    }
     int remain = interval - static_cast<int>(curTick - lastTick);
     if (remain <= 0) {
         if (s_postUpdate)
@@ -72,6 +83,11 @@ int TVPDrawSceneOnce(int interval) {
     } else {
         return remain;
     }
+}
+
+void TVPResetDrawSceneOnceTimingForRestart() {
+    // 下次 TVPDrawSceneOnce 重取节拍基准（engine_destroy 复位链调用）。
+    s_drawSceneLastTickValid = false;
 }
 
 // ---------------------------------------------------------------------------
