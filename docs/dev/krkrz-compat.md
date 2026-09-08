@@ -93,6 +93,34 @@
 - 当前最大阻塞仍是 P0 两个**引擎能力**（drawdeviceZ 主 buffer 合成 + krmovie Present），
   不靠写插件解决。
 
+## drawdeviceD3DZ 深挖（2026-09-08）
+
+> 对 Kirikiroid2 `RenderManager_ogl.cpp` 与本项目同文件逐环节比对（子代理 + 人工复核），
+> 结论与定位如下，防止返工。
+
+### 结论（重要）
+- **黑屏根因不在 `RenderManager_ogl.cpp` 内部合成算法**：本文件与 Kirikiroid2 逐环节
+  一一对应、逻辑等价（`SetRenderTarget/_RestoreGLStatues/InitGL/GetTempTexture2D/CopyTexture/
+  CreateTexture2D/OperateRect/OperateTriangles/OperatePerspective/Stencil` 全匹配）。
+- **场景一次绘制入口不在本文件**：合成入口在 `cpp/core/visual/LayerBitmapIntf.cpp`
+  （`TVPGetRenderManager()->OperateRect`）、`LayerIntf.cpp`、`impl/PassThroughDrawDevice.cpp`；
+  参考(Kirikiroid2)对应在它自己的 `LayerImpl.cpp`/`BitmapLayerTreeOwner.cpp`。
+- 因此 **drawdeviceD3DZ 在移动端不存在可照搬的独立"插件文件"**，它是渲染管线如何让
+  Z 主 `DrawBuffer` 被实际画入 primary texture 的问题，属 core/visual 能力，非插件。
+
+### 待实机复核的 3 处候选（按性价比排序）
+| # | 候选 | 现状 | 真机验证动作 |
+|---|---|---|---|
+| C | 渲染管理器注册/链接 | **代码已核实正确**：`EngineBootstrap.cpp:61` 在 EGL 就绪后、首次 `TVPGetRenderManager()` 前调 `TVPForceRegisterOpenGLRenderManager()`；宏在 `RenderManager.h:319-326` | 首帧打点确认 `TVPGetRenderManager()` 非空且为 OpenGL 管理器 |
+| A | `krkr::gl` 包装 vs `cocos2d::GL` 语义等价（viewport/FBO bind/blend cache/attribute enable） | 本项目相对参考新增的重写层，最可能画错/画到失效 FBO | 开 `enable_render_probe` 抓 `SourceSample`/`PostBlit`，看主 DrawBuffer 是否被写入纹理 |
+| B | Renderer-recreated/FBO 重建 | `5fd30da` 已增强重建 `_FBO`/`_stencil_FBO` 并复位状态（二次打开），系正确修复 | 两游戏不杀进程二次打开复核渲染 |
+
+### 首选下一步
+真机开 `enable_render_probe=true` 抓二次打开黑屏日志：确认主 `DrawBuffer` 的 `OperateRect`/
+合成是否真的被触发。若 `SourceSample`/draw 计数缺失（现状据 2026-09-08 日志正是如此，
+且日志仍存在重复问题见 `engine_api.cpp` 4e47e97 修复），则先到 `LayerBitmapIntf.cpp`/
+`PassThroughDrawDevice.cpp` 定位"主 DrawBuffer 从未被合成"的调用缺失一环，再据候选 A/B 修正。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
