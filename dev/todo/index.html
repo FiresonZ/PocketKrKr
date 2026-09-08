@@ -698,10 +698,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#2a-motionplayer-motiond3dadaptor" class="md-nav__link">
+  <a href="#2a-motionplayer-motiond3dadaptor-2-krkrz" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2a. motionplayer 缺 Motion.D3DAdaptor — 首屏后点击退出的兼容根因
+        2a. motionplayer 缺 Motion.D3DAdaptor — 千恋万花首屏后无法进入【已归入 §2 krkrz 兼容】
       
     </span>
   </a>
@@ -731,10 +731,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-runtime-restart-pr12" class="md-nav__link">
+  <a href="#3-runtime-restart" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
+        3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— ✅ 已全部解决
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3b-bug-skip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3b. 小 bug：快速 skip 时消息框（聊天框）偶发变黑色色块【间歇性，低优先，挂起】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3c-runtime-restart-auto-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3c. runtime-restart 切换【不同】游戏：旧游戏 auto-path 未清 → 路径污染/黑屏【已修，待真机】
       
     </span>
   </a>
@@ -1378,10 +1400,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#2a-motionplayer-motiond3dadaptor" class="md-nav__link">
+  <a href="#2a-motionplayer-motiond3dadaptor-2-krkrz" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2a. motionplayer 缺 Motion.D3DAdaptor — 首屏后点击退出的兼容根因
+        2a. motionplayer 缺 Motion.D3DAdaptor — 千恋万花首屏后无法进入【已归入 §2 krkrz 兼容】
       
     </span>
   </a>
@@ -1411,10 +1433,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-runtime-restart-pr12" class="md-nav__link">
+  <a href="#3-runtime-restart" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
+        3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— ✅ 已全部解决
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3b-bug-skip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3b. 小 bug：快速 skip 时消息框（聊天框）偶发变黑色色块【间歇性，低优先，挂起】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3c-runtime-restart-auto-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3c. runtime-restart 切换【不同】游戏：旧游戏 auto-path 未清 → 路径污染/黑屏【已修，待真机】
       
     </span>
   </a>
@@ -1555,29 +1599,32 @@
 <li>状态：真机不再永久转圈，可进入游戏。</li>
 </ul>
 <h2 id="_3">进行中 / 待验证<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="2a-motionplayer-motiond3dadaptor">2a. motionplayer 缺 <code>Motion.D3DAdaptor</code> — 首屏后点击退出的兼容根因<a class="headerlink" href="#2a-motionplayer-motiond3dadaptor" title="Permanent link">&para;</a></h3>
-<ul>
-<li>旧现象（千恋万花高压 真机日志）：开场播放 yuzulogo logo 后，<code>custom.ks:89</code>
+<h3 id="2a-motionplayer-motiond3dadaptor-2-krkrz">2a. motionplayer 缺 <code>Motion.D3DAdaptor</code> — 千恋万花首屏后无法进入【已归入 §2 krkrz 兼容】<a class="headerlink" href="#2a-motionplayer-motiond3dadaptor-2-krkrz" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>2026-09-08 决定</strong>：D3D 是 krkrz(Z) 插件闭源成员，按用户要求<strong>归入 §2「krkrz/Z 插件兼容」</strong>，
+与 drawdeviceD3DZ 等一并做，不再单列。千恋万花为 Z 兼容的典型实测游戏。
+下文保留排查历史供移植 D3D stub 时参考。
+- 旧现象（千恋万花高压 真机日志）：开场播放 yuzulogo logo 后，<code>custom.ks:89</code>
   访问 <code>Motion.D3DAdaptor</code>（<code>(property getter) motionD3DAdaptor</code>），早期报
-  <code>Member "D3DAdaptor" does not exist</code> → 脚本致命错误。</li>
-<li>根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
-  我们 motionplayer 未实现。</li>
-<li><strong>新增现象（2026-09-08 00:32 日志）</strong>：给 <code>D3DAdaptor</code> 返回 <code>undefined</code> 后，<code>Member
+  <code>Member "D3DAdaptor" does not exist</code> → 脚本致命错误。
+- 根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
+  我们 motionplayer 未实现。
+- <strong>新增现象（2026-09-08 00:32 日志）</strong>：给 <code>D3DAdaptor</code> 返回 <code>undefined</code> 后，<code>Member
   does not exist</code> 消失，但 krkrz 的 <code>affinesourcemotion.tjs drawAffine</code> 把
   <code>Motion.D3DAdaptor</code> <strong>当作 Object 传参/赋值</strong>（<code>new MotionXX(D3DAdaptor, …)</code>）→ 报
-  <code>Cannot convert the variable type (() to Object)</code>，<code>custom.ks:89</code> 致命 → logo 后崩溃+卡死。</li>
-<li>修复（本轮，<code>cpp/plugins/motionplayer/main.cpp</code>）：<code>getD3DAdaptor</code> 改为返回 <strong>stub 字典
+  <code>Cannot convert the variable type (() to Object)</code>，<code>custom.ks:89</code> 致命 → logo 后崩溃+卡死。
+- 修复（本轮，<code>cpp/plugins/motionplayer/main.cpp</code>）：<code>getD3DAdaptor</code> 改为返回 <strong>stub 字典
   对象</strong>（与 <code>Motion.enableD3D</code> 的 <code>getEnableD3D</code> 同一模式）而非 undefined，避免
-  <code>() → Object</code> 转换错误。后续若脚本访问 stub 的具体成员再逐项补。</li>
-<li><strong>再次复验（2026-09-08 01:51 真机日志）</strong>：字典 stub 仍崩溃——<code>affinesourcemotion.tjs</code>
+  <code>() → Object</code> 转换错误。后续若脚本访问 stub 的具体成员再逐项补。
+- <strong>再次复验（2026-09-08 01:51 真机日志）</strong>：字典 stub 仍崩溃——<code>affinesourcemotion.tjs</code>
   <code>drawAffine</code> 实际执行 <strong><code>new Motion.D3DAdaptor(…, w/2, h/2)</code></strong>（字节码
   <code>45 new %1, %9(%-1, %2, %3, %4, %6)</code>，%9 = D3DAdaptor 值），字典对象不是函数/类 →
-  <code>Not a function or invalid method/property type</code> 致命错误 → 主循环终止 → 退出。</li>
-<li><strong>二修（本轮）</strong>：<code>getD3DAdaptor</code> 改为返回<strong>可 new 的空类</strong>（<code>new tTJSNativeClass(TJS_W("D3DAdaptor"))</code>），
-  让 <code>new Motion.D3DAdaptor(...)</code> 成功创建实例；后续若脚本访问实例成员再逐项补 stub。</li>
-<li>待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor 实例
-  成员（如 drawAffine 里对实例的 getter/方法调用）的 stub。</li>
-</ul>
+  <code>Not a function or invalid method/property type</code> 致命错误 → 主循环终止 → 退出。
+- <strong>二修（本轮）</strong>：<code>getD3DAdaptor</code> 改为返回<strong>可 new 的空类</strong>（<code>new tTJSNativeClass(TJS_W("D3DAdaptor"))</code>），
+  让 <code>new Motion.D3DAdaptor(...)</code> 成功创建实例；后续若脚本访问实例成员再逐项补 stub。
+- 待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor 实例
+  成员（如 drawAffine 里对实例的 getter/方法调用）的 stub。</p>
+</blockquote>
 <h3 id="2-zkrkrzkirikiri-z">2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】<a class="headerlink" href="#2-zkrkrzkirikiri-z" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p>移植清单/参考源：见 <a href="../krkrz-compat/">krkrz-compat.md</a>（已确认各插件源码来源，含
@@ -1615,9 +1662,24 @@ krkrz/krkr2/Kirikiroid2 本地参考副本）。
 <li>参考：<code>cpp/core/visual/impl/VideoOvlImpl.cpp</code> 的 <code>EC_UPDATE</code> 处理与
   <code>iTVPVideoOverlay::PresentVideoImage</code> / <code>GetFrontBuffer</code> 契约。</li>
 </ul>
-<h3 id="3-runtime-restart-pr12">3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12<a class="headerlink" href="#3-runtime-restart-pr12" title="Permanent link">&para;</a></h3>
+<h3 id="3-runtime-restart">3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— ✅ 已全部解决<a class="headerlink" href="#3-runtime-restart" title="Permanent link">&para;</a></h3>
 <blockquote>
-<p><strong>📍当前状态（2026-09-08）</strong>：teardown 已按上游 PR#12 完整对照（engine_api.cpp：
+<p><strong>✅ 已全部解决（2026-09-08，真机复验）</strong>：
+- <strong>退出卡死</strong>根治：①<code>Application::OnExit</code> 在销毁脚本引擎前 <code>TVPClearLoggingHandlers()</code>
+  （<code>DebugIntf.cpp</code>，提前释放日志闭包，避免引擎死后 finalizer 命中失效 TJS 态）
+  → 提交 <code>4221543</code>；② 真正卡死点是音效线程析构：<code>~tTVPWaveSoundBufferThread</code>
+  原在 <code>WaitFor()</code>（join）后才 <code>Terminate()</code>，<code>Execute()</code> 是 <code>while(!GetTerminated())</code>
+  无限循环 → join 永久阻塞（进程退出被 OS 回收掩盖，进程内 teardown 必现）。
+  已改为先 <code>Terminate()</code>+<code>Event.Set()</code> 再 <code>WaitFor()</code> → 提交 <code>081a9c1</code>。
+- <strong>二次打开黑屏/乱屏</strong>根治（首开正常、仅 reset 后乱、杀进程重开正常）：EGL context
+  在重启时被 <code>EngineBootstrap::Shutdown</code> 销毁重建，但复用渲染器单例的 shader/共享
+  <code>_FBO</code>/模板 FBO 都是旧 context 的失效 id；<code>FireRendererRecreated</code> 全仓零调用（死代码）。
+  修复：<code>EngineBootstrap::InitializeGraphics</code> 在 context（重）建后真正调用
+  <code>krkr::gl::FireRendererRecreated()</code>，<code>RenderManager_ogl.cpp</code> 回调内除重建 shader 外
+  还重建 <code>_FBO</code>/<code>_stencil_FBO</code> 并复位 FBO 状态 → 提交 <code>5fd30da</code>。
+- 状态：两游戏不杀进程二次打开渲染正常，无黑屏/乱屏；杀进程重开亦正常。
+- 下文为排查/移植历史，保留作经验摘记。</p>
+<p><strong>📍历史排查状态（2026-09-08）</strong>：teardown 已按上游 PR#12 完整对照（engine_api.cpp：
 <code>OnExit→TVPSystemUninit→删 scene/loop→13 项 Reset→Bootstrap→g_runtime_started_once=false</code>）。
 装真机复验（01:51）两游戏（krkr2 IINCHO-Re.co 与 Z 千恋万花）退出均<strong>永久卡死在
 <code>TVPSystemUninit begin</code> 之后的 <code>TVPCauseAtExit()</code> 内某个 at-exit handler</strong>；项 C 端
@@ -1737,6 +1799,31 @@ plugin 走的是<strong>带完整 teardown 的那份</strong>（engine_api.cpp:7
   cherry-pick——该 PR 还夹带 launch_args/归档/.gitignore/CMake <code>TVP_SOURCE_ROOT</code> 等噪声）。
   移植后真机验证是否根治"杀后台/无法再开游戏"。若仍失败，再评估引擎热重启或新进程形态。</p>
 </blockquote>
+<h3 id="3b-bug-skip">3b. 小 bug：快速 skip 时消息框（聊天框）偶发变黑色色块【间歇性，低优先，挂起】<a class="headerlink" href="#3b-bug-skip" title="Permanent link">&para;</a></h3>
+<ul>
+<li>现象（2026-09-08 真机）：快速 skip 模式下，本应透明的消息框偶发整块变成<strong>黑色色块</strong>
+  （消息框背景层/遮罩变成不透明黑）。</li>
+<li>复现：<strong>间歇性，难复现</strong>——再次尝试快速 skip 未再出现。当前无稳定触发条件，暂不强查。</li>
+<li>推测方向（未验证）：skip 快速帧间的混合/预乘路径偶发把 alpha 写成 0xFF 的黑色，
+  或遮罩层未随 skip 正确刷新；与 runtime-restart 无关（单次运行即现）。</li>
+<li>处置：<strong>挂起（低优先）</strong>。下次再现时记录触发前场景（所在界面/哪一步 skip/消息框是否
+  正在淡入淡出），并抓 skip 瞬间渲染探针（<code>enable_render_probe=true</code>）日志复核混合路径。</li>
+</ul>
+<h3 id="3c-runtime-restart-auto-path">3c. runtime-restart 切换【不同】游戏：旧游戏 auto-path 未清 → 路径污染/黑屏【已修，待真机】<a class="headerlink" href="#3c-runtime-restart-auto-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li>现象（2026-09-08）：reset（进程内）后<strong>同款游戏可重开；换不同游戏打开变黑屏</strong>。
+  用户疑为 xp3 挂载/重挂载问题。</li>
+<li>根因（已定位）：<code>TVPAutoPathList</code>（全局 auto-path 列表）跨重启<strong>只增不清</strong>——
+  <code>TVPAutoMountProjectXP3Archives</code>/<code>TVPAddAutoPath</code>（脚本 <code>Storages.addAutoPath</code>）把
+  工程归档目录与脚本路径加进全局列表，<code>TVPResetStorageImplForRestart</code> 之前只清 apppath
+  缓存，<strong>从不清 auto-path</strong>。切到新游戏后，旧游戏归档路径仍留在搜索表最前，文件解析
+  可能命中旧游戏归档 → 资源错乱/黑屏；同款重启因 <code>TVPBoostAutoMountPaths</code> 去重挪位而看似正常。</li>
+<li>修复（本轮）：新增 <code>TVPClearAutoPathListForRestart()</code>（清 <code>TVPAutoPathList</code> + auto-path
+  缓存 + 失效路径表，<code>StorageIntf.{h,cpp}</code>），并在 <code>TVPResetStorageImplForRestart</code> 中调用，
+  reset 链末尾清空上一游戏累积的 auto-path → 新游戏只含自身挂载。</li>
+<li>待真机：不杀进程切换两个不同 krkr2 游戏，确认均能正常渲染、无黑屏。</li>
+<li>注：千恋万花是 krkrz(Z) 游戏，其黑屏属 §2 兼容问题，与此项（krkr2 游戏互切）区分。</li>
+</ul>
 <h3 id="4-simd">4. SIMD 公式逐模式修到位级一致（保正确回归）<a class="headerlink" href="#4-simd" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><strong>❗更正（2026-09-08，CI 实证）</strong>：下方 P2–P6 的「已放回 0 mismatch」对 <strong>11 个 PS 混合
