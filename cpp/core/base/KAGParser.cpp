@@ -15,9 +15,6 @@
 #include "tjsDictionary.h"
 #include "DebugIntf.h"
 #include "TextStream.h"
-#if defined(KRKR_RENDER_PROBE)
-#include <spdlog/spdlog.h>
-#endif
 
 namespace TJS {
     ttstr TJSMapGlobalStringMap(const ttstr &string);
@@ -958,20 +955,6 @@ void tTJSNI_KAGParser::LoadScenario(const ttstr &name) {
 
     BreakConditionAndMacro();
 
-    // ── KAG 加载探针（仅 KRKR_RENDER_PROBE）：区分二次打开场景是"从头加载"还是
-    // "命中相同 storage 续跑(Rewind)"，以及首场景名。二次打开若命中 Rewind 续跑，
-    // 说明 first.ks 的宏注册前奏不会被重放（脚本层已认为加载过）。
-#if defined(KRKR_RENDER_PROBE)
-    {
-        const bool hitRewind = (StorageName == name);
-        spdlog::info("KAGLoadScenario: name={} curStorage={} hitRewind={} curLine={}/{}",
-                     name.AsNarrowStdString(),
-                     StorageName.AsNarrowStdString(),
-                     (int)hitRewind, CurLine, LineCount);
-        spdlog::default_logger()->flush();
-    }
-#endif
-
     if(StorageName == name) {
         // avoid re-loading
         Rewind();
@@ -1696,21 +1679,6 @@ parse_start:
 
         ttstr tagname(tagnamestart, CurLineStr + CurPos - tagnamestart);
         tagname.ToLowerCase();
-#if defined(KRKR_RENDER_PROBE)
-        {
-            // ── KAG 标签流探针（仅 KRKR_RENDER_PROBE）：低频记录解析到的标签名与位置。
-            // 二次打开若首条就是 [linemode] 且来自 first.ks 第 1 行 -> 宏前奏确实没跑；
-            // 若序列正常(先 @eval/@call/macro) -> 不是场景位置问题而是宏注册本身失效。
-            static unsigned s_tagProbe = 0;
-            if((++s_tagProbe % 256) == 1) {
-                spdlog::info("KAGTag: {}.{} tag={} storage={}",
-                             StorageShortName.AsNarrowStdString(), TagLine,
-                             tagname.AsNarrowStdString(),
-                             StorageShortName.AsNarrowStdString());
-                spdlog::default_logger()->flush();
-            }
-        }
-#endif
         {
 
             tTJSVariant tag_val(tagname);
