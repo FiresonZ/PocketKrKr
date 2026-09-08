@@ -1454,7 +1454,23 @@ engine_result_t engine_tick(engine_handle_t handle, uint32_t delta_ms) {
   // TVPDrawSceneOnce() only restores GL state and calls SwapBuffer,
   // which is insufficient.
   if (::Application) {
+    // ── 帧驱动探针（仅 KRKR_RENDER_PROBE）：区分二次打开"无帧"是 host 不再调
+    // engine_tick，还是 engine_tick 被调了但 Application->Run() 没触发合成/blit。
+    // 若能看到 enter/return 却没有 UpdateDrawBuffer -> Run() 走不下去（主窗口/绘制未恢复）； 
+    // 若连 enter 都没有 -> host 停止调用 engine_tick。
+#if defined(KRKR_RENDER_PROBE)
+    if (impl->tick_count % 15 == 0) {
+      spdlog::info("engine_tick: tick={} Application::Run enter", impl->tick_count);
+      spdlog::default_logger()->flush();
+    }
+#endif
     ::Application->Run();
+#if defined(KRKR_RENDER_PROBE)
+    if (impl->tick_count % 15 == 0) {
+      spdlog::info("engine_tick: tick={} Application::Run return", impl->tick_count);
+      spdlog::default_logger()->flush();
+    }
+#endif
   }
   ::TVPDrawSceneOnce(0);
 

@@ -202,6 +202,24 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 - 对黑屏游戏若为 `DIFF` → 其主层画进了别的纹理（非 blit 源），属游戏特定主层/渲染目标设定。
 - 对黑屏游戏若为 `SAME` 但仍黑 → 引擎对它的主层画了黑/没画，指向该游戏主层用了未接入的钻取路径。
 
+### 二次实测补充②（2026-09-08，engine(9).log，旧版无 RTProbe）
+
+**序列**：Kemomusu(1st)｜正常(SourceSample 25/25 持续) → IINCHO(2nd)｜**无帧** → Kemomusu(3rd)｜正常(25/25 持续)。
+
+**决定性证据（修正方向②，重要）**：
+- 2nd 段 `StartApp 完成(923)` 到 destroy(945) 共 5.5s：仅 1 次 `engine_tick auto-attached`，
+  **其间无任何 UpdateDrawBuffer/SourceSample/帧**；那次 engine_tick 调 `Application->Run()` 也
+  **未触发任何 blit**。
+- 1st/3rd 段（相同游戏 Kemomusu）都持续出帧。
+- 结论：**二次打开(open#2)是"帧驱动/主窗口绘制没恢复"，既非合成画错目标，也非 drawdeviceD3DZ 主层，
+  更非具体游戏**（IINCHO+Tick 平时能跑，作为 2nd 打开照样无帧）。且呈位置性：open#2 失败、open#3 成功。
+
+**已加判别探针**（`engine_api.cpp` engine_tick，KRKR_RENDER_PROBE，每 15 tick）：
+`Application::Run enter / return` paired with 原有 `UpdateDrawBuffer`。
+- 2nd 段看到 enter/return 却无 UpdateDrawBuffer → `Application->Run()` 走不下（主窗口/绘制未恢复）。
+- 2nd 段连 enter 都没有 → host 停止调用 engine_tick。
+（此判别探针连同 RTProbe + 3 处复位卫生修复见 `d29009f`。）
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
