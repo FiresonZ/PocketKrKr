@@ -443,6 +443,16 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
 **记录对比日志**：`.uploads/0f0103b2-...-engine(14).log`（Kemomusu→IINCHO→Kemomusu）、
 `.uploads/77a31787-...-engine(15).log`（IINCHO→Kemomusu→IINCHO）。
 
+### 与上游 PR#12 的复位差异补口（2026-09-08）
+> 逐条对照 `reAAAq/KrKr2-Next#12` 后，我们的复位序列基本同位，仅缺 OpenGL 渲染器复位；已移植。
+
+- **已补（85684a8）**：`TVPResetOpenGLRenderManagerForRestart()` + `TVPResetOpenGLGlobalsForRestart()`，
+  清 `sTVPGLExtensions`/延伸探测标志/`TVPTextureFormats`/`tTVPOGLRenderMethod_Script` shader 缓存/
+  `krkr::gl` 渲染器重建回调与新状态缓存；并在 `TVPResetRenderManagerForRestart()` 里追加调用。
+  PR#12 的 `GL::glCopyImageSubData` 等函数指针本仓不存在，略去。
+  **未移植**：PR#12 的异步启动状态机（`EnsureEngineRuntimeInitialized`/`engine_get_startup_state`/
+  `engine_drain_startup_logs`）——体量大属架构改造，暂缓。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
