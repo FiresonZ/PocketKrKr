@@ -95,5 +95,12 @@ void OnRendererRecreated(std::function<void()> callback);
  */
 void FireRendererRecreated();
 
+/**
+ * Clear all registered renderer-recreated callbacks.
+ * Used on runtime-restart to discard callbacks bound to the previous
+ * render manager / GL context.
+ */
+void ClearRendererRecreatedCallbacks();
+
 } // namespace gl
 } // namespace krkr
