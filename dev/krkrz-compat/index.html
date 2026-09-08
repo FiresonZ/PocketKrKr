@@ -2264,7 +2264,19 @@ EGL context（Destroy+重建）/OpenGL 共享 <code>_FBO</code> 重建（<code>O
 <td>delta=0= TJS 定时器没推进</td>
 </tr>
 <tr>
-<td>（已有）<code>RTProbe</code>/<code>RequestUpdate</code>/<code>Run</code>/<code>DeliverWinUpdate</code>/<code>BasicShow</code></td>
+<td><code>KAGLoadScenario</code></td>
+<td><code>KAGParser.cpp</code> LoadScenario</td>
+<td><code>name / curStorage / hitRewind / curLine</code>，每次加载</td>
+<td>hitRewind=1 且 curLine&gt;0=二次命中 Rewind 续跑（宏前奏不复重）</td>
+</tr>
+<tr>
+<td><code>KAGTag</code></td>
+<td><code>KAGParser.cpp</code> _GetNextTag（tagname 取出处）</td>
+<td><code>storage.line tag=名</code>，每 256 条 tag</td>
+<td>二次打开首条即 [linemode] 且 line=1 → 宏前奏确实没跑；序列正常 → 宏注册本身失效</td>
+</tr>
+<tr>
+<td>（已有）<code>RTProbe</code>/<code>RequestUpdate</code>/<code>Run</code>/<code>DeliverWinUpdate</code></td>
 <td>见上</td>
 <td>—</td>
 <td>渲染链已证明健康</td>
@@ -2275,7 +2287,31 @@ EGL context（Destroy+重建）/OpenGL 共享 <code>_FBO</code> 重建（<code>O
 - game#2 段 <code>TimerProbe delta=0</code> + <code>ContinuousProbe</code> 两向量空 → <strong>脚本每帧驱动未建立</strong>（即使脚本起过一次），
   治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
 - game#2 段 <code>TimerProbe delta≈4</code> 在转 + <code>[TVP Console] エラーが発生しました</code> → <strong>游戏脚本/KAG 自身报错</strong>停画，非重启状态 bug。</p>
-<h3 id="pocketkrkr_engine12log2026-09-08-1">换游戏黑屏的实测定性（pocketkrkr_engine(12).log，2026-09-08）——第 1 版结论已被证伪，见修正<a class="headerlink" href="#pocketkrkr_engine12log2026-09-08-1" title="Permanent link">&para;</a></h3>
+<h3 id="pocketkrkr_engine12log-iincho-log132026-09-08">换游戏黑屏的实测定性（pocketkrkr_engine(12).log + IINCHO 单开 log13，2026-09-08）——重启残留已证实<a class="headerlink" href="#pocketkrkr_engine12log-iincho-log132026-09-08" title="Permanent link">&para;</a></h3>
+<p><strong>决定性对比（Kemomusu→IINCHO 重启 vs IINCHO 单开全新）：</strong>
+- <strong>IINCHO 单开（全新进程，engine(13).log）</strong>：渲染链全程健康——<code>RequestUpdate</code> 增长、<code>DeliverWinUpdate</code>
+  持续、<code>UpdateDrawBuffer layers=69 draw=15</code>、<code>PostBlit err=0</code> 且颜色逐帧变化（245,252→200,239→147,224…，
+  即在播内容）。<strong>全程无 <code>[linemode]</code> 报错、无 <code>first.ks : [linemode]</code> 字样</strong>。其 <code>first.ks</code> 先走前奏
+  <code>@eval KAGLoadScript('debug.dtjs')</code> → <code>@call ks_system.ks</code> → <code>@call cmdMacro.ks</code>（注册大量 <code>[macro ...]</code>），
+  之后 <code>[linemode]</code> 已被宏/标签覆盖定义，正常运行。
+- <strong>Kemomusu→IINCHO 重启（engine(12).log）</strong>：KAG 模块表与单开<strong>完全一致</strong>（都无 LineMode.tjs，模块表不是差异）；
+  <code>first.ks</code> 却<strong>跳过前奏</strong>，直接命中 <code>[linemode]</code> → <code>タグ/マクロ "linemode" は存在しません</code> → 画停黑屏。</p>
+<p>⇒ <strong>用户"重启后脚本/宏加载未 reset、仍是残留状态"的方向成立</strong>：二次启动时 first.ks 的宏定义前奏
+（KAGLoadScript/<code>@call cmdMacro.ks</code>）没执行/失效，导致 <code>[linemode]</code> 未注册。这不是插件列表（已否决），
+而是 <strong>KAG 场景宏/脚本的加载态在 in-process 重启下残留</strong>。修复方向：定位并复位 KAG 场景/宏加载的
+进程级残留（宏注册表/场景位置/已加载脚本缓存），使二次打开时 first.ks 前奏完整重跑。</p>
+<p><strong>reset 链缺口核对（2026-09-08）：<code>TVPScenarioCache</code> 是唯一未纳入 reset 的进程级全局。</strong>
+- engine_destroy 的 reset-for-restart 覆盖各子系统：存储/插件/类安装/渲染/字体/窗口/trans/drawscene/
+  extension 等均有 <code>TVPResetXXXForRestart()</code>。
+- 但 KAGParser.cpp 文件作用域的 <code>tTVPScenarioCache TVPScenarioCache(8)</code>（KAGParser.cpp:249）<strong>只在
+  <code>KAGParser::Clear()</code> 内部经 <code>TVPClearScnearioCache()</code> 清空</strong>，该 Clear 由脚本侧 <code>kag.Clear()</code> 触发；
+  engine 生命周期结束的 reset-for-restart <strong>没有清它</strong>。
+- 若二次启动的 KAG 沿用了首游戏遗留的场景缓存对象（两个游戏 first.ks 名不同本应不命中，但 cmdMacro/
+  KAGLoadScript 等共享名若在缓存中会命中首游戏残留），则前奏/宏注册场景可能被错误复用。
+- 候选修复：新增 <code>TVPClearScnearioCache()</code> 到 reset-for-restart 链（或在 teardown 时清一次），
+  与其余子系统一致。需评估脚本侧是否已自行 Clear（多数 KAG 启动会 new KAGParser，实例内各自独立，
+  全局缓存却是共享的）。</p>
+<h3 id="1">换游戏黑屏的实测定性（历史版本保留供追溯）——第 1 版结论已被证伪<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
 <p><strong>第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"</strong>。依据：game1=Kemomusu 渲染全健康，
 game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <strong><code>タグ/マクロ "linemode" は存在しません</code></strong> 后画停。
 但用户实测确认 <strong>IINCHO 是能正常游玩的正经游戏</strong> ⇒ 该 KAG 错误只在"作为第二游戏重启打开"时才出现，
