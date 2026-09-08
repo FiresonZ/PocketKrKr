@@ -14,9 +14,10 @@
   我们未接入。
 - **插件缺口**（real 游戏 `plugin/` 全 Failed，引擎无实现/stub）：`drawdeviceD3D/Z`、`kztouch`、`k2compat`、
   `kagexopt`、`multiimage`、`squirrel`、`PackinOne`。
+- **已做**：③ 挂名完成（`cpp/plugins/zcompat/zcompat_plugin.cpp`，16 个 Z 插件名内部注册，link 不再 Failed）。
 - **下一步**：① Windows 跑同游戏二分（引擎 vs 渲染链路）；② 对照 Kirikiroid2
   `src/core/visual/RenderManager_ogl.cpp`+`BasicDrawDevice.cpp` 与我们的 `RenderManager.*`，定位
-  DrawBuffer 未合成原因；③ ncb 内部给 Z 插件挂名（先可 link），再实现功能。
+  DrawBuffer 未合成原因；③ 挂名后逐个实现（squirrel/k2compat 先行）。
 
 ### P1 — §2a. motionplayer 缺 `Motion.D3DAdaptor`：千恋万花首屏后无法进入【属 motionplayer 兼容】
 > `Motion.D3DAdaptor` 是 **krkr2 motionplayer** 成员（Direct3D affine），非 krkrz/Z 专属——实证

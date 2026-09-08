@@ -93,6 +93,16 @@
 - 当前最大阻塞仍是 P0 两个**引擎能力**（drawdeviceZ 主 buffer 合成 + krmovie Present），
   不靠写插件解决。
 
+### Z 插件挂名（2026-09-09，`cpp/plugins/zcompat/zcompat_plugin.cpp`）
+- 用 `ncbCallbackAutoRegister`（空回调 `ZCompatStub`）在内部注册表挂名，让
+  `Plugins.link` 不再 Failed：drawdeviceD3DZ / drawdeviceD3D / kztouch / k2compat /
+  kagexopt / multiimage / squirrel / menu / yuzuex / lzfs / win32ole /
+  motionplayer_nod3d / PackinOne / extNagano / pkutil / xpzdec。
+- **刻意不挂名**：krmovie（P0 引擎工作，挂名会让游戏期待视频能力而实际 Present 未实现）；
+  KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。
+- 挂名只是「先可 link」：游戏若 `Plugins.isAvailable()` 为 true 后调用对应类/函数，
+  仍会抛「类不存在」——逐个实现的顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat）推进。
+
 ## drawdeviceD3DZ 深挖（2026-09-08）
 
 > 对 Kirikiroid2 `RenderManager_ogl.cpp` 与本项目同文件逐环节比对（子代理 + 人工复核），
