@@ -167,6 +167,7 @@ tjs_uint64 TVPEventSequenceNumberToProcess = 0;
 // current event sequence which must be processed
 
 static void TVPDestroyEventQueue() {
+    spdlog::info("at-exit PREPARE[1/4]: DestroyEventQueue begin");
     // delete all event objects
     // deletion of event object may cause other deletion of event
     // objects.
@@ -750,6 +751,7 @@ static std::vector<tTJSVariantClosure> TVPContinuousHandlerVector;
 static bool TVPContinuousEventProcessing = false;
 
 static void TVPDestroyContinuousHandlerVector() {
+    spdlog::info("at-exit PREPARE[2/4]: DestroyContinuousHandlerVector begin");
     std::vector<tTJSVariantClosure>::iterator i;
     for(i = TVPContinuousHandlerVector.begin();
         i != TVPContinuousHandlerVector.end(); i++) {

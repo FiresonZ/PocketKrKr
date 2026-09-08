@@ -25,6 +25,7 @@
 #include "SysInitImpl.h"
 #include "StorageIntf.h"
 #include "DebugIntf.h"
+#include <spdlog/spdlog.h>
 // #include "WindowFormUnit.h"
 void TVPInitWindowOptions();
 #include "UtilStreams.h"
@@ -188,6 +189,7 @@ void TVPUnmapPrerenderedFont(const tTVPFont &font) {
 }
 //---------------------------------------------------------------------------
 static void TVPUnmapAllPrerenderedFonts() {
+    spdlog::info("at-exit PREPARE[4/4]: UnmapAllPrerenderedFonts begin");
     // unmap all prerendered fonts
     std::vector<tTVPPrerenderedFontMap>::iterator i;
     for(i = TVPPrerenderedFontMapVector.begin();

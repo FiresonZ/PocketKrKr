@@ -28,6 +28,7 @@
 
 #include "Application.h"
 #include "combase.h"
+#include <spdlog/spdlog.h>
 
 extern void GetVideoOverlayObject(tTJSNI_VideoOverlay *callbackwin,
                                   struct IStream *stream,
@@ -69,6 +70,7 @@ static void TVPRemoveVideoOverlay(tTJSNI_VideoOverlay *ovl) {
 }
 //---------------------------------------------------------------------------
 static void TVPShutdownVideoOverlay() {
+    spdlog::info("at-exit PREPARE[3/4]: ShutdownVideoOverlay begin");
     // shutdown all overlay object and release krmovie.dll /
     // krflash.dll
     std::vector<tTJSNI_VideoOverlay *>::iterator i;
