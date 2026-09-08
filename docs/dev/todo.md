@@ -210,7 +210,7 @@
 > 与 conventions §9「SIMD≠标量→回退标量保正确」一致。修复后 Linux CI `tvpgl_simd_compare`
 > **全绿**。
 >
-> 待办（放回前提）：已用 [harness_ps.cpp](../../harness_ps.cpp) 实证**唯一能位级一致**的算法
+> 待办（放回前提）：已用 [harness_ps.cpp](https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp) 实证**唯一能位级一致**的算法
 > = **u8 混合核心 + u32 打包 alpha**（每像素 32 位打包复现标量跨字节借位，再 `&0xFF` 截断），
 > 11 模式 × 4 变体 × 2M 随机矢量 0 mismatch。需把它改写成 Highway **u32 lane** 后再放回注册。
 > 功能正确性已由标量保证；性能上 PS 混合暂为标量（VN 中少用，可接受）。

@@ -108,13 +108,13 @@ Apple 上必须对 ANGLE 的 `libGLESv2`/`libEGL`/`libANGLE` 用 `-force_load` �
 >
 > **✅ 最新定案（2026-09-08，Linux CI `tvpgl_simd_compare` 已全绿）**：
 > - 11 个 PS 混合模式（Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/HardLight/Exclusion）
->   在 [tvpgl_simd_init.cpp](../../../cpp/core/visual/simd/tvpgl_simd_init.cpp) **不再注册，回退标量**
+>   在 [tvpgl_simd_init.cpp](https://github.com/FiresonZ/PocketKrKr/blob/main/cpp/core/visual/simd/tvpgl_simd_init.cpp) **不再注册，回退标量**
 >   （提交 `8ff8760`）。
 > - **回退根因（结构性，非符号级）**：这些模式最终步骤 `ps_alpha_blend_func` 标量用
 >   **32 位打包 R/B 算术（跨字节借位 `%2^32`，B 下溢借 R）**；SIMD 用逐字节 u16 通道 +
 >   `OrderedDemote2To`（对 16 位中间值**饱和**到 0xFF，标量是 `&0xFF` **截断**）。二者**无法**逐位一致。
 > - 待办（放回前提）：用 **u32 lane** 复现标量打包算术（每像素 32 位）+ `&0xFF` 截断；
->   算法已由 [harness_ps.cpp](../../../harness_ps.cpp) 实证位级一致（u8 核心 + u32 打包 alpha），
+>   算法已由 [harness_ps.cpp](https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp) 实证位级一致（u8 核心 + u32 打包 alpha），
 >   尚需改写为 Highway u32 lane 并注册回放。
 > - 其余 SIMD（copy/fill、Alpha/Add/Sub/Mul/Screen blend、AdditiveAlphaBlend、convert、misc、blur）
 >   保持注册且与标量逐位一致（CI 覆盖）。
