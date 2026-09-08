@@ -155,6 +155,36 @@
 2. 定位第二游戏渲染循环为何停摆：`EngineLoop` tick 调度 / 连续处理器 / present 未随二次
    `StartApplication` 重新拉起。
 
+## 重启复位链静态审计（2026-09-08）
+
+> 背景：上游 KrKr2-Next master 的 `engine_destroy` 仍报 "runtime restart is not supported yet"
+> （即上游不热重启），我们这份"对照 PR#12"的重启复位链是全 fork 自写的、无上游可对照。
+> 因此改为审计我们自身复位链完整性，找出漏掉的进程级静态。
+
+### 结论
+复位链（`engine_api.cpp engine_destroy` 内）对多数子系统已彻底：脚本/存储/窗口/字体/位图/插件/
+EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreated`）均已清或重建。
+
+剩余 4 处进程级静态漏项，但**只有个别对 Android 二次黑屏成立**：
+
+| # | 漏项 | 位置 | 是否解释 Android 二次黑屏 |
+|---|---|---|---|
+| 1 | `tTVPAtExit` 一次性注册失效，二次退出静态清理不执行，跨代累积污染 | `base/SysInitIntf.cpp:114-160` | 结构性；单次重启影响弱 |
+| 2 | `TVPDrawSceneOnce` 的 `static lastTick` 不复位 | `environ/EngineLoop.cpp:62-75` | ❌ 不适用：`engine_tick` 恒 `interval=0` 调用，合成照常发生（探针 draw 增长为证） |
+| 3 | `EGLContextManager::Destroy()` 漏调 `DestroyIOSurfaceResources()` 复位 IOSurface 字段 | `visual/ogl/krkr_egl_context.cpp:224` | ❌ 仅 iOS/macOS；Android 走 NativeWindow 不受影响 |
+| 4 | `TVPIsSoftwareRenderManager` 的 `static bool ret` | `visual/RenderManager.cpp:4966` | 低危 |
+
+### 诚实结论（重要）
+静态审计**未能为 Android "第二游戏 draw=5 但 blit 源全黑 + 首帧后停摆"给出决定性单线根因**。
+#2/#3 与 Android 现象对不上。Android 高概率根因仍在：重启后 `FlutterWindowLayer` 的
+`blitSrcTexture` 与引擎实际主 DrawBuffer 未同步（此前候选 A）。要定死需一次探针日志区分
+"合成画错地方" vs "渲染循环停摆"。
+
+### 可低风险顺手修的（正确性卫生，非 Android 根因）
+- #2：显式复位 `TVPDrawSceneOnce` 的 `lastTick`（保护正 interval 内部路径）。
+- #3：`EGLContextManager::Destroy()` 内补 `DestroyIOSurfaceResources()`（iOS 干净重置）。
+- #4：失效 `static bool ret`。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
