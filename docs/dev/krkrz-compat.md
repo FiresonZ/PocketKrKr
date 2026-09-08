@@ -468,6 +468,26 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
 - **推进**：引擎侧已排除（异常/fallback/漏复位/重绘残留），改加 StorageExec 探针（TVPExecuteStorage 低频
   记录 startup 链实际执行的文件），直接对比 restart 时从哪个脚本断掉/跳过 KAG boot。
 
+### StartupProbe 二次确认 + 执行链定性（engine(3)(1).log，2026-09-09，Kemomusu→IINCHO→Kemomusu 探针包）
+- `StartupProbe` 三次启动**均为 `completed without throwing`** → gate 再次排除异常/fallback，是 startup.tjs 静默分支。
+- **渲染侧铁证**：IINCHO(第2个游戏) startup 后**仅一次全黑 blit**，此后 ~2.6s 运行期 `RequestUpdate=0`、
+  `DeliverWinUpdate=0`；而 C++ tick/Timer 健康（TimerProbe 56→94 持续触发）→ 黑屏 = 游戏脚本从不请求重绘，
+  tick/定时器/事件线程未停。
+- **资产/KAG 标记**：Kemomusu 两次启动都在 startup 窗口内 `kag:`（motionplayer ResourceManager）+ 加载
+  `ezsave.PIMG`/`bgmtitle.PIMG`；IINCHO **完全不加载任何 psb、无 motionplayer 初始化** → boot 链从未推进到
+  场景资产加载。
+- **cmdArgGen 澄清（非 gate）**：
+  - entry 值 Kemomusu=2、IINCHO=1 的差来自 **patch.tjs 是否存在**：Kemomusu 有 patch.tjs（exec#1，其中
+    `System.exeCommandLine=` 一次 +1）；IINCHO 无 patch.tjs → entry=1。与 restart 残留无关。
+  - IINCHO startup 期间 1→12（11 次 `System.exeCommandLine=`）= 其 config 链（config/gameConfig.tjs 等）
+    自身行为，首开同样会发生，非门控。
+- **IINCHO 启动链采样**（exec#121/#161）：config/gameConfig.tjs → `Plugins.link`（KAGParser.dll / menu.dll
+  Failed 被脚本吞掉继续）→ 建窗 → exDefaultMover.tjs → 完成。KAGParser.dll 加载失败属插件兼容清单
+  （P0 drawdeviceD3DZ 之外的 KAGParser 类插件），但首开也会失败，不是 restart gate。
+- **重开 Kemomusu（第3会话）正常渲染** → restart 残留并不破坏 Kemomusu；gate 是 IINCHO 特有的静默分支。
+- **下一步**：缺 IINCHO**首开**（工作态）基线。StorageExec 探针已改全量记录（exec# 累计序号），
+  用同一探针包跑「IINCHO 首开」与「Kemomusu→IINCHO」，diff 两条 StorageExec 链即可钉死分支断点脚本。
+
 ### PR#12 剩余差异全量扫描（2026-09-08/09）
 - ✅ **已对齐且保留**：全部 `TVPReset*ForRestart` + `TVPUnregisterInternalPluginsForRestart` +
   `TVPResetPluginSystemForRestart` + `ncbAutoRegister::ResetModuleStateForRestart` + FontImpl release；

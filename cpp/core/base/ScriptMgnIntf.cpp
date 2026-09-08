@@ -731,11 +731,11 @@ void TVPExecuteStorage(const ttstr &name, iTJSDispatch2 *context,
                        const tjs_char *modestr) {
     // execute storage which contains script
 #if defined(KRKR_RENDER_PROBE)
-    { // StorageExec 探针：记录 startup 链实际执行的 storage（低频），
-        // restart 时对比首开，看"跳过 KAG boot"是从哪个脚本断的。
+    { // StorageExec 探针：全量记录 startup 链实际执行的 storage（含 exec# 累计序号），
+        // 首开 vs restart 逐脚本 diff，钉死"跳过 KAG boot"是从哪个脚本断的。
         static unsigned s_exec = 0;
-        if((++s_exec % 40) == 1)
-            spdlog::info("StorageExec: name={}", name.AsStdString());
+        spdlog::info("StorageExec: exec#{} name={}", ++s_exec,
+                     name.AsStdString());
     }
 #endif
     if(!TVPScriptEngine)
