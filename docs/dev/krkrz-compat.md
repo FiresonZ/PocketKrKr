@@ -220,6 +220,27 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 - 2nd 段连 enter 都没有 → host 停止调用 engine_tick。
 （此判别探针连同 RTProbe + 3 处复位卫生修复见 `d29009f`。）
 
+### 二次实测补充③（2026-09-08，engine(10).log，带 RTProbe + Application::Run 探针的 release 包）
+
+**序列**：Kemomusu(1st) 正常 → IINCHO(2nd) 黑 → Kemomusu(3rd)（同题）。
+**决定性证据（彻底定性）**：
+- 1st/3rd：`RTProbe` **每帧** `blitSrcTex=3 engineCurFbo=1 fboAttachedTex=3 [SAME]`，
+  `Application::Run` 每 tick 进出，合成进同一纹理、持续出帧。
+- 2nd（IINCHO，5.4s）：`Application::Run enter/return` **持续每 tick 都在**
+  （tick=15…600），但 **RTProbe/UpdateDrawBuffer 只出现 1 帧（行1050 `blitSrcTex=81 [SAME]`）**，
+  之后到 destroy 再无 blit。
+- 结论：**host 一直在调 engine_tick、Application::Run 一直在跑**；不是"合成画错目标"、
+  也不是"host 停摆"。回收链是 **`Application::Run → SystemWatchTimerTimer → DeliverEvents → 
+  tTVPWinUpdateEvent → Window::UpdateContent → DrawDevice->Update()+Show → UpdateDrawBuffer`**，
+  二次打开从第 1 帧起**不再有窗口重绘（win update event/Show 不再触发）** → 画面停在第 1 帧黑块。
+
+**因此根因在框架重绘调度，不在 GL/合成/目标/ host 帧回调**。候选集中于：
+- `tTVPAtExit` 一次性注册失效（审计#1）→ 二次打开定时器/连续处理器未恢复，游戏不再请求重绘；
+- 或二次打开的 `TVPSystemControl`/`TVPTimer`/主窗口 update 事件投递未恢复。
+
+**下一步判别**：在 `tTVPWinUpdateEvent::Deliver`/`TVPWinUpdateEventQueue` 或 `TVPTimer::ProgressAllTimer`
+打点，确认 2nd 段是否还有窗口重绘事件被投递/分发，从而区分"框架没投递重绘"vs"投递了但 Show 没 blit"。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
