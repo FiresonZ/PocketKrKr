@@ -330,7 +330,9 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 |---|---|---|---|
 | `ContinuousProbe` | `EventIntf.cpp` TVPDeliverContinuousEvent | `eventVec / handlerVec` 大小，每 30 次 | 两向量空且不涨=连续驱动没建立 |
 | `TimerProbe` | `TVPTimer.cpp` ProgressAllTimer（FireNext 计数） | `cumulativeFired / delta`，每 30 次 | delta=0= TJS 定时器没推进 |
-| （已有）`RTProbe`/`RequestUpdate`/`Run`/`DeliverWinUpdate`/`BasicShow` | 见上 | — | 渲染链已证明健康 |
+| `KAGLoadScenario` | `KAGParser.cpp` LoadScenario | `name / curStorage / hitRewind / curLine`，每次加载 | hitRewind=1 且 curLine>0=二次命中 Rewind 续跑（宏前奏不复重） |
+| `KAGTag` | `KAGParser.cpp` _GetNextTag（tagname 取出处） | `storage.line tag=名`，每 256 条 tag | 二次打开首条即 [linemode] 且 line=1 → 宏前奏确实没跑；序列正常 → 宏注册本身失效 |
+| （已有）`RTProbe`/`RequestUpdate`/`Run`/`DeliverWinUpdate` | 见上 | — | 渲染链已证明健康 |
 
 配合判：
 - game#2 段 `TimerProbe delta=0` + `ContinuousProbe` 两向量空 → **脚本每帧驱动未建立**（即使脚本起过一次），
