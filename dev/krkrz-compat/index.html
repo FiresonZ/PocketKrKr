@@ -2448,6 +2448,22 @@ game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <st
 <li><strong>残余问题</strong>：修复日志后黑屏成因仍待一次复测——若 boot 尾段实际执行（图像加载/AfterInit/first.ks 只是日志被吞），
   黑屏=连续事件投递/重绘未建立；若尾段真未执行，则看恢复后的 KAG 报错。</li>
 </ul>
+<h3 id="tvpscenariocache-engine21log2026-09-09">根因钉死：TVPScenarioCache 跨游戏同名场景碰撞（engine(21).log，2026-09-09，日志修复后复测）<a class="headerlink" href="#tvpscenariocache-engine21log2026-09-09" title="Permanent link">&para;</a></h3>
+<ul>
+<li>日志修复后黑屏会话可见完整 boot 尾段：sys_* 图层加载 → AfterInit(232ms) → <code>Scenario loaded : first.ks</code> →
+  <strong><code>first.ks : [linemode]</code> → <code>エラーが発生しました / タグ/マクロ "linemode" は存在しません</code>（行 1）</strong>。</li>
+<li><strong>首开会话（engine(19)）first.ks 从 <code>@eval</code>/<code>@nextskip</code> 开始处理，无任何错误</strong> ⇒ 同一 <code>kag.loadScenario("first.ks")</code>
+  两次加载到了<strong>不同的 first.ks 内容</strong>：</li>
+<li>首开加载 IINCHO 自己的 first.ks（KAG3 stock 结构，@eval 开头）→ 正常。</li>
+<li>restart 后加载到 <strong>Kemomusu 的 first.ks</strong>（<code>[linemode]</code> 开头，KAGParserEx 系）→ IINCHO 的 KAG3 无 linemode → 报错 → boot 中止 → 黑屏。</li>
+<li><strong>机制</strong>：<code>TVPGetScenario</code>（KAGParser.cpp:266）以<strong>场景短名</strong>（如 "first.ks"）为 key 存进程级
+  <code>TVPScenarioCache</code>（文件作用域 static，KAGParser.cpp:249）；restart 不随 TJS VM 销毁、<code>TVPClearScnearioCache</code>
+  仅被 <code>KAGParser::Clear()</code>（脚本调 kag.clear()）触发。前一个游戏（Kemomusu）加载 first.ks 后缓存命中即跨游戏复用。</li>
+<li><strong>排除项</strong>：auto-path 表无污染（IINCHO 会话重建后 Total 3084 = IINCHO 自身 8 个 xp3 文件数，恰为
+  116+323+502+83+101+480+17+1462）；兄弟 xp3 扫描两者均 "No sibling"（xp3 在各游戏目录内，父目录无裸 xp3）。</li>
+<li><strong>修复</strong>：<code>TVPResetRuntimeForRestart</code>（engine_destroy 复位链）中调用 <code>TVPClearScnearioCache()</code>，
+  换游戏/复开前清空跨游戏残留的场景缓存。同游戏复开仅损失一次场景解压。</li>
+</ul>
 <h3 id="pr12-2026-09-0809">PR#12 剩余差异全量扫描（2026-09-08/09）<a class="headerlink" href="#pr12-2026-09-0809" title="Permanent link">&para;</a></h3>
 <ul>
 <li>✅ <strong>已对齐且保留</strong>：全部 <code>TVPReset*ForRestart</code> + <code>TVPUnregisterInternalPluginsForRestart</code> +
