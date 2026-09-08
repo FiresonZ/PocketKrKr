@@ -337,7 +337,23 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
   治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
 - game#2 段 `TimerProbe delta≈4` 在转 + `[TVP Console] エラーが発生しました` → **游戏脚本/KAG 自身报错**停画，非重启状态 bug。
 
-### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log，2026-09-08）——第 1 版结论已被证伪，见修正
+### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log + IINCHO 单开 log13，2026-09-08）——重启残留已证实
+
+**决定性对比（Kemomusu→IINCHO 重启 vs IINCHO 单开全新）：**
+- **IINCHO 单开（全新进程，engine(13).log）**：渲染链全程健康——`RequestUpdate` 增长、`DeliverWinUpdate`
+  持续、`UpdateDrawBuffer layers=69 draw=15`、`PostBlit err=0` 且颜色逐帧变化（245,252→200,239→147,224…，
+  即在播内容）。**全程无 `[linemode]` 报错、无 `first.ks : [linemode]` 字样**。其 `first.ks` 先走前奏
+  `@eval KAGLoadScript('debug.dtjs')` → `@call ks_system.ks` → `@call cmdMacro.ks`（注册大量 `[macro ...]`），
+  之后 `[linemode]` 已被宏/标签覆盖定义，正常运行。
+- **Kemomusu→IINCHO 重启（engine(12).log）**：KAG 模块表与单开**完全一致**（都无 LineMode.tjs，模块表不是差异）；
+  `first.ks` 却**跳过前奏**，直接命中 `[linemode]` → `タグ/マクロ "linemode" は存在しません` → 画停黑屏。
+
+⇒ **用户"重启后脚本/宏加载未 reset、仍是残留状态"的方向成立**：二次启动时 first.ks 的宏定义前奏
+（KAGLoadScript/`@call cmdMacro.ks`）没执行/失效，导致 `[linemode]` 未注册。这不是插件列表（已否决），
+而是 **KAG 场景宏/脚本的加载态在 in-process 重启下残留**。修复方向：定位并复位 KAG 场景/宏加载的
+进程级残留（宏注册表/场景位置/已加载脚本缓存），使二次打开时 first.ks 前奏完整重跑。
+
+### 换游戏黑屏的实测定性（历史版本保留供追溯）——第 1 版结论已被证伪
 
 **第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"**。依据：game1=Kemomusu 渲染全健康，
 game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "linemode" は存在しません`** 后画停。
