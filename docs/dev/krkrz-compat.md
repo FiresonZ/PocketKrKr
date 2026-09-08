@@ -364,6 +364,15 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
     继续追宏/override 的加载。
 - `[linemode]` 未在本项目 C++ 源码定义（仅脚本/KAG 侧注册），引擎源码仅一处无关 MultilineMode。
 
+**"reset 后还是第一个游戏的插件列表"假设——已被日志否决：**
+- game2 的 `tvpLoadPlugins` 用的是 **IINCHO 自己的插件列表**（extrans/layerExBTOA/layerExImage/wuvorbis/
+  KAGParser/menu/xpzdec），不是 Kemomusu 的（AlphaMovie/KAGParserEx/getSample/layerExDraw/psbfile/psd/windowEx）。
+- game2 挂载的也是自己的 8 个 xp3（iincho-re.co），路径/归档无 Kemomusu 残留 ⇒ 存储未泄漏。
+- reset 链本身完整：`TVPResetPluginSystemForRestart`（清自动加载计数/模块状态/ncb 注册表）、
+  `TVPResetExtensionClassInstallStateForRestart`（清全局类安装态）、`TVPResetStorageImplForRestart` 等均已实现。
+- 故"插件列表 stale"不成立；真正差异仍集中在**game2 自己的 KAG 模块表缺 LineMode.tjs**（见上），
+  待全新 IINCHO 日志定它是包配置如此还是重启加载丢失。
+
 记录此日志文件名供后续对照：`.uploads/29c5fff9-...-pocketkrkr_engine(12).log`
 
 ## 自检 / 验收
