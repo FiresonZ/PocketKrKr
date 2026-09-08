@@ -124,6 +124,12 @@ void TVPEngineBootstrap::InitializeGraphics(uint32_t width, uint32_t height,
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // EGL context（重）建完成、已 make current：通知已注册的渲染器重建其 GL 对象
+    // （shader/共享 FBO）。runtime-restart 时 context 被 Shutdown 销毁再重建，渲染器
+    // 是进程级复用单例，旧 context 的 GL id 全部失效，必须在重建后刷新，否则
+    // 二次打开渲染黑屏/乱屏（首次 open 该回调列表为空，无副作用）。
+    krkr::gl::FireRendererRecreated();
+
     spdlog::info("EngineBootstrap: ANGLE EGL context ready");
 }
 

@@ -2983,12 +2983,27 @@ protected:
 
         // Renderer recreated callback.
         // On Android, this rebuilds all shaders after GL context loss.
+        // 注意：此回调由 EngineBootstrap 在 EGL context（重）建后调用
+        // krkr::gl::FireRendererRecreated() 触发（runtime-restart 时 context 被
+        // Shutdown 销毁再重建，旧 context 的 GL 对象 id 全部失效）。除重建 shader
+        // 外，还必须重建共享 FBO/模板 FBO 并复位 FBO 状态——否则
+        // TVPSetRenderTarget 会在失效 _FBO 上合成 renderable 纹理，二次打开黑屏。
         krkr::gl::OnRendererRecreated([this]() {
             tTVPOGLRenderMethod_Script::ClearCache();
             for(auto it : AllMethods) {
                 tTVPOGLRenderMethod *method =
                     static_cast<tTVPOGLRenderMethod *>(it.second);
                 method->Rebuild();
+            }
+            // 旧 context 已销毁，其 FBO id 在新 context 下无效；直接覆盖为新 id
+            // （不能 glDelete，旧 id 可能已被新 context 复用）。InitGL 原在构造函数用
+            // glGenFramebuffers/glGenRenderbuffers 创建，这里等量重建。
+            if(_FBO || _stencil_FBO) {
+                glGenFramebuffers(1, &_FBO);
+                glGenRenderbuffers(1, &_stencil_FBO);
+                _screenFrameBuffer = 0;
+                _CurrentFBOValid = false;
+                _CurrentRenderTarget = 0;
             }
         });
         TVPSetPostUpdateEvent(_RestoreGLStatues);
