@@ -2384,33 +2384,36 @@ game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <st
 <p>逐条对照 <code>reAAAq/KrKr2-Next#12</code> 后，我们的复位序列基本同位，仅缺 OpenGL 渲染器复位；已移植。</p>
 </blockquote>
 <ul>
-<li><strong>已补（85684a8）</strong>：<code>TVPResetOpenGLRenderManagerForRestart()</code> + <code>TVPResetOpenGLGlobalsForRestart()</code>，
-  清 <code>sTVPGLExtensions</code>/延伸探测标志/<code>TVPTextureFormats</code>/<code>tTVPOGLRenderMethod_Script</code> shader 缓存/
-  <code>krkr::gl</code> 渲染器重建回调与新状态缓存；并在 <code>TVPResetRenderManagerForRestart()</code> 里追加调用。
-  （最初误判 <code>GL::glCopyImageSubData</code> 等不存在而略去，见下"补 OGL 复位遗漏"。）
+<li><strong>曾移植（85684a8/86f2391，后因回归回退 →1fd6206/109704f）</strong>：
+  <code>TVPResetOpenGLRenderManagerForRestart()</code> + <code>TVPResetOpenGLGlobalsForRestart()</code>（清扩展/格式/GL 函数指针/
+  shader 缓存）+ <code>krkr::gl::ClearRendererRecreatedCallbacks()</code>。
+  <strong>回退原因</strong>：<code>ClearRendererRecreatedCallbacks()</code> 清掉了 <code>5fd30da</code> 依赖的、供 EGL context 重建后
+  <code>FireRendererRecreated()</code> 触发的"重建共享 _FBO/_stencil_FBO + shader"回调；而我们复用渲染器单例
+  （<code>TVPResetRenderManagerForRestart</code> 明言绝不 delete），PR#12 的设计是重建实例、二者生命周期不同 →
+  清回调致二次打开乱屏复现。且 OGL 复位也<strong>未修好换游戏黑屏</strong>。故整体回退，保留 5fd30da 机制。
   <strong>未移植</strong>：PR#12 的异步启动状态机（<code>EnsureEngineRuntimeInitialized</code>/<code>engine_get_startup_state</code>/
   <code>engine_drain_startup_logs</code>）——体量大属架构改造，暂缓。</li>
 </ul>
-<h3 id="pr12-2026-09-08_1">PR#12 剩余差异全量扫描（2026-09-08）<a class="headerlink" href="#pr12-2026-09-08_1" title="Permanent link">&para;</a></h3>
+<h3 id="startupprobe-conclusiveengine16log2026-09-09">StartupProbe 首测 conclusive（engine(16).log，2026-09-09）<a class="headerlink" href="#startupprobe-conclusiveengine16log2026-09-09" title="Permanent link">&para;</a></h3>
 <ul>
-<li>✅ <strong>已对齐</strong>：全部 <code>TVPReset*ForRestart</code>（脚本引擎/运行时/存储/应用/SysInitImpl/扩展/插件/ncbind/字体/
-  渐变/窗口/位图分配/图层位图/RenderManager）+ <code>TVPUnregisterInternalPluginsForRestart</code> +
-  <code>TVPResetPluginSystemForRestart</code> + <code>ncbAutoRegister::ResetModuleStateForRestart</code>(清 TVPRegisteredPlugins
-  +_internal_plugins) + FontImpl reset 调 TVPReleaseFontLibrary。</li>
-<li>✅ <strong>补 OGL 复位遗漏（86f2391）</strong>：<code>TVPResetOpenGLGlobalsForRestart</code> 清 <code>GL::glCopyImageSubData/
-  glClearTexImage/glClearTexSubImage/glAlphaFunc</code>（+_MSC_VER glGetTextureImage）——首次移植误以为不存在，
-  实则在 RenderManager_ogl 的 <code>namespace GL</code>（应该在，用户纠正正确）。</li>
-<li>✅ <strong>补 EngineLoop 析构复位（6521e4f）</strong>：<code>~EngineLoop()</code> 置 <code>s_postUpdate=nullptr</code> + <code>memset(s_scancode,0)</code>。</li>
-<li>🟡 <strong>暂缓：LogSetup.cpp/h（TVPConfigureLoggerPattern/TVPConfigureDefaultLoggerPattern）</strong>——异步启动机的
-  日志辅助，不移植异步机则死代码，待确认是否上异步机再定。</li>
+<li>三次启动（Kemomusu→IINCHO→Kemomusu）<code>StartupProbe</code> <strong>均为 <code>completed without throwing</code></strong>。</li>
+<li>首开 Kemomusu：<code>AppConfig/Config.tjs</code> + <code>KAG System スクリプト</code> 全链加载。</li>
+<li>非首开（IINCHO、重开 Kemomusu）：<strong>不加载 Config/KAG-System boot 块</strong>，且<strong>无任何文件打开失败/抛错</strong>。</li>
+<li>⇒ <strong>排除</strong>"异常吞掉/fallback"假设。黑屏是游戏 startup.tjs 里<strong>静默条件分支</strong>：restart 后读到某跨游戏
+  残留状态即提前返回、跳 KAG boot。Kemomusu 无 boot 也能渲染，IINCHO 依赖 boot 致黑。门控状态待进一步定位。</li>
+</ul>
+<h3 id="pr12-2026-09-0809">PR#12 剩余差异全量扫描（2026-09-08/09）<a class="headerlink" href="#pr12-2026-09-0809" title="Permanent link">&para;</a></h3>
+<ul>
+<li>✅ <strong>已对齐且保留</strong>：全部 <code>TVPReset*ForRestart</code> + <code>TVPUnregisterInternalPluginsForRestart</code> +
+  <code>TVPResetPluginSystemForRestart</code> + <code>ncbAutoRegister::ResetModuleStateForRestart</code> + FontImpl release；
+  EngineLoop 析构复位（6521e4f）。</li>
+<li>⭕ <strong>回退</strong>：OGL 复位/GL 函数指针/ClearRendererRecreatedCallbacks（见上，回归同游戏复开乱屏）。</li>
+<li>🟡 <strong>暂缓</strong>：LogSetup.cpp/h（异步机日志辅助，不移植异步机为死代码）。</li>
 <li>⚪ <strong>不适用/无需</strong>：</li>
-<li>StorageImpl <code>_tjs_normalize_nfc</code> GetLen 修复 —— 我们的 Apple 路径已用 <code>static_cast&lt;CFIndex&gt;(name.GetLen())</code>，
-    效果一致（殊途同归）。</li>
-<li>cubism/Live2DCubismCore.h + krkrlive2d.cpp（+188/-16 / +14/-3）—— 是 <strong>R4→R5 SDK 迁移</strong>（R5 删
-    ClearDrawableForceHiddenFlags、CreateRenderer 加宽高参数、改用 GetOverrideMultiplyAndScreenColor）；
-    我们仍用 R4 API，直接挪会编译不过；与 restart 无关，独立任务，暂不做。</li>
-<li>platforms/{linux,windows}/main.cpp 桌面端 spdlog 初始化 —— Android 走自有路径。</li>
-<li>CMakeLists(base/tjs2/plugins)/vcpkg libarchive/.gitignore/pubspec.lock —— 构建依赖/杂项。</li>
+<li>StorageImpl <code>_tjs_normalize_nfc</code> GetLen —— 我们的 Apple 路径已用 <code>static_cast&lt;CFIndex&gt;(name.GetLen())</code>，殊途同归。</li>
+<li>cubism/krkrlive2d（+188/-16 / +14/-3）—— R4→R5 SDK 迁移，我们仍用 R4 API，直接挪编译不过；与 restart 无关。</li>
+<li>platforms/{linux,windows}/main.cpp 桌面端 spdlog —— Android 走自有路径。</li>
+<li>CMakeLists/vcpkg libarchive/.gitignore/pubspec.lock —— 构建依赖/杂项。</li>
 </ul>
 <h2 id="_11">自检 / 验收<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
 <ul>
