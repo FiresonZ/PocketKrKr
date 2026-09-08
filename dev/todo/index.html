@@ -1542,8 +1542,14 @@
 <li>修复（本轮，<code>cpp/plugins/motionplayer/main.cpp</code>）：<code>getD3DAdaptor</code> 改为返回 <strong>stub 字典
   对象</strong>（与 <code>Motion.enableD3D</code> 的 <code>getEnableD3D</code> 同一模式）而非 undefined，避免
   <code>() → Object</code> 转换错误。后续若脚本访问 stub 的具体成员再逐项补。</li>
-<li>待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor / 相关
-  motionplayer 成员的 stub。</li>
+<li><strong>再次复验（2026-09-08 01:51 真机日志）</strong>：字典 stub 仍崩溃——<code>affinesourcemotion.tjs</code>
+  <code>drawAffine</code> 实际执行 <strong><code>new Motion.D3DAdaptor(…, w/2, h/2)</code></strong>（字节码
+  <code>45 new %1, %9(%-1, %2, %3, %4, %6)</code>，%9 = D3DAdaptor 值），字典对象不是函数/类 →
+  <code>Not a function or invalid method/property type</code> 致命错误 → 主循环终止 → 退出。</li>
+<li><strong>二修（本轮）</strong>：<code>getD3DAdaptor</code> 改为返回<strong>可 new 的空类</strong>（<code>new tTJSNativeClass(TJS_W("D3DAdaptor"))</code>），
+  让 <code>new Motion.D3DAdaptor(...)</code> 成功创建实例；后续若脚本访问实例成员再逐项补 stub。</li>
+<li>待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor 实例
+  成员（如 drawAffine 里对实例的 getter/方法调用）的 stub。</li>
 </ul>
 <h3 id="2-zkrkrzkirikiri-z">2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】<a class="headerlink" href="#2-zkrkrzkirikiri-z" title="Permanent link">&para;</a></h3>
 <blockquote>
@@ -1613,7 +1619,18 @@ plugin 走的是<strong>带完整 teardown 的那份</strong>（engine_api.cpp:7
 - ✅ <strong>打点保留，engine_destroy 复位链严格对照上游顺序</strong>
   （Unregister→OnExit→TVPSystemUninit→scene·EngineLoop→13 项 Reset→Bootstrap→started_once）。
 - ⏳ <strong>待真机</strong>：编译通过 + 退出不再静默卡死（走到 <code>runtime teardown complete</code>）+
-  不杀进程能再开另一款游戏。
+  不杀进程能再开另一款游戏。</p>
+<p><strong>❗二次复验（2026-09-08 01:51 真机日志 <code>pocketkrkr_engine(3).log</code>）：仍卡死，且已精确定位</strong>。
+- IINCHO-Re.co（krkr2）与千恋万花（Z）两个游戏退出<strong>均永久卡死在 <code>engine_destroy</code> 的
+  <code>TVPSystemUninit begin</code> 之后</strong>（第一个游戏用户等 13.6 秒无返回后手动杀进程；第二个游戏
+  日志止于 <code>TVPSystemUninit begin</code> 不再前进）。
+- 已排除：<code>TVPUninitTVPGL</code>（= <code>TVPDestroyTable</code> 空操作）、<code>TVPUninitScriptEngine</code>（OnExit
+  已调过，守卫标志 → no-op）→ <strong>卡死点在 <code>TVPCauseAtExit()</code> 内部某个 at-exit handler</strong>。
+- <strong>本轮动作</strong>：给 <code>TVPCauseAtExit()</code> 循环加逐 handler 打点（<code>handler[i] pri=… begin/end</code>，
+  <code>SysInitIntf.cpp</code>），下次真机退出据最后一条日志直接定位卡在哪个 at-exit handler
+  （可疑候选：线程 join 类 <code>TVPWatchThreadUninit</code>/<code>TVPTimerThreadUninit</code>/<code>ContinuousHandlerCallLimit</code>，
+  或 GL 相关 <code>TVPReleaseTexture2D</code> glFlush——engine_destroy 在 Flutter UI 线程，可能无 EGL 上下文）。
+- ⏳ 待真机：据新打点定位具体 handler 后修。
 <strong>C 端根因已定位</strong>（这篇日志复现确认）：<code>engine_api.cpp</code> 的 <code>g_runtime_started_once</code>
 一旦置 true 从不复位；<code>engine_destroy</code> 只清 <code>g_runtime_active/owner</code>，漏了它 → 第二次
 <code>engine_open_game</code> 必命中 <code>runtime restart is not supported yet</code>。Dart shutdown 是前置，
