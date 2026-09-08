@@ -313,14 +313,16 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
   - `TVPContinuousHandlerVector` / `TVPContinuousEventVector`：静态 vector，`TVPAddContinuousHandler` 重填。
 - 结论：at-exit 一次性注册失效不会让 game#2 的每帧驱动"建立不起来"；真根因仍需从脚本驱动侧实测确认。
 
-**但"清理卫生缺口"属实且有跨游戏残留风险，已按最小安全范围修复**：
-- `SysInitIntf.cpp::TVPCauseAtExit/TVPResetRuntimeForRestart`：**不再 delete/置空 `TVPAtExitInfos`**，
-  把静态 at-exit 列表变为**持久清单**，使每个 `engine_destroy` 都重放框架级 teardown
-  （定时器/连续事件/tick/事件队列等单例"置空+下次 Init 重建"，可重入）。修复前的 bugs：
-  列表首次退出后即 lost，第 2+ 个游戏退出不再 teardown 框架单例，跨游戏残留/泄漏。
-- `DebugIntf.cpp::TVPDestroyLogObjects`：销毁逻辑日志对象后**复位 `TVPLogObjectsInitialized=false`**，
-  否则重放后 `TVPEnsureLogObjects` 因 guard 已置位而跳过重建，game#3+ 的 `TVPLogDeque` 恒 null
-  （框架重要日志/历史不再累积）。这是整个 core 里唯一"销毁但没复位初始化标志"的 handler。
+**但"清理卫生缺口"曾误判为需修——实测重放会崩，已回退（终判：at-exit 是一次性进程 teardown，原设计正确）**：
+- 曾尝试把 `TVPAtExitInfos` 改为持久清单、每次 `engine_destroy` 重放全部 at-exit handler（含把
+  `TVPDestroyLogObjects` 复位 init 标志）——**真机第 2 个游戏退出时在 CLEANUP handler 上 SIGSEGV 闪退**
+  （二次 `engine_destroy` 的 `TVPCauseAtExit` 重放，`handler[15]=FreeAllocator` 之前那个 pri=10000 崩溃）。
+- 根因定性：这些 at-exit handler 是**按进程周期一次性**设计的（进程启动注册一次、进程末清理），
+  不是"置空+下次 Init 重建"的按引擎周期 teardown；跨游戏重放会触碰已按需重建的单例，导致
+  double-free/use-after-free。多 handler 都长这样，逐个修是打地鼠且高风险。
+- 终判：**回退该修复**（`SysInitIntf`/`DebugIntf` 恢复原样）。框架单例本就跨游戏安全复用
+  （timer/连续事件懒重建），不漏 teardown 不致命；原设计对 runtime-restart 是正确模型。
+- 教训：runtime-restart 下，at-exit 只该在"真进程退出前"跑一次；引擎间复用应全走 lazy-init/显式 lifecycle，别重放 at-exit。
 
 ### 已加脚本驱动侧判别探针（KRKR_RENDER_PROBE，与现有探针一次日志定死）
 
