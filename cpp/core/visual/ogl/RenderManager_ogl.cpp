@@ -5002,6 +5002,15 @@ static void TVPResetOpenGLGlobalsForRestart() {
     GL_CHECK_unpack_subimage = false;
     GL_CHECK_shader_framebuffer_fetch = false;
     TVPTextureFormats.clear();
+    // 复位由上一 context 经 eglGetProcAddress 拉取的 GL 函数指针，
+    // 二次 open_game 重新探测（对照上游 PR#12）。
+    GL::glCopyImageSubData = nullptr;
+    GL::glClearTexImage = nullptr;
+    GL::glClearTexSubImage = nullptr;
+#ifdef _MSC_VER
+    GL::glGetTextureImage = nullptr;
+#endif
+    GL::glAlphaFunc = nullptr;
 }
 
 void TVPResetOpenGLRenderManagerForRestart() {
