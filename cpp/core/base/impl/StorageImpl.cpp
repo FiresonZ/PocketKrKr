@@ -21,6 +21,7 @@
 #include "MsgIntf.h"
 
 #include "StorageImpl.h"
+#include "StorageIntf.h"
 #include "WindowImpl.h"
 #include "SysInitIntf.h"
 #include "DebugIntf.h"
@@ -598,6 +599,10 @@ ttstr TVPGetAppPath() {
 void TVPResetStorageImplForRestart() {
     TVPAppPathCache.Clear();
     TVPAppPathCacheValid = false;
+    // runtime-restart 切换游戏时清空累积的 auto-path（上一游戏工程归档路径+脚本
+    // addAutoPath），否则旧游戏归档路径混入新游戏搜索表 → 换不同游戏文件解析错乱/黑屏。
+    // （TVPAutoMountedPaths 每次启动已被 TVPBoostAutoMountPaths 消费清空，无需在此处理。）
+    TVPClearAutoPathListForRestart();
 }
 //---------------------------------------------------------------------------
 

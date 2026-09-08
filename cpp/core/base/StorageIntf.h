@@ -266,6 +266,9 @@ TJS_EXP_FUNC_DEF(void, TVPAddAutoPath, (const ttstr &name));
 TJS_EXP_FUNC_DEF(void, TVPRemoveAutoPath, (const ttstr &name));
 // remove given path from auto search path
 
+extern void TVPClearAutoPathListForRestart();
+// runtime-restart 时清空累积的 auto-path（上一游戏归档路径），供 reset 链调用
+
 TJS_EXP_FUNC_DEF(ttstr, TVPGetPlacedPath, (const ttstr &name));
 // search path and return the path which the "name" is placed.
 

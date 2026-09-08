@@ -986,6 +986,20 @@ void TVPRemoveAutoPath(const ttstr &name) {
 }
 
 //---------------------------------------------------------------------------
+// TVPClearAutoPathListForRestart : 清空累积的 auto-path 列表，供 runtime-restart 用
+//---------------------------------------------------------------------------
+// runtime-restart 切换游戏时，上一游戏的归档 auto-path（工程目录 xp3 + 脚本
+// addAutoPath）已永久残留在全局 TVPAutoPathList 里只增不清，混入新游戏的搜索表，
+// 导致换不同游戏文件解析错乱/黑屏（同款重启因 TVPBoostAutoMountPaths 去重挪位而
+// 看似正常）。这里整表重置：清列表、清缓存、使路径表失效（下次重建只含当前游戏）。
+void TVPClearAutoPathListForRestart() {
+    tTJSCriticalSectionHolder cs_holder(TVPCreateStreamCS);
+    TVPAutoPathList.clear();
+    TVPAutoPathCache.Clear();
+    TVPInvalidateAutoPathTable();
+}
+
+//---------------------------------------------------------------------------
 static tjs_uint TVPRebuildAutoPathTable() {
     // rebuild auto path table
     if(AutoPathTableInit)
