@@ -367,6 +367,23 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
   与其余子系统一致。需评估脚本侧是否已自行 Clear（多数 KAG 启动会 new KAGParser，实例内各自独立，
   全局缓存却是共享的）。
 
+### KAG 探针首投实测（engine(1).log，2026-09-08，IINCHO→Kemomusu→IINCHO 三连）
+
+**结论前置：宿命证据是 `curLine=510789971` 垃圾值 —— 二次打开 first.ks 时 KAGParser 的 CurLine 未初始化。**
+- 第 1 次 IINCHO（正常）：`first.ks curLine=0/0` 干净启动，full KAG 宏加载链（cmdMacro→cmdEffects→
+  usr_macro→wesave… 大量 `KAGTag: macro/endmacro/eval`），RequestUpdate++ → DeliverWinUpdate → PostBlit
+  全程健康，进 title。
+- 第 2 次 Kemomusu：`first.ks curLine=510789971/0` —— **CurLine 是垃圾地址/未初始化值**。此后
+  KAGTag 宏加载输出骤减（仅 4077-4085 每条文件一两行），无 RequestUpdate/DeliverWinUpdate/PostBlit，
+  脚本几乎不推进。start 后即 destroy。
+- 第 3 次 IINCHO：`first.ks curLine=0/0` 干净，但 startup 后**无后续 KAG 加载链**，start → 立即 destroy，
+  无任何渲染/宏加载。
+- 相较旧 log12 的 `[linemode]` 报错：本次三连都**没打印 linemode / KAG 标签错误**，说明问题已从
+  "特定标签缺失"退化为"二次启动后 KAG 场景/脚本整体不振"；且第三次再开同游戏也不再提振。
+- **判读**：`curLine` 垃圾值指向 KAGParser 场景对象在重启复用时未正确重建（复用已释放内存/状态）。
+  `TVPScenarioCache` 全局缓存未随 restart 清理是首要嫌疑（见上节），其缓存项引用旧消息释放的
+  Scenario，二次 `LoadScenario` 命中后 CurLine/指针指向失效内存。
+
 ### 换游戏黑屏的实测定性（历史版本保留供追溯）——第 1 版结论已被证伪
 
 **第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"**。依据：game1=Kemomusu 渲染全健康，
