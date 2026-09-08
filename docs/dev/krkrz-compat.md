@@ -330,14 +330,44 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 |---|---|---|---|
 | `ContinuousProbe` | `EventIntf.cpp` TVPDeliverContinuousEvent | `eventVec / handlerVec` 大小，每 30 次 | 两向量空且不涨=连续驱动没建立 |
 | `TimerProbe` | `TVPTimer.cpp` ProgressAllTimer（FireNext 计数） | `cumulativeFired / delta`，每 30 次 | delta=0= TJS 定时器没推进 |
-| （已有）`RTProbe`/`RequestUpdate`/`Run`/`DeliverWinUpdate`/`BasicShow` | 见上 | — | 渲染链已证明健康 |
+| `KAGLoadScenario` | `KAGParser.cpp` LoadScenario | `name / curStorage / hitRewind / curLine`，每次加载 | hitRewind=1 且 curLine>0=二次命中 Rewind 续跑（宏前奏不复重） |
+| `KAGTag` | `KAGParser.cpp` _GetNextTag（tagname 取出处） | `storage.line tag=名`，每 256 条 tag | 二次打开首条即 [linemode] 且 line=1 → 宏前奏确实没跑；序列正常 → 宏注册本身失效 |
+| （已有）`RTProbe`/`RequestUpdate`/`Run`/`DeliverWinUpdate` | 见上 | — | 渲染链已证明健康 |
 
 配合判：
 - game#2 段 `TimerProbe delta=0` + `ContinuousProbe` 两向量空 → **脚本每帧驱动未建立**（即使脚本起过一次），
   治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
 - game#2 段 `TimerProbe delta≈4` 在转 + `[TVP Console] エラーが発生しました` → **游戏脚本/KAG 自身报错**停画，非重启状态 bug。
 
-### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log，2026-09-08）——第 1 版结论已被证伪，见修正
+### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log + IINCHO 单开 log13，2026-09-08）——重启残留已证实
+
+**决定性对比（Kemomusu→IINCHO 重启 vs IINCHO 单开全新）：**
+- **IINCHO 单开（全新进程，engine(13).log）**：渲染链全程健康——`RequestUpdate` 增长、`DeliverWinUpdate`
+  持续、`UpdateDrawBuffer layers=69 draw=15`、`PostBlit err=0` 且颜色逐帧变化（245,252→200,239→147,224…，
+  即在播内容）。**全程无 `[linemode]` 报错、无 `first.ks : [linemode]` 字样**。其 `first.ks` 先走前奏
+  `@eval KAGLoadScript('debug.dtjs')` → `@call ks_system.ks` → `@call cmdMacro.ks`（注册大量 `[macro ...]`），
+  之后 `[linemode]` 已被宏/标签覆盖定义，正常运行。
+- **Kemomusu→IINCHO 重启（engine(12).log）**：KAG 模块表与单开**完全一致**（都无 LineMode.tjs，模块表不是差异）；
+  `first.ks` 却**跳过前奏**，直接命中 `[linemode]` → `タグ/マクロ "linemode" は存在しません` → 画停黑屏。
+
+⇒ **用户"重启后脚本/宏加载未 reset、仍是残留状态"的方向成立**：二次启动时 first.ks 的宏定义前奏
+（KAGLoadScript/`@call cmdMacro.ks`）没执行/失效，导致 `[linemode]` 未注册。这不是插件列表（已否决），
+而是 **KAG 场景宏/脚本的加载态在 in-process 重启下残留**。修复方向：定位并复位 KAG 场景/宏加载的
+进程级残留（宏注册表/场景位置/已加载脚本缓存），使二次打开时 first.ks 前奏完整重跑。
+
+**reset 链缺口核对（2026-09-08）：`TVPScenarioCache` 是唯一未纳入 reset 的进程级全局。**
+- engine_destroy 的 reset-for-restart 覆盖各子系统：存储/插件/类安装/渲染/字体/窗口/trans/drawscene/
+  extension 等均有 `TVPResetXXXForRestart()`。
+- 但 KAGParser.cpp 文件作用域的 `tTVPScenarioCache TVPScenarioCache(8)`（KAGParser.cpp:249）**只在
+  `KAGParser::Clear()` 内部经 `TVPClearScnearioCache()` 清空**，该 Clear 由脚本侧 `kag.Clear()` 触发；
+  engine 生命周期结束的 reset-for-restart **没有清它**。
+- 若二次启动的 KAG 沿用了首游戏遗留的场景缓存对象（两个游戏 first.ks 名不同本应不命中，但 cmdMacro/
+  KAGLoadScript 等共享名若在缓存中会命中首游戏残留），则前奏/宏注册场景可能被错误复用。
+- 候选修复：新增 `TVPClearScnearioCache()` 到 reset-for-restart 链（或在 teardown 时清一次），
+  与其余子系统一致。需评估脚本侧是否已自行 Clear（多数 KAG 启动会 new KAGParser，实例内各自独立，
+  全局缓存却是共享的）。
+
+### 换游戏黑屏的实测定性（历史版本保留供追溯）——第 1 版结论已被证伪
 
 **第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"**。依据：game1=Kemomusu 渲染全健康，
 game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "linemode" は存在しません`** 后画停。

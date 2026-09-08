@@ -14,9 +14,6 @@
 #include "WindowImpl.h"
 #include "RenderManager.h"
 #include "DrawDeviceGLESModule.h"
-#if defined(KRKR_RENDER_PROBE)
-#include <spdlog/spdlog.h>
-#endif
 using namespace DrawDeviceGLES;
 
 #define ZeroMemory(p, n) memset(p, 0, n);
@@ -549,29 +546,8 @@ void tTVPBasicDrawDevice::Show() {
             if(buf) {
                 form->UpdateDrawBuffer(buf->GetTexture());
             }
-#if defined(KRKR_RENDER_PROBE)
-            else {
-                // DrawBuffer 空：Show 被调但无缓冲可 blit。
-                spdlog::info("BasicShow: skip (buf=null)");
-                spdlog::default_logger()->flush();
-            }
-#endif
         }
-#if defined(KRKR_RENDER_PROBE)
-        else {
-            // form 或主层 LayerManager 缺失：Show 被调但守卫生效，无法 blit。
-            spdlog::info("BasicShow: skip (form={} managers={})",
-                         (void *)form, Managers.size());
-            spdlog::default_logger()->flush();
-        }
-#endif
     }
-#if defined(KRKR_RENDER_PROBE)
-    else {
-        spdlog::info("BasicShow: skip (Window=null)");
-        spdlog::default_logger()->flush();
-    }
-#endif
 #if 0
 	if(!TargetWindow) return;
 	if(!Texture) return;
