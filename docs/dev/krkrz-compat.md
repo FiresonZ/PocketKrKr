@@ -269,6 +269,24 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 - `RequestUpdate`/`DeliverWinUpdate` 有 + `BasicShow: skip` 打法 → Show 段（主层 Manager 空）。
 - `DeliverWinUpdate` 无但 `RequestUpdate` 有 → 投递链（DeliverEvents）坏。
 
+### 决定性实测结论（2026-09-08，engine(11).log，完整探针矩阵）
+
+**序列**：Kemomusu(1st) 健康 → IINCHO(2nd) 黑屏 → Kemomusu(3rd)。
+**各段探针**：
+| 段 | Application::Run | RequestUpdate | DeliverWinUpdate | RTProbe/blit |
+|---|---|---|---|---|
+| 1st Kemomusu | 每 tick | `cum=1/61/121…` 持续 | 持续 queue=1 | 每帧 SAME |
+| 2nd IINCHO | 每 tick | **0 次** | 仅 1 次(queue=1) | 仅 1 帧 SAME |
+| 3rd Kemomusu | 每 tick | 持续 | 持续 | 每帧 |
+
+**板钉结论**：断点在最上游——**第二游戏从第 1 帧起不再调用 `RequestUpdate`**（不再请求重绘）。
+引擎投递/Show/blit 机制全程健康（DeliverWinUpdate 工作过、RTProbe [SAME]），`Application::Run`
+每 tick 都跑。是**游戏侧每帧驱动（主层连续更新/脚本/定时器）没恢复**，与"第二游戏日志更少"吻合。
+
+**收窄到候选①强化**：`RequestUpdate` 由主层更新触发；二次打开其连续/每帧驱动不转。
+下一步直接从"主层如何触发 RequestUpdate + 连续重绘/TJS 定时器在二次打开的复位"入手，
+而不再查渲染/投递链路（已证明健康）。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
