@@ -996,6 +996,7 @@ void TVPExecuteStartupScript() {
         // —— startup.tjs 执行探针：抓 restart 时 startup 提前抛错的时机/消息。
         // 黑屏特征：startup.tjs 抛异常(而 system/Initialize.tjs 存在)时被静默吞掉改走 fallback，
         // KAG boot 被绕过。此探针记录是"完成"还是"抛错"及错误内容，钉死跳 KvK boot 的具体 gate。
+#if defined(KRKR_RENDER_PROBE)
         auto StartupProbeLog = [](const char *kind, const ttstr &msg) {
             spdlog::info(
                 "StartupProbe: startup.tjs threw({}) sysInitExists={} msg={}",
