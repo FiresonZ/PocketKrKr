@@ -449,9 +449,29 @@ game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "line
 - **已补（85684a8）**：`TVPResetOpenGLRenderManagerForRestart()` + `TVPResetOpenGLGlobalsForRestart()`，
   清 `sTVPGLExtensions`/延伸探测标志/`TVPTextureFormats`/`tTVPOGLRenderMethod_Script` shader 缓存/
   `krkr::gl` 渲染器重建回调与新状态缓存；并在 `TVPResetRenderManagerForRestart()` 里追加调用。
-  PR#12 的 `GL::glCopyImageSubData` 等函数指针本仓不存在，略去。
+  （最初误判 `GL::glCopyImageSubData` 等不存在而略去，见下"补 OGL 复位遗漏"。）
   **未移植**：PR#12 的异步启动状态机（`EnsureEngineRuntimeInitialized`/`engine_get_startup_state`/
   `engine_drain_startup_logs`）——体量大属架构改造，暂缓。
+
+### PR#12 剩余差异全量扫描（2026-09-08）
+- ✅ **已对齐**：全部 `TVPReset*ForRestart`（脚本引擎/运行时/存储/应用/SysInitImpl/扩展/插件/ncbind/字体/
+  渐变/窗口/位图分配/图层位图/RenderManager）+ `TVPUnregisterInternalPluginsForRestart` +
+  `TVPResetPluginSystemForRestart` + `ncbAutoRegister::ResetModuleStateForRestart`(清 TVPRegisteredPlugins
+  +_internal_plugins) + FontImpl reset 调 TVPReleaseFontLibrary。
+- ✅ **补 OGL 复位遗漏（86f2391）**：`TVPResetOpenGLGlobalsForRestart` 清 `GL::glCopyImageSubData/
+  glClearTexImage/glClearTexSubImage/glAlphaFunc`（+_MSC_VER glGetTextureImage）——首次移植误以为不存在，
+  实则在 RenderManager_ogl 的 `namespace GL`（应该在，用户纠正正确）。
+- ✅ **补 EngineLoop 析构复位（6521e4f）**：`~EngineLoop()` 置 `s_postUpdate=nullptr` + `memset(s_scancode,0)`。
+- 🟡 **暂缓：LogSetup.cpp/h（TVPConfigureLoggerPattern/TVPConfigureDefaultLoggerPattern）**——异步启动机的
+  日志辅助，不移植异步机则死代码，待确认是否上异步机再定。
+- ⚪ **不适用/无需**：
+  - StorageImpl `_tjs_normalize_nfc` GetLen 修复 —— 我们的 Apple 路径已用 `static_cast<CFIndex>(name.GetLen())`，
+    效果一致（殊途同归）。
+  - cubism/Live2DCubismCore.h + krkrlive2d.cpp（+188/-16 / +14/-3）—— 是 **R4→R5 SDK 迁移**（R5 删
+    ClearDrawableForceHiddenFlags、CreateRenderer 加宽高参数、改用 GetOverrideMultiplyAndScreenColor）；
+    我们仍用 R4 API，直接挪会编译不过；与 restart 无关，独立任务，暂不做。
+  - platforms/{linux,windows}/main.cpp 桌面端 spdlog 初始化 —— Android 走自有路径。
+  - CMakeLists(base/tjs2/plugins)/vcpkg libarchive/.gitignore/pubspec.lock —— 构建依赖/杂项。
 
 ## 自检 / 验收
 
