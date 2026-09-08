@@ -111,5 +111,6 @@ nav:
       - 渲染 / 黑屏诊断: dev/rendering-diagnosis.md
   - 兼容与性能:
       - 游戏兼容性: dev/compatibility.md
+      - KIRIKIRI Z(krkrz) 插件兼容移植清单: dev/krkrz-compat.md
       - 性能优化候选: dev/perf-optimization.md
   - 下载: download.md
