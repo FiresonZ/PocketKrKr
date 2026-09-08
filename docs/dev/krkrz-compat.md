@@ -269,6 +269,71 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 - `RequestUpdate`/`DeliverWinUpdate` 有 + `BasicShow: skip` 打法 → Show 段（主层 Manager 空）。
 - `DeliverWinUpdate` 无但 `RequestUpdate` 有 → 投递链（DeliverEvents）坏。
 
+### 决定性实测结论（2026-09-08，engine(11).log，完整探针矩阵）
+
+**序列**：Kemomusu(1st) 健康 → IINCHO(2nd) 黑屏 → Kemomusu(3rd)。
+**各段探针**：
+| 段 | Application::Run | RequestUpdate | DeliverWinUpdate | RTProbe/blit |
+|---|---|---|---|---|
+| 1st Kemomusu | 每 tick | `cum=1/61/121…` 持续 | 持续 queue=1 | 每帧 SAME |
+| 2nd IINCHO | 每 tick | **0 次** | 仅 1 次(queue=1) | 仅 1 帧 SAME |
+| 3rd Kemomusu | 每 tick | 持续 | 持续 | 每帧 |
+
+**板钉结论**：断点在最上游——**第二游戏从第 1 帧起不再调用 `RequestUpdate`**（不再请求重绘）。
+引擎投递/Show/blit 机制全程健康（DeliverWinUpdate 工作过、RTProbe [SAME]），`Application::Run`
+每 tick 都跑。是**游戏侧每帧驱动（主层连续更新/脚本/定时器）没恢复**，与"第二游戏日志更少"吻合。
+
+**收窄到候选①强化**：`RequestUpdate` 由主层更新触发；二次打开其连续/每帧驱动不转。
+下一步直接从"主层如何触发 RequestUpdate + 连续重绘/TJS 定时器在二次打开的复位"入手，
+而不再查渲染/投递链路（已证明健康）。
+
+### 渲染侧彻底排除 + 根因定性（2026-09-08）
+
+- `RequestUpdate` 唯一触发：主层内容变化 → `iTVPLayerManager`/`tTVPDrawDevice::NotifyLayerImageChange`
+  → `Window->RequestUpdate()`（DrawDevice.cpp:302-307）。第二游戏 `RequestUpdate=0` ⇒ **主层从未产生
+  新内容 ⇒ 游戏脚本没在画**。
+- 整条显示链已逐环节证明健康：`Application::Run` 每tick 在跑、`TVPSystemControl` 重建、
+  `TVPEventInvoked` 每tick 复位、`DeliverWinUpdate` 工作过、`RTProbe [SAME]`、`Show` 无 skip。
+  加上第 3 段同游戏复开正常 ⇒ 渲染与重启渲染机制无误。
+- **根因定性**：二次打开（open#2）的**游戏侧每帧驱动（TJS 脚本推进/定时器/连续处理/主层连续重绘）
+  未转**，脚本起了一次（startup.tjs 跑完、建 layers）后便不再产出画面 → 黑屏定格。与"第二游戏日志
+  更少"吻合。属脚本引擎/连续处理器重启问题，非渲染谱系。
+- `TVPResetScriptEngineForRestart`（ScriptMgnIntf.cpp:591）仅清 guard 标志，疑似不是此处；
+  最可能是一次性 `tTVPAtExit` 注册失效（`TVPDestroyContinuousHandlerVector`/timer 线程）致二次打开的
+  连续/定时驱动不建立（候选①强化）。
+
+### tTVPAtExit 一次性注册失效——核实 + 安全修复（2026-09-08）
+
+**核实结论：部分成立——"二次退出不跑 at-exit 清理"属实（清理卫生缺口），但它不是黑屏根因。**
+- 二次退出（open#2 的 teardown）确实不会再跑进程启动时那批 at-exit 清理（清理卫生缺口）。
+- 它**并不阻止第二游戏建立每帧驱动**，因为这些驱动都是懒重建/静态向量，二次 `StartApplication`
+  会重新建立：
+  - `TVPTimerThread`：`Add()→Init()` 懒创建（TimerImpl.cpp:307-333），游戏#2 首个 TJS 定时器即重建。
+  - `TVPContinuousHandlerCallLimitThread`：`TVPBeginContinuousEvent` 里 `if(!...)` 懒创建（EventImpl.cpp:234）。
+  - `TVPContinuousHandlerVector` / `TVPContinuousEventVector`：静态 vector，`TVPAddContinuousHandler` 重填。
+- 结论：at-exit 一次性注册失效不会让 game#2 的每帧驱动"建立不起来"；真根因仍需从脚本驱动侧实测确认。
+
+**但"清理卫生缺口"属实且有跨游戏残留风险，已按最小安全范围修复**：
+- `SysInitIntf.cpp::TVPCauseAtExit/TVPResetRuntimeForRestart`：**不再 delete/置空 `TVPAtExitInfos`**，
+  把静态 at-exit 列表变为**持久清单**，使每个 `engine_destroy` 都重放框架级 teardown
+  （定时器/连续事件/tick/事件队列等单例"置空+下次 Init 重建"，可重入）。修复前的 bugs：
+  列表首次退出后即 lost，第 2+ 个游戏退出不再 teardown 框架单例，跨游戏残留/泄漏。
+- `DebugIntf.cpp::TVPDestroyLogObjects`：销毁逻辑日志对象后**复位 `TVPLogObjectsInitialized=false`**，
+  否则重放后 `TVPEnsureLogObjects` 因 guard 已置位而跳过重建，game#3+ 的 `TVPLogDeque` 恒 null
+  （框架重要日志/历史不再累积）。这是整个 core 里唯一"销毁但没复位初始化标志"的 handler。
+
+### 已加脚本驱动侧判别探针（KRKR_RENDER_PROBE，与现有探针一次日志定死）
+
+| 探针 | 位置 | 打印 | 判 |
+|---|---|---|---|
+| `ContinuousProbe` | `EventIntf.cpp` TVPDeliverContinuousEvent | `eventVec / handlerVec` 大小，每 30 次 | 两向量空且不涨=连续驱动没建立 |
+| `TimerProbe` | `TVPTimer.cpp` ProgressAllTimer（FireNext 计数） | `cumulativeFired / delta`，每 30 次 | delta=0= TJS 定时器没推进 |
+| （已有）`RTProbe`/`RequestUpdate`/`Run`/`DeliverWinUpdate`/`BasicShow` | 见上 | — | 渲染链已证明健康 |
+
+配合判：
+- game#2 段 `TimerProbe delta=0` + `ContinuousProbe` 两向量空 → **脚本每帧驱动未建立**（即使脚本起过一次），
+  治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
