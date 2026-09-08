@@ -2192,6 +2192,86 @@ EGL context（Destroy+重建）/OpenGL 共享 <code>_FBO</code> 重建（<code>O
 - <code>RequestUpdate</code> 无 + 全部其他无 → 游戏/脚本未推进（脚本引擎/连续处理器重启问题）。
 - <code>RequestUpdate</code>/<code>DeliverWinUpdate</code> 有 + <code>BasicShow: skip</code> 打法 → Show 段（主层 Manager 空）。
 - <code>DeliverWinUpdate</code> 无但 <code>RequestUpdate</code> 有 → 投递链（DeliverEvents）坏。</p>
+<h3 id="2026-09-08engine11log">决定性实测结论（2026-09-08，engine(11).log，完整探针矩阵）<a class="headerlink" href="#2026-09-08engine11log" title="Permanent link">&para;</a></h3>
+<p><strong>序列</strong>：Kemomusu(1st) 健康 → IINCHO(2nd) 黑屏 → Kemomusu(3rd)。
+<strong>各段探针</strong>：
+| 段 | Application::Run | RequestUpdate | DeliverWinUpdate | RTProbe/blit |
+|---|---|---|---|---|
+| 1st Kemomusu | 每 tick | <code>cum=1/61/121…</code> 持续 | 持续 queue=1 | 每帧 SAME |
+| 2nd IINCHO | 每 tick | <strong>0 次</strong> | 仅 1 次(queue=1) | 仅 1 帧 SAME |
+| 3rd Kemomusu | 每 tick | 持续 | 持续 | 每帧 |</p>
+<p><strong>板钉结论</strong>：断点在最上游——<strong>第二游戏从第 1 帧起不再调用 <code>RequestUpdate</code></strong>（不再请求重绘）。
+引擎投递/Show/blit 机制全程健康（DeliverWinUpdate 工作过、RTProbe [SAME]），<code>Application::Run</code>
+每 tick 都跑。是<strong>游戏侧每帧驱动（主层连续更新/脚本/定时器）没恢复</strong>，与"第二游戏日志更少"吻合。</p>
+<p><strong>收窄到候选①强化</strong>：<code>RequestUpdate</code> 由主层更新触发；二次打开其连续/每帧驱动不转。
+下一步直接从"主层如何触发 RequestUpdate + 连续重绘/TJS 定时器在二次打开的复位"入手，
+而不再查渲染/投递链路（已证明健康）。</p>
+<h3 id="2026-09-08_2">渲染侧彻底排除 + 根因定性（2026-09-08）<a class="headerlink" href="#2026-09-08_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>RequestUpdate</code> 唯一触发：主层内容变化 → <code>iTVPLayerManager</code>/<code>tTVPDrawDevice::NotifyLayerImageChange</code>
+  → <code>Window-&gt;RequestUpdate()</code>（DrawDevice.cpp:302-307）。第二游戏 <code>RequestUpdate=0</code> ⇒ <strong>主层从未产生
+  新内容 ⇒ 游戏脚本没在画</strong>。</li>
+<li>整条显示链已逐环节证明健康：<code>Application::Run</code> 每tick 在跑、<code>TVPSystemControl</code> 重建、
+  <code>TVPEventInvoked</code> 每tick 复位、<code>DeliverWinUpdate</code> 工作过、<code>RTProbe [SAME]</code>、<code>Show</code> 无 skip。
+  加上第 3 段同游戏复开正常 ⇒ 渲染与重启渲染机制无误。</li>
+<li><strong>根因定性</strong>：二次打开（open#2）的<strong>游戏侧每帧驱动（TJS 脚本推进/定时器/连续处理/主层连续重绘）
+  未转</strong>，脚本起了一次（startup.tjs 跑完、建 layers）后便不再产出画面 → 黑屏定格。与"第二游戏日志
+  更少"吻合。属脚本引擎/连续处理器重启问题，非渲染谱系。</li>
+<li><code>TVPResetScriptEngineForRestart</code>（ScriptMgnIntf.cpp:591）仅清 guard 标志，疑似不是此处；
+  最可能是一次性 <code>tTVPAtExit</code> 注册失效（<code>TVPDestroyContinuousHandlerVector</code>/timer 线程）致二次打开的
+  连续/定时驱动不建立（候选①强化）。</li>
+</ul>
+<h3 id="ttvpatexit-2026-09-08">tTVPAtExit 一次性注册失效——核实 + 安全修复（2026-09-08）<a class="headerlink" href="#ttvpatexit-2026-09-08" title="Permanent link">&para;</a></h3>
+<p><strong>核实结论：部分成立——"二次退出不跑 at-exit 清理"属实（清理卫生缺口），但它不是黑屏根因。</strong>
+- 二次退出（open#2 的 teardown）确实不会再跑进程启动时那批 at-exit 清理（清理卫生缺口）。
+- 它<strong>并不阻止第二游戏建立每帧驱动</strong>，因为这些驱动都是懒重建/静态向量，二次 <code>StartApplication</code>
+  会重新建立：
+  - <code>TVPTimerThread</code>：<code>Add()→Init()</code> 懒创建（TimerImpl.cpp:307-333），游戏#2 首个 TJS 定时器即重建。
+  - <code>TVPContinuousHandlerCallLimitThread</code>：<code>TVPBeginContinuousEvent</code> 里 <code>if(!...)</code> 懒创建（EventImpl.cpp:234）。
+  - <code>TVPContinuousHandlerVector</code> / <code>TVPContinuousEventVector</code>：静态 vector，<code>TVPAddContinuousHandler</code> 重填。
+- 结论：at-exit 一次性注册失效不会让 game#2 的每帧驱动"建立不起来"；真根因仍需从脚本驱动侧实测确认。</p>
+<p><strong>但"清理卫生缺口"属实且有跨游戏残留风险，已按最小安全范围修复</strong>：
+- <code>SysInitIntf.cpp::TVPCauseAtExit/TVPResetRuntimeForRestart</code>：<strong>不再 delete/置空 <code>TVPAtExitInfos</code></strong>，
+  把静态 at-exit 列表变为<strong>持久清单</strong>，使每个 <code>engine_destroy</code> 都重放框架级 teardown
+  （定时器/连续事件/tick/事件队列等单例"置空+下次 Init 重建"，可重入）。修复前的 bugs：
+  列表首次退出后即 lost，第 2+ 个游戏退出不再 teardown 框架单例，跨游戏残留/泄漏。
+- <code>DebugIntf.cpp::TVPDestroyLogObjects</code>：销毁逻辑日志对象后<strong>复位 <code>TVPLogObjectsInitialized=false</code></strong>，
+  否则重放后 <code>TVPEnsureLogObjects</code> 因 guard 已置位而跳过重建，game#3+ 的 <code>TVPLogDeque</code> 恒 null
+  （框架重要日志/历史不再累积）。这是整个 core 里唯一"销毁但没复位初始化标志"的 handler。</p>
+<h3 id="krkr_render_probe">已加脚本驱动侧判别探针（KRKR_RENDER_PROBE，与现有探针一次日志定死）<a class="headerlink" href="#krkr_render_probe" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>探针</th>
+<th>位置</th>
+<th>打印</th>
+<th>判</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ContinuousProbe</code></td>
+<td><code>EventIntf.cpp</code> TVPDeliverContinuousEvent</td>
+<td><code>eventVec / handlerVec</code> 大小，每 30 次</td>
+<td>两向量空且不涨=连续驱动没建立</td>
+</tr>
+<tr>
+<td><code>TimerProbe</code></td>
+<td><code>TVPTimer.cpp</code> ProgressAllTimer（FireNext 计数）</td>
+<td><code>cumulativeFired / delta</code>，每 30 次</td>
+<td>delta=0= TJS 定时器没推进</td>
+</tr>
+<tr>
+<td>（已有）<code>RTProbe</code>/<code>RequestUpdate</code>/<code>Run</code>/<code>DeliverWinUpdate</code>/<code>BasicShow</code></td>
+<td>见上</td>
+<td>—</td>
+<td>渲染链已证明健康</td>
+</tr>
+</tbody>
+</table>
+<p>配合判：
+- game#2 段 <code>TimerProbe delta=0</code> + <code>ContinuousProbe</code> 两向量空 → <strong>脚本每帧驱动未建立</strong>（即使脚本起过一次），
+  治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。</p>
 <h2 id="_11">自检 / 验收<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
 <ul>
 <li>目标游戏（魔女的夜宴/sabbat_kr）启动后：主 <code>DrawBuffer</code> 被合成、源纹理非全黑、draw 计数增长。</li>
