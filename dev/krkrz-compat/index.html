@@ -1105,7 +1105,57 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#2026-09-08-kirikiroid2-clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键认知
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kirikiroid2-grep-rin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实测缺口（对照 Kirikiroid2 全仓库 grep -rin，区分"插件"与"引擎"）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        结论
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         自检 / 验收
@@ -1257,7 +1307,57 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#2026-09-08-kirikiroid2-clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        关键认知
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kirikiroid2-grep-rin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实测缺口（对照 Kirikiroid2 全仓库 grep -rin，区分"插件"与"引擎"）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        结论
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         自检 / 验收
@@ -1467,7 +1567,91 @@ krkrz 闭源版与 Kirikiroid2（安卓端完整实现）。</p>
 <li><strong>squirrel + k2compat（P1）</strong>：恢复 Z 游戏脚本/系统逻辑。</li>
 <li>逐一消化 P1 其余（menu、PassThroughDrawDevice、drawdeviceD3D…），P2 待源码确认。</li>
 </ol>
-<h2 id="_3">自检 / 验收<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="2026-09-08-kirikiroid2-clone">差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）<a class="headerlink" href="#2026-09-08-kirikiroid2-clone" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>背景：我们已 <code>git clone --depth=1</code> zeas2/Kirikiroid2（本地 <code>/tmp/Kirikiroid2</code>），
+想逐个确认缺哪些插件。</p>
+</blockquote>
+<h3 id="_3">关键认知<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>drawdeviceD3DZ 在移动端不是插件</strong>：Kirikiroid2 用 <code>src/core/visual/RenderManager_ogl.cpp</code></li>
+<li><code>win32/DrawDevice.*</code>/<code>BasicDrawDevice.*</code> 作为<strong>核心渲染管理器</strong>直接合成 Z 主 DrawBuffer，
+   不走 <code>plugin/*.dll</code> 的 ncb 通道。魔女的夜宴等 Z 游戏黑屏根因在此，属 <strong>core/visual 引擎能力</strong>，
+   不是"写个插件"能解决 → P0 优先走渲染管线，勿当插件实现。</li>
+<li><strong>同源 fork → 插件大面积重合</strong>：我们与 Kirikiroid2 同源，其 <code>src/plugins/*</code> 的 ncb 插件
+   （extrans/wuvorbis/wuflac/wuopus、layerEx 全家、AlphaMovie、psb/psd、xp3filter、fftgraph、
+   drawDeviceD2Dm、krkrsteam、krkrgles、json、fstat…）我们 <code>_internal_plugins</code> 基本都已注册。
+   真要补的插件很少。</li>
+</ol>
+<h3 id="kirikiroid2-grep-rin">实测缺口（对照 Kirikiroid2 全仓库 <code>grep -rin</code>，区分"插件"与"引擎"）<a class="headerlink" href="#kirikiroid2-grep-rin" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>插件</th>
+<th>态况</th>
+<th>缺的是插件还是引擎</th>
+<th>决策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>drawdeviceD3DZ</td>
+<td>Z 主画面，<strong>黑屏根因</strong></td>
+<td><strong>引擎</strong>（RenderManager_ogl）</td>
+<td>P0，对核心渲染链路</td>
+</tr>
+<tr>
+<td>krmovie Present</td>
+<td>视频回放</td>
+<td><strong>引擎</strong>（<code>movie/krmovie.cpp</code>）</td>
+<td>P0</td>
+</tr>
+<tr>
+<td>squirrel</td>
+<td>很多 Z 存档/系统脚本</td>
+<td>插件（krkr2 <code>squirrel</code>）</td>
+<td>P1</td>
+</tr>
+<tr>
+<td>k2compat</td>
+<td>krkr2→Z 兼容函数</td>
+<td>脚本/TJS（Krkr2Compat）</td>
+<td>P1，内置脚本</td>
+</tr>
+<tr>
+<td>menu / drawdeviceD3D / PassThroughDrawDevice</td>
+<td>常用</td>
+<td>插件</td>
+<td>P1</td>
+</tr>
+<tr>
+<td><strong>PackinOne</strong></td>
+<td>千恋万花实载 Failed；<strong>Kirikiroid2 全仓库无此实现</strong></td>
+<td>插件（疑似闭源）</td>
+<td><strong>C 级，跳过</strong>：下载已解包游戏可跑；仅整包加密需解包</td>
+</tr>
+<tr>
+<td><strong>extNagano</strong></td>
+<td>千恋万花实载 Failed；<strong>Kirikiroid2 全仓库无此实现</strong></td>
+<td>插件（独立冷门扩展）</td>
+<td><strong>C 级，跳过</strong>：基干无它照跑</td>
+</tr>
+<tr>
+<td>kztouch / kagexopt / multiimage</td>
+<td>冷门，来源待确认</td>
+<td>插件</td>
+<td>P2，等源码</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">结论<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li>真缺且急用的插件只有 <strong>squirrel</strong>（P1）；PackinOne/extNagano 多为下载解包版可跳过，
+  只做"挂名不报 Failed"或直接跳过，等有真实游戏卡在它们头上再补。</li>
+<li>当前最大阻塞仍是 P0 两个<strong>引擎能力</strong>（drawdeviceZ 主 buffer 合成 + krmovie Present），
+  不靠写插件解决。</li>
+</ul>
+<h2 id="_5">自检 / 验收<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>
 <li>目标游戏（魔女的夜宴/sabbat_kr）启动后：主 <code>DrawBuffer</code> 被合成、源纹理非全黑、draw 计数增长。</li>
 <li><code>plugin/</code> 目录缺失插件从"Failed"变为可 <code>Plugins.link</code>。</li>
