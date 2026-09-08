@@ -185,6 +185,23 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 - #3：`EGLContextManager::Destroy()` 内补 `DestroyIOSurfaceResources()`（iOS 干净重置）。
 - #4：失效 `static bool ret`。
 
+## 二次实测补充（2026-09-08，真机）
+
+**新证据**：第一个游戏成功跑完后，第二个不同游戏黑屏；但**不杀进程再次点开第一个游戏，仍能正常跑**。
+
+**判定（修正方向，重要）**：
+- 全局重启 teardown（EGL context 重建 + FBO 重建 + FlutterWindowLayer blit 路径）**基本健康**——
+  若全局渲染状态脏，重开同一个游戏也会黑，但实测不会。
+- 黑屏是**游戏/图层资源特定**的：同游戏复开正常、换游戏才黑 → 不同游戏走了不同的主层渲染路径。
+  IINCHO 用标准 primary layer 能出画面；千恋万花（Yuzusoft/Z 引擎）可能走 Z 型主 DrawBuffer，
+  引擎未给其合成 → 黑屏。这与"千恋万花作为第一游戏其实也只是开了 logo、未真正渲染"一致。
+- 因此**候选 A（krkr::gl 全局状态）权重下调**；问题重新指向"Z 主层 DrawBuffer 未走标准合成"——
+  即 drawdeviceD3DZ 兼容（又回到 P0 渲染管线，但性质是"不同游戏主层路径"，非"重启残留"）。
+
+**待 RTProbe 定死**：`FlutterWindowLayer::RTProbe blitSrcTex X fboAttachedTex Z [SAME]/[DIFF]`
+- 对黑屏游戏若为 `DIFF` → 其主层画进了别的纹理（非 blit 源），属游戏特定主层/渲染目标设定。
+- 对黑屏游戏若为 `SAME` 但仍黑 → 引擎对它的主层画了黑/没画，指向该游戏主层用了未接入的钻取路径。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
