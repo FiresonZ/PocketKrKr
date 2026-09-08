@@ -1026,6 +1026,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#android_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Android 稳定签名（升级一致性，可选）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1433,6 +1444,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#android_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Android 稳定签名（升级一致性，可选）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1688,6 +1710,24 @@
 <li>跑完自动建 tag <code>ios-vX.Y.Z</code> / <code>android-vX.Y.Z</code> → 建对应 GitHub Release → 挂产物。</li>
 <li><strong>注意</strong>：只测不发布则不勾「发布 Release」（产物仍保留 14 天）；已存在 tag 再跑不会重复建
   Release，只补充/覆盖产物；<code>debug</code> 类型即使发布也是 debug 包，正式发布请用 <code>release</code>。</li>
+</ul>
+<h3 id="android_2">Android 稳定签名（升级一致性，可选）<a class="headerlink" href="#android_2" title="Permanent link">&para;</a></h3>
+<p>Android 覆盖安装要求<strong>同一签名</strong>；默认 release 用 debug 临时签名，每次 CI 全新 runner 生成的
+keystore 不同 → <strong>签名每次不一致，用户无法覆盖更新（只能卸载重装）</strong>。为此提供<strong>可选稳定 keystore</strong>：</p>
+<ul>
+<li><strong>工作方式</strong>：在 GitHub Secrets 配置后，CI 解出 keystore 并写入 <code>KEYSTORE_PATH/KEYSTORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD</code> 环境变量，
+  <code>android/app/build.gradle</code> 检测到这些变量（且 keystore 文件存在）时用<strong>固定 keystore</strong> 给 release 签名；
+  未配置则回退 debug 临时签名（现状行为）。</li>
+<li><strong>配置 Secrets</strong>（仓库 Settings → Secrets and variables → Actions）：
+  <code>ANDROID_KEYSTORE_BASE64</code>、<code>ANDROID_KEYSTORE_PASSWORD</code>、<code>ANDROID_KEY_ALIAS</code>、<code>ANDROID_KEY_PASSWORD</code>。</li>
+<li><strong>生成 keystore + base64</strong>（本地一次，妥善保存，丢失则旧包无法更新）：
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>keytool<span class="w"> </span>-genkeypair<span class="w"> </span>-v<span class="w"> </span>-keystore<span class="w"> </span>release.jks<span class="w"> </span>-alias<span class="w"> </span>release<span class="w"> </span>-keyalg<span class="w"> </span>RSA<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>-keysize<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-validity<span class="w"> </span><span class="m">10000</span><span class="w"> </span>-storepass<span class="w"> </span>&lt;pw&gt;<span class="w"> </span>-keypass<span class="w"> </span>&lt;pw&gt;<span class="w"> </span>-dname<span class="w"> </span><span class="s2">"CN=PocketKrKr"</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>base64<span class="w"> </span>-w0<span class="w"> </span>release.jks<span class="w">        </span><span class="c1"># 全部输出即为 ANDROID_KEYSTORE_BASE64</span>
+</code></pre></div></li>
+<li><strong>iOS 无此问题</strong>：iOS 产物是未签名 IPA，由用户用<strong>自己的 Apple ID</strong> 侧载签名；只要 bundle ID
+  （<code>org.pocketkrkr.app</code>）不变、每次用同一 Apple ID 重签，即可覆盖更新，无需 CI 签名密钥。</li>
+<li><strong>本地构建</strong>：随便装即可不设这些变量；要签名一致就导出上述 4 个环境变量再 <code>./build.sh android release</code>。</li>
 </ul>
 <h2 id="_6">常见问题<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <ul>
