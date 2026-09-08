@@ -337,20 +337,23 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
   治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
 - game#2 段 `TimerProbe delta≈4` 在转 + `[TVP Console] エラーが発生しました` → **游戏脚本/KAG 自身报错**停画，非重启状态 bug。
 
-### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log，2026-09-08）
+### 换游戏黑屏的实测定性（pocketkrkr_engine(12).log，2026-09-08）——第 1 版结论已被证伪，见修正
 
-**这次"第二个游戏黑屏"的根因是 IINCHO 的 KAG 标签错误，不是 runtime-restart 状态 bug：**
-- game1=Kemomusu：KAG 栈完整（KAGParserEx/MainWindow/KAGLayer… 全 Success），渲染链全程健康
-  （`RequestUpdate` 增长 → `DeliverWinUpdate` → `UpdateDrawBuffer layers=69 draw=25` → `SourceSample 全非黑` → `PostBlit err=0`）。
-- game2=IINCHO：startup 后脚本执行 `first.ks` 第 1 行 `[linemode]` 抛
-  **`タグ/マクロ "linemode" は存在しません`**（KAG 未定义该标签）→ 画停。此后 `Application::Run`
-  每 tick 在跑、`TimerProbe delta≈4`、`ContinuousProbe handlerVec=2` 都正常，但主层不再变化 →
-  无 `RequestUpdate`/`DeliverWinUpdate` → 黑屏定格。
-- 判据：错误发生在**任何渲染之前**、且 KAG 报错由场景脚本解析期抛出，与重启残留无关
-  （时间线说明定时器/连续事件/引擎 tick 全部照常运转）。故这是 IINCHO 在此引擎上的 **KAG/插件兼容缺口**。
-- 注意区分：之前"同游戏复开正常、换游戏才黑"恰因从兼容游戏（Kemomusu）切到不兼容游戏（IINCHO）。
-  **复核法**：把 IINCHO 作为第一个游戏整体新开，若同样抛 `[linemode]` 错误+黑屏即证为游戏兼容问题，
-  与重启无关。`[linemode]` 未在本项目任何 KAG/override 中定义（引擎源码仅一处无关 MultilineMode）。
+**第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"**。依据：game1=Kemomusu 渲染全健康，
+game2=IINCHO 在 `first.ks` 第 1 行 `[linemode]` 抛 **`タグ/マクロ "linemode" は存在しません`** 后画停。
+但用户实测确认 **IINCHO 是能正常游玩的正经游戏** ⇒ 该 KAG 错误只在"作为第二游戏重启打开"时才出现，
+**它就是 runtime-restart 残留的症状**，不是游戏本身不兼容。
+- 现象复核：全新启动的 IINCHO，`[linemode]` 标签是在的；作为第二游戏启动时该标签不见了
+  （KAG 标签/宏注册没在二次启动时重新建立 → "不存在"）。这正是"换游戏才黑、同游戏复开正常"的本质：
+  重启后脚本/KAG 全局状态残留了第一个游戏（Kemomusu）的东西，没有正确清空/重建。
+- 时间线证据（与重启无关的判据在此不成立）：错误发生在二次 `StartApplication` 的 KAG 场景解析期，
+  而引擎 tick / 定时器 / 连续 handler 仍照常运转——说明**驱动没停，是 KAG 层注册态坏了**。
+- 结论修正：黑屏真根因仍指向**脚本引擎/连续处理器/全局脚本态的 runtime-restart 复位缺失**
+  （候选①方向复活），具体到 KAG 为"二次启动时标签/宏注册表未重建"。
+- **下一步复核实验**：抓一份 IINCHO 作为**第一游戏、全新进程**的日志，与本节日志对比——
+  若全新 IINCHO 无 `[linemode]` 错误（标签齐全）而二次打开报错 ⇒ 证实是重启注册表残留，
+  差异点即修复目标。
+- `[linemode]` 未在本项目 C++ 源码定义（仅脚本侧 KAG 注册），引擎源码仅一处无关 MultilineMode。
 
 记录此日志文件名供后续对照：`.uploads/29c5fff9-...-pocketkrkr_engine(12).log`
 
