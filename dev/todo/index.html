@@ -1622,11 +1622,17 @@ krkrz/krkr2/Kirikiroid2 本地参考副本）。
 装真机复验（01:51）两游戏（krkr2 IINCHO-Re.co 与 Z 千恋万花）退出均<strong>永久卡死在
 <code>TVPSystemUninit begin</code> 之后的 <code>TVPCauseAtExit()</code> 内某个 at-exit handler</strong>；项 C 端
 <code>g_runtime_started_once</code> 不复位的根因已修。已给 <code>TVPCauseAtExit()</code> 循环加逐 handler 打点
-（<code>SysInitIntf.cpp</code>，每 handler <code>begin/end</code> + flush）。<strong>下一步只需一次真机退出</strong>，据最后
-一条 <code>TVPCauseAtExit: handler[N]... begin</code>（无对应 <code>end</code>）即定位卡在哪个 handler。
-已审计的 on-device handler：线程 join 类（<code>TVPWatchThreadUninit</code>/<code>ContinuousHandlerCallLimit</code>）
-构造安全；<strong>设备态相关候选</strong>：<code>TVPShutdownVideoOverlay</code>（PREPARE，最先）与
-<code>TVPReleaseTexture2D glFlush</code>（RELEASE+500，teardown 跑 Flutter UI 线程可能无 EGL 上下文）。
+（<code>SysInitIntf.cpp</code>，每 handler <code>begin/end</code> + flush）。
+<strong>最新一轮（09:35 安卓日志）定位</strong>：卡在 <code>TVPCauseAtExit: handler[2] pri=10 begin</code>
+（有 begin 无 end）——即 <strong><code>PREPARE(10)</code> 优先级的一个 at-exit handler</strong>。Android 上
+<code>pri=10</code> 共 4 个：<code>TVPDestroyEventQueue</code>、<code>TVPDestroyContinuousHandlerVector</code>、
+<code>TVPShutdownVideoOverlay</code>、<code>TVPUnmapAllPrerenderedFonts</code>；<code>std::sort</code> 不稳定，handler[2]
+具体是哪一个无法仅凭 index 判定。三个是纯 Release 循环（事件/连续 handler/字体），
+唯一与线程/媒体交互的是 <code>TVPShutdownVideoOverlay</code>（疑点最大：teardown 跑 Flutter UI 线程，
+视频/渲染子线程若仍在等主循环推进可死锁）。
+<strong>本轮动作</strong>：<code>TVPCauseAtExit</code> 打点改用 <code>dladdr</code> 附带 handler <strong>符号名</strong>（
+<code>&lt;dlfcn.h&gt;</code>，debug 构建可解析；与 <code>DrawDeviceGLESModule.h</code> 已用的 <code>dlsym</code> 同一库，各平台可链）。
+<strong>下一步只需再次真机退出</strong>，<code>sym=</code> 字段直接给出卡死的 handler 函数名，即可对症修。
 盲改任一候选有破坏二次重启的风险，故等真机日志对症下药。</p>
 <p><strong>❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治</strong>。日志
 <code>pocketkrkr_engine(1).log</code> 里 IINCHO-Re.co（krkr2）到 title 屏后退出：第一个游戏的最后一行
