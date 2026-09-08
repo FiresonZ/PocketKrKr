@@ -13,6 +13,10 @@
         <link rel="canonical" href="https://krkr2next.com/dev/krkrz-compat/">
       
       
+        <link rel="prev" href="../compatibility/">
+      
+      
+        <link rel="next" href="../perf-optimization/">
       
       
         
@@ -23,7 +27,7 @@
     
     
       
-        <title>KIRIKIRI Z（krkrz）插件兼容移植清单 - PocketKrKr</title>
+        <title>KIRIKIRI Z(krkrz) 插件兼容移植清单 - PocketKrKr</title>
       
     
     
@@ -111,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              KIRIKIRI Z（krkrz）插件兼容移植清单
+              KIRIKIRI Z(krkrz) 插件兼容移植清单
             
           </span>
         </div>
@@ -904,8 +908,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -913,6 +919,8 @@
       
         
       
+        
+      
     
     
     
@@ -922,11 +930,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
@@ -947,7 +955,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -981,6 +989,136 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KIRIKIRI Z(krkrz) 插件兼容移植清单
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    KIRIKIRI Z(krkrz) 插件兼容移植清单
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        移植总原则
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#z" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        插件清单（按对"跑通 Z 游戏"的关键性排序）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        建议推进顺序
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自检 / 验收
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1078,7 +1216,7 @@
   <a href="#commit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        参考源（本地已浅克隆，仅作移植蓝本，勿直接 commit 进仓库）
+        参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）
       
     </span>
   </a>
@@ -1156,39 +1294,42 @@
 krkrz 闭源版与 Kirikiroid2（安卓端完整实现）。</p>
 <p>关联待办：<a href="../todo/">todo.md</a> #2（黑屏根因）、#2b（krmovie Present）。</p>
 </blockquote>
-<h2 id="commit">参考源（本地已浅克隆，仅作移植蓝本，勿直接 commit 进仓库）<a class="headerlink" href="#commit" title="Permanent link">&para;</a></h2>
+<h2 id="commit">参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）<a class="headerlink" href="#commit" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>本环境无本地 <code>/tmp/krkrz-ref</code> 副本，参考以在线仓库为准（可用 <code>git clone --depth=1</code> 拉取）。</p>
+</blockquote>
 <table>
 <thead>
 <tr>
 <th>仓库</th>
-<th>本地路径</th>
+<th>在线地址</th>
 <th>用途</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>krkrz/krkrz</td>
-<td><code>/tmp/krkrz-ref/krkrz</code></td>
+<td>https://github.com/krkrz/krkrz</td>
 <td>KIRIKIRI Z 引擎核心；<code>movie/win32/krmovie.cpp</code></td>
 </tr>
 <tr>
 <td>krkrz/krkr2</td>
-<td><code>/tmp/krkrz-ref/krkr2</code></td>
+<td>https://github.com/krkrz/krkr2</td>
 <td>kwiki 全量 win32 插件源码；<code>src/plugins/win32/*</code>（drawdeviceZ_D3D9、squirrel、drawdeviceD3D 等）</td>
 </tr>
 <tr>
 <td>krkrz/krkrz_dev</td>
-<td><code>/tmp/krkrz-ref/krkrz_dev</code></td>
+<td>https://github.com/krkrz/krkrz_dev</td>
 <td>Z 工具 + win32 插件（menu、fftgraph、theora…）</td>
 </tr>
 <tr>
 <td>zeas2/Kirikiroid2</td>
-<td><code>/tmp/krkrz-ref/Kirikiroid2</code></td>
+<td>https://github.com/zeas2/Kirikiroid2</td>
 <td><strong>安卓端完整移植（最强参考）</strong>：<code>src/core/visual/ogl</code>（RenderManager_ogl=GL drawdevice）、<code>src/core/movie/krmovie.cpp</code>+<code>ffmpeg/</code>、<code>src/core/visual/win32/DrawDevice.h</code>/<code>BasicDrawDevice.*</code>/<code>PassThroughDrawDevice.*</code>、<code>src/plugins/InternalPlugins.cpp</code></td>
 </tr>
 <tr>
 <td>krkrz/Krkr2Compat</td>
-<td>（TJS 仓库）</td>
+<td>https://github.com/krkrz/Krkr2Compat</td>
 <td><code>k2compat/k2compat.tjs</code>：krkr2→Z 兼容层，纯 TJS 脚本</td>
 </tr>
 </tbody>
@@ -1364,6 +1505,44 @@ krkrz 闭源版与 Kirikiroid2（安卓端完整实现）。</p>
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../compatibility/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 游戏兼容性">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                游戏兼容性
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../perf-optimization/" class="md-footer__link md-footer__link--next" aria-label="下一页: 性能优化候选">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                性能优化候选
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">
