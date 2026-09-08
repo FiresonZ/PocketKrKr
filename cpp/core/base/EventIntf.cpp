@@ -615,6 +615,16 @@ void TVPRemoveWindowUpdate(tTJSNI_BaseWindow *window) {
 void TVPDeliverWindowUpdateEvents() {
     if(TVPWindowUpdateEventsDelivering)
         return; // does not allow re-entering
+    // ── 重绘调度探针（仅 KRKR_RENDER_PROBE）：
+    // 二次打开若此处一直有 non-empty queue 却被投递，但 RTProbe 无 blit
+    //   -> win update 在投递、失败在 UpdateContent/Show 段；
+    // 若此处始终空/不被调用                        -> 游戏/脚本根本没请求重绘（RequestUpdate 未发生）。
+#if defined(KRKR_RENDER_PROBE)
+    if(!TVPWinUpdateEventQueue.empty()) {
+        spdlog::info("DeliverWinUpdate: queue={} -> UpdateContent", TVPWinUpdateEventQueue.size());
+        spdlog::default_logger()->flush();
+    }
+#endif
     TVPWindowUpdateEventsDelivering = true;
 
     try {

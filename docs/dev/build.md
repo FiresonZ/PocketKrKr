@@ -199,3 +199,20 @@ keystore 不同 → **签名每次不一致，用户无法覆盖更新（只能�
 
 - **静态库重复符号**：多为冗余三方库未排除（libpng/libjpeg/libwebpdecoder 等），核对合并脚本排除列表。
 
+- **Android debug 编译失败 / release 却正常（2026-09-08 记录，已决定暂缓）**：
+  - 现象：`./build.sh android debug` 在 CMake Generate 阶段报
+    `Imported target "libgdiplus::libgdiplus" includes non-existent path
+    .../out/android/release/vcpkg_installed/arm64-android/include`；但 `release` 构建正常出包。
+  - 根因：**vcpkg 二进制缓存按 triplet（`arm64-android`）共享，不按 debug/release 区分**；
+    `libgdiplus`（及其 pkg-config 依赖 glib/cairo/fontconfig/freetype）在 **release** 配置下生成
+    的导出目标，把 `INTERFACE_INCLUDE_DIRECTORIES` 烤成了绝对 `release/.../vcpkg_installed/.../include`
+    路径并写入共享缓存。后续 **debug** 配置 `find_package(libgdiplus)` 复用该缓存 → 引用 release 专属
+    绝对路径 → 该目录在 debug 树/前缀下不存在 → Generate 失败。`--clean` 只清
+    `out/android/$BUILD_TYPE`（当前构建类型），清不掉这份共享缓存；当前 GitHub Actions 缓存空间也不足。
+  - 关联：glib 属 meson 端口，与 Android arm64 的 include 路径错配是本仓库已知旧坑
+    （见 AGENTS「vcpkg meson × Android」⚠️，修法参考 `vcpkg/ports/glib/portfile.cmake`）。
+  - 临时规避：清掉 vcpkg `arm64-android` 二进制缓存后重编 debug；release 不受影响。
+  - **根治（待做，缓存空间不足暂搁置）**：让 vcpkg 缓存 key 区分 debug/release，或把
+    `libgdiplus`/glib 的导出 include 路径改为相对/正确前缀，避免绝对路径串流 debug/release。
+    （此问题与引擎代码改动无关，属构建基础设施。）
+

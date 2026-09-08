@@ -220,6 +220,55 @@ EGL context（Destroy+重建）/OpenGL 共享 `_FBO` 重建（`OnRendererRecreat
 - 2nd 段连 enter 都没有 → host 停止调用 engine_tick。
 （此判别探针连同 RTProbe + 3 处复位卫生修复见 `d29009f`。）
 
+### 二次实测补充③（2026-09-08，engine(10).log，带 RTProbe + Application::Run 探针的 release 包）
+
+**序列**：Kemomusu(1st) 正常 → IINCHO(2nd) 黑 → Kemomusu(3rd)（同题）。
+**决定性证据（彻底定性）**：
+- 1st/3rd：`RTProbe` **每帧** `blitSrcTex=3 engineCurFbo=1 fboAttachedTex=3 [SAME]`，
+  `Application::Run` 每 tick 进出，合成进同一纹理、持续出帧。
+- 2nd（IINCHO，5.4s）：`Application::Run enter/return` **持续每 tick 都在**
+  （tick=15…600），但 **RTProbe/UpdateDrawBuffer 只出现 1 帧（行1050 `blitSrcTex=81 [SAME]`）**，
+  之后到 destroy 再无 blit。
+- 结论：**host 一直在调 engine_tick、Application::Run 一直在跑**；不是"合成画错目标"、
+  也不是"host 停摆"。回收链是 **`Application::Run → SystemWatchTimerTimer → DeliverEvents → 
+  tTVPWinUpdateEvent → Window::UpdateContent → DrawDevice->Update()+Show → UpdateDrawBuffer`**，
+  二次打开从第 1 帧起**不再有窗口重绘（win update event/Show 不再触发）** → 画面停在第 1 帧黑块。
+
+**因此根因在框架重绘调度，不在 GL/合成/目标/ host 帧回调**。候选集中于：
+- `tTVPAtExit` 一次性注册失效（审计#1）→ 二次打开定时器/连续处理器未恢复，游戏不再请求重绘；
+- 或二次打开的 `TVPSystemControl`/`TVPTimer`/主窗口 update 事件投递未恢复。
+
+**下一步判别**：在 `tTVPWinUpdateEvent::Deliver`/`TVPWinUpdateEventQueue` 或 `TVPTimer::ProgressAllTimer`
+打点，确认 2nd 段是否还有窗口重绘事件被投递/分发，从而区分"框架没投递重绘"vs"投递了但 Show 没 blit"。
+
+### 候选排查结论（2026-09-08，静态核对 + 已加 DeliverWinUpdate 探针）
+
+- 已**排除**：`TVPSystemControl`（OnExit 时 delete、二次 open 时 `new` 重建，Application.cpp:865/412）；
+  `TVPEventInvoked`（每 tick 经 `_TVPDeliverAllEvents→TVPEventReceived()`（EventIntf.cpp:481/46）复位，
+  不易卡死）；`TVPContinuousHandlerCallLimitThread`/`TVPTimer` 由 End/BeginContinuousEvent 切换。
+- 确定性结论：二次打开从第 1 帧起**不再有窗口重绘（win update 事件投递/交付）**，回收链
+  `RequestUpdate→TVPPostWindowUpdate→TVPInvokeEvents→(Run 每tick)DeliverEvents→TVPDeliverWindowUpdateEvents
+  →UpdateContent→Show→UpdateDrawBuffer` 在 2nd 段断在 blit 之前。
+- **已加探针**（`EventIntf.cpp` TVPDeliverWindowUpdateEvents，KRKR_RENDER_PROBE）：
+  `DeliverWinUpdate: queue=N -> UpdateContent`。下一轮 release+probe 日志即可判：
+  - 2nd 段 `DeliverWinUpdate` 持续打印、但无 RTProbe/blit → **投递→Show 段坏**（Show guard/Managers 空）；
+  - 2nd 段 `DeliverWinUpdate` 根本不打印 → **游戏/脚本未请求重绘**（RequestUpdate 未发生，指向脚本/连续处理器未恢复）。
+
+### 二次黑屏探针矩阵（一次 release+probe 日志即可定死整条链）
+
+| 链路节点 | 探针 | 打印内容 | 判定 |
+|---|---|---|---|
+| 游戏请求重绘 | `RequestUpdate`（WindowIntf.cpp） | `RequestUpdate: repaint requested (cum=N)`，每 60 次 | 有=游戏在画；无=脚本/连续处理器没恢复 |
+| 重绘事件投递 | `TVPDeliverWindowUpdateEvents`（EventIntf.cpp） | `DeliverWinUpdate: queue=N -> UpdateContent`（queue 非空） | 有=投递发生 |
+| Show 被调但没 blit | `tTVPBasicDrawDevice::Show`（BasicDrawDevice.cpp） | `BasicShow: skip (buf=null \| form/Managers)` | 有=Show 守卫生效（Managers 空等） |
+| blit 是否到纹理 | `RTProbe`（ui_stubs.cpp） | `blitSrcTex=… engineCurFbo=… [SAME/DIFF]` | 有 blit 则每帧；`SAME/DIFF` 定合成目标 |
+| 引擎帧驱动 | `Application::Run enter/return`（engine_api.cpp） | 每 15 tick | 每 tick 有=引擎在跑 |
+
+组合判：
+- `RequestUpdate` 无 + 全部其他无 → 游戏/脚本未推进（脚本引擎/连续处理器重启问题）。
+- `RequestUpdate`/`DeliverWinUpdate` 有 + `BasicShow: skip` 打法 → Show 段（主层 Manager 空）。
+- `DeliverWinUpdate` 无但 `RequestUpdate` 有 → 投递链（DeliverEvents）坏。
+
 ## 自检 / 验收
 
 - 目标游戏（魔女的夜宴/sabbat_kr）启动后：主 `DrawBuffer` 被合成、源纹理非全黑、draw 计数增长。
