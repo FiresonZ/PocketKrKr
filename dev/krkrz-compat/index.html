@@ -2401,6 +2401,11 @@ game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <st
 <li>非首开（IINCHO、重开 Kemomusu）：<strong>不加载 Config/KAG-System boot 块</strong>，且<strong>无任何文件打开失败/抛错</strong>。</li>
 <li>⇒ <strong>排除</strong>"异常吞掉/fallback"假设。黑屏是游戏 startup.tjs 里<strong>静默条件分支</strong>：restart 后读到某跨游戏
   残留状态即提前返回、跳 KAG boot。Kemomusu 无 boot 也能渲染，IINCHO 依赖 boot 致黑。门控状态待进一步定位。</li>
+<li><strong>误判澄清（engine(2).log）</strong>：IINCHO(黑)启动段出现 <code>RequestUpdate: repaint requested (cum=181)</code> 一度
+  怀疑跨 restart 重绘残留；查证 <code>cpp/core/visual/WindowIntf.cpp</code> 的 RequestUpdate 中 cum 是
+  KRKR_RENDER_PROBE 下<strong>静态局部变量 s_reqUpd</strong>（不随 restart 重置）的纯计数，非引擎残留状态，属探针伪影。</li>
+<li><strong>推进</strong>：引擎侧已排除（异常/fallback/漏复位/重绘残留），改加 StorageExec 探针（TVPExecuteStorage 低频
+  记录 startup 链实际执行的文件），直接对比 restart 时从哪个脚本断掉/跳过 KAG boot。</li>
 </ul>
 <h3 id="pr12-2026-09-0809">PR#12 剩余差异全量扫描（2026-09-08/09）<a class="headerlink" href="#pr12-2026-09-0809" title="Permanent link">&para;</a></h3>
 <ul>
