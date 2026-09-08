@@ -22,6 +22,7 @@
 #include "SysInitIntf.h"
 #include "ScriptMgnIntf.h"
 #include "tvpgl.h"
+#include <spdlog/spdlog.h>
 
 //---------------------------------------------------------------------------
 // global data
@@ -133,8 +134,17 @@ static void TVPCauseAtExit() {
     std::sort(TVPAtExitInfos->begin(),
               TVPAtExitInfos->end()); // descending sort
 
-    for(auto i = TVPAtExitInfos->begin(); i != TVPAtExitInfos->end(); ++i) {
+    // 逐 handler 打点：真机退出卡死时据最后一条日志定位卡在哪个 at-exit handler。
+    tjs_uint idx = 0;
+    for(auto i = TVPAtExitInfos->begin(); i != TVPAtExitInfos->end();
+        ++i, ++idx) {
+        spdlog::info("TVPCauseAtExit: handler[{}] pri={} begin", idx,
+                     i->Priority);
+        spdlog::default_logger()->flush();
         i->Handler();
+        spdlog::info("TVPCauseAtExit: handler[{}] pri={} end", idx,
+                     i->Priority);
+        spdlog::default_logger()->flush();
     }
 
     delete TVPAtExitInfos;

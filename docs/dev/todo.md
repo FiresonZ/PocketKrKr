@@ -42,8 +42,14 @@
 - 修复（本轮，`cpp/plugins/motionplayer/main.cpp`）：`getD3DAdaptor` 改为返回 **stub 字典
   对象**（与 `Motion.enableD3D` 的 `getEnableD3D` 同一模式）而非 undefined，避免
   `() → Object` 转换错误。后续若脚本访问 stub 的具体成员再逐项补。
-- 待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor / 相关
-  motionplayer 成员的 stub。
+- **再次复验（2026-09-08 01:51 真机日志）**：字典 stub 仍崩溃——`affinesourcemotion.tjs`
+  `drawAffine` 实际执行 **`new Motion.D3DAdaptor(…, w/2, h/2)`**（字节码
+  `45 new %1, %9(%-1, %2, %3, %4, %6)`，%9 = D3DAdaptor 值），字典对象不是函数/类 →
+  `Not a function or invalid method/property type` 致命错误 → 主循环终止 → 退出。
+- **二修（本轮）**：`getD3DAdaptor` 改为返回**可 new 的空类**（`new tTJSNativeClass(TJS_W("D3DAdaptor"))`），
+  让 `new Motion.D3DAdaptor(...)` 成功创建实例；后续若脚本访问实例成员再逐项补 stub。
+- 待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor 实例
+  成员（如 drawAffine 里对实例的 getter/方法调用）的 stub。
 
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 > 移植清单/参考源：见 [krkrz-compat.md](krkrz-compat.md)（已确认各插件源码来源，含
@@ -112,6 +118,18 @@
 >   （Unregister→OnExit→TVPSystemUninit→scene·EngineLoop→13 项 Reset→Bootstrap→started_once）。
 > - ⏳ **待真机**：编译通过 + 退出不再静默卡死（走到 `runtime teardown complete`）+
 >   不杀进程能再开另一款游戏。
+>
+> **❗二次复验（2026-09-08 01:51 真机日志 `pocketkrkr_engine(3).log`）：仍卡死，且已精确定位**。
+> - IINCHO-Re.co（krkr2）与千恋万花（Z）两个游戏退出**均永久卡死在 `engine_destroy` 的
+>   `TVPSystemUninit begin` 之后**（第一个游戏用户等 13.6 秒无返回后手动杀进程；第二个游戏
+>   日志止于 `TVPSystemUninit begin` 不再前进）。
+> - 已排除：`TVPUninitTVPGL`（= `TVPDestroyTable` 空操作）、`TVPUninitScriptEngine`（OnExit
+>   已调过，守卫标志 → no-op）→ **卡死点在 `TVPCauseAtExit()` 内部某个 at-exit handler**。
+> - **本轮动作**：给 `TVPCauseAtExit()` 循环加逐 handler 打点（`handler[i] pri=… begin/end`，
+>   `SysInitIntf.cpp`），下次真机退出据最后一条日志直接定位卡在哪个 at-exit handler
+>   （可疑候选：线程 join 类 `TVPWatchThreadUninit`/`TVPTimerThreadUninit`/`ContinuousHandlerCallLimit`，
+>   或 GL 相关 `TVPReleaseTexture2D` glFlush——engine_destroy 在 Flutter UI 线程，可能无 EGL 上下文）。
+> - ⏳ 待真机：据新打点定位具体 handler 后修。
 > **C 端根因已定位**（这篇日志复现确认）：`engine_api.cpp` 的 `g_runtime_started_once`
 > 一旦置 true 从不复位；`engine_destroy` 只清 `g_runtime_active/owner`，漏了它 → 第二次
 > `engine_open_game` 必命中 `runtime restart is not supported yet`。Dart shutdown 是前置，
