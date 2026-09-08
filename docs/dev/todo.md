@@ -29,17 +29,26 @@
 
 ## 进行中 / 待验证
 
-### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 千恋万花首屏后无法进入【已归入 §2 krkrz 兼容】
-> **2026-09-08 决定**：D3D 是 krkrz(Z) 插件闭源成员，按用户要求**归入 §2「krkrz/Z 插件兼容」**，
-> 与 drawdeviceD3DZ 等一并做，不再单列。千恋万花为 Z 兼容的典型实测游戏。
-> 下文保留排查历史供移植 D3D stub 时参考。
+### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 千恋万花首屏后无法进入【属 motionplayer 插件兼容】
+> **2026-09-08 分类更正**：`Motion.D3DAdaptor` 实为 **krkr2 motionplayer** 成员（Direct3D 硬件
+> 加速 affine motion），**非 krkrz/Z 专属**。实证：知名 Kirikiroid2_patch (zeas2) 给千恋万花
+> 的 patch.tjs 用 `if(typeof Motion.D3DAdaptor == "undefined"){ with(Motion.Player){.useD3D=0} }
+> else { &Motion.Player.useD3D = 0; }` 兜底——真机 krkr2 的 motionplayer.dll (Windows/D3D 版)
+> 确实提供 D3DAdaptor，补丁为「无 D3D 环境（移动端）」把 D3DAdaptor 置 undefined 并强制
+> useD3D=0 走软件变形。
+> 归属：**motionplayer 插件兼容**（不是 §2 krkrz/Z）。注：千恋万花高压本身是 krkrz(Z) repack
+> （黑屏那层走 §2，因其加载 kztouch/k2compat/drawdeviceD3DZ 且全 Failed）；但 D3DAdaptor 成员
+> 源自 krkr2 的 motionplayer，两者要分开归因。
+> 移动端标准做法（Kirikiroid2）：D3DAdaptor 应 undefined + useD3D=0 强制软件；但原装游戏
+> 脚本按「D3DAdaptor 存在」执行 `new Motion.D3DAdaptor(...)`，故我们暂用「可 new 空类」让
+> 脚本走通、由我们的 CPU/GL motion 播放。下文保留排查历史。
 - 旧现象（千恋万花高压 真机日志）：开场播放 yuzulogo logo 后，`custom.ks:89`
   访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`），早期报
   `Member "D3DAdaptor" does not exist` → 脚本致命错误。
-- 根因：Z 的 D3D 版 motionplayer（motionplayer_nod3d/drawdeviceD3DZ，无开源）专有成员，
-  我们 motionplayer 未实现。
+- 根因：motionplayer 的 D3D 成员（real krkr2 motionplayer.dll 的 Direct3D 适配器）在
+  无 D3D 的移动端缺失；我们 motionplayer 未提供。
 - **新增现象（2026-09-08 00:32 日志）**：给 `D3DAdaptor` 返回 `undefined` 后，`Member
-  does not exist` 消失，但 krkrz 的 `affinesourcemotion.tjs drawAffine` 把
+  does not exist` 消失，但 `affinesourcemotion.tjs drawAffine` 把
   `Motion.D3DAdaptor` **当作 Object 传参/赋值**（`new MotionXX(D3DAdaptor, …)`）→ 报
   `Cannot convert the variable type (() to Object)`，`custom.ks:89` 致命 → logo 后崩溃+卡死。
 - 修复（本轮，`cpp/plugins/motionplayer/main.cpp`）：`getD3DAdaptor` 改为返回 **stub 字典
@@ -52,7 +61,8 @@
 - **二修（本轮）**：`getD3DAdaptor` 改为返回**可 new 的空类**（`new tTJSNativeClass(TJS_W("D3DAdaptor"))`），
   让 `new Motion.D3DAdaptor(...)` 成功创建实例；后续若脚本访问实例成员再逐项补 stub。
 - 待验证：真机复验千恋万花首屏 logo 后不再崩溃；若还崩，看是否要继续补 D3DAdaptor 实例
-  成员（如 drawAffine 里对实例的 getter/方法调用）的 stub。
+  成员（如 drawAffine 里对实例的 getter/方法调用）的 stub，或改为 Kirikiroid2 式
+  undefined+useD3D=0。
 
 ### 2. Z（krkrz/KIRIKIRI Z）插件兼容 — 移动端黑屏根因【高优】
 > 移植清单/参考源：见 [krkrz-compat.md](krkrz-compat.md)（已确认各插件源码来源，含
