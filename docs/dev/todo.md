@@ -87,6 +87,18 @@
   `iTVPVideoOverlay::PresentVideoImage` / `GetFrontBuffer` 契约。
 
 ### 3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
+> **📍当前状态（2026-09-08）**：teardown 已按上游 PR#12 完整对照（engine_api.cpp：
+> `OnExit→TVPSystemUninit→删 scene/loop→13 项 Reset→Bootstrap→g_runtime_started_once=false`）。
+> 装真机复验（01:51）两游戏（krkr2 IINCHO-Re.co 与 Z 千恋万花）退出均**永久卡死在
+> `TVPSystemUninit begin` 之后的 `TVPCauseAtExit()` 内某个 at-exit handler**；项 C 端
+> `g_runtime_started_once` 不复位的根因已修。已给 `TVPCauseAtExit()` 循环加逐 handler 打点
+> （`SysInitIntf.cpp`，每 handler `begin/end` + flush）。**下一步只需一次真机退出**，据最后
+> 一条 `TVPCauseAtExit: handler[N]... begin`（无对应 `end`）即定位卡在哪个 handler。
+> 已审计的 on-device handler：线程 join 类（`TVPWatchThreadUninit`/`ContinuousHandlerCallLimit`）
+> 构造安全；**设备态相关候选**：`TVPShutdownVideoOverlay`（PREPARE，最先）与
+> `TVPReleaseTexture2D glFlush`（RELEASE+500，teardown 跑 Flutter UI 线程可能无 EGL 上下文）。
+> 盲改任一候选有破坏二次重启的风险，故等真机日志对症下药。
+>
 > **❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治**。日志
 > `pocketkrkr_engine(1).log` 里 IINCHO-Re.co（krkr2）到 title 屏后退出：第一个游戏的最后一行
 > 日志停在 `00:31:46 journal title.ks:@s`，其后**完全没有 engine_destroy / TVPSystemUninit 任何
@@ -185,9 +197,26 @@
   移植后真机验证是否根治"杀后台/无法再开游戏"。若仍失败，再评估引擎热重启或新进程形态。
 
 ### 4. SIMD 公式逐模式修到位级一致（保正确回归）
-- 背景：`tests/tvpgl_simd_compare` 已证实 **23 处 SIMD ≠ 标量**；
-  PS 全系混合 / SubBlend_o / ScreenBlend 已先回退到 `*_c` 标量保证正确
-  （`tvpgl_simd_init.cpp` 已注释对应注册）。
+> **❗更正（2026-09-08，CI 实证）**：下方 P2–P6 的「已放回 0 mismatch」对 **11 个 PS 混合
+> 模式不成立**。这些模式的 SIMD 用**逐字节 u16 + `OrderedDemote2To`**，而标量
+> `ps_alpha_blend_func` 用 **32 位打包 R/B 算术（跨字节借位，`%2^32`）**：
+>   - `OrderedDemote2To` 对 16 位中间值**饱和**到 0xFF，标量是 `&0xFF` **截断**；
+>   - 标量打包算术里 B 通道下溢会**借位**影响 R 通道，逐字节通道无法复现。
+> 二者**结构性不等**。Linux CI `tvpgl_simd_compare` 实测 **16 处 mismatch**
+> （如 `PsAlphaBlend scalar=005E8946 simd=00FF8946`、`PsMulBlend scalar=00752B57 simd=00FFFFFF`）。
+>
+> **对策（已提交 8ff8760）**：把 Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/
+> HardLight/Exclusion 共 11 个 PS 模式在 `tvpgl_simd_init.cpp` **不再注册**（回退生产标量），
+> 与 conventions §9「SIMD≠标量→回退标量保正确」一致。修复后 Linux CI `tvpgl_simd_compare`
+> **全绿**。
+>
+> 待办（放回前提）：已用 [harness_ps.cpp](../../harness_ps.cpp) 实证**唯一能位级一致**的算法
+> = **u8 混合核心 + u32 打包 alpha**（每像素 32 位打包复现标量跨字节借位，再 `&0xFF` 截断），
+> 11 模式 × 4 变体 × 2M 随机矢量 0 mismatch。需把它改写成 Highway **u32 lane** 后再放回注册。
+> 功能正确性已由标量保证；性能上 PS 混合暂为标量（VN 中少用，可接受）。
+
+- 背景：`tests/tvpgl_simd_compare` 用于标量 vs SIMD 逐像素比对；早期证实
+  PS 全系混合 / SubBlend_o / ScreenBlend 等 SIMD ≠ 标量。<以下保留各模式修复历史/经验摘记>
 - **P2 ✅（PsApplyAlpha 舍入序已修）**：标量 `TVPPS_ALPHABLEND`（tvpps.inc）实际是
   `result = ((s - d) * a >> 8) + d`；旧 SIMD 用了 `(s*a>>8) + (d*(255-a)>>8)`，30M
   随机矢量 29.85M 不一致。已改为 `((s-d)*a >> 8) + d`（u16 包减/包乘，`OrderedDemote2To`

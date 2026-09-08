@@ -37,7 +37,7 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 
 1. **平台守卫是惰性的，别删**：`#if __ANDROID__`/`#ifdef _WIN32`/`#if __linux__` 等在 Apple 构建不编译，是潜在复用代码，剥离是高危重构（§2）。
 2. **`win32/` 是跨平台共享实现**（音频/线程/系统控制），不是 Windows 专属，绝不能删（§1）。
-3. **SIMD（Highway）公式以 [tvpgl.cpp](cpp/core/visual/tvpgl.cpp) 的 `*_c` 标量为准**；SubBlend/ScreenBlend_o/AdditiveAlphaBlend/PS alpha 已修，待逐像素验证（§9）。
+3. **SIMD（Highway）公式以 [tvpgl.cpp](cpp/core/visual/tvpgl.cpp) 的 `*_c` 标量为准**；非 PS 混合已到位级一致，**11 个 PS 混合已回退标量**（逐字节 u16+saturation 与标量 32 位打包跨字节借位结构性不等，等待做 u32 lane 后再放回，§9 / todo §4）。
 4. **Live2D（cubism）按 SDK 磁盘存在与否条件编译**，CI 上自动禁用；缺库是正常状态，不是 bug（§4）。
 5. **vcpkg 的 angle 分平台**：Apple 用 `metal` feature，Android/Linux 用 `vulkan`，不可混用。
 6. **Android 引擎是自包含 `libengine_api.so`**：插件源码经 `target_sources(PUBLIC)`→`INTERFACE_SOURCES` 直接编进 .so，**普通链接** `krkr2core+krkr2plugin`；**别再 `--whole-archive`**，否则 ld.lld 重复符号；JNI 在 `bridge/engine_api/src/engine_api_android_jni.cpp`。
@@ -61,13 +61,19 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 | iOS 黑屏诊断 | 🔬 探针已加，真机日志排除视频后根因转向 **Z 插件兼容**（缺 drawdeviceD3DZ/kztouch/k2compat 等，主 DrawBuffer 从未被合成、源纹理保持初始黑） |
 | Android 构建链路 | ✅ APK 可出、真机不再闪退/不转圈；SDL Java 层 + 上游 JNI 平台层已补齐（`a2d8d75`），引擎日志写公共存储 `PocketKrKrLogs`（`c312272`），已进入真机日志筛查游戏兼容性 |
 | vcpkg meson × Android | ⚠️ glib 等 meson 端口与 arm64 错配；修法见 `vcpkg/ports/glib/portfile.cmake` |
-| Linux 引擎验证 CI | ✅ 绿灯 |
-| SIMD 公式 | ⚠️ 23 处 SIMD≠标量，已回退标量保正确，待逐模式修到位级一致放回 |
+| Linux 引擎验证 CI | ✅ 绿灯（`tvpgl_simd_compare` 全绿） |
+| SIMD 公式 | ⚠️ 非 PS 混合已对齐标量；**11 个 PS 混合回退标量**（`8ff8760`，逐字节 u16+saturation 与标量 32 位打包借位结构性不等，已按 §9 回退保正确）；待做 u32 lane 后再放回（算法已由 harness_ps.cpp 实证） |
+| runtime-restart（退出→再开另一游戏） | ⚠️ teardown 已对齐 PR#12、C 端 `g_runtime_started_once` 已复位；但真机退出仍永久卡死在 `TVPCauseAtExit` 某 at-exit handler（逐 handler 打点已加，待真机日志定位） |
 
 ## 建议的下一步
 
-1. 重跑 Linux engine_verify CI，确认回退后 ctest 全绿。
-2. 读 iOS 真机日志，按 `BlackScreen` 探针结论决定是否先做 krmovie Present（见 todo.md）。
-3. Android 已进入日志筛查游戏兼容性阶段；iOS 出 nosign IPA 真机实测；核心待办转向 **Z 插件兼容黑屏**（见 todo「已解决 / 进行中」）。
-4. 逐模式修 SIMD 到位级一致（PsApplyAlpha 舍入序 + SubBlend_o/ScreenBlend alpha + Overlay/HardLight 分支），tests 验证后放回。
+1. **runtime-restart 卡死（最优先）**：真机退出一次，读 `pocketkrkr_engine*.log` 最后一条
+   `TVPCauseAtExit: handler[N]... begin`（无对应 `end`）→ 定位卡死的 at-exit handler 后修
+   （见 todo §3）。
+2. **千恋万花 D3DAdaptor**：`getD3DAdaptor` 已改返回可 `new` 的 `tTJSNativeClass`，真机复验首屏
+   logo 后不再崩溃。
+3. **Z 插件兼容黑屏**（iOS/Android）：核心待办是补 `drawdeviceD3DZ/kztouch/k2compat` 等 Z 插件
+   （见 todo §2），trunk 走向与 Z 闭源版兼容持平。
+4. SIMD（低优先，功能已被标量保证）：把 11 个 PS 混合按 u32 lane 复现标量打包算术后放回注册
+   （算法由 harness_ps.cpp 实证）。
 5. 真机问题修复后进入游戏兼容性测试（[docs/dev/compatibility.md](docs/dev/compatibility.md)）。

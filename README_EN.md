@@ -89,8 +89,8 @@ No macOS locally? The Android APK can be built directly on Windows.
 | Flutter Plugin (zero-copy textures) | ✅ Mostly Done | IOSurface + SurfaceTexture + RGBA fallback path |
 | Flutter Debug UI | ✅ Mostly Done | FPS control, engine lifecycle, rendering monitor |
 | Input Event Forwarding | ✅ Mostly Done | Touch / pointer coordinate mapping and forwarding |
-| Android build chain | 🔨 In Progress | triplet / CMake preset / JNI bridge / Kotlin plugin wired, awaiting device verification |
-| Engine Performance | 🔨 In Progress | SIMD pixel blending (Highway, formula defects fixed), GPU compositing pipeline, etc. |
+| Android build chain | ✅ Mostly Done | Self-contained `libengine_api.so` (with JNI), APK builds; no more crash/spinner on device; entering log-driven game-compat triage |
+| Engine Performance | 🔨 In Progress | SIMD pixel blending (Highway): non-PS blending bit-aligned with scalar; **11 PS blends reverted to scalar** (await u32-lane rewrite), GPU compositing pipeline, etc. |
 | Game Compatibility | 🔨 In Progress | Completing the script parser and plugins; target parity with Z's closed-source build |
 
 ## Related Docs
