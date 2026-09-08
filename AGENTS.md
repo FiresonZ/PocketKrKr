@@ -63,14 +63,14 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 | vcpkg meson × Android | ⚠️ glib 等 meson 端口与 arm64 错配；修法见 `vcpkg/ports/glib/portfile.cmake` |
 | Linux 引擎验证 CI | ✅ 绿灯（`tvpgl_simd_compare` 全绿） |
 | SIMD 公式 | ⚠️ 非 PS 混合已对齐标量；**11 个 PS 混合回退标量**（`8ff8760`，逐字节 u16+saturation 与标量 32 位打包借位结构性不等，已按 §9 回退保正确）；待做 u32 lane 后再放回（算法已由 harness_ps.cpp 实证） |
-| runtime-restart（退出→再开另一游戏） | ⚠️ teardown 已对齐 PR#12、C 端 `g_runtime_started_once` 已复位；但真机退出仍永久卡死在 `TVPCauseAtExit` 的**某个 `PREPARE(10)` at-exit handler**。已用显式标记逐步排除：handler[0]/[1]=DestEventQueue/DestroyContinuousHandlerVector 完成，handler[2] 排除 video/font（有标记未打出）→ 判定为**第 5 个 pri=10 `TVPDestroyLoggingHandlerVector`**（释放日志闭包、跑 TJS finalizer）；已加标记+逐 closure 打点，**待一次真机日志**确认定位 |
+| runtime-restart（退出→再开另一游戏） | ✅ **已解决**（真机复验）：退出卡死 = ①日志闭包未在脚本引擎销毁前释放（`4221543`）②音效线程析构 `Terminate()` 在 `WaitFor()` 之后致 join 死锁（`081a9c1`）；二次打开黑屏/乱屏 = EGL context 重启时销毁重建，复用渲染器单例的 shader/共享 `_FBO` 失效且 `FireRendererRecreated` 从未被调用，已补调用并重建 shader+`_FBO`（`5fd30da`）。两游戏不杀进程二次打开渲染正常 |
 
 ## 建议的下一步
 
-1. **runtime-restart 卡死（最优先）**：真机退出一次，读 `pocketkrkr_engine*.log` 最后一条
-   `at-exit PREPARE[k/4]: … begin`（无对应 `end`），即卡死的 at-exit handler（stripped 包
-   dladdr 无效，已改显式标记）→ 对症后修（见 todo §3）。
-2. **千恋万花 D3DAdaptor**：`getD3DAdaptor` 已改返回可 `new` 的 `tTJSNativeClass`，真机复验首屏
+1. **快速 skip 消息框黑块（新，小 bug）**：快速 skip 时本应透明的消息框偶发变黑色色块
+   （见 [todo.md](docs/dev/todo.md) §3b）。方向：skip 快速帧间的混合/预乘路径或遮罩层刷新，
+   抓 skip 瞬间渲染探针日志复核。
+2. **千恋万花 D3DAdaptor 复验**：`getD3DAdaptor` 已改返回可 `new` 的 `tTJSNativeClass`，真机复验首屏
    logo 后不再崩溃。
 3. **Z 插件兼容黑屏**（iOS/Android）：核心待办是补 `drawdeviceD3DZ/kztouch/k2compat` 等 Z 插件
    （见 todo §2），trunk 走向与 Z 闭源版兼容持平。

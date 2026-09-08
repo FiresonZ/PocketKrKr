@@ -29,7 +29,10 @@
 
 ## 进行中 / 待验证
 
-### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 首屏后点击退出的兼容根因
+### 2a. motionplayer 缺 `Motion.D3DAdaptor` — 千恋万花首屏后无法进入【已归入 §2 krkrz 兼容】
+> **2026-09-08 决定**：D3D 是 krkrz(Z) 插件闭源成员，按用户要求**归入 §2「krkrz/Z 插件兼容」**，
+> 与 drawdeviceD3DZ 等一并做，不再单列。千恋万花为 Z 兼容的典型实测游戏。
+> 下文保留排查历史供移植 D3D stub 时参考。
 - 旧现象（千恋万花高压 真机日志）：开场播放 yuzulogo logo 后，`custom.ks:89`
   访问 `Motion.D3DAdaptor`（`(property getter) motionD3DAdaptor`），早期报
   `Member "D3DAdaptor" does not exist` → 脚本致命错误。
@@ -86,8 +89,24 @@
 - 参考：`cpp/core/visual/impl/VideoOvlImpl.cpp` 的 `EC_UPDATE` 处理与
   `iTVPVideoOverlay::PresentVideoImage` / `GetFrontBuffer` 契约。
 
-### 3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— 参考上游 PR#12
-> **📍当前状态（2026-09-08）**：teardown 已按上游 PR#12 完整对照（engine_api.cpp：
+### 3. runtime-restart 不支持（退出后无法直接开另一个游戏）—— ✅ 已全部解决
+> **✅ 已全部解决（2026-09-08，真机复验）**：
+> - **退出卡死**根治：①`Application::OnExit` 在销毁脚本引擎前 `TVPClearLoggingHandlers()`
+>   （`DebugIntf.cpp`，提前释放日志闭包，避免引擎死后 finalizer 命中失效 TJS 态）
+>   → 提交 `4221543`；② 真正卡死点是音效线程析构：`~tTVPWaveSoundBufferThread`
+>   原在 `WaitFor()`（join）后才 `Terminate()`，`Execute()` 是 `while(!GetTerminated())`
+>   无限循环 → join 永久阻塞（进程退出被 OS 回收掩盖，进程内 teardown 必现）。
+>   已改为先 `Terminate()`+`Event.Set()` 再 `WaitFor()` → 提交 `081a9c1`。
+> - **二次打开黑屏/乱屏**根治（首开正常、仅 reset 后乱、杀进程重开正常）：EGL context
+>   在重启时被 `EngineBootstrap::Shutdown` 销毁重建，但复用渲染器单例的 shader/共享
+>   `_FBO`/模板 FBO 都是旧 context 的失效 id；`FireRendererRecreated` 全仓零调用（死代码）。
+>   修复：`EngineBootstrap::InitializeGraphics` 在 context（重）建后真正调用
+>   `krkr::gl::FireRendererRecreated()`，`RenderManager_ogl.cpp` 回调内除重建 shader 外
+>   还重建 `_FBO`/`_stencil_FBO` 并复位 FBO 状态 → 提交 `5fd30da`。
+> - 状态：两游戏不杀进程二次打开渲染正常，无黑屏/乱屏；杀进程重开亦正常。
+> - 下文为排查/移植历史，保留作经验摘记。
+>
+> **📍历史排查状态（2026-09-08）**：teardown 已按上游 PR#12 完整对照（engine_api.cpp：
 > `OnExit→TVPSystemUninit→删 scene/loop→13 项 Reset→Bootstrap→g_runtime_started_once=false`）。
 > 装真机复验（01:51）两游戏（krkr2 IINCHO-Re.co 与 Z 千恋万花）退出均**永久卡死在
 > `TVPSystemUninit begin` 之后的 `TVPCauseAtExit()` 内某个 at-exit handler**；项 C 端
@@ -210,6 +229,29 @@
 - 待办（真机阶段）：已移植 PR#12 中 `game_page.dart` 的 shutdown 重构（只搬这段，不整体
   cherry-pick——该 PR 还夹带 launch_args/归档/.gitignore/CMake `TVP_SOURCE_ROOT` 等噪声）。
   移植后真机验证是否根治"杀后台/无法再开游戏"。若仍失败，再评估引擎热重启或新进程形态。
+
+### 3b. 小 bug：快速 skip 时消息框（聊天框）偶发变黑色色块【间歇性，低优先，挂起】
+- 现象（2026-09-08 真机）：快速 skip 模式下，本应透明的消息框偶发整块变成**黑色色块**
+  （消息框背景层/遮罩变成不透明黑）。
+- 复现：**间歇性，难复现**——再次尝试快速 skip 未再出现。当前无稳定触发条件，暂不强查。
+- 推测方向（未验证）：skip 快速帧间的混合/预乘路径偶发把 alpha 写成 0xFF 的黑色，
+  或遮罩层未随 skip 正确刷新；与 runtime-restart 无关（单次运行即现）。
+- 处置：**挂起（低优先）**。下次再现时记录触发前场景（所在界面/哪一步 skip/消息框是否
+  正在淡入淡出），并抓 skip 瞬间渲染探针（`enable_render_probe=true`）日志复核混合路径。
+
+### 3c. runtime-restart 切换【不同】游戏：旧游戏 auto-path 未清 → 路径污染/黑屏【已修，待真机】
+- 现象（2026-09-08）：reset（进程内）后**同款游戏可重开；换不同游戏打开变黑屏**。
+  用户疑为 xp3 挂载/重挂载问题。
+- 根因（已定位）：`TVPAutoPathList`（全局 auto-path 列表）跨重启**只增不清**——
+  `TVPAutoMountProjectXP3Archives`/`TVPAddAutoPath`（脚本 `Storages.addAutoPath`）把
+  工程归档目录与脚本路径加进全局列表，`TVPResetStorageImplForRestart` 之前只清 apppath
+  缓存，**从不清 auto-path**。切到新游戏后，旧游戏归档路径仍留在搜索表最前，文件解析
+  可能命中旧游戏归档 → 资源错乱/黑屏；同款重启因 `TVPBoostAutoMountPaths` 去重挪位而看似正常。
+- 修复（本轮）：新增 `TVPClearAutoPathListForRestart()`（清 `TVPAutoPathList` + auto-path
+  缓存 + 失效路径表，`StorageIntf.{h,cpp}`），并在 `TVPResetStorageImplForRestart` 中调用，
+  reset 链末尾清空上一游戏累积的 auto-path → 新游戏只含自身挂载。
+- 待真机：不杀进程切换两个不同 krkr2 游戏，确认均能正常渲染、无黑屏。
+- 注：千恋万花是 krkrz(Z) 游戏，其黑屏属 §2 兼容问题，与此项（krkr2 游戏互切）区分。
 
 ### 4. SIMD 公式逐模式修到位级一致（保正确回归）
 > **❗更正（2026-09-08，CI 实证）**：下方 P2–P6 的「已放回 0 mismatch」对 **11 个 PS 混合
