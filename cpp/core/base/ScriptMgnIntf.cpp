@@ -972,19 +972,68 @@ void TVPExecuteStartupScript() {
                             place.AsStdString().c_str());
 #endif
         TVPStartupSuccess = false;
+#if defined(KRKR_RENDER_PROBE)
+        // —— startup.tjs 执行探针：抓 restart 时 startup 提前抛错的时机/消息。
+        // 黑屏特征：startup.tjs 抛异常(而 system/Initialize.tjs 存在)时被静默吞掉改走 fallback，
+        // KAG boot 被绕过。此探针记录是"完成"还是"抛错"及错误内容，钉死跳 KvK boot 的具体 gate。
+        auto StartupProbeLog = [](const char *kind, const ttstr &msg) {
+            spdlog::info(
+                "StartupProbe: startup.tjs threw({}) sysInitExists={} msg={}",
+                kind, (int)TVPIsExistentStorage(TJS_W("system/Initialize.tjs")),
+                msg.AsStdString());
+            spdlog::default_logger()->flush();
+        };
+#endif
         try {
             iTJSTextReadStream *stream = TVPCreateTextStreamForRead(place, "");
             stream->Destruct();
             TVPExecuteStorage(TVPStartupScriptName);
             TVPStartupSuccess = true;
-        } catch(...) {
+#if defined(KRKR_RENDER_PROBE)
+            spdlog::info("StartupProbe: startup.tjs completed without throwing");
+            spdlog::default_logger()->flush();
+#endif
+        }
+#if defined(KRKR_RENDER_PROBE)
+        catch(const TJS::eTJSScriptError &e) {
+            StartupProbeLog("eTJSScriptError", e.GetMessage());
+            if(!TVPIsExistentStorage(TJS_W("system/Initialize.tjs"))) throw;
+        }
+        catch(const TJS::eTJS &e) {
+            StartupProbeLog("eTJS", e.GetMessage());
+            if(!TVPIsExistentStorage(TJS_W("system/Initialize.tjs"))) throw;
+        }
+        catch(const std::exception &e) {
+            StartupProbeLog("std::exception", ttstr(e.what()));
+            if(!TVPIsExistentStorage(TJS_W("system/Initialize.tjs"))) throw;
+        }
+        catch(const char *e) {
+            StartupProbeLog("const char*", ttstr(e));
+            if(!TVPIsExistentStorage(TJS_W("system/Initialize.tjs"))) throw;
+        }
+        catch(const tjs_char *e) {
+            StartupProbeLog("tjs_char*", ttstr(e));
+            if(!TVPIsExistentStorage(TJS_W("system/Initialize.tjs"))) throw;
+        }
+        catch(...) {
+            StartupProbeLog("unknown", TJS_W(""));
+            if(!TVPIsExistentStorage(TJS_W("system/Initialize.tjs"))) throw;
+        }
+#else
+        catch(...) {
             if(!TVPIsExistentStorage(TJS_W("system/Initialize.tjs"))) {
                 throw;
             }
         }
+#endif
         if(!TVPStartupSuccess) {
             // try direct execute initialize.tjs to compatible for
             // some patch
+#if defined(KRKR_RENDER_PROBE)
+            spdlog::info(
+                "StartupProbe: running FALLBACK system/Initialize.tjs (startup.tjs failed)");
+            spdlog::default_logger()->flush();
+#endif
 #if defined(__ANDROID__)
             __android_log_print(ANDROID_LOG_INFO, "krkr2",
                                 "Fallback startup script: system/Initialize.tjs");
