@@ -100,9 +100,12 @@
 > 具体是哪一个无法仅凭 index 判定。三个是纯 Release 循环（事件/连续 handler/字体），
 > 唯一与线程/媒体交互的是 `TVPShutdownVideoOverlay`（疑点最大：teardown 跑 Flutter UI 线程，
 > 视频/渲染子线程若仍在等主循环推进可死锁）。
-> **本轮动作**：`TVPCauseAtExit` 打点改用 `dladdr` 附带 handler **符号名**（
-> `<dlfcn.h>`，debug 构建可解析；与 `DrawDeviceGLESModule.h` 已用的 `dlsym` 同一库，各平台可链）。
-> **下一步只需再次真机退出**，`sym=` 字段直接给出卡死的 handler 函数名，即可对症修。
+> **本轮动作**：`TVPCauseAtExit` 打点改用 `dladdr` 附带 handler **符号名**；但 release APK
+> stripped，真机 `sym=?` 解析不出（10:16 日志）。**改在各 PREPARE(10) handler 内部打显式标记**
+> （`at-exit PREPARE[1/4] DestroyEventQueue / [2/4] DestroyContinuousHandlerVector /
+> [3/4] ShutdownVideoOverlay / [4/4] UnmapAllPrerenderedFonts`，与 stripped 无关）。
+> **下一步只需再次真机退出**，日志里最后一条 `at-exit PREPARE[k/4]: … begin` 无 end 即为
+> 卡死 handler。
 > 盲改任一候选有破坏二次重启的风险，故等真机日志对症下药。
 >
 > **❗真机 2026-09-08 00:31 复验：退出即卡死（非干净的 restart），reset 未根治**。日志

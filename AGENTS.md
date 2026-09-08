@@ -63,14 +63,13 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 | vcpkg meson × Android | ⚠️ glib 等 meson 端口与 arm64 错配；修法见 `vcpkg/ports/glib/portfile.cmake` |
 | Linux 引擎验证 CI | ✅ 绿灯（`tvpgl_simd_compare` 全绿） |
 | SIMD 公式 | ⚠️ 非 PS 混合已对齐标量；**11 个 PS 混合回退标量**（`8ff8760`，逐字节 u16+saturation 与标量 32 位打包借位结构性不等，已按 §9 回退保正确）；待做 u32 lane 后再放回（算法已由 harness_ps.cpp 实证） |
-| runtime-restart（退出→再开另一游戏） | ⚠️ teardown 已对齐 PR#12、C 端 `g_runtime_started_once` 已复位；但真机退出仍永久卡死在 `TVPCauseAtExit` 的**某个 `PREPARE(10)` at-exit handler**（已确认 handler[2] pri=10，唯一线程交互候选为 `TVPShutdownVideoOverlay`）；打点已加 `dladdr` 符号名，**待一次真机日志**据 `sym=` 定位 |
+| runtime-restart（退出→再开另一游戏） | ⚠️ teardown 已对齐 PR#12、C 端 `g_runtime_started_once` 已复位；但真机退出仍永久卡死在 `TVPCauseAtExit` 的**某个 `PREPARE(10)` at-exit handler**（handler[2] pri=10，stripped 包 dladdr 解不出 `sym=?`）；已给 4 个 PREPARE handler 打显式标记（DestroyEventQueue/DestroyContinuousHandlerVector/ShutdownVideoOverlay/UnmapAllPrerenderedFonts），**待一次真机日志**定位 |
 
 ## 建议的下一步
 
 1. **runtime-restart 卡死（最优先）**：真机退出一次，读 `pocketkrkr_engine*.log` 最后一条
-   `TVPCauseAtExit: handler[N] pri=… sym=… begin`（无对应 `end`），`sym=` 即为卡死的
-   at-exit handler（当前疑为某 `PREPARE(10)`，候选含 `TVPShutdownVideoOverlay`）→ 对症后修
-   （见 todo §3）。
+   `at-exit PREPARE[k/4]: … begin`（无对应 `end`），即卡死的 at-exit handler（stripped 包
+   dladdr 无效，已改显式标记）→ 对症后修（见 todo §3）。
 2. **千恋万花 D3DAdaptor**：`getD3DAdaptor` 已改返回可 `new` 的 `tTJSNativeClass`，真机复验首屏
    logo 后不再崩溃。
 3. **Z 插件兼容黑屏**（iOS/Android）：核心待办是补 `drawdeviceD3DZ/kztouch/k2compat` 等 Z 插件
