@@ -161,22 +161,29 @@ jobs:
 
       - name: Prepare release keystore (if secret)
         # 若配置了 ANDROID_KEYSTORE_BASE64 等 Secrets，则解出稳定 keystore 并在 release
-        # 构建时用它签名（保证签名一致、用户可覆盖更新）；未配置则跳过，回退 debug 临时签名。
+        # 构建时用它签名（保证签名一致、用户可覆盖更新）；未配置则为 no-op，回退 debug 临时签名。
+        # 注：GitHub 的 secrets 上下文【不能】用于 step 的 if: 条件（报 Unrecognized named-value:
+        # 'secrets'），故移到 step env，用 shell 判空兜底。
         # Secrets 需在仓库 Settings → Secrets and variables → Actions 里添加：
         #   ANDROID_KEYSTORE_BASE64（keystore 的 base64）、
         #   ANDROID_KEYSTORE_PASSWORD、ANDROID_KEY_ALIAS、ANDROID_KEY_PASSWORD
-        # 生成示例：keytool -genkeypair -v -keystore release.jks -alias release -keyalg RSA \
-        #   -keysize 2048 -validity 10000 -storepass <pw> -keypass <pw> -dname "CN=PocketKrKr"
-        #   base64 -w0 release.jks   # 把输出作为 ANDROID_KEYSTORE_BASE64
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$HOME/android-release.jks"
-          chmod 600 "$HOME/android-release.jks"
-          echo "KEYSTORE_PATH=$HOME/android-release.jks" >> "$GITHUB_ENV"
-          echo "KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> "$GITHUB_ENV"
-          echo "KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "::notice::使用稳定 keystore 对 release APK 签名"
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$HOME/android-release.jks"
+            chmod 600 "$HOME/android-release.jks"
+            echo "KEYSTORE_PATH=$HOME/android-release.jks" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "KEY_ALIAS=$ANDROID_KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "::notice::使用稳定 keystore 对 release APK 签名"
+          else
+            echo "::warning::未配置 ANDROID_KEYSTORE_BASE64 等 Secrets，回退 debug 临时签名（签名每次构建不同，无法覆盖更新）"
+          fi
 
       - name: Build C++ engine + Flutter Android app
         run: |
