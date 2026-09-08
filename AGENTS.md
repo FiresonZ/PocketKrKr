@@ -44,7 +44,7 @@ cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build
 7. `*.md` 不再被 gitignore，新增 md 正常 `git add`；`build/` 已反忽略。
 8. 改 vcpkg 依赖 → CI 缓存 key 变 + 首次全量重编（半小时级）属正常。
 9. **待办在 [docs/dev/todo.md](docs/dev/todo.md)**，动手前先看是否已有条目。
-10. **krkrz/Z 兼容的参考源码**用本地副本：`/tmp/krkrz-ref/{krkrz,krkr2,krkrz_dev,Kirikiroid2}`（Kirikiroid2=安卓完整移植，渲染/视频参考最强），清单见 [docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)，别把这些仓库代码直接 commit。
+10. **krkrz/Z 兼容的参考源码**（在线，勿直接 commit 进仓库）：krkrz 引擎 [github.com/krkrz/krkrz](https://github.com/krkrz/krkrz)、Z 工具/插件 [github.com/krkrz/krkrz_dev](https://github.com/krkrz/krkrz_dev)、安卓完整移植（渲染/视频参考最强）[github.com/zeas2/Kirikiroid2](https://github.com/zeas2/Kirikiroid2)；清单见 [docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)。
 
 ## Git 协作规则（务必遵守）
 

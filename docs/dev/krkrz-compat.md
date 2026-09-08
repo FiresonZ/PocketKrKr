@@ -6,15 +6,17 @@
 >
 > 关联待办：[todo.md](todo.md) #2（黑屏根因）、#2b（krmovie Present）。
 
-## 参考源（本地已浅克隆，仅作移植蓝本，勿直接 commit 进仓库）
+## 参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）
 
-| 仓库 | 本地路径 | 用途 |
+> 本环境无本地 `/tmp/krkrz-ref` 副本，参考以在线仓库为准（可用 `git clone --depth=1` 拉取）。
+
+| 仓库 | 在线地址 | 用途 |
 |---|---|---|
-| krkrz/krkrz | `/tmp/krkrz-ref/krkrz` | KIRIKIRI Z 引擎核心；`movie/win32/krmovie.cpp` |
-| krkrz/krkr2 | `/tmp/krkrz-ref/krkr2` | kwiki 全量 win32 插件源码；`src/plugins/win32/*`（drawdeviceZ_D3D9、squirrel、drawdeviceD3D 等） |
-| krkrz/krkrz_dev | `/tmp/krkrz-ref/krkrz_dev` | Z 工具 + win32 插件（menu、fftgraph、theora…） |
-| zeas2/Kirikiroid2 | `/tmp/krkrz-ref/Kirikiroid2` | **安卓端完整移植（最强参考）**：`src/core/visual/ogl`（RenderManager_ogl=GL drawdevice）、`src/core/movie/krmovie.cpp`+`ffmpeg/`、`src/core/visual/win32/DrawDevice.h`/`BasicDrawDevice.*`/`PassThroughDrawDevice.*`、`src/plugins/InternalPlugins.cpp` |
-| krkrz/Krkr2Compat | （TJS 仓库） | `k2compat/k2compat.tjs`：krkr2→Z 兼容层，纯 TJS 脚本 |
+| krkrz/krkrz | https://github.com/krkrz/krkrz | KIRIKIRI Z 引擎核心；`movie/win32/krmovie.cpp` |
+| krkrz/krkr2 | https://github.com/krkrz/krkr2 | kwiki 全量 win32 插件源码；`src/plugins/win32/*`（drawdeviceZ_D3D9、squirrel、drawdeviceD3D 等） |
+| krkrz/krkrz_dev | https://github.com/krkrz/krkrz_dev | Z 工具 + win32 插件（menu、fftgraph、theora…） |
+| zeas2/Kirikiroid2 | https://github.com/zeas2/Kirikiroid2 | **安卓端完整移植（最强参考）**：`src/core/visual/ogl`（RenderManager_ogl=GL drawdevice）、`src/core/movie/krmovie.cpp`+`ffmpeg/`、`src/core/visual/win32/DrawDevice.h`/`BasicDrawDevice.*`/`PassThroughDrawDevice.*`、`src/plugins/InternalPlugins.cpp` |
+| krkrz/Krkr2Compat | https://github.com/krkrz/Krkr2Compat | `k2compat/k2compat.tjs`：krkr2→Z 兼容层，纯 TJS 脚本 |
 
 ## 移植总原则
 
