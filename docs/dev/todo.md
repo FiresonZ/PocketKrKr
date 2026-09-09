@@ -50,11 +50,19 @@
     `mainwindow.tjs (property getter) motionD3DAdaptor`——它**无条件**取 `Motion.D3DAdaptor`
     （先算 scWidth/2、pxHeight/2 再访问），置 undefined → `Member "D3DAdaptor" does not exist`
     致命。Kirikiroid2 能跑此游戏正说明它**定义**了 D3DAdaptor（krkr2 motionplayer 本来就有该成员）。
-- **修复**：`cpp/plugins/motionplayer/main.cpp` 用 **classic tjsNative 模式**定义 `D3DAdaptor`
-  原生类（`NI_D3DAdaptor` + 构造收任意参 + `captureCanvas`/`unloadUnusedTextures` no-op），
-  `Motion.D3DAdaptor` getter 返回 `Create_NC_D3DAdaptor()`。Layer 原生同款 no-op（LayerIntf.cpp）
-  保留兜底。⚠️ 迭代史：`815d8c3` 移除→undefined 崩（Member 不存在）；`4166901` NCB 空类无构造→
-  `new` 崩（"Called method is not implemented"）；**本次 = 显式构造函数 + 实例方法**。
+- **修复**：`cpp/plugins/motionplayer/main.cpp` `getD3DAdaptor` 返回**内建空类**
+  `Create_NC_D3DAdaptor() = new tTJSNativeClass("D3DAdaptor")`（`new` 收任意参创建实例）。
+  Layer 原生 `captureCanvas`/`unloadUnusedTextures` no-op（LayerIntf.cpp `b008020`）兜底。
+  ⚠️ 迭代史：`815d8c3` 移除→undefined 崩（Member 不存在）；`4166901` NCB 空类无构造→`new`
+  崩（"Called method is not implemented"）；`948ee37` classic tjsNative 在自由函数用
+  TJS_BEGIN_NATIVE_MEMBERS→**编译失败**（该宏用 `this`）；**`6d36839` 回退内建空类，编译通过**。
+  ⚠️ 但 engine(24) 实证：内建空类 + Layer-native captureCanvas 时，`motionWorkLayer.captureCanvas()`
+  仍报 Member 缺失 → motionWorkLayer 既非 Layer 也非空 D3DAdaptor 实例，是**脚本对象**。
+- 待定（需决策）：captureCanvas 落在脚本对象上，native 无解。两路并行参考：
+  ① **脚本 polyfill**：运行时给游戏 AffineLayer 系脚本类注入 `captureCanvas`/`unloadUnusedTextures`
+  no-op（需要游戏脚本类名/宿主，读 mainwindow.world 字节码确认）；② **Kirikiroid2 同款**（绝对参考）：
+  让 `Motion` 整体不存在 → 游戏 `_motionD3DAdaptor` 不赋值 → CPU 路径，根本不调 captureCanvas
+  （但会影响真用 motion 的 Z 游戏，需用户取舍）。
 - 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 `The object is already invalidated`
   （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
 - 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；
