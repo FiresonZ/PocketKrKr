@@ -564,6 +564,33 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
                             TJS_STATICMEMBER);
 }
 
+// D3DAdaptor —— 千恋万花等 Yuzusoft 作品的 D3D affine layer 适配器。
+// mainwindow.tjs 的 motionD3DAdaptor getter 会**无条件** `new Motion.D3DAdaptor(...)`
+// （先算 scWidth/2、pxHeight/2），affinesourcemotion.tjs 也在 D3D capture 路径 new 它
+// 并调用 captureCanvas/unloadUnusedTextures。移动端无 D3D：提供可 new 的正式 NCB 类，
+// 构造接受任意参数，captureCanvas/unloadUnusedTextures 为 no-op（cpu/GL motion 已把
+// affine 内容直接渲染进 layer 光栅，"捕获"可安全跳过；不 clear 目标 image 防连锁空图）。
+static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                          iTJSDispatch2 *) {
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
+static tjs_error D3DAdaptor_unloadUnusedTextures(tTJSVariant *r, tjs_int,
+                                                 tTJSVariant **,
+                                                 iTJSDispatch2 *) {
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
+class D3DAdaptor {};
+
+NCB_REGISTER_CLASS(D3DAdaptor) {
+    NCB_METHOD_RAW_CALLBACK(captureCanvas, D3DAdaptor_captureCanvas, 0);
+    NCB_METHOD_RAW_CALLBACK(unloadUnusedTextures,
+                            D3DAdaptor_unloadUnusedTextures, 0);
+}
+
 class Motion {
 public:
     static tjs_error getPlayFlagForce(tTJSVariant *r, tjs_int, tTJSVariant **,
@@ -605,15 +632,24 @@ public:
         return TJS_E_INVALIDPARAM;
     }
 
-    // Z（KIRIKIRI Z）游戏脚本用 `typeof Motion.D3DAdaptor != "undefined"` 判定 D3D
-    // motion 是否可用，从而决定走 D3D capture（captureCanvas/motionWorkLayer）还是
-    // CPU/useD3D=0 路径。移动端无 D3D：**必须保持 D3DAdaptor 为 undefined**，使游戏
-    // 自动走 CPU 路径、根本不会调 captureCanvas —— 这正是 Kirikiroid2 千恋万花能跑的办法
-    // （见 todo.md §2a）。
-    // ⚠️ 之前我们返回"可 new 的 tTJSNativeClass"导致 typeof 判定 D3D 存在 → 游戏进入
-    // D3D capture 路径 → 调 captureCanvas（且此前"不能 new 空 dict"致命错误也是同一根源
-    // ：typeof 非 undefined 就会走到 new）。因此这里不再注册 D3DAdaptor 属性。
-    // （Layer 原生已补 captureCanvas/unloadUnusedTextures no-op 作兜底，见 LayerIntf.cpp）
+    // Z（KIRIKIRI Z）游戏脚本 `Motion.D3DAdaptor` 会被**无条件访问**：mainwindow.tjs 的
+    // `motionD3DAdaptor` 属性 getter 先算 scWidth/2、pxHeight/2 后直接取 `Motion.D3DAdaptor`
+    // 并 `new` 之（engine(5) 实证：保持 undefined → `Member "D3DAdaptor" does not exist`
+    // 致命崩溃）；affinesourcemotion.tjs 也在 D3D capture 路径 `new` 它。移动端无 D3D，
+    // 标准做法是**提供可 new 的空实现类**（此前 `new tTJSNativeClass` 空类即可 new）。
+    // 现改为正式 NCB 类 D3DAdaptor，并在类上直接提供 captureCanvas/unloadUnusedTextures
+    // no-op（engine(24) 实证 motionWorkLayer 调 captureCanvas 时该类/被捕获对象必须能
+    // 解析该方法；Layer 原生另有同款 no-op 兜底，见 LayerIntf.cpp）。
+    static tjs_error getD3DAdaptor(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                   iTJSDispatch2 *) {
+        iTJSDispatch2 *cls = ncbClassInfo<class D3DAdaptor>::GetClassObject();
+        if(cls) {
+            *r = tTJSVariant(cls); // tTJSVariant(obj) 内部 AddRef + 持有
+        } else {
+            *r = tTJSVariant();
+        }
+        return TJS_S_OK;
+    }
 
     static tjs_error getEnableD3D(tTJSVariant *r, tjs_int, tTJSVariant **,
                                   iTJSDispatch2 *) {
@@ -634,8 +670,7 @@ private:
 NCB_REGISTER_CLASS(Motion) {
     NCB_PROPERTY_RAW_CALLBACK(enableD3D, Motion::getEnableD3D,
                               Motion::setEnableD3D, TJS_STATICMEMBER);
-    // Motion.D3DAdaptor 不再注册：保持 undefined 让游戏走 CPU/useD3D=0 路径
-    // （见 getD3DAdaptor 删除处注释 / todo.md §2a）。
+    NCB_PROPERTY_RAW_CALLBACK_RO(D3DAdaptor, Motion::getD3DAdaptor, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(PlayFlagForce, Motion::getPlayFlagForce, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypePoint, Motion::getShapeTypePoint, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypeCircle, Motion::getShapeTypeCircle, TJS_STATICMEMBER);
