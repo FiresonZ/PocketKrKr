@@ -1240,25 +1240,25 @@
 
 
 <h1 id="_1">下载<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<p>PocketKrKr 的开发构建由 <a href="https://github.com/FiresonZ/PocketKrKr/actions">GitHub Actions</a> 自动打包，
-发布物托管在 GitHub <strong>Releases</strong>。当前最新版本为 <strong>v0.0.1</strong>（iOS + Android，2026-09-07 发布）。</p>
+<p>PocketKrKr 的开发构建由 <a href="https://github.com/FiresonZ/PocketKrKr/actions">GitHub Actions</a> 自动打包，发布物托管在 GitHub <strong>Releases</strong>。下面的下载链接会分别读取最新的 Android 和 iOS Release，发布新构建后页面会自动更新。</p>
 <blockquote>
-<p><strong><a href="https://github.com/FiresonZ/PocketKrKr/releases/latest">前往最新 Release 页面</a></strong>　　
-<strong><a href="https://github.com/FiresonZ/PocketKrKr/releases">查看全部 Release</a></strong></p>
+<p><strong><a href="https://github.com/FiresonZ/PocketKrKr/releases">查看全部 Release</a></strong></p>
 </blockquote>
 <h2 id="android">Android<a class="headerlink" href="#android" title="Permanent link">&para;</a></h2>
 <p>直接安装 APK（无需签名）。</p>
+<div id="android-download">
+<p>正在获取最新 Android 构建……</p>
+</div>
 <ul>
-<li><strong>最新版本</strong>：<a href="https://github.com/FiresonZ/PocketKrKr/releases/tag/android-v0.0.1">PocketKrKr Android v0.0.1</a></li>
-<li><strong>直接下载</strong>：<a href="https://github.com/FiresonZ/PocketKrKr/releases/download/android-v0.0.1/PocketKrKr-Android-release.apk">PocketKrKr-Android-release.apk</a>（约 108 MB）</li>
 <li><strong>系统要求</strong>：Android 7.0 / API 24+　·　arm64-v8a　·　需支持 Vulkan 的 GPU</li>
 <li><strong>安装方式</strong>：下载 APK 后允许「安装未知来源应用」即可；更新时直接覆盖安装旧包。</li>
 </ul>
 <h2 id="ios">iOS<a class="headerlink" href="#ios" title="Permanent link">&para;</a></h2>
 <p>未签名 <code>.ipa</code>，需用你自己的 Apple 开发者证书/工具侧载签名后安装。</p>
+<div id="ios-download">
+<p>正在获取最新 iOS 构建……</p>
+</div>
 <ul>
-<li><strong>最新版本</strong>：<a href="https://github.com/FiresonZ/PocketKrKr/releases/tag/ios-v0.0.1">PocketKrKr iOS v0.0.1</a></li>
-<li><strong>直接下载</strong>：<a href="https://github.com/FiresonZ/PocketKrKr/releases/download/ios-v0.0.1/PocketKrKr-iOS-release-nosign.ipa">PocketKrKr-iOS-release-nosign.ipa</a>（约 29 MB）</li>
 <li><strong>系统要求</strong>：iOS / iPadOS 15.0+　·　arm64</li>
 <li><strong>安装方式</strong>：本包为<strong>未签名</strong> <code>.ipa</code>，需自行签名后侧载；可用
   <a href="https://altstore.io">AltStore</a> / Sideloadly（配合 Apple ID 与「信任开发者」）。</li>
@@ -1269,6 +1269,73 @@
 <li>使用问题/崩溃反馈请到 <a href="https://github.com/FiresonZ/PocketKrKr/issues">Issues</a> 提交；
   兼容性情况见 <a href="../support_games/">支持的游戏</a>。</li>
 </ul>
+<script>
+(() => {
+  const repository = "FiresonZ/PocketKrKr";
+  const releasesUrl = `https://api.github.com/repos/${repository}/releases?per_page=100`;
+  const builds = [
+    {
+      id: "android-download",
+      platform: "Android",
+      tagPrefix: "android-v",
+      assetName: "PocketKrKr-Android-release.apk",
+      releaseLabel: "PocketKrKr Android"
+    },
+    {
+      id: "ios-download",
+      platform: "iOS",
+      tagPrefix: "ios-v",
+      assetName: "PocketKrKr-iOS-release-nosign.ipa",
+      releaseLabel: "PocketKrKr iOS"
+    }
+  ];
+
+  const escapeHtml = (value) => value.replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    "\"": "&quot;"
+  }[character]));
+
+  const formatDate = (value) => new Intl.DateTimeFormat("zh-CN", {
+    dateStyle: "medium"
+  }).format(new Date(value));
+
+  const renderError = (build, message) => {
+    document.getElementById(build.id).innerHTML = `<p>暂时无法获取最新 ${build.platform} 构建：${escapeHtml(message)}。请前往 <a href="https://github.com/${repository}/releases">Releases</a> 页面下载。</p>`;
+  };
+
+  const renderBuild = (build, releases) => {
+    const release = releases
+      .filter((item) => !item.draft && item.tag_name.startsWith(build.tagPrefix))
+      .sort((left, right) => new Date(right.published_at || right.created_at) - new Date(left.published_at || left.created_at))
+      .find((item) => item.assets.some((asset) => asset.name === build.assetName));
+
+    if (!release) {
+      renderError(build, "尚未找到可下载的构建");
+      return;
+    }
+
+    const asset = release.assets.find((item) => item.name === build.assetName);
+    const version = release.tag_name.slice(build.tagPrefix.length);
+    const size = asset.size ? `（${(asset.size / 1024 / 1024).toFixed(1)} MB）` : "";
+    document.getElementById(build.id).innerHTML = `
+      <ul>
+        <li><strong>最新版本</strong>：<a href="${release.html_url}">${build.releaseLabel} v${escapeHtml(version)}</a>（${formatDate(release.published_at || release.created_at)}）</li>
+        <li><strong>直接下载</strong>：<a href="${asset.browser_download_url}">${escapeHtml(asset.name)}</a> ${size}</li>
+      </ul>`;
+  };
+
+  fetch(releasesUrl, { headers: { Accept: "application/vnd.github+json" } })
+    .then((response) => {
+      if (!response.ok) throw new Error(`GitHub API 返回 ${response.status}`);
+      return response.json();
+    })
+    .then((releases) => builds.forEach((build) => renderBuild(build, releases)))
+    .catch((error) => builds.forEach((build) => renderError(build, error.message)));
+})();
+</script>
 
 
 
