@@ -354,28 +354,29 @@ namespace motion {
             // Skip re-compositing when images haven't changed since last draw
             if(_composited) return;
 
+            // Composite onto our own visible display layer (hung on the window
+            // tree) instead of the game's primary layer, so motion pixels never
+            // pollute the main scene (title text, background, etc.).
+            // 合成到我们自己的可见显示层（挂在窗口层树），而不是游戏主层，motion
+            // 像素不会污染主场景（标题文字、背景等）。
+            iTJSDispatch2 *displayLayer = getOrCreateDisplayLayer();
+            if(!displayLayer) {
+                if(logger) logger->warn("drawPSBImages: getOrCreateDisplayLayer failed");
+                return;
+            }
             iTJSDispatch2 *realLayer = resolveRealLayer(target);
             iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
-            // operateRect must go to a real Layer. When target is an adaptor shell
-            // (D3DAdaptor) without operateRect, draw onto realLayer (primaryLayer).
-            // operateRect 必须画到真实 Layer；当 target 是适配器空壳（D3DAdaptor，
-            // 无 operateRect）时，画到 realLayer（primaryLayer）。
-            iTJSDispatch2 *drawTarget = realLayer ? realLayer : target;
 
             if(logger) {
-                logger->info("drawPSBImages: {} images, target={} realLayer={} drawTarget={}",
+                logger->info("drawPSBImages: {} images, target={} realLayer={} displayLayer={}",
                              _psbImages.size(),
                              static_cast<void*>(target),
                              static_cast<void*>(realLayer),
-                             static_cast<void*>(drawTarget));
+                             static_cast<void*>(displayLayer));
             }
 
             tTJSVariant faceVal(static_cast<tjs_int>(0)); // dfAlpha
-            if(drawTarget != target) {
-                drawTarget->PropSet(0, TJS_W("face"), nullptr, &faceVal, drawTarget);
-            } else {
-                target->PropSet(0, TJS_W("face"), nullptr, &faceVal, target);
-            }
+            displayLayer->PropSet(0, TJS_W("face"), nullptr, &faceVal, displayLayer);
 
             int drawn = 0;
             for(size_t i = 0; i < _psbImages.size(); i++) {
@@ -423,7 +424,7 @@ namespace motion {
                                           &opArgs[3], &opArgs[4], &opArgs[5],
                                           &opArgs[6], &opArgs[7], &opArgs[8] };
                 try {
-                    drawTarget->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, drawTarget);
+                    displayLayer->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, displayLayer);
                     drawn++;
                 } catch(const std::exception &e) {
                     if(auto l = _logger()) l->warn("drawPSBImages: operateRect exception: {}", e.what());
@@ -499,71 +500,121 @@ namespace motion {
             return target;
         }
 
+        // Resolve (window, parent) for a temp/display layer, independent of the
+        // draw target's type. When the target is a D3DAdaptor shell (no window
+        // member), fall back to the main window + its primaryLayer.
+        // 解析创建临时/显示层所需的 (window, parent)，与绘制目标类型无关；当目标是
+        // D3DAdaptor 空壳（无 window 成员）时回退到主窗口 + primaryLayer。
+        bool resolveWindowAndParent(iTJSDispatch2 *realLayer,
+                                    tTJSVariant &windowVar,
+                                    tTJSVariant &parentVar) {
+            if(!realLayer) return false;
+
+            bool haveWindow = TJS_SUCCEEDED(
+                realLayer->PropGet(0, TJS_W("window"), nullptr, &windowVar, realLayer)) &&
+                windowVar.Type() == tvtObject && windowVar.AsObjectNoAddRef();
+
+            bool haveParent = false;
+            // The real layer may itself be the primaryLayer, which has no
+            // `primaryLayer` member; fall back to the main window in that case.
+            // realLayer 可能是 primaryLayer 本身（无 primaryLayer 成员），此时回退主窗口。
+            if(TJS_SUCCEEDED(realLayer->PropGet(0, TJS_W("primaryLayer"), nullptr,
+                                                &parentVar, realLayer)) &&
+               parentVar.Type() == tvtObject && parentVar.AsObjectNoAddRef()) {
+                haveParent = true;
+            }
+
+            if((!haveParent || !haveWindow) && TVPMainWindow) {
+                iTJSDispatch2 *winDsp = TVPMainWindow->GetOwnerNoAddRef();
+                if(winDsp) {
+                    if(!haveParent) {
+                        if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
+                                                         nullptr, &parentVar, winDsp))) {
+                            haveParent = parentVar.Type() == tvtObject &&
+                                         parentVar.AsObjectNoAddRef();
+                        }
+                    }
+                    if(!haveWindow) {
+                        tTJSVariant wVar(winDsp, winDsp);
+                        windowVar = wVar;
+                        haveWindow = true;
+                    }
+                }
+            }
+            return haveWindow && haveParent;
+        }
+
+        iTJSDispatch2 *createChildLayer(const tTJSVariant &windowVar,
+                                        const tTJSVariant &parentVar) {
+            iTJSDispatch2 *global = TVPGetScriptDispatch();
+            if(!global) return nullptr;
+
+            tTJSVariant layerClassVar;
+            global->PropGet(0, TJS_W("Layer"), nullptr, &layerClassVar, global);
+
+            tTJSVariant ctorArgs[2] = { windowVar, parentVar };
+            tTJSVariant *ctorArgv[] = { &ctorArgs[0], &ctorArgs[1] };
+            iTJSDispatch2 *newLayer = nullptr;
+            auto hr = layerClassVar.AsObjectNoAddRef()->CreateNew(
+                0, nullptr, nullptr, &newLayer, 2, ctorArgv, layerClassVar.AsObjectNoAddRef());
+            global->Release();
+            if(TJS_FAILED(hr) || !newLayer) return nullptr;
+            return newLayer;
+        }
+
+        // A visible, full-window child layer used as the motion compositing target.
+        // Keeps motion pixels off the primary layer so the game's own layers stay
+        // clean (title text etc. render above/below independently).
+        // 可见的、铺满窗口的子层，作为 motion 合成目标；motion 像素不直接画到主层，
+        // 游戏自身图层（标题文字等）保持独立、干净。
+        iTJSDispatch2 *getOrCreateDisplayLayer() {
+            if(_displayLayer) return _displayLayer;
+
+            tTJSVariant windowVar, parentVar;
+            iTJSDispatch2 *probe = nullptr;
+            // Any real layer is enough to resolve window+parent; primaryLayer works.
+            if(TVPMainWindow) probe = TVPMainWindow->GetOwnerNoAddRef();
+            if(!probe) return nullptr;
+
+            tTJSVariant plVar;
+            if(!resolveWindowAndParent(probe, windowVar, parentVar)) return nullptr;
+
+            iTJSDispatch2 *layer = createChildLayer(windowVar, parentVar);
+            if(!layer) return nullptr;
+
+            tTJSVariant trueVar(true);
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("visible"), nullptr, &trueVar, layer);
+            tTJSVariant zeroVar(static_cast<tjs_int>(0));
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("left"), nullptr, &zeroVar, layer);
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("top"), nullptr, &zeroVar, layer);
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("hitThreshold"), nullptr, &zeroVar, layer);
+            // Full-window size: copy primary layer's dimensions.
+            tTJSVariant pwVar, phVar;
+            if(TJS_SUCCEEDED(parentVar.AsObjectNoAddRef()->PropGet(
+                   0, TJS_W("width"), nullptr, &pwVar, parentVar.AsObjectNoAddRef()))) {
+                layer->PropSet(TJS_MEMBERENSURE, TJS_W("width"), nullptr, &pwVar, layer);
+            }
+            if(TJS_SUCCEEDED(parentVar.AsObjectNoAddRef()->PropGet(
+                   0, TJS_W("height"), nullptr, &phVar, parentVar.AsObjectNoAddRef()))) {
+                layer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &phVar, layer);
+            }
+
+            _displayLayer = layer;
+            return _displayLayer;
+        }
+
         iTJSDispatch2 *getOrCreateTempLayer(iTJSDispatch2 *realLayer) {
             if(_tempLayer) return _tempLayer;
             if(!realLayer) return nullptr;
 
             try {
-                iTJSDispatch2 *global = TVPGetScriptDispatch();
-                if(!global) return nullptr;
-
-                tTJSVariant layerClassVar;
-                global->PropGet(0, TJS_W("Layer"), nullptr, &layerClassVar, global);
-
-                // Try to resolve the window + parent from the real layer itself.
-                // When the draw target is a D3DAdaptor (Yuzusoft motionWorkLayer is
-                // an empty shell with no window member), fall back to the main
-                // window's primaryLayer so temp layers can still be created.
-                // 优先从 realLayer 自身解析 window + parent；当绘制目标是 D3DAdaptor
-                // （Yuzusoft motionWorkLayer 是无 window 成员的空壳）时，回退到主窗口
-                // 的 primaryLayer，保证临时层仍能创建。
-                tTJSVariant windowVar;
-                bool haveWindow = TJS_SUCCEEDED(
-                    realLayer->PropGet(0, TJS_W("window"), nullptr, &windowVar, realLayer)) &&
-                    windowVar.Type() == tvtObject && windowVar.AsObjectNoAddRef();
-
-                tTJSVariant parentVar;
-                bool haveParent = false;
-                // The real layer may itself be the primaryLayer, which has no
-                // `primaryLayer` member; fall back to the main window in that case.
-                // realLayer 可能是 primaryLayer 本身（无 primaryLayer 成员），此时回退主窗口。
-                if(TJS_SUCCEEDED(realLayer->PropGet(0, TJS_W("primaryLayer"), nullptr,
-                                                    &parentVar, realLayer)) &&
-                   parentVar.Type() == tvtObject && parentVar.AsObjectNoAddRef()) {
-                    haveParent = true;
-                }
-
-                if((!haveParent || !haveWindow) && TVPMainWindow) {
-                    iTJSDispatch2 *winDsp = TVPMainWindow->GetOwnerNoAddRef();
-                    if(winDsp) {
-                        if(!haveParent) {
-                            if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
-                                                             nullptr, &parentVar, winDsp))) {
-                                haveParent = parentVar.Type() == tvtObject &&
-                                             parentVar.AsObjectNoAddRef();
-                            }
-                        }
-                        if(!haveWindow) {
-                            tTJSVariant wVar(winDsp, winDsp);
-                            windowVar = wVar;
-                            haveWindow = true;
-                        }
-                    }
-                }
-
-                if(!haveWindow || !haveParent) {
-                    global->Release();
+                tTJSVariant windowVar, parentVar;
+                if(!resolveWindowAndParent(realLayer, windowVar, parentVar)) {
                     return nullptr;
                 }
 
-                tTJSVariant ctorArgs[2] = { windowVar, parentVar };
-                tTJSVariant *ctorArgv[] = { &ctorArgs[0], &ctorArgs[1] };
-                iTJSDispatch2 *newLayer = nullptr;
-                auto hr = layerClassVar.AsObjectNoAddRef()->CreateNew(
-                    0, nullptr, nullptr, &newLayer, 2, ctorArgv, layerClassVar.AsObjectNoAddRef());
-                global->Release();
-
-                if(TJS_FAILED(hr) || !newLayer) return nullptr;
+                iTJSDispatch2 *newLayer = createChildLayer(windowVar, parentVar);
+                if(!newLayer) return nullptr;
 
                 tTJSVariant falseVar(false);
                 newLayer->PropSet(TJS_MEMBERENSURE, TJS_W("visible"), nullptr, &falseVar, newLayer);
@@ -582,6 +633,18 @@ namespace motion {
                 } catch(...) {}
                 _tempLayer->Release();
                 _tempLayer = nullptr;
+            }
+            // The display layer is our own per-motion compositing canvas hung on the
+            // window tree; destroy it together with the temp source layer so a scene
+            // change cannot leave stale motion pixels on screen.
+            // 显示层是我们挂在窗口层树上的逐-motion 合成画布；与临时源层一并销毁，
+            // 避免场景切换在屏幕上残留旧的 motion 像素。
+            if(_displayLayer) {
+                try {
+                    _displayLayer->FuncCall(0, TJS_W("invalidate"), nullptr, nullptr, 0, nullptr, _displayLayer);
+                } catch(...) {}
+                _displayLayer->Release();
+                _displayLayer = nullptr;
             }
         }
 
@@ -852,6 +915,7 @@ namespace motion {
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;
+        iTJSDispatch2 *_displayLayer = nullptr;
 
         struct ButtonBounds {
             int left = 0, top = 0, width = 0, height = 0;
