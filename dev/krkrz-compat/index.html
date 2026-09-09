@@ -1984,9 +1984,9 @@ krkrz 闭源版与 Kirikiroid2（安卓端完整实现）。</p>
 <td>MenuItem 类核心全局注册（ScriptMgnIntf.cpp registerObject），link 即用</td>
 </tr>
 <tr>
-<td>真实现</td>
+<td>真实现（暂回退挂名）</td>
 <td>k2compat</td>
-<td><strong>内嵌 Krkr2Compat 纯 TJS 兼容层</strong>（<code>zcompat/k2compat_scripts.cpp</code>，10 个脚本按依赖序在 link/预加载时 <code>tTJS::ExecScript</code>），非挂名</td>
+<td>内嵌 Krkr2Compat 纯 TJS 层（<code>zcompat/k2compat_scripts.cpp</code>）已就绪，<strong>但引擎启动时强制执行会抛异常打断启动链</strong>（engine(22) 实测三游戏全黑），已回退挂名；真实现待改走"游戏运行时显式 link"再放回</td>
 </tr>
 <tr>
 <td>名字映射</td>
