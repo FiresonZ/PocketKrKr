@@ -714,6 +714,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#3e-restart-bgm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【新增，待查】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#3b-skip" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1407,6 +1418,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#3e-restart-bgm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【新增，待查】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#3b-skip" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1565,20 +1587,22 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
   均为编译后 <code>TJS2100</code> 字节码）。<code>captureCanvas</code> 是 <strong>affinesourcemotion.tjs 里 AffineLayer 派生类的脚本类
   成员</strong>（与 <code>D3DAdaptor</code>/<code>motionWorkLayer</code>/<code>motionD3DAdaptor</code>/<code>unloadUnusedTextures</code>/<code>updateImage</code>
   同簇）；base <code>affinelayer.tjs</code> <strong>不含</strong>它。
-- <strong>2026-09-09 根因反转（真机 engine(23/24) + GitHub compare 实证）</strong>：
-  - 已确认 <code>b008020</code>（native Layer 补 captureCanvas no-op）进了 main@7927938 的构建（<code>get_file_contents</code> 命中、
-    构建 success），但真机<strong>仍</strong> <code>Member "captureCanvas" does not exist</code> → <strong>motionWorkLayer 不是 native Layer
-    继承链对象，native Layer 补成员兜不住</strong>。
-  - 真正根因=<strong>我们把 <code>Motion.D3DAdaptor</code> 暴露为"已定义"</strong>（<code>getD3DAdaptor</code> 返回 <code>new tTJSNativeClass</code>）。
-    游戏用 <code>typeof Motion.D3DAdaptor != "undefined"</code> 判定 D3D 可用 → <code>_useD3D=true</code> → 走 D3D capture 路径
-    （<code>new Motion.D3DAdaptor</code> + <code>captureCanvas</code>）。此前"不能 new 空 dict"致命错误同源（typeof 非 undefined 就走到 new）。
-- <strong>修复（对齐 Kirikiroid2 移动端标准= undefined + useD3D=0）</strong>：<code>cpp/plugins/motionplayer/main.cpp</code> <strong>删除</strong>
-  <code>Motion.D3DAdaptor</code> 属性与 <code>getD3DAdaptor</code>，让它保持 <code>undefined</code> → 游戏自动走 CPU/useD3D=0 路径，
-  <strong>根本不会调 captureCanvas</strong>。Layer 原生 <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op 保留作兜底
-  （LayerIntf.cpp，无害）。
-- 待办：① ✅ 根因定位 + main.cpp 移除 D3DAdaptor（LayerIntf.cpp captureCanvas no-op 兜底）；② 真机复验
-  yuzulogo 点击后不再崩、走 CPU motion；③ 若仍进 D3D capture（说明游戏另有 D3D 判定源），再回溯
-  <code>_useD3D</code>/<code>enableD3D</code> 归属。</p>
+- <strong>2026-09-09 根因反转 ×2（真机 engine(24/25/5) 实证）</strong>：
+  - ① <code>b008020</code>（native Layer captureCanvas no-op）进了 main@7927938 但真机仍 <code>captureCanvas</code>
+    缺失 → 工作层对象非 native Layer 继承链（换 D3DAdaptor 为正式类 + 类上 no-op 后见下）。
+  - ② <strong><code>Motion.D3DAdaptor</code> 不能是 undefined</strong>：engine(5) 两次打开千恋万花均崩在
+    <code>mainwindow.tjs (property getter) motionD3DAdaptor</code>——它<strong>无条件</strong>取 <code>Motion.D3DAdaptor</code>
+    （先算 scWidth/2、pxHeight/2 再访问），置 undefined → <code>Member "D3DAdaptor" does not exist</code>
+    致命。Kirikiroid2 能跑此游戏正说明它<strong>定义</strong>了 D3DAdaptor（krkr2 motionplayer 本来就有该成员）。
+- <strong>修复</strong>：<code>cpp/plugins/motionplayer/main.cpp</code> 新增正式 NCB 类 <code>D3DAdaptor</code>（可 new、构造收任意参），
+  类上直接挂 <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op；<code>Motion.D3DAdaptor</code> getter 返回该类对象。
+  Layer 原生同款 no-op（LayerIntf.cpp）保留兜底。无 D3D/CPU-GL 下 affine 已渲染进 layer 光栅，no-op 不
+  clear 目标 image 防连锁空图。
+- 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 <code>The object is already invalidated</code>
+  （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
+- 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；
+  ② 真机复验 yuzulogo 后不再崩；③ 若仍报 missing member，读 mainwindow.tjs motionD3DAdaptor getter
+  完整字节码，逐个补 D3DAdaptor 实例成员。</p>
 </blockquote>
 <h3 id="p1-2b-motionplayer-emoteplayeremoteplayerdllnew">P1 — §2b. motionplayer 的 <code>EmotePlayer</code>（emoteplayer.dll）未实现【NEW】<a class="headerlink" href="#p1-2b-motionplayer-emoteplayeremoteplayerdllnew" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1615,6 +1639,15 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
   让残留 GL id 在下个 context 按需重新上传为有效纹理（对应 Kirikiroid2 式 context-loss 清缓存）。</li>
 <li>待真机：退出→不杀进程→二次游玩渲染正常；若仍黑，需运行时探针定位 id83 纹理确切宿主
   （LayerManager DrawBuffer vs gcache），再针对性重建。</li>
+</ul>
+<h3 id="3e-restart-bgm">— §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【新增，待查】<a class="headerlink" href="#3e-restart-bgm" title="Permanent link">&para;</a></h3>
+<ul>
+<li>现象（engine(25) 实测链路 IINCHO→Kemomusu→IINCHO…）：二次打开<strong>不同</strong>游戏后，BGM 疑似叠加了
+  上一游戏的（都 StartApplication 正常、无异常）。同游戏复开不明显。</li>
+<li>方向：runtime-restart 时声音系统（win32/wave 后端）未把上一游戏<strong>正在播放</strong>的 BGM/音效全部
+  Stop/清空（此前的 restart 修复只处理线程析构死锁 <code>081a9c1</code> 与日志闭包 <code>4221543</code>）。需在
+  restart 重置链里加「全部频道停止 + 播放实例清空」（参考 TVPStopAllSamples / 音效系统 reset）。</li>
+<li>待查：确认 codec/DSound/WaveSound 是否进程级残留播放句柄；再在 reset 时统一释放。</li>
 </ul>
 <h3 id="3b-skip">— §3b. 快速 skip 消息框黑块【间歇，挂起低优先】<a class="headerlink" href="#3b-skip" title="Permanent link">&para;</a></h3>
 <ul>
