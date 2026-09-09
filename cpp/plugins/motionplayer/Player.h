@@ -69,6 +69,21 @@ namespace motion {
         tjs_real getSpeed() const { return _speed; }
         void setSpeed(tjs_real v) { _speed = v; }
         tjs_int getCompletionType() const { return _completionType; }
+
+        // Yuzusoft affinesourcemotion.tjs canSync(): non-"emote" storage reads
+        // `_player.loopTime`, "emote" reads `_player.animating`. Without these
+        // members the KAG backup/env-transition chain throws "Member loopTime
+        // does not exist" and the scene freezes (white screen) right after the
+        // yuzulogo intro voice. loopTime = remaining/total loop time (ms, 0 is
+        // a safe "not looping" value), animating = whether a motion is playing.
+        // Yuzusoft 的 affinesourcemotion.tjs canSync()：非 emote 读 _player.loopTime，
+        // emote 读 _player.animating。缺这两个成员会让 KAG 备份/环境转换链路抛
+        // "Member loopTime does not exist" 并卡白屏。loopTime=循环时长(ms, 0=不在循环)，
+        // animating=是否在播放。
+        tjs_int getLoopTime() const { return _loopTime; }
+        void setLoopTime(tjs_int v) { _loopTime = v; }
+        bool getAnimating() const { return _animating; }
+        void setAnimating(bool v) { _animating = v; }
         void setCompletionType(tjs_int v) { _completionType = v; }
 
         void play(const ttstr &motion, tjs_int all = 0) {
@@ -696,6 +711,8 @@ namespace motion {
         bool _playWasCalled = false;
         bool _isTransition = false;
         bool _stopCommandSent = false;
+        tjs_int _loopTime = 0;
+        bool _animating = false;
         mutable std::string _pendingButtonName;
         tjs_real _coordX = 0;
         tjs_real _coordY = 0;
