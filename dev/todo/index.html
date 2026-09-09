@@ -717,7 +717,7 @@
   <a href="#3e-restart-bgm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【新增，待查】
+        — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【已修，待真机】
       
     </span>
   </a>
@@ -1421,7 +1421,7 @@
   <a href="#3e-restart-bgm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【新增，待查】
+        — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【已修，待真机】
       
     </span>
   </a>
@@ -1594,10 +1594,11 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
     <code>mainwindow.tjs (property getter) motionD3DAdaptor</code>——它<strong>无条件</strong>取 <code>Motion.D3DAdaptor</code>
     （先算 scWidth/2、pxHeight/2 再访问），置 undefined → <code>Member "D3DAdaptor" does not exist</code>
     致命。Kirikiroid2 能跑此游戏正说明它<strong>定义</strong>了 D3DAdaptor（krkr2 motionplayer 本来就有该成员）。
-- <strong>修复</strong>：<code>cpp/plugins/motionplayer/main.cpp</code> 新增正式 NCB 类 <code>D3DAdaptor</code>（可 new、构造收任意参），
-  类上直接挂 <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op；<code>Motion.D3DAdaptor</code> getter 返回该类对象。
-  Layer 原生同款 no-op（LayerIntf.cpp）保留兜底。无 D3D/CPU-GL 下 affine 已渲染进 layer 光栅，no-op 不
-  clear 目标 image 防连锁空图。
+- <strong>修复</strong>：<code>cpp/plugins/motionplayer/main.cpp</code> 用 <strong>classic tjsNative 模式</strong>定义 <code>D3DAdaptor</code>
+  原生类（<code>NI_D3DAdaptor</code> + 构造收任意参 + <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op），
+  <code>Motion.D3DAdaptor</code> getter 返回 <code>Create_NC_D3DAdaptor()</code>。Layer 原生同款 no-op（LayerIntf.cpp）
+  保留兜底。⚠️ 迭代史：<code>815d8c3</code> 移除→undefined 崩（Member 不存在）；<code>4166901</code> NCB 空类无构造→
+  <code>new</code> 崩（"Called method is not implemented"）；<strong>本次 = 显式构造函数 + 实例方法</strong>。
 - 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 <code>The object is already invalidated</code>
   （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
 - 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；
@@ -1640,14 +1641,18 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
 <li>待真机：退出→不杀进程→二次游玩渲染正常；若仍黑，需运行时探针定位 id83 纹理确切宿主
   （LayerManager DrawBuffer vs gcache），再针对性重建。</li>
 </ul>
-<h3 id="3e-restart-bgm">— §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【新增，待查】<a class="headerlink" href="#3e-restart-bgm" title="Permanent link">&para;</a></h3>
+<h3 id="3e-restart-bgm">— §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【已修，待真机】<a class="headerlink" href="#3e-restart-bgm" title="Permanent link">&para;</a></h3>
 <ul>
-<li>现象（engine(25) 实测链路 IINCHO→Kemomusu→IINCHO…）：二次打开<strong>不同</strong>游戏后，BGM 疑似叠加了
+<li>现象（engine(8) 实测链路 IINCHO→Kemomusu→IINCHO）：二次打开<strong>不同</strong>游戏后，BGM 疑似叠加了
   上一游戏的（都 StartApplication 正常、无异常）。同游戏复开不明显。</li>
-<li>方向：runtime-restart 时声音系统（win32/wave 后端）未把上一游戏<strong>正在播放</strong>的 BGM/音效全部
-  Stop/清空（此前的 restart 修复只处理线程析构死锁 <code>081a9c1</code> 与日志闭包 <code>4221543</code>）。需在
-  restart 重置链里加「全部频道停止 + 播放实例清空」（参考 TVPStopAllSamples / 音效系统 reset）。</li>
-<li>待查：确认 codec/DSound/WaveSound 是否进程级残留播放句柄；再在 reset 时统一释放。</li>
+<li>根因：<code>ShutdownWaveSoundBuffers</code> 是<strong>一次性 <code>tTVPAtExit</code>（PRI_PREPARE）</strong>，首次 engine_destroy 的
+  <code>TVPCauseAtExit</code> 已把 <code>TVPAtExitInfos</code> delete 置空；之后每次重启 teardown 的 <code>TVPCauseAtExit</code> 提前 return，
+  <strong>不再停混音线程 <code>TVPWaveSoundBufferThread</code></strong> → 上一游戏 BGM 继续响、叠进下一游戏（与日志闭包 <code>4221543</code>
+  同类一次性 at-exit 问题，但声音模块无 restart 特例）。</li>
+<li>修复（提交，<code>SysInitIntf.cpp</code> <code>TVPResetRuntimeForRestart</code> + <code>WaveImpl.cpp</code>）：新增
+  <code>TVPStopAllWaveSoundsForRestart()</code>——停掉 <code>TVPWaveSoundBufferThread</code> + 释放存活 buffer（<code>TVPReleaseSoundBuffers</code>），
+  restart 末尾显式调用。</li>
+<li>待真机：切游戏后 BGM 不再残留（首屏 logo 即干净）。</li>
 </ul>
 <h3 id="3b-skip">— §3b. 快速 skip 消息框黑块【间歇，挂起低优先】<a class="headerlink" href="#3b-skip" title="Permanent link">&para;</a></h3>
 <ul>
