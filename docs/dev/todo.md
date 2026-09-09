@@ -63,11 +63,27 @@
   no-op（需要游戏脚本类名/宿主，读 mainwindow.world 字节码确认）；② **Kirikiroid2 同款**（绝对参考）：
   让 `Motion` 整体不存在 → 游戏 `_motionD3DAdaptor` 不赋值 → CPU 路径，根本不调 captureCanvas
   （但会影响真用 motion 的 Z 游戏，需用户取舍）。
+- **2026-09-09 方案②证伪 + Kirikiroid2 实证（最新，方向反转）**：
+  - **Kirikiroid2 不是"让 Motion 整体不存在"**——GitHub 仓库源码（zeas2/Kirikiroid2）确实搜不到
+    Motion/motionplayer，但那是**源码未同步**；下载官方发布 APK（1.3.9）反查 `libgame.so`，
+    **完整存在**：`D3DEmotePlayer/D3DEmoteModule/SeparateLayerAdaptor/D3DAdaptor/useD3D/enableD3D/
+    Motion::ResourceManager/setEmotePSBDecryptSeed/setEmotePSBDecryptFunc/captureCanvas/
+    unloadUnusedTextures/canvasCaptureEnabled/motionplayer.dll/emoteplayer.dll`。
+  - zeas2 官方补丁库 `Kirikiroid2_patch`（github.com/zeas2/Kirikiroid2_patch）含**千恋万花补丁**
+    （patch/ゆずソフト/千恋＊万花/patch.tjs）：`Plugins.link("motionplayer.dll")` +
+    `typeof Motion.D3DAdaptor` 两分支**都强制 `useD3D=0`**（移动端无 D3D9，走 CPU/GL），
+    并 `System.setArgument("-hdresomode","1080")` + 清空 movieQualitySelectMenuItem。
+  - ⇒ 结论：**保持 Motion 存在（D3DAdaptor 可 new）+ captureCanvas/unloadUnusedTextures 挂到
+    SeparateLayerAdaptor（motionWorkLayer 宿主）+ useD3D=0** 与 Kirikiroid2 行为一致；当前主线正确。
+  - **本次改动（待提交）**：`cpp/plugins/motionplayer/main.cpp` SeparateLayerAdaptor 新增
+    `captureCanvas`/`unloadUnusedTextures` no-op 注册（转发目标 Layer，兜底清空返回值）。
+  - 其余成员（`Motion.Player.varibleKeys`/`Motion.EmotePlayer.setCameraCoord/Rotate/Scale`）：
+    Kirikiroid2 APK **也没有**，游戏脚本自带 `typeof==="undefined"` polyfill 兜底，无需实现。
 - 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 `The object is already invalidated`
   （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
-- 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；
-  ② 真机复验 yuzulogo 后不再崩；③ 若仍报 missing member，读 mainwindow.tjs motionD3DAdaptor getter
-  完整字节码，逐个补 D3DAdaptor 实例成员。
+- 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖 +
+  SeparateLayerAdaptor no-op，2026-09-09 补）；② 真机复验 yuzulogo 后不再崩；③ 若仍报 missing member，
+  读 mainwindow.tjs motionD3DAdaptor getter 完整字节码，逐个补 D3DAdaptor 实例成员。
 
 ### P1 — §2b. motionplayer 的 `EmotePlayer`（emoteplayer.dll）未实现【NEW】
 - 现况：`cpp/plugins/motionplayer/EmotePlayer.{h,cpp}` 是**空壳 stub**（仅 `_useD3D` 读写，无 emote 物理/播放）。

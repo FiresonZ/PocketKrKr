@@ -113,12 +113,17 @@
 
 - **刻意不挂名**：krmovie（P0 引擎工作，挂名会让游戏期待视频能力而实际 Present 未实现）；
   KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。
-- **motionplayer（motionplayer.dll）D3DAdaptor**：千恋万花等 Yuzusoft 作品 data 自带 `affinesourcemotion.tjs`
-  （编译字节码）声明的 AffineLayer 派生脚本类含 `captureCanvas`/`unloadUnusedTextures`/`motionWorkLayer`/
-  `motionD3DAdaptor` 等。**移动端标准= `Motion.D3DAdaptor` 保持 `undefined`**，让游戏用
-  `typeof Motion.D3DAdaptor` 判定走 CPU/useD3D=0 路径、不调 captureCanvas（与 Kirikiroid2 一致）。
-  已删除 main.cpp 里 `getD3DAdaptor`（曾返回可 new 空类，反而令游戏误判 D3D 可用而进 captureCanvas 路径）。
-  核心 `tTJSNC_Layer` 另补 `captureCanvas`+`unloadUnusedTextures` void no-op 作兜底（详见 todo.md §2a）。
+- **motionplayer（motionplayer.dll / emoteplayer.dll）+ D3DAdaptor**：千恋万花等 Yuzusoft 作品 data 自带
+  `affinesourcemotion.tjs`（编译字节码）声明的 AffineLayer 派生脚本类含 `captureCanvas`/
+  `unloadUnusedTextures`/`motionWorkLayer`/`motionD3DAdaptor` 等，且 `mainwindow.tjs` 的
+  `motionD3DAdaptor` getter **无条件 `new Motion.D3DAdaptor(...)`**（实测置 undefined 崩溃）。
+  **Kirikiroid2 实证（2026-09-09，反查官方 APK libgame.so）**：`Motion` 完整存在——`D3DEmotePlayer/
+  D3DEmoteModule/SeparateLayerAdaptor/D3DAdaptor/useD3D/captureCanvas/unloadUnusedTextures/
+  Motion::ResourceManager` 全在（GitHub 源码仓库虽搜不到，属源码未同步）。zeas2 补丁库
+  `Kirikiroid2_patch` 给千恋万花的 patch.tjs：`typeof Motion.D3DAdaptor` 两分支**都强制 `useD3D=0`**
+  （移动端无 D3D9 → CPU/GL 渲染）。⇒ 我们的做法对齐：`Motion.D3DAdaptor` 返回可 new 内建空类
+  （`main.cpp` `Create_NC_D3DAdaptor`）+ `useD3D` 默认 false + `SeparateLayerAdaptor` 与 `Layer` 双挂
+  `captureCanvas`/`unloadUnusedTextures` no-op 兜底（详见 todo.md §2a）。
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
