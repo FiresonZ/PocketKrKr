@@ -97,7 +97,19 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          sudo apt-get update
+          # runner 预装的 google-chrome apt 源与本次构建无关，且其 dl.google.com
+          # CDN 偶发 Hash Sum mismatch，导致 `sudo apt-get update` 退出码 100，
+          # 整个 workflow 连带失败（2026-09-09 连续三次命中）。先移除该源，
+          # 只保留 ubuntu 官方源——我们要装的 cmake/ninja/ccache/autoconf/automake/
+          # libtool 全部来自官方源，chrome 源纯属干扰。
+          # The preinstalled google-chrome apt source is unrelated to this build and
+          # its dl.google.com CDN intermittently returns Hash Sum mismatch, making
+          # `apt-get update` exit 100 and failing the whole workflow (hit 3x in a
+          # row on 2026-09-09). Remove it first and keep only the ubuntu archives,
+          # which provide every package we need; the chrome source is pure noise.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list \
+                     /etc/apt/sources.list.d/google.list
+          sudo apt-get update -o Acquire::Retries=3
           # autoconf/automake/libtool: libexif(autotools overlay) 的 autoreconf 需要
           # 宿主工具（vcpkg_find_acquire_program 不认识 AUTOCONF 类 tool 名，官方
           # vcpkg_configure_make 也是 find_program 依赖系统 autoreconf）
