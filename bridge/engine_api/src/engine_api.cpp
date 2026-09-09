@@ -31,6 +31,15 @@ extern "C" void krkr_GetSurfaceDimensions(uint32_t*, uint32_t*);
 #endif
 #if !defined(__ANDROID__)
 #include <execinfo.h>
+#else
+// Android/bionic backtrace for native crash dumps: _Unwind_Backtrace walks the
+// frame chain, dladdr symbolizes what it can (addresses always, symbols where
+// the .so keeps debug/symbol info). This gives a usable SIGSEGV/SIGABRT stack
+// in the engine log so crash causes can be located without a separate tombstone.
+// Android/bionic 原生崩溃栈：_Unwind_Backtrace 遍历帧链，dladdr 尽可能符号化，
+// 崩溃日志直接带栈，无需单独抓 tombstone 即可定位。
+#include <unwind.h>
+#include <dlfcn.h>
 #endif
 
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -189,13 +198,19 @@ std::shared_ptr<spdlog::logger> EnsureNamedLogger(const char* name) {
   return spdlog::stdout_color_mt(name);
 }
 
-void CrashSignalHandler(int sig) {
-  spdlog::critical("FATAL SIGNAL {} received!", sig);
-
-  // Print a mini backtrace (not available on Android)
+// Dumps the current thread's native stack to the log.
+// - Non-Android: glibc backtrace() + backtrace_symbols().
+// - Android (bionic): _Unwind_Backtrace + dladdr. Unwinding uses only the
+//   signal-return context / frame pointers, which is async-signal-safe enough
+//   for a crash dump; dladdr is not strictly async-signal-safe but is the
+//   standard pragmatic choice for on-device native crash reporting.
+// 打印当前线程原生调用栈到日志：
+// - 非 Android：glibc backtrace + backtrace_symbols；
+// - Android(bionic)：_Unwind_Backtrace + dladdr（设备侧崩溃定位的标准做法）。
+void DumpNativeBacktrace() {
 #if !defined(__ANDROID__)
   void* frames[32];
-  int count = backtrace(frames, 32);
+  int count = static_cast<int>(backtrace(frames, 32));
   char** symbols = backtrace_symbols(frames, count);
   if (symbols) {
     for (int i = 0; i < count; ++i) {
@@ -203,7 +218,43 @@ void CrashSignalHandler(int sig) {
     }
     free(symbols);
   }
+#else
+  struct TraceCtx {
+    void* addr[48];
+    int count = 0;
+  } ctx;
+  auto cb = [](_Unwind_Context* c, void* arg) -> _Unwind_Reason_Code {
+    auto* tc = static_cast<TraceCtx*>(arg);
+    if (tc->count >= static_cast<int>(sizeof(tc->addr) / sizeof(tc->addr[0])))
+      return _URC_END_OF_STACK;
+    uintptr_t ip = _Unwind_GetIP(c);
+    tc->addr[tc->count++] = reinterpret_cast<void*>(ip);
+    return _URC_NO_REASON;
+  };
+  _Unwind_Backtrace(cb, &ctx);
+
+  for (int i = 0; i < ctx.count; ++i) {
+    Dl_info info;
+    const char* sym = "<unknown>";
+    const char* obj = "<unknown>";
+    if (dladdr(ctx.addr[i], &info) != 0) {
+      if (info.dli_sname) sym = info.dli_sname;
+      if (info.dli_fname) obj = info.dli_fname;
+    }
+    spdlog::critical("  [{}] {:#016x} {} (in {})", i,
+                     reinterpret_cast<uintptr_t>(ctx.addr[i]), sym, obj);
+  }
 #endif
+}
+
+void CrashSignalHandler(int sig) {
+  spdlog::critical("FATAL SIGNAL {} received!", sig);
+
+  // Print a mini backtrace on every supported platform.
+  // Android de-optimizes far enough that a native stack is essential to locate
+  // the crashing call site; see DumpNativeBacktrace below.
+  // 在所有平台打印简易原生栈；Android 上必须靠它定位崩溃点。
+  DumpNativeBacktrace();
 
   spdlog::default_logger()->flush();
   // Re-raise so the OS generates a proper crash report
