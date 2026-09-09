@@ -14,6 +14,7 @@
 #include "tjsDictionary.h"
 #include "../core/base/StorageIntf.h"
 #include "../core/base/ScriptMgnIntf.h"
+#include "../core/visual/WindowIntf.h"
 #include "../psbfile/PSBMedia.h"
 #include "SeparateLayerAdaptor.h"
 #include "ncbind.hpp"
@@ -355,16 +356,26 @@ namespace motion {
 
             iTJSDispatch2 *realLayer = resolveRealLayer(target);
             iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
+            // operateRect must go to a real Layer. When target is an adaptor shell
+            // (D3DAdaptor) without operateRect, draw onto realLayer (primaryLayer).
+            // operateRect 必须画到真实 Layer；当 target 是适配器空壳（D3DAdaptor，
+            // 无 operateRect）时，画到 realLayer（primaryLayer）。
+            iTJSDispatch2 *drawTarget = realLayer ? realLayer : target;
 
             if(logger) {
-                logger->info("drawPSBImages: {} images, target={} realLayer={}",
+                logger->info("drawPSBImages: {} images, target={} realLayer={} drawTarget={}",
                              _psbImages.size(),
                              static_cast<void*>(target),
-                             static_cast<void*>(realLayer));
+                             static_cast<void*>(realLayer),
+                             static_cast<void*>(drawTarget));
             }
 
             tTJSVariant faceVal(static_cast<tjs_int>(0)); // dfAlpha
-            target->PropSet(0, TJS_W("face"), nullptr, &faceVal, target);
+            if(drawTarget != target) {
+                drawTarget->PropSet(0, TJS_W("face"), nullptr, &faceVal, drawTarget);
+            } else {
+                target->PropSet(0, TJS_W("face"), nullptr, &faceVal, target);
+            }
 
             int drawn = 0;
             for(size_t i = 0; i < _psbImages.size(); i++) {
@@ -412,7 +423,7 @@ namespace motion {
                                           &opArgs[3], &opArgs[4], &opArgs[5],
                                           &opArgs[6], &opArgs[7], &opArgs[8] };
                 try {
-                    target->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, target);
+                    drawTarget->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, drawTarget);
                     drawn++;
                 } catch(const std::exception &e) {
                     if(auto l = _logger()) l->warn("drawPSBImages: operateRect exception: {}", e.what());
@@ -465,6 +476,26 @@ namespace motion {
                 auto *owner = adaptor->getOwner();
                 return owner;
             }
+            // A draw target that is not a real Layer (e.g. the Yuzusoft
+            // D3DAdaptor shell has no window member) cannot host temp layers or
+            // operateRect; route to the main window's primaryLayer instead.
+            // 绘制目标若不是真实 Layer（如 Yuzusoft D3DAdaptor 空壳无 window 成员），
+            // 无法承载临时层/operateRect；改路由到主窗口的 primaryLayer。
+            tTJSVariant probe;
+            if(TJS_FAILED(target->PropGet(0, TJS_W("window"), nullptr, &probe, target)) ||
+               probe.Type() != tvtObject || !probe.AsObjectNoAddRef()) {
+                if(TVPMainWindow) {
+                    iTJSDispatch2 *winDsp = TVPMainWindow->GetOwnerNoAddRef();
+                    if(winDsp) {
+                        tTJSVariant plVar;
+                        if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
+                                                         nullptr, &plVar, winDsp)) &&
+                           plVar.Type() == tvtObject && plVar.AsObjectNoAddRef()) {
+                            return plVar.AsObjectNoAddRef();
+                        }
+                    }
+                }
+            }
             return target;
         }
 
@@ -479,13 +510,49 @@ namespace motion {
                 tTJSVariant layerClassVar;
                 global->PropGet(0, TJS_W("Layer"), nullptr, &layerClassVar, global);
 
+                // Try to resolve the window + parent from the real layer itself.
+                // When the draw target is a D3DAdaptor (Yuzusoft motionWorkLayer is
+                // an empty shell with no window member), fall back to the main
+                // window's primaryLayer so temp layers can still be created.
+                // 优先从 realLayer 自身解析 window + parent；当绘制目标是 D3DAdaptor
+                // （Yuzusoft motionWorkLayer 是无 window 成员的空壳）时，回退到主窗口
+                // 的 primaryLayer，保证临时层仍能创建。
                 tTJSVariant windowVar;
-                if(TJS_FAILED(realLayer->PropGet(0, TJS_W("window"), nullptr, &windowVar, realLayer))) {
+                bool haveWindow = TJS_SUCCEEDED(
+                    realLayer->PropGet(0, TJS_W("window"), nullptr, &windowVar, realLayer)) &&
+                    windowVar.Type() == tvtObject && windowVar.AsObjectNoAddRef();
+
+                tTJSVariant parentVar;
+                bool haveParent = false;
+                if(haveWindow) {
+                    haveParent = TJS_SUCCEEDED(
+                        realLayer->PropGet(0, TJS_W("primaryLayer"), nullptr,
+                                           &parentVar, realLayer)) &&
+                        parentVar.Type() == tvtObject && parentVar.AsObjectNoAddRef();
+                }
+
+                if(!haveParent && TVPMainWindow) {
+                    iTJSDispatch2 *winDsp = TVPMainWindow->GetOwnerNoAddRef();
+                    if(winDsp && haveWindow == false) {
+                        if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
+                                                         nullptr, &parentVar, winDsp))) {
+                            haveParent = parentVar.Type() == tvtObject &&
+                                         parentVar.AsObjectNoAddRef();
+                        }
+                    }
+                    if(haveWindow == false) {
+                        tTJSVariant wVar(winDsp, winDsp);
+                        windowVar = wVar;
+                        haveWindow = winDsp != nullptr;
+                    }
+                }
+
+                if(!haveWindow || !haveParent) {
                     global->Release();
                     return nullptr;
                 }
 
-                tTJSVariant ctorArgs[2] = { windowVar, tTJSVariant(realLayer, realLayer) };
+                tTJSVariant ctorArgs[2] = { windowVar, parentVar };
                 tTJSVariant *ctorArgv[] = { &ctorArgs[0], &ctorArgs[1] };
                 iTJSDispatch2 *newLayer = nullptr;
                 auto hr = layerClassVar.AsObjectNoAddRef()->CreateNew(
