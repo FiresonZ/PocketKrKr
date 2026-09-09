@@ -124,6 +124,12 @@
   （移动端无 D3D9 → CPU/GL 渲染）。⇒ 我们的做法对齐：`Motion.D3DAdaptor` 返回可 new 内建空类
   （`main.cpp` `Create_NC_D3DAdaptor`）+ `useD3D` 默认 false + `SeparateLayerAdaptor` 与 `Layer` 双挂
   `captureCanvas`/`unloadUnusedTextures` no-op 兜底（详见 todo.md §2a）。
+  - **canvasCaptureEnabled 的 setter 绝不可为 nullptr**：只读属性若用
+    `TJSCreateNativeClassProperty(get, nullptr)` 注册，游戏脚本对该属性**赋值**时
+    `tTJSNativeClassProperty::PropSet` 会调用空函数指针 → SIGSEGV。千恋万花 yuzulogo
+    开场动画会写 `motionWorkLayer.canvasCaptureEnabled`，即为崩溃点（engine(12) 栈
+    frame[1]=tTJSNativeClassProperty::PropSet 实证）。必须提供 no-op setter 吞掉值。
+    教训：用 classic tjsNative 动态注册属性时，宁给 no-op setter 也别传 nullptr。
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
