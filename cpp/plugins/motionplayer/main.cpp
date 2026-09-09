@@ -348,6 +348,33 @@ static tjs_error Player_getPlaying(tTJSVariant *r, tjs_int, tTJSVariant **,
     return TJS_S_OK;
 }
 
+// loopTime / animating —— Yuzusoft canSync() 依赖的同步查询属性，见 Player.h 注释。
+// loopTime / animating — sync-query properties used by Yuzusoft canSync().
+static tjs_error Player_getLoopTime(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                    iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(r) *r = tTJSVariant(player ? player->getLoopTime() : static_cast<tjs_int>(0));
+    return TJS_S_OK;
+}
+static tjs_error Player_setLoopTime(tTJSVariant *, tjs_int count, tTJSVariant **p,
+                                    iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(player && count >= 1) player->setLoopTime(static_cast<tjs_int>(p[0]->AsInteger()));
+    return TJS_S_OK;
+}
+static tjs_error Player_getAnimating(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                     iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(r) *r = tTJSVariant(player ? player->getAnimating() : false);
+    return TJS_S_OK;
+}
+static tjs_error Player_setAnimating(tTJSVariant *, tjs_int count, tTJSVariant **p,
+                                     iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(player && count >= 1) player->setAnimating(p[0]->operator bool());
+    return TJS_S_OK;
+}
+
 static tjs_error Player_getAllplaying(tTJSVariant *r, tjs_int, tTJSVariant **,
                                       iTJSDispatch2 *objthis) {
     auto *player = GetPlayerInstance(objthis);
@@ -592,6 +619,12 @@ NCB_REGISTER_SUBCLASS_DELAY(Player) {
     NCB_PROPERTY_RAW_CALLBACK(lastTime, Player_getLastTime, Player_setLastTime, 0);
     NCB_PROPERTY_RAW_CALLBACK(speed, Player_getSpeed, Player_setSpeed, 0);
     NCB_PROPERTY_RAW_CALLBACK(completionType, Player_getCompletionType, Player_setCompletionType, 0);
+    // loopTime/animating: Yuzusoft affinesourcemotion.tjs canSync() 读取它们做图层
+    // 备份/环境转换同步判断，缺失会抛 Member does not exist 卡白屏（千恋万花实证）。
+    // loopTime/animating: read by canSync() for backup/env-transition sync; missing
+    // members freeze the scene white (verified on Senren Banka).
+    NCB_PROPERTY_RAW_CALLBACK(loopTime, Player_getLoopTime, Player_setLoopTime, 0);
+    NCB_PROPERTY_RAW_CALLBACK(animating, Player_getAnimating, Player_setAnimating, 0);
     NCB_METHOD_RAW_CALLBACK(play, Player_play, 0);
     NCB_METHOD_RAW_CALLBACK(stop, Player_stop, 0);
     NCB_METHOD_RAW_CALLBACK(progress, Player_progress, 0);
