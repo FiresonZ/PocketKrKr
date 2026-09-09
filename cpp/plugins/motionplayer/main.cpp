@@ -715,6 +715,20 @@ static tjs_error D3DAdaptor_getCanvasCaptureEnabledProp(tTJSVariant *r,
     return TJS_S_OK;
 }
 
+static tjs_error D3DAdaptor_setCanvasCaptureEnabledProp(const tTJSVariant *,
+                                                        iTJSDispatch2 *) {
+    // no-op setter：只读属性本无需 setter，但若传 nullptr，游戏脚本对
+    // canvasCaptureEnabled 赋值时会经 tTJSNativeClassProperty::PropSet 直接调用
+    // 空函数指针 → SIGSEGV（千恋万花 yuzulogo 动画实证：脚本写该属性即崩）。
+    // 提供一个 no-op setter（纯吞掉值），与 getter 返回 true 保持一致，避免空调用。
+    // No-op setter: this property is logically read-only, but passing nullptr
+    // makes tTJSNativeClassProperty::PropSet call a null function pointer when
+    // the game script ASSIGNS canvasCaptureEnabled -> SIGSEGV (verified on the
+    // Senren Banka yuzulogo animation, which writes this property). Absorb the
+    // value and return OK.
+    return TJS_S_OK;
+}
+
 static iTJSDispatch2 *Create_NC_D3DAdaptor() {
     auto *cls = new tTJSNativeClass(TJS_W("D3DAdaptor"));
     if(cls) {
@@ -727,13 +741,16 @@ static iTJSDispatch2 *Create_NC_D3DAdaptor() {
                                   TJSCreateNativeClassMethod(
                                       D3DAdaptor_unloadUnusedTextures),
                                   TJS_W("D3DAdaptor"), nitMethod);
-        // canvasCaptureEnabled 只读属性。
+        // canvasCaptureEnabled 属性（只读语义，但提供 no-op setter 防空调用崩溃）。
         // 注意：RegisterNCM 内部会 `dsp->Release()` 接管传入对象的所有权（tjsNative.cpp
         // RegisterNCM 末尾 dsp->Release()），此处**不得**再手动 Release，否则 use-after-free。
         // Note: RegisterNCM internally does `dsp->Release()` to take ownership of the
         // passed object (tjsNative.cpp, end of RegisterNCM); do NOT Release again here.
+        // Setter must NOT be nullptr or PropSet on assignment calls a null function
+        // pointer (see D3DAdaptor_setCanvasCaptureEnabledProp).
         iTJSDispatch2 *cProp = TJSCreateNativeClassProperty(
-            D3DAdaptor_getCanvasCaptureEnabledProp, nullptr);
+            D3DAdaptor_getCanvasCaptureEnabledProp,
+            D3DAdaptor_setCanvasCaptureEnabledProp);
         TJSNativeClassRegisterNCM(cls, TJS_W("canvasCaptureEnabled"), cProp,
                                   TJS_W("D3DAdaptor"), nitProperty);
     }
