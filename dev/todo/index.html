@@ -1521,7 +1521,10 @@
 - <strong>下一步</strong>：① Windows 跑同游戏二分（引擎 vs 渲染链路）；② 对照 Kirikiroid2
   <code>src/core/visual/RenderManager_ogl.cpp</code>+<code>BasicDrawDevice.cpp</code> 与我们的 <code>RenderManager.*</code>，定位
   DrawBuffer 未合成原因；③ squirrel 移植（krkr2 trunk <code>src/plugins/win32/squirrel</code> + Squirrel VM 源码
-  可得，待按 k2compat 同法内嵌；multiimage 源码不可得，暂挂名）。</p>
+  可得，待按 k2compat 同法内嵌；multiimage 源码不可得，暂挂名）。
+- <strong>缺口核对（2026-09-09）</strong>：核心 API 层已确认不缺 <code>Pad</code>/<code>PassThroughDrawDevice</code>/<code>MenuItem</code>/<code>KAGParser</code>
+  （核心均注册）；唯一可选缺项 <code>System.getDisplayMonitors</code>（K2COMPAT_SPEC_DESKTOPINFO 默认关）。
+  真正未收口仍是 P0 引擎能力：Z 主层 DrawBuffer 合成 + krmovie Present。</p>
 </blockquote>
 <h3 id="p1-2a-motionplayer-motiond3dadaptor-motionplayer">P1 — §2a. motionplayer 缺 <code>Motion.D3DAdaptor</code>：千恋万花首屏后无法进入【属 motionplayer 兼容】<a class="headerlink" href="#p1-2a-motionplayer-motiond3dadaptor-motionplayer" title="Permanent link">&para;</a></h3>
 <blockquote>

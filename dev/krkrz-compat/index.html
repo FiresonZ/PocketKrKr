@@ -1160,6 +1160,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#api-2026-09-09-kirikiroid2-vs-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1495,6 +1506,17 @@
     <span class="md-ellipsis">
       
         Z 插件兼容现状（2026-09-09，cpp/plugins/zcompat/zcompat_plugin.cpp）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-2026-09-09-kirikiroid2-vs-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
       
     </span>
   </a>
@@ -1983,6 +2005,43 @@ krkrz 闭源版与 Kirikiroid2（安卓端完整实现）。</p>
   KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。</li>
 <li>实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。</li>
 </ul>
+<h3 id="api-2026-09-09-kirikiroid2-vs-core">核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）<a class="headerlink" href="#api-2026-09-09-kirikiroid2-vs-core" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>澄清：早前误列"缺 Pad / PassThroughDrawDevice"，实测<strong>核心均已注册</strong>，不在缺口内。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>我们核心</th>
+<th>缺口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Pad</code> 类</td>
+<td>✅ <code>ScriptMgnIntf.cpp:503</code> registerObject</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>PassThroughDrawDevice</code></td>
+<td>✅ <code>ScriptMgnIntf.cpp:538</code> Window 静态成员</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>System.getDisplayMonitors</code></td>
+<td>❌ 全区 grep 无定义</td>
+<td><strong>可选</strong>：仅 <code>K2COMPAT_SPEC_DESKTOPINFO</code>（k2compat 默认关）时用；实现可返回主显示器矩形（对齐 Kirikiroid2）</td>
+</tr>
+<tr>
+<td><code>MenuItem</code> / <code>KAGParser</code></td>
+<td>✅ 全局注册</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：插件/核心 API 层对"跑通 Z 游戏"已经基本不缺。真正未收口的仍是 P0 两个<strong>引擎能力</strong>
+（Z 主层 DrawBuffer 合成 + krmovie Present），不是缺类。</p>
 <h2 id="drawdeviced3dz-2026-09-08">drawdeviceD3DZ 深挖（2026-09-08）<a class="headerlink" href="#drawdeviced3dz-2026-09-08" title="Permanent link">&para;</a></h2>
 <blockquote>
 <p>对 Kirikiroid2 <code>RenderManager_ogl.cpp</code> 与本项目同文件逐环节比对（子代理 + 人工复核），
