@@ -356,23 +356,43 @@ namespace motion {
             iTJSDispatch2 *realLayer = resolveRealLayer(target);
             iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
 
+            if(logger) {
+                logger->info("drawPSBImages: {} images, target={} realLayer={}",
+                             _psbImages.size(),
+                             static_cast<void*>(target),
+                             static_cast<void*>(realLayer));
+            }
+
             tTJSVariant faceVal(static_cast<tjs_int>(0)); // dfAlpha
             target->PropSet(0, TJS_W("face"), nullptr, &faceVal, target);
 
+            int drawn = 0;
             for(size_t i = 0; i < _psbImages.size(); i++) {
                 const auto &img = _psbImages[i];
 
                 iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
-                if(!temp) continue;
+                if(!temp) {
+                    if(logger) logger->warn("drawPSBImages: getOrCreateTempLayer failed for {}",
+                                            img.key);
+                    continue;
+                }
 
-                if(!tryLoadImage(temp, img.path)) continue;
+                if(!tryLoadImage(temp, img.path)) {
+                    if(logger) logger->warn("drawPSBImages: tryLoadImage failed for {}",
+                                            img.path.AsStdString());
+                    continue;
+                }
 
                 tTJSVariant wVar, hVar;
                 temp->PropGet(0, TJS_W("imageWidth"), nullptr, &wVar, temp);
                 temp->PropGet(0, TJS_W("imageHeight"), nullptr, &hVar, temp);
                 int iw = static_cast<int>(wVar.AsInteger());
                 int ih = static_cast<int>(hVar.AsInteger());
-                if(iw <= 0 || ih <= 0) continue;
+                if(iw <= 0 || ih <= 0) {
+                    if(logger) logger->warn("drawPSBImages: bad image size {}/{} for {}",
+                                            iw, ih, img.key);
+                    continue;
+                }
 
                 int opacity = std::min(img.opacity, 255);
                 if(opacity <= 0) continue;
@@ -393,12 +413,14 @@ namespace motion {
                                           &opArgs[6], &opArgs[7], &opArgs[8] };
                 try {
                     target->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, target);
+                    drawn++;
                 } catch(const std::exception &e) {
                     if(auto l = _logger()) l->warn("drawPSBImages: operateRect exception: {}", e.what());
                 } catch(...) {
                     if(auto l = _logger()) l->warn("drawPSBImages: operateRect unknown exception");
                 }
             }
+            if(logger) logger->info("drawPSBImages: drew {} of {} images", drawn, _psbImages.size());
             _composited = true;
         }
 
