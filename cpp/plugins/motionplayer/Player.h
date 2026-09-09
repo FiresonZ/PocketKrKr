@@ -101,6 +101,17 @@ namespace motion {
         // getOptions() 的枚举也读 zpos（Z 序/深度）。默认 0。
         tjs_int getZpos() const { return _zpos; }
         void setZpos(tjs_int v) { _zpos = v; }
+
+        // getOptions() also copies `_player.variableKeys` (array of dynamic-variable
+        // key names) into the option dictionary; missing it throws a fatal
+        // "Member variableKeys does not exist" (Senren Banka engine(2) verified).
+        // Return an empty array — we keep no per-player dynamic variables.
+        // getOptions() 还会把 _player.variableKeys（动态变量键名数组）拷进选项字典；
+        // 缺失会抛 "Member variableKeys does not exist"（千恋万花 engine(2) 实证）。
+        // 返回空数组——我们不维护 per-player 动态变量。
+        iTJSDispatch2 *getVariableKeys() const {
+            return TJSCreateArrayObject();
+        }
         void setCompletionType(tjs_int v) { _completionType = v; }
 
         void play(const ttstr &motion, tjs_int all = 0) {

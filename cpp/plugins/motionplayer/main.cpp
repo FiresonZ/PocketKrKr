@@ -405,6 +405,24 @@ static tjs_error Player_setZpos(tTJSVariant *, tjs_int count, tTJSVariant **p,
     return TJS_S_OK;
 }
 
+// variableKeys —— getOptions() 拷进选项字典的动态变量键名数组，缺失抛错卡白屏。
+// variableKeys — dynamic-variable key array copied into the option dict by
+// getOptions(); missing it throws and freezes the scene.
+static tjs_error Player_getVariableKeys(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                        iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(r) {
+        if(player) {
+            iTJSDispatch2 *arr = player->getVariableKeys();
+            *r = tTJSVariant(arr);
+            arr->Release();
+        } else {
+            *r = tTJSVariant();
+        }
+    }
+    return TJS_S_OK;
+}
+
 static tjs_error Player_getAllplaying(tTJSVariant *r, tjs_int, tTJSVariant **,
                                       iTJSDispatch2 *objthis) {
     auto *player = GetPlayerInstance(objthis);
@@ -661,6 +679,9 @@ NCB_REGISTER_SUBCLASS_DELAY(Player) {
     // zpos: getOptions() 遍历的另一成员（Z 序/深度），一并补齐。
     // zpos: another getOptions() enumeration member (Z-order/depth).
     NCB_PROPERTY_RAW_CALLBACK(zpos, Player_getZpos, Player_setZpos, 0);
+    // variableKeys: getOptions() 拷进选项字典的键名数组（只读，返回空数组）。
+    // variableKeys: key-name array copied into option dict by getOptions() (RO, empty).
+    NCB_PROPERTY_RAW_CALLBACK_RO(variableKeys, Player_getVariableKeys, 0);
     NCB_METHOD_RAW_CALLBACK(play, Player_play, 0);
     NCB_METHOD_RAW_CALLBACK(stop, Player_stop, 0);
     NCB_METHOD_RAW_CALLBACK(progress, Player_progress, 0);
