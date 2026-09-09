@@ -23,6 +23,9 @@
   `src/core/visual/RenderManager_ogl.cpp`+`BasicDrawDevice.cpp` 与我们的 `RenderManager.*`，定位
   DrawBuffer 未合成原因；③ squirrel 移植（krkr2 trunk `src/plugins/win32/squirrel` + Squirrel VM 源码
   可得，待按 k2compat 同法内嵌；multiimage 源码不可得，暂挂名）。
+- **缺口核对（2026-09-09）**：核心 API 层已确认不缺 `Pad`/`PassThroughDrawDevice`/`MenuItem`/`KAGParser`
+  （核心均注册）；唯一可选缺项 `System.getDisplayMonitors`（K2COMPAT_SPEC_DESKTOPINFO 默认关）。
+  真正未收口仍是 P0 引擎能力：Z 主层 DrawBuffer 合成 + krmovie Present。
 
 ### P1 — §2a. motionplayer 缺 `Motion.D3DAdaptor`：千恋万花首屏后无法进入【属 motionplayer 兼容】
 > `Motion.D3DAdaptor` 是 **krkr2 motionplayer** 成员（Direct3D affine），非 krkrz/Z 专属——实证

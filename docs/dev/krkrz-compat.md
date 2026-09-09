@@ -115,6 +115,19 @@
   KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
+### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
+> 澄清：早前误列"缺 Pad / PassThroughDrawDevice"，实测**核心均已注册**，不在缺口内。
+
+| 项目 | 我们核心 | 缺口 |
+|---|---|---|
+| `Pad` 类 | ✅ `ScriptMgnIntf.cpp:503` registerObject | — |
+| `PassThroughDrawDevice` | ✅ `ScriptMgnIntf.cpp:538` Window 静态成员 | — |
+| `System.getDisplayMonitors` | ❌ 全区 grep 无定义 | **可选**：仅 `K2COMPAT_SPEC_DESKTOPINFO`（k2compat 默认关）时用；实现可返回主显示器矩形（对齐 Kirikiroid2） |
+| `MenuItem` / `KAGParser` | ✅ 全局注册 | — |
+
+**结论**：插件/核心 API 层对"跑通 Z 游戏"已经基本不缺。真正未收口的仍是 P0 两个**引擎能力**
+（Z 主层 DrawBuffer 合成 + krmovie Present），不是缺类。
+
 ## drawdeviceD3DZ 深挖（2026-09-08）
 
 > 对 Kirikiroid2 `RenderManager_ogl.cpp` 与本项目同文件逐环节比对（子代理 + 人工复核），
