@@ -32,13 +32,15 @@ extern "C" void krkr_GetSurfaceDimensions(uint32_t*, uint32_t*);
 #if !defined(__ANDROID__)
 #include <execinfo.h>
 #else
-// Android/bionic backtrace for native crash dumps: _Unwind_Backtrace walks the
-// frame chain, dladdr symbolizes what it can (addresses always, symbols where
-// the .so keeps debug/symbol info). This gives a usable SIGSEGV/SIGABRT stack
-// in the engine log so crash causes can be located without a separate tombstone.
-// Android/bionic 原生崩溃栈：_Unwind_Backtrace 遍历帧链，dladdr 尽可能符号化，
-// 崩溃日志直接带栈，无需单独抓 tombstone 即可定位。
-#include <unwind.h>
+// Android/bionic native crash backtrace. We must read the interrupted thread's
+// registers from the ucontext passed to a SA_SIGINFO handler: _Unwind_Backtrace
+// called from a plain handler only unwinds the signal-delivery frame (handler ->
+// sigreturn), which shows nothing useful. ucontext.uc_mcontext gives the real
+// PC/LR of the crashing thread; dladdr symbolizes each address.
+// Android/bionic 原生崩溃栈：必须从 SA_SIGINFO 处理器收到的 ucontext 读取被中断线程
+// 的 PC/LR；用普通处理器调 _Unwind_Backtrace 只会展开信号投递帧（handler->sigreturn），
+// 看不到实际崩溃点。dladdr 负责符号化。
+#include <ucontext.h>
 #include <dlfcn.h>
 #endif
 
@@ -198,16 +200,17 @@ std::shared_ptr<spdlog::logger> EnsureNamedLogger(const char* name) {
   return spdlog::stdout_color_mt(name);
 }
 
-// Dumps the current thread's native stack to the log.
+// Dumps the crashing thread's native stack to the log.
 // - Non-Android: glibc backtrace() + backtrace_symbols().
-// - Android (bionic): _Unwind_Backtrace + dladdr. Unwinding uses only the
-//   signal-return context / frame pointers, which is async-signal-safe enough
-//   for a crash dump; dladdr is not strictly async-signal-safe but is the
-//   standard pragmatic choice for on-device native crash reporting.
-// 打印当前线程原生调用栈到日志：
+// - Android (bionic): read PC/LR from the interrupted context handed to a
+//   SA_SIGINFO handler (ucontext.uc_mcontext), then dladdr for symbols; plus a
+//   best-effort AArch64 frame-pointer walk capped by safe bounds so a corrupted
+//   FP cannot send us into an unmapped address and double-fault.
+// 打印崩溃线程原生调用栈到日志：
 // - 非 Android：glibc backtrace + backtrace_symbols；
-// - Android(bionic)：_Unwind_Backtrace + dladdr（设备侧崩溃定位的标准做法）。
-void DumpNativeBacktrace() {
+// - Android(bionic)：从 ucontext.uc_mcontext 读被中断线程的 PC/LR，dladdr 符号化，
+//   并尽力按 AArch64 帧指针逐帧回溯（用安全边界约束，避免坏 FP 二次崩溃）。
+void DumpNativeBacktrace(void *ucontext) {
 #if !defined(__ANDROID__)
   void* frames[32];
   int count = static_cast<int>(backtrace(frames, 32));
@@ -219,42 +222,57 @@ void DumpNativeBacktrace() {
     free(symbols);
   }
 #else
-  struct TraceCtx {
-    void* addr[48];
-    int count = 0;
-  } ctx;
-  auto cb = [](_Unwind_Context* c, void* arg) -> _Unwind_Reason_Code {
-    auto* tc = static_cast<TraceCtx*>(arg);
-    if (tc->count >= static_cast<int>(sizeof(tc->addr) / sizeof(tc->addr[0])))
-      return _URC_END_OF_STACK;
-    uintptr_t ip = _Unwind_GetIP(c);
-    tc->addr[tc->count++] = reinterpret_cast<void*>(ip);
-    return _URC_NO_REASON;
-  };
-  _Unwind_Backtrace(cb, &ctx);
-
-  for (int i = 0; i < ctx.count; ++i) {
+  auto *uc = static_cast<ucontext_t *>(ucontext);
+  if (!uc) {
+    spdlog::critical("  (no ucontext captured)");
+    return;
+  }
+  auto dumpSym = [](int i, uintptr_t addr) {
+    const char *sym = "<unknown>";
+    const char *obj = "<unknown>";
     Dl_info info;
-    const char* sym = "<unknown>";
-    const char* obj = "<unknown>";
-    if (dladdr(ctx.addr[i], &info) != 0) {
+    if (dladdr(reinterpret_cast<void *>(addr), &info) != 0) {
       if (info.dli_sname) sym = info.dli_sname;
       if (info.dli_fname) obj = info.dli_fname;
     }
-    spdlog::critical("  [{}] {:#016x} {} (in {})", i,
-                     reinterpret_cast<uintptr_t>(ctx.addr[i]), sym, obj);
+    spdlog::critical("  [{}] {:#016x} {} (in {})", i, addr, sym, obj);
+  };
+
+#if defined(__aarch64__)
+  const uintptr_t pc = static_cast<uintptr_t>(uc->uc_mcontext.pc);
+  const uintptr_t lr = static_cast<uintptr_t>(uc->uc_mcontext.regs[30]);
+  uintptr_t fp = static_cast<uintptr_t>(uc->uc_mcontext.regs[29]);
+  dumpSym(0, pc);
+  dumpSym(1, lr);
+  // Best-effort frame-pointer walk: [fp] = saved fp, [fp+8] = saved lr.
+  // Bounds are tight so a corrupt fp just stops the walk instead of faulting.
+  const uintptr_t kLow = 0x1000;
+  const uintptr_t kHigh = 0x400000000000;
+  for (int i = 2; i < 48 && fp > kLow && fp < kHigh; ++i) {
+    uintptr_t saved_lr = 0;
+    saved_lr = *reinterpret_cast<volatile uintptr_t *>(fp + 8);
+    uintptr_t next_fp = *reinterpret_cast<volatile uintptr_t *>(fp);
+    dumpSym(i, saved_lr);
+    fp = next_fp;
   }
+#elif defined(__arm__)
+  dumpSym(0, static_cast<uintptr_t>(uc->uc_mcontext.arm_pc));
+  dumpSym(1, static_cast<uintptr_t>(uc->uc_mcontext.arm_lr));
+#else
+  dumpSym(0, 0);
+#endif
 #endif
 }
 
-void CrashSignalHandler(int sig) {
+void CrashSignalHandler(int sig, siginfo_t * /*info*/,
+                        void *ucontext) {
   spdlog::critical("FATAL SIGNAL {} received!", sig);
 
   // Print a mini backtrace on every supported platform.
   // Android de-optimizes far enough that a native stack is essential to locate
-  // the crashing call site; see DumpNativeBacktrace below.
+  // the crashing call site; see DumpNativeBacktrace above.
   // 在所有平台打印简易原生栈；Android 上必须靠它定位崩溃点。
-  DumpNativeBacktrace();
+  DumpNativeBacktrace(ucontext);
 
   spdlog::default_logger()->flush();
   // Re-raise so the OS generates a proper crash report
@@ -263,10 +281,18 @@ void CrashSignalHandler(int sig) {
 }
 
 void InstallCrashSignalHandlers() {
-  signal(SIGSEGV, CrashSignalHandler);
-  signal(SIGABRT, CrashSignalHandler);
-  signal(SIGBUS,  CrashSignalHandler);
-  signal(SIGFPE,  CrashSignalHandler);
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_sigaction = CrashSignalHandler;
+  sa.sa_flags = SA_SIGINFO;
+  sigemptyset(&sa.sa_mask);
+  // SA_SIGINFO passes the interrupted thread's ucontext so we can dump its real
+  // PC/LR backtrace (a plain signal() handler cannot).
+  // SA_SIGINFO 让处理器拿到被中断线程的 ucontext，从而打出真实 PC/LR 崩溃栈。
+  sigaction(SIGSEGV, &sa, nullptr);
+  sigaction(SIGABRT, &sa, nullptr);
+  sigaction(SIGBUS, &sa, nullptr);
+  sigaction(SIGFPE, &sa, nullptr);
 }
 
 void EnsureInternalPluginAnchorsLinked() {
