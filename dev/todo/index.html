@@ -1607,11 +1607,27 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
   no-op（需要游戏脚本类名/宿主，读 mainwindow.world 字节码确认）；② <strong>Kirikiroid2 同款</strong>（绝对参考）：
   让 <code>Motion</code> 整体不存在 → 游戏 <code>_motionD3DAdaptor</code> 不赋值 → CPU 路径，根本不调 captureCanvas
   （但会影响真用 motion 的 Z 游戏，需用户取舍）。
+- <strong>2026-09-09 方案②证伪 + Kirikiroid2 实证（最新，方向反转）</strong>：
+  - <strong>Kirikiroid2 不是"让 Motion 整体不存在"</strong>——GitHub 仓库源码（zeas2/Kirikiroid2）确实搜不到
+    Motion/motionplayer，但那是<strong>源码未同步</strong>；下载官方发布 APK（1.3.9）反查 <code>libgame.so</code>，
+    <strong>完整存在</strong>：<code>D3DEmotePlayer/D3DEmoteModule/SeparateLayerAdaptor/D3DAdaptor/useD3D/enableD3D/
+    Motion::ResourceManager/setEmotePSBDecryptSeed/setEmotePSBDecryptFunc/captureCanvas/
+    unloadUnusedTextures/canvasCaptureEnabled/motionplayer.dll/emoteplayer.dll</code>。
+  - zeas2 官方补丁库 <code>Kirikiroid2_patch</code>（github.com/zeas2/Kirikiroid2_patch）含<strong>千恋万花补丁</strong>
+    （patch/ゆずソフト/千恋＊万花/patch.tjs）：<code>Plugins.link("motionplayer.dll")</code> +
+    <code>typeof Motion.D3DAdaptor</code> 两分支<strong>都强制 <code>useD3D=0</code></strong>（移动端无 D3D9，走 CPU/GL），
+    并 <code>System.setArgument("-hdresomode","1080")</code> + 清空 movieQualitySelectMenuItem。
+  - ⇒ 结论：<strong>保持 Motion 存在（D3DAdaptor 可 new）+ captureCanvas/unloadUnusedTextures 挂到
+    SeparateLayerAdaptor（motionWorkLayer 宿主）+ useD3D=0</strong> 与 Kirikiroid2 行为一致；当前主线正确。
+  - <strong>本次改动（待提交）</strong>：<code>cpp/plugins/motionplayer/main.cpp</code> SeparateLayerAdaptor 新增
+    <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op 注册（转发目标 Layer，兜底清空返回值）。
+  - 其余成员（<code>Motion.Player.varibleKeys</code>/<code>Motion.EmotePlayer.setCameraCoord/Rotate/Scale</code>）：
+    Kirikiroid2 APK <strong>也没有</strong>，游戏脚本自带 <code>typeof==="undefined"</code> polyfill 兜底，无需实现。
 - 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 <code>The object is already invalidated</code>
   （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
-- 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；
-  ② 真机复验 yuzulogo 后不再崩；③ 若仍报 missing member，读 mainwindow.tjs motionD3DAdaptor getter
-  完整字节码，逐个补 D3DAdaptor 实例成员。</p>
+- 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖 +
+  SeparateLayerAdaptor no-op，2026-09-09 补）；② 真机复验 yuzulogo 后不再崩；③ 若仍报 missing member，
+  读 mainwindow.tjs motionD3DAdaptor getter 完整字节码，逐个补 D3DAdaptor 实例成员。</p>
 </blockquote>
 <h3 id="p1-2b-motionplayer-emoteplayeremoteplayerdllnew">P1 — §2b. motionplayer 的 <code>EmotePlayer</code>（emoteplayer.dll）未实现【NEW】<a class="headerlink" href="#p1-2b-motionplayer-emoteplayeremoteplayerdllnew" title="Permanent link">&para;</a></h3>
 <ul>
