@@ -1713,6 +1713,20 @@ static tTVPAtExit
                                       TVPShutdownWaveSoundBuffers);
 
 //---------------------------------------------------------------------------
+// TVPStopAllWaveSoundsForRestart : runtime-restart 专用声音停止
+//---------------------------------------------------------------------------
+// tTVPAtExit 是一次性的：首次 engine_destroy 的 TVPCauseAtExit 会 delete 置空
+// TVPAtExitInfos，之后重启的 teardown 不再执行 ShutdownWaveSoundBuffers，导致上一游戏
+// 正在播放的 BGM/音效（由 TVPWaveSoundBufferThread 混音输出）继续响、叠进下一游戏
+// （真机：切游戏后 BGM 重叠，甚至首屏 logo 就带着上一游戏的 BGM）。这里在重启末尾
+// 显式停掉混音线程并释放存活 buffer。
+void TVPStopAllWaveSoundsForRestart() {
+    if(TVPWaveSoundBufferThread)
+        delete TVPWaveSoundBufferThread, TVPWaveSoundBufferThread = nullptr;
+    TVPReleaseSoundBuffers();
+}
+
+//---------------------------------------------------------------------------
 static void TVPEnsureWaveSoundBufferWorking() {
     if(!TVPWaveSoundBufferThread)
         TVPWaveSoundBufferThread = new tTVPWaveSoundBufferThread();

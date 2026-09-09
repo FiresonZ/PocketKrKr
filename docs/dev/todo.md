@@ -50,10 +50,11 @@
     `mainwindow.tjs (property getter) motionD3DAdaptor`——它**无条件**取 `Motion.D3DAdaptor`
     （先算 scWidth/2、pxHeight/2 再访问），置 undefined → `Member "D3DAdaptor" does not exist`
     致命。Kirikiroid2 能跑此游戏正说明它**定义**了 D3DAdaptor（krkr2 motionplayer 本来就有该成员）。
-- **修复**：`cpp/plugins/motionplayer/main.cpp` 新增正式 NCB 类 `D3DAdaptor`（可 new、构造收任意参），
-  类上直接挂 `captureCanvas`/`unloadUnusedTextures` no-op；`Motion.D3DAdaptor` getter 返回该类对象。
-  Layer 原生同款 no-op（LayerIntf.cpp）保留兜底。无 D3D/CPU-GL 下 affine 已渲染进 layer 光栅，no-op 不
-  clear 目标 image 防连锁空图。
+- **修复**：`cpp/plugins/motionplayer/main.cpp` 用 **classic tjsNative 模式**定义 `D3DAdaptor`
+  原生类（`NI_D3DAdaptor` + 构造收任意参 + `captureCanvas`/`unloadUnusedTextures` no-op），
+  `Motion.D3DAdaptor` getter 返回 `Create_NC_D3DAdaptor()`。Layer 原生同款 no-op（LayerIntf.cpp）
+  保留兜底。⚠️ 迭代史：`815d8c3` 移除→undefined 崩（Member 不存在）；`4166901` NCB 空类无构造→
+  `new` 崩（"Called method is not implemented"）；**本次 = 显式构造函数 + 实例方法**。
 - 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 `The object is already invalidated`
   （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
 - 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；
@@ -92,13 +93,17 @@
 - 待真机：退出→不杀进程→二次游玩渲染正常；若仍黑，需运行时探针定位 id83 纹理确切宿主
   （LayerManager DrawBuffer vs gcache），再针对性重建。
 
-### — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【新增，待查】
-- 现象（engine(25) 实测链路 IINCHO→Kemomusu→IINCHO…）：二次打开**不同**游戏后，BGM 疑似叠加了
+### — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【已修，待真机】
+- 现象（engine(8) 实测链路 IINCHO→Kemomusu→IINCHO）：二次打开**不同**游戏后，BGM 疑似叠加了
   上一游戏的（都 StartApplication 正常、无异常）。同游戏复开不明显。
-- 方向：runtime-restart 时声音系统（win32/wave 后端）未把上一游戏**正在播放**的 BGM/音效全部
-  Stop/清空（此前的 restart 修复只处理线程析构死锁 `081a9c1` 与日志闭包 `4221543`）。需在
-  restart 重置链里加「全部频道停止 + 播放实例清空」（参考 TVPStopAllSamples / 音效系统 reset）。
-- 待查：确认 codec/DSound/WaveSound 是否进程级残留播放句柄；再在 reset 时统一释放。
+- 根因：`ShutdownWaveSoundBuffers` 是**一次性 `tTVPAtExit`（PRI_PREPARE）**，首次 engine_destroy 的
+  `TVPCauseAtExit` 已把 `TVPAtExitInfos` delete 置空；之后每次重启 teardown 的 `TVPCauseAtExit` 提前 return，
+  **不再停混音线程 `TVPWaveSoundBufferThread`** → 上一游戏 BGM 继续响、叠进下一游戏（与日志闭包 `4221543`
+  同类一次性 at-exit 问题，但声音模块无 restart 特例）。
+- 修复（提交，`SysInitIntf.cpp` `TVPResetRuntimeForRestart` + `WaveImpl.cpp`）：新增
+  `TVPStopAllWaveSoundsForRestart()`——停掉 `TVPWaveSoundBufferThread` + 释放存活 buffer（`TVPReleaseSoundBuffers`），
+  restart 末尾显式调用。
+- 待真机：切游戏后 BGM 不再残留（首屏 logo 即干净）。
 
 ### — §3b. 快速 skip 消息框黑块【间歇，挂起低优先】
 - 现象：快速 skip 时本应透明的消息框偶发整块变黑；再次 skip 未复现。
