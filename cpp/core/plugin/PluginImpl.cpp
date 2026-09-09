@@ -303,6 +303,8 @@ void TVPLoadPlugin(const ttstr &name) {
     auto pluginName = name;
     if(name == TJS_W("emoteplayer.dll"))
         pluginName = "motionplayer.dll";
+    if(name == TJS_W("motionplayer_nod3d.dll")) // 千恋万花等 Z 游戏
+        pluginName = "motionplayer.dll";
 
     if(TVPLoadInternalPlugin(pluginName)) {
         spdlog::debug("Loading Plugin: {} Success", name.AsStdString());
