@@ -9648,7 +9648,11 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
     // 脚本类成员）。移动端无 D3D、motion 走 CPU/GL：affine 内容已直接渲染进该
     // layer 光栅，主 DrawBuffer/LLR 即时呈现，"捕获进另一块 canvas" 可安全跳过。
     // 这里是 no-op（不 clear 目标 image，保留已渲染内容），仅让脚本调用不抛
-    // Member does not exist 致命错误。若后续发现游戏复用返回值再按体补。
+    // Member does not exist 致命错误。
+    // ⚠️ 空壳性质说明（与 motionplayer 插件里 SeparateLayerAdaptor / D3DAdaptor
+    //   的同名成员属同一语义）：承载画面的真渲染靠 motion player 的 PSB 合成链路，
+    //   这些空方法只负责"不崩"；仅当某游戏真的取用捕获结果作为后续图像源时
+    //   （读取返回值 / 绘制到指定 layer）才需升级为真抓取实现。
     TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/ captureCanvas) {
         TJS_GET_NATIVE_INSTANCE(/*var. name*/ _this,
                                 /*var. type*/ tTJSNI_Layer);
