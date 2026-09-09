@@ -176,5 +176,11 @@ void TVPResetRuntimeForRestart() {
     // 换游戏后下一个游戏 kag.loadScenario 会命中前一个游戏的内容（跨游戏同名场景碰撞），
     // 此处清空。同游戏复开重读缓存为空后正常重建，仅损失一次解压。
     TVPClearScnearioCache();
+
+    // tTVPAtExit 一次性、首次已消费 → 重启不再执行 ShutdownWaveSoundBuffers，上一游戏的
+    // BGM/音效由 TVPWaveSoundBufferThread 继续混音输出、叠进下一游戏。这里显式停掉。
+    // （实现见 cpp/core/sound/win32/WaveImpl.cpp TVPStopAllWaveSoundsForRestart）
+    extern void TVPStopAllWaveSoundsForRestart();
+    TVPStopAllWaveSoundsForRestart();
 }
 //---------------------------------------------------------------------------
