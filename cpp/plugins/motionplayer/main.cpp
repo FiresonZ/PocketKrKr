@@ -605,15 +605,26 @@ public:
         return TJS_E_INVALIDPARAM;
     }
 
-    // Z（KIRIKIRI Z）游戏脚本用 `typeof Motion.D3DAdaptor != "undefined"` 判定 D3D
-    // motion 是否可用，从而决定走 D3D capture（captureCanvas/motionWorkLayer）还是
-    // CPU/useD3D=0 路径。移动端无 D3D：**必须保持 D3DAdaptor 为 undefined**，使游戏
-    // 自动走 CPU 路径、根本不会调 captureCanvas —— 这正是 Kirikiroid2 千恋万花能跑的办法
-    // （见 todo.md §2a）。
-    // ⚠️ 之前我们返回"可 new 的 tTJSNativeClass"导致 typeof 判定 D3D 存在 → 游戏进入
-    // D3D capture 路径 → 调 captureCanvas（且此前"不能 new 空 dict"致命错误也是同一根源
-    // ：typeof 非 undefined 就会走到 new）。因此这里不再注册 D3DAdaptor 属性。
-    // （Layer 原生已补 captureCanvas/unloadUnusedTextures no-op 作兜底，见 LayerIntf.cpp）
+    // Z（KIRIKIRI Z）游戏脚本 `Motion.D3DAdaptor` 会被**无条件访问**：mainwindow.tjs 的
+    // `motionD3DAdaptor` 属性 getter 先算 scWidth/2、pxHeight/2 后直接取 `Motion.D3DAdaptor`
+    // 并 `new` 之（engine(5) 实证：保持 undefined → `Member "D3DAdaptor" does not exist`
+    // 致命崩溃）；affinesourcemotion.tjs 也在 D3D capture 路径 `new` 它。移动端无 D3D，
+    // 标准做法是**提供可 new 的空实现类**（此前 `new tTJSNativeClass` 空类即可 new）。
+    // 现改为正式 NCB 类 D3DAdaptor，并在类上直接提供 captureCanvas/unloadUnusedTextures
+    // no-op（engine(24) 实证 motionWorkLayer 调 captureCanvas 时该类/被捕获对象必须能
+    // 解析该方法；Layer 原生另有同款 no-op 兜底，见 LayerIntf.cpp）。
+    static tjs_error getD3DAdaptor(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                   iTJSDispatch2 *) {
+        iTJSDispatch2 *cls = ncbClassInfo<class D3DAdaptor>::GetClassObject();
+        if(cls) {
+            *r = tTJSVariant(cls);
+            cls->AddRef(); // 模块级类对象常驻，显式持有引用
+            cls->Release();
+        } else {
+            *r = tTJSVariant();
+        }
+        return TJS_S_OK;
+    }
 
     static tjs_error getEnableD3D(tTJSVariant *r, tjs_int, tTJSVariant **,
                                   iTJSDispatch2 *) {
