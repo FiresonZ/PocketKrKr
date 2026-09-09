@@ -205,9 +205,14 @@ static tjs_error SeparateLayerAdaptor_getImageHeight(tTJSVariant *r, tjs_int, tT
 // 千恋万花等 Yuzusoft 作品：motion 的 work layer 由 SeparateLayerAdaptor 承载，
 // 游戏脚本 affinesourcemotion.tjs 会调 captureCanvas/canvasCaptureEnabled/
 // unloadUnusedTextures（Kirikiroid2 发布 APK 的 libgame.so 同款成员，实证）。
-// 移动端无 D3D、motion 走 CPU/GL，affine 已直接渲染进目标 layer，"捕获进另一块
-// canvas"可安全跳过。no-op（不清目标 image，保留已渲染内容）仅让脚本调用不抛
-// Member does not exist 致命错误。
+//
+// ⚠️ 空壳性质说明（与 D3DAdaptor 的成员属同一语义的两套宿主）：
+//   Kirikiroid2 的 D3DAdaptor 与 SeparateLayerAdaptor 都有 captureCanvas 等成员；
+//   本文件把它们按宿主分别注册（SeparateLayerAdaptor / 下方 D3DAdaptor），
+//   motionWorkLayer 实际是哪一个实例就命中哪一个。两者都遵循：
+//     优先转发到目标 Layer（若它能处理则交给它），无目标/不可转发则 no-op 兜底。
+//   移动端无 D3D、motion 走 CPU/GL 已直接渲染，"捕获进另一块 canvas"可跳过。
+//   升级触发条件见 D3DAdaptor 注释：仅当游戏真的取用捕获结果作为后续图像源时。
 static tjs_error SeparateLayerAdaptor_getCanvasCaptureEnabled(tTJSVariant *r, tjs_int,
                                                               tTJSVariant **,
                                                               iTJSDispatch2 *) {
@@ -634,6 +639,19 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
 // 使 `new Motion.D3DAdaptor(...)` 生成的实例带有这些成员（对齐 Kirikiroid2 APK：
 // 其 D3DAdaptor 类自带同款成员，实证）。affinesourcemotion.tjs 的 drawAffine 会
 // `_window.motionWorkLayer.captureCanvas()`——若 D3DAdaptor 实例无该方法即闪退。
+//
+// ⚠️ 空壳性质说明（重要，防误判）：
+//   - captureCanvas / unloadUnusedTextures / canvasCaptureEnabled 是 **D3D canvas 捕获**
+//     能力的占位（把已绘制的 motion 画面抓进另一块 D3D canvas）。
+//   - 移动端无 D3D9，motion 走 CPU/GL **直接把内容画进目标 layer、即时呈现**，因此
+//     "再抓一份"本身是无意义操作——返回空 + 保留已渲染内容 = **语义正确的 no-op**，
+//     不是"没写完的 stub"。Kirikiroid2 移动端同定位。
+//   - **承载画面的真渲染链路不在这些空方法里**：Motion.Player::draw 做 PSB 图缓存→
+//     合成到 layer，Motion.ResourceManager 做真 PSB 解码/缓存/解密 seed。空方法只负责
+//     "让脚本调用不抛 Member does not exist"，画面靠 Player 这套真链路。
+//   - **何时必须从 no-op 升级为真实现**：仅当某个游戏把 captureCanvas 的捕获结果当
+//     后续图像源使用（读取返回值 / 绘制到指定 layer）时。当前千恋万花反汇编证明它只是
+//     调用、不取返回值，故 no-op 足够。若未来遇依赖捕获结果的游戏再做真实现。
 static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
                                           iTJSDispatch2 *) {
     // 移动端无 D3D，motion 走 CPU/GL 已直接渲染；"捕获进另一块 canvas"可跳过，
