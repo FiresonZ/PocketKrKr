@@ -130,6 +130,17 @@
     开场动画会写 `motionWorkLayer.canvasCaptureEnabled`，即为崩溃点（engine(12) 栈
     frame[1]=tTJSNativeClassProperty::PropSet 实证）。必须提供 no-op setter 吞掉值。
     教训：用 classic tjsNative 动态注册属性时，宁给 no-op setter 也别传 nullptr。
+  - **Motion.Player 成员需按 Yuzusoft affinesourcemotion.tjs 枚举补齐**：`canSync()`
+    读 `loopTime`（非 emote）/`animating`（emote）；`getOptions()` 遍历固定成员表
+    `motion/chara/tickCount/speed/outline/zpos/...` 生成选项字典。任一缺失都会让
+    KAG 链路（backupLayer/doEnvTrans/storeFlags→onStore→getOptions）抛
+    `Member "xxx" does not exist` 致命错误并卡白屏（千恋万花实证：loopTime→outline
+    逐个暴露）。遇到新游戏白屏先查日志 `Member "..." does not exist`，按枚举表补成员。
+    Motion.Player members must cover the Yuzusoft affinesourcemotion.tjs enumeration:
+    canSync() reads loopTime/animating, getOptions() enumerates
+    motion/chara/tickCount/speed/outline/zpos. Missing members throw a fatal
+    "Member ... does not exist" and freeze the scene (verified: loopTime then
+    outline). On white screen, check the log for the missing member and add it.
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
