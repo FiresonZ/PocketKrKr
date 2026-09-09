@@ -727,12 +727,15 @@ static iTJSDispatch2 *Create_NC_D3DAdaptor() {
                                   TJSCreateNativeClassMethod(
                                       D3DAdaptor_unloadUnusedTextures),
                                   TJS_W("D3DAdaptor"), nitMethod);
-        // canvasCaptureEnabled 只读属性
+        // canvasCaptureEnabled 只读属性。
+        // 注意：RegisterNCM 内部会 `dsp->Release()` 接管传入对象的所有权（tjsNative.cpp
+        // RegisterNCM 末尾 dsp->Release()），此处**不得**再手动 Release，否则 use-after-free。
+        // Note: RegisterNCM internally does `dsp->Release()` to take ownership of the
+        // passed object (tjsNative.cpp, end of RegisterNCM); do NOT Release again here.
         iTJSDispatch2 *cProp = TJSCreateNativeClassProperty(
             D3DAdaptor_getCanvasCaptureEnabledProp, nullptr);
         TJSNativeClassRegisterNCM(cls, TJS_W("canvasCaptureEnabled"), cProp,
                                   TJS_W("D3DAdaptor"), nitProperty);
-        if(cProp) cProp->Release();
     }
     return cls;
 }
