@@ -1513,9 +1513,15 @@
   我们未接入。
 - <strong>插件缺口</strong>（real 游戏 <code>plugin/</code> 全 Failed，引擎无实现/stub）：<code>drawdeviceD3D/Z</code>、<code>kztouch</code>、<code>k2compat</code>、
   <code>kagexopt</code>、<code>multiimage</code>、<code>squirrel</code>、<code>PackinOne</code>。
+- <strong>已做</strong>：③ 挂名 + 逐个实现（<code>cpp/plugins/zcompat/</code>）：
+  - 挂名 16 个 Z 插件名（link 不再 Failed）；drawdeviceD3DZ/D3D、kztouch、menu 确认功能已内建核心。
+  - <strong>k2compat 真实现</strong>：内嵌 Krkr2Compat 纯 TJS（<code>zcompat/k2compat_scripts.cpp</code>，10 脚本按依赖序
+    link/预加载时 <code>tTJS::ExecScript</code>），非挂名。
+  - <strong>motionplayer_nod3d → motionplayer.dll 映射</strong>（PluginImpl.cpp <code>TVPLoadPlugin</code>），复用已有实现。
 - <strong>下一步</strong>：① Windows 跑同游戏二分（引擎 vs 渲染链路）；② 对照 Kirikiroid2
   <code>src/core/visual/RenderManager_ogl.cpp</code>+<code>BasicDrawDevice.cpp</code> 与我们的 <code>RenderManager.*</code>，定位
-  DrawBuffer 未合成原因；③ ncb 内部给 Z 插件挂名（先可 link），再实现功能。</p>
+  DrawBuffer 未合成原因；③ squirrel 移植（krkr2 trunk <code>src/plugins/win32/squirrel</code> + Squirrel VM 源码
+  可得，待按 k2compat 同法内嵌；multiimage 源码不可得，暂挂名）。</p>
 </blockquote>
 <h3 id="p1-2a-motionplayer-motiond3dadaptor-motionplayer">P1 — §2a. motionplayer 缺 <code>Motion.D3DAdaptor</code>：千恋万花首屏后无法进入【属 motionplayer 兼容】<a class="headerlink" href="#p1-2a-motionplayer-motiond3dadaptor-motionplayer" title="Permanent link">&para;</a></h3>
 <blockquote>

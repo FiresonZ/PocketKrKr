@@ -1149,6 +1149,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#z-2026-09-09cpppluginszcompatzcompat_plugincpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Z 插件兼容现状（2026-09-09，cpp/plugins/zcompat/zcompat_plugin.cpp）
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1473,6 +1484,17 @@
     <span class="md-ellipsis">
       
         结论
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#z-2026-09-09cpppluginszcompatzcompat_plugincpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Z 插件兼容现状（2026-09-09，cpp/plugins/zcompat/zcompat_plugin.cpp）
       
     </span>
   </a>
@@ -1906,6 +1928,60 @@ krkrz 闭源版与 Kirikiroid2（安卓端完整实现）。</p>
   只做"挂名不报 Failed"或直接跳过，等有真实游戏卡在它们头上再补。</li>
 <li>当前最大阻塞仍是 P0 两个<strong>引擎能力</strong>（drawdeviceZ 主 buffer 合成 + krmovie Present），
   不靠写插件解决。</li>
+</ul>
+<h3 id="z-2026-09-09cpppluginszcompatzcompat_plugincpp">Z 插件兼容现状（2026-09-09，<code>cpp/plugins/zcompat/zcompat_plugin.cpp</code>）<a class="headerlink" href="#z-2026-09-09cpppluginszcompatzcompat_plugincpp" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>关键认知（Kirikiroid2 实证）：<strong>移动端没有"加载 Z 插件 DLL"这回事</strong>。Kirikiroid2 的
+<code>TVPLoadPlugin</code> 密封所有 DLL 加载（<code>return; // seal all plugins</code>），<code>Plugins.link</code>
+只查内部注册表，功能全部内建在引擎核心。因此"真正兼容"= <strong>功能内建引擎 + link 命中</strong>，
+与"挂名"在形态上同构，差异只在"功能是否真的在"。</p>
+</blockquote>
+<p>按状态分四类：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>插件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>功能已内建</td>
+<td>drawdeviceD3DZ / drawdeviceD3D</td>
+<td>主 DrawBuffer 由 core/visual 渲染管线合成（Kirikiroid2 RenderManager_ogl 同思路），非独立插件</td>
+</tr>
+<tr>
+<td>功能已内建</td>
+<td>kztouch</td>
+<td>移动端触摸类已内建（Window.getTouchPoint 等，WindowImpl.cpp）</td>
+</tr>
+<tr>
+<td>功能已内建</td>
+<td>menu</td>
+<td>MenuItem 类核心全局注册（ScriptMgnIntf.cpp registerObject），link 即用</td>
+</tr>
+<tr>
+<td>真实现</td>
+<td>k2compat</td>
+<td><strong>内嵌 Krkr2Compat 纯 TJS 兼容层</strong>（<code>zcompat/k2compat_scripts.cpp</code>，10 个脚本按依赖序在 link/预加载时 <code>tTJS::ExecScript</code>），非挂名</td>
+</tr>
+<tr>
+<td>名字映射</td>
+<td>motionplayer_nod3d</td>
+<td>PluginImpl.cpp <code>TVPLoadPlugin</code> 映射到 motionplayer.dll，复用已有实现</td>
+</tr>
+<tr>
+<td>挂名（暂不可实现）</td>
+<td>kagexopt / multiimage / squirrel / yuzuex / lzfs / win32ole / PackinOne / extNagano / pkutil / xpzdec</td>
+<td>源码不可得（multiimage 闭源）/ 桌面概念（win32ole）/ 待移植（squirrel 源码可得，VM 在 krkr2 trunk），挂名消除 Failed，调用缺类仍会抛错</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>刻意不挂名</strong>：krmovie（P0 引擎工作，挂名会让游戏期待视频能力而实际 Present 未实现）；
+  KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。</li>
+<li>实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。</li>
 </ul>
 <h2 id="drawdeviced3dz-2026-09-08">drawdeviceD3DZ 深挖（2026-09-08）<a class="headerlink" href="#drawdeviced3dz-2026-09-08" title="Permanent link">&para;</a></h2>
 <blockquote>
@@ -2463,6 +2539,7 @@ game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <st
   116+323+502+83+101+480+17+1462）；兄弟 xp3 扫描两者均 "No sibling"（xp3 在各游戏目录内，父目录无裸 xp3）。</li>
 <li><strong>修复</strong>：<code>TVPResetRuntimeForRestart</code>（engine_destroy 复位链）中调用 <code>TVPClearScnearioCache()</code>，
   换游戏/复开前清空跨游戏残留的场景缓存。同游戏复开仅损失一次场景解压。</li>
+<li><strong>✅ 真机复验通过（2026-09-09）</strong>：Kemomusu → 退出 → IINCHO 换游戏后正常出画面，黑屏根治。</li>
 </ul>
 <h3 id="pr12-2026-09-0809">PR#12 剩余差异全量扫描（2026-09-08/09）<a class="headerlink" href="#pr12-2026-09-0809" title="Permanent link">&para;</a></h3>
 <ul>
