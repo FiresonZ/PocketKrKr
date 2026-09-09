@@ -524,26 +524,30 @@ namespace motion {
 
                 tTJSVariant parentVar;
                 bool haveParent = false;
-                if(haveWindow) {
-                    haveParent = TJS_SUCCEEDED(
-                        realLayer->PropGet(0, TJS_W("primaryLayer"), nullptr,
-                                           &parentVar, realLayer)) &&
-                        parentVar.Type() == tvtObject && parentVar.AsObjectNoAddRef();
+                // The real layer may itself be the primaryLayer, which has no
+                // `primaryLayer` member; fall back to the main window in that case.
+                // realLayer 可能是 primaryLayer 本身（无 primaryLayer 成员），此时回退主窗口。
+                if(TJS_SUCCEEDED(realLayer->PropGet(0, TJS_W("primaryLayer"), nullptr,
+                                                    &parentVar, realLayer)) &&
+                   parentVar.Type() == tvtObject && parentVar.AsObjectNoAddRef()) {
+                    haveParent = true;
                 }
 
-                if(!haveParent && TVPMainWindow) {
+                if((!haveParent || !haveWindow) && TVPMainWindow) {
                     iTJSDispatch2 *winDsp = TVPMainWindow->GetOwnerNoAddRef();
-                    if(winDsp && haveWindow == false) {
-                        if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
-                                                         nullptr, &parentVar, winDsp))) {
-                            haveParent = parentVar.Type() == tvtObject &&
-                                         parentVar.AsObjectNoAddRef();
+                    if(winDsp) {
+                        if(!haveParent) {
+                            if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
+                                                             nullptr, &parentVar, winDsp))) {
+                                haveParent = parentVar.Type() == tvtObject &&
+                                             parentVar.AsObjectNoAddRef();
+                            }
                         }
-                    }
-                    if(haveWindow == false) {
-                        tTJSVariant wVar(winDsp, winDsp);
-                        windowVar = wVar;
-                        haveWindow = winDsp != nullptr;
+                        if(!haveWindow) {
+                            tTJSVariant wVar(winDsp, winDsp);
+                            windowVar = wVar;
+                            haveWindow = true;
+                        }
                     }
                 }
 
