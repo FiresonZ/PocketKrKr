@@ -659,10 +659,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#p1-2a-motionplayer-motiond3dadaptor-motionplayer" class="md-nav__link">
+  <a href="#p1-2a-motionplayer-motiond3dadaptor-capturecanvas-motionplayer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        P1 — §2a. motionplayer 缺 Motion.D3DAdaptor：千恋万花首屏后无法进入【属 motionplayer 兼容】
+        P1 — §2a. motionplayer 缺 Motion.D3DAdaptor + captureCanvas：千恋万花首屏后无法进入【属 motionplayer 兼容】
       
     </span>
   </a>
@@ -1341,10 +1341,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#p1-2a-motionplayer-motiond3dadaptor-motionplayer" class="md-nav__link">
+  <a href="#p1-2a-motionplayer-motiond3dadaptor-capturecanvas-motionplayer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        P1 — §2a. motionplayer 缺 Motion.D3DAdaptor：千恋万花首屏后无法进入【属 motionplayer 兼容】
+        P1 — §2a. motionplayer 缺 Motion.D3DAdaptor + captureCanvas：千恋万花首屏后无法进入【属 motionplayer 兼容】
       
     </span>
   </a>
@@ -1527,14 +1527,29 @@
   （核心均注册）；唯一可选缺项 <code>System.getDisplayMonitors</code>（K2COMPAT_SPEC_DESKTOPINFO 默认关）。
   真正未收口仍是 P0 引擎能力：Z 主层 DrawBuffer 合成 + krmovie Present。</p>
 </blockquote>
-<h3 id="p1-2a-motionplayer-motiond3dadaptor-motionplayer">P1 — §2a. motionplayer 缺 <code>Motion.D3DAdaptor</code>：千恋万花首屏后无法进入【属 motionplayer 兼容】<a class="headerlink" href="#p1-2a-motionplayer-motiond3dadaptor-motionplayer" title="Permanent link">&para;</a></h3>
+<h3 id="p1-2a-motionplayer-motiond3dadaptor-capturecanvas-motionplayer">P1 — §2a. motionplayer 缺 <code>Motion.D3DAdaptor</code> + <code>captureCanvas</code>：千恋万花首屏后无法进入【属 motionplayer 兼容】<a class="headerlink" href="#p1-2a-motionplayer-motiond3dadaptor-capturecanvas-motionplayer" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p><code>Motion.D3DAdaptor</code> 是 <strong>krkr2 motionplayer</strong> 成员（Direct3D affine），非 krkrz/Z 专属——实证
 Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3DAdaptor=="undefined"</code> 兜底，说明
 真机 krkr2 的 motionplayer.dll 确有 D3DAdaptor。移动端标准做法=undefined+useD3D=0；我们暂用「可 new 空类」
 让 <code>new Motion.D3DAdaptor(...)</code> 走通、由 CPU/GL motion 播 logo。
 - 现况：<code>getD3DAdaptor</code> 返回 <code>new tTJSNativeClass("D3DAdaptor")</code>（<code>cpp/plugins/motionplayer/main.cpp</code>）。
-- 待办：真机复验千恋万花首屏 logo 后不再崩；若还崩，补实例成员 stub 或改 Kirikiroid2 式 undefined+useD3D=0。</p>
+- <strong>2026-09-09 实测（engine(23)）</strong>：三游戏(千恋万花) logo 能显示、渲染健康（SourceSample 25/25、PSB 14 图已缓存），
+  <strong>点击后走 <code>yuzulogo</code> 动画 <code>drawAffine</code> 时，<code>_window.motionWorkLayer.captureCanvas()</code> 报
+  <code>Member "captureCanvas" does not exist</code> → 致命脚本错误 → 闪退</strong>。
+- <code>captureCanvas</code>/<code>motionWorkLayer</code> 是<strong>千恋万花 data 自带 <code>affinesourcemotion.tjs</code></strong> 动画辅助 API，
+  <strong>krkrz/krkr2/Kirikiroid2/KrKr2-Next 源码全都没有该实现</strong> ⇒ 无参考可抄。
+- <strong>2026-09-09 宿主定位（脚本字节码符号表）</strong>：4 个 data 脚本（patch/affinelayer/affinesourcemotion/motion.tjs
+  均为编译后 <code>TJS2100</code> 字节码）。<code>captureCanvas</code> 是 <strong>affinesourcemotion.tjs 里 AffineLayer 派生类的脚本类
+  成员</strong>（与 <code>D3DAdaptor</code>/<code>motionWorkLayer</code>/<code>motionD3DAdaptor</code>/<code>unloadUnusedTextures</code>/<code>updateImage</code>
+  同簇）；base <code>affinelayer.tjs</code> <strong>不含</strong>它。崩因=<code>_window.motionWorkLayer</code> 返回的是<strong>核心原生 Layer</strong>
+  （非脚本类实例），故脚本方法没挂上。
+- <strong>修复（核心 Layer 原生 no-op）</strong>：<code>cpp/core/visual/LayerIntf.cpp</code> 在 <code>assignImages</code> 后给 <code>tTJSNC_Layer</code>
+  补 <code>captureCanvas</code> + <code>unloadUnusedTextures</code> 两个 void no-op。无 D3D/CPU-GL 下 affine 已直接渲染进该
+  layer 光栅，"捕获进另一块 canvas" 可跳过；no-op 不 clear 目标 image 防连锁空图。
+- 待办：① ✅ 完成（宿主定位 + 原生 no-op，LayerIntf.cpp captureCanvas/unloadUnusedTextures）；② 真机复验
+  yuzulogo 点击后不再崩、可继续进入下一画面；③ 若后续游戏复用 captureCanvas <strong>返回值</strong>（贴到别处）出现
+  缺失图块，再按体补真实捕获。</p>
 </blockquote>
 <h3 id="p1-2b-motionplayer-emoteplayeremoteplayerdllnew">P1 — §2b. motionplayer 的 <code>EmotePlayer</code>（emoteplayer.dll）未实现【NEW】<a class="headerlink" href="#p1-2b-motionplayer-emoteplayeremoteplayerdllnew" title="Permanent link">&para;</a></h3>
 <ul>
