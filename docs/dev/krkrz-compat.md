@@ -107,7 +107,7 @@
 | 功能已内建 | drawdeviceD3DZ / drawdeviceD3D | 主 DrawBuffer 由 core/visual 渲染管线合成（Kirikiroid2 RenderManager_ogl 同思路），非独立插件 |
 | 功能已内建 | kztouch | 移动端触摸类已内建（Window.getTouchPoint 等，WindowImpl.cpp） |
 | 功能已内建 | menu | MenuItem 类核心全局注册（ScriptMgnIntf.cpp registerObject），link 即用 |
-| 真实现 | k2compat | **内嵌 Krkr2Compat 纯 TJS 兼容层**（`zcompat/k2compat_scripts.cpp`，10 个脚本按依赖序在 link/预加载时 `tTJS::ExecScript`），非挂名 |
+| 真实现（暂回退挂名） | k2compat | 内嵌 Krkr2Compat 纯 TJS 层（`zcompat/k2compat_scripts.cpp`）已就绪，**但引擎启动时强制执行会抛异常打断启动链**（engine(22) 实测三游戏全黑），已回退挂名；真实现待改走"游戏运行时显式 link"再放回 |
 | 名字映射 | motionplayer_nod3d | PluginImpl.cpp `TVPLoadPlugin` 映射到 motionplayer.dll，复用已有实现 |
 | 挂名（暂不可实现） | kagexopt / multiimage / squirrel / yuzuex / lzfs / win32ole / PackinOne / extNagano / pkutil / xpzdec | 源码不可得（multiimage 闭源）/ 桌面概念（win32ole）/ 待移植（squirrel 源码可得，VM 在 krkr2 trunk），挂名消除 Failed，调用缺类仍会抛错 |
 
