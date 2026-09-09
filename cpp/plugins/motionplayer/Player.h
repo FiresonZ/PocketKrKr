@@ -84,6 +84,23 @@ namespace motion {
         void setLoopTime(tjs_int v) { _loopTime = v; }
         bool getAnimating() const { return _animating; }
         void setAnimating(bool v) { _animating = v; }
+
+        // Yuzusoft affinesourcemotion.tjs getOptions() enumerates a fixed list of
+        // Player members (motion/chara/tickcount/speed/outline/...) to build the
+        // option dictionary. `outline` (stroke width) is in that list; without it
+        // the KAG storeFlags -> onStore -> getOptions chain throws "Member outline
+        // does not exist" and the scene freezes white. Default 0 = no stroke.
+        // Yuzusoft 的 getOptions() 会遍历 Player 固定成员表（motion/chara/tickcount/
+        // speed/outline/...）生成选项字典；outline（描边宽度）在其中，缺失会让
+        // storeFlags -> onStore -> getOptions 链路抛 "Member outline does not exist"
+        // 并卡白屏。默认 0=无描边。
+        tjs_int getOutline() const { return _outline; }
+        void setOutline(tjs_int v) { _outline = v; }
+
+        // Same getOptions() enumeration also reads `zpos` (Z-order/depth). Default 0.
+        // getOptions() 的枚举也读 zpos（Z 序/深度）。默认 0。
+        tjs_int getZpos() const { return _zpos; }
+        void setZpos(tjs_int v) { _zpos = v; }
         void setCompletionType(tjs_int v) { _completionType = v; }
 
         void play(const ttstr &motion, tjs_int all = 0) {
@@ -713,6 +730,8 @@ namespace motion {
         bool _stopCommandSent = false;
         tjs_int _loopTime = 0;
         bool _animating = false;
+        tjs_int _outline = 0;
+        tjs_int _zpos = 0;
         mutable std::string _pendingButtonName;
         tjs_real _coordX = 0;
         tjs_real _coordY = 0;

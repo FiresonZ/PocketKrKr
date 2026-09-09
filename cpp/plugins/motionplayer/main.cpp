@@ -375,6 +375,36 @@ static tjs_error Player_setAnimating(tTJSVariant *, tjs_int count, tTJSVariant *
     return TJS_S_OK;
 }
 
+// outline —— Yuzusoft getOptions() 遍历的成员之一（描边宽度），见 Player.h 注释。
+// outline — member enumerated by Yuzusoft getOptions() (stroke width).
+static tjs_error Player_getOutline(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                   iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(r) *r = tTJSVariant(player ? player->getOutline() : static_cast<tjs_int>(0));
+    return TJS_S_OK;
+}
+static tjs_error Player_setOutline(tTJSVariant *, tjs_int count, tTJSVariant **p,
+                                   iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(player && count >= 1) player->setOutline(static_cast<tjs_int>(p[0]->AsInteger()));
+    return TJS_S_OK;
+}
+
+// zpos —— getOptions() 枚举的另一成员（Z 序/深度），见 Player.h 注释。
+// zpos — another member enumerated by getOptions() (Z-order/depth).
+static tjs_error Player_getZpos(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(r) *r = tTJSVariant(player ? player->getZpos() : static_cast<tjs_int>(0));
+    return TJS_S_OK;
+}
+static tjs_error Player_setZpos(tTJSVariant *, tjs_int count, tTJSVariant **p,
+                                iTJSDispatch2 *objthis) {
+    auto *player = GetPlayerInstance(objthis);
+    if(player && count >= 1) player->setZpos(static_cast<tjs_int>(p[0]->AsInteger()));
+    return TJS_S_OK;
+}
+
 static tjs_error Player_getAllplaying(tTJSVariant *r, tjs_int, tTJSVariant **,
                                       iTJSDispatch2 *objthis) {
     auto *player = GetPlayerInstance(objthis);
@@ -625,6 +655,12 @@ NCB_REGISTER_SUBCLASS_DELAY(Player) {
     // members freeze the scene white (verified on Senren Banka).
     NCB_PROPERTY_RAW_CALLBACK(loopTime, Player_getLoopTime, Player_setLoopTime, 0);
     NCB_PROPERTY_RAW_CALLBACK(animating, Player_getAnimating, Player_setAnimating, 0);
+    // outline: getOptions() 遍历的成员之一（描边宽度），缺失同样抛错卡白屏。
+    // outline: member enumerated by getOptions() (stroke width); missing throws too.
+    NCB_PROPERTY_RAW_CALLBACK(outline, Player_getOutline, Player_setOutline, 0);
+    // zpos: getOptions() 遍历的另一成员（Z 序/深度），一并补齐。
+    // zpos: another getOptions() enumeration member (Z-order/depth).
+    NCB_PROPERTY_RAW_CALLBACK(zpos, Player_getZpos, Player_setZpos, 0);
     NCB_METHOD_RAW_CALLBACK(play, Player_play, 0);
     NCB_METHOD_RAW_CALLBACK(stop, Player_stop, 0);
     NCB_METHOD_RAW_CALLBACK(progress, Player_progress, 0);
