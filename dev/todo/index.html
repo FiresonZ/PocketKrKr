@@ -1594,11 +1594,19 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
     <code>mainwindow.tjs (property getter) motionD3DAdaptor</code>——它<strong>无条件</strong>取 <code>Motion.D3DAdaptor</code>
     （先算 scWidth/2、pxHeight/2 再访问），置 undefined → <code>Member "D3DAdaptor" does not exist</code>
     致命。Kirikiroid2 能跑此游戏正说明它<strong>定义</strong>了 D3DAdaptor（krkr2 motionplayer 本来就有该成员）。
-- <strong>修复</strong>：<code>cpp/plugins/motionplayer/main.cpp</code> 用 <strong>classic tjsNative 模式</strong>定义 <code>D3DAdaptor</code>
-  原生类（<code>NI_D3DAdaptor</code> + 构造收任意参 + <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op），
-  <code>Motion.D3DAdaptor</code> getter 返回 <code>Create_NC_D3DAdaptor()</code>。Layer 原生同款 no-op（LayerIntf.cpp）
-  保留兜底。⚠️ 迭代史：<code>815d8c3</code> 移除→undefined 崩（Member 不存在）；<code>4166901</code> NCB 空类无构造→
-  <code>new</code> 崩（"Called method is not implemented"）；<strong>本次 = 显式构造函数 + 实例方法</strong>。
+- <strong>修复</strong>：<code>cpp/plugins/motionplayer/main.cpp</code> <code>getD3DAdaptor</code> 返回<strong>内建空类</strong>
+  <code>Create_NC_D3DAdaptor() = new tTJSNativeClass("D3DAdaptor")</code>（<code>new</code> 收任意参创建实例）。
+  Layer 原生 <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op（LayerIntf.cpp <code>b008020</code>）兜底。
+  ⚠️ 迭代史：<code>815d8c3</code> 移除→undefined 崩（Member 不存在）；<code>4166901</code> NCB 空类无构造→<code>new</code>
+  崩（"Called method is not implemented"）；<code>948ee37</code> classic tjsNative 在自由函数用
+  TJS_BEGIN_NATIVE_MEMBERS→<strong>编译失败</strong>（该宏用 <code>this</code>）；<strong><code>6d36839</code> 回退内建空类，编译通过</strong>。
+  ⚠️ 但 engine(24) 实证：内建空类 + Layer-native captureCanvas 时，<code>motionWorkLayer.captureCanvas()</code>
+  仍报 Member 缺失 → motionWorkLayer 既非 Layer 也非空 D3DAdaptor 实例，是<strong>脚本对象</strong>。
+- 待定（需决策）：captureCanvas 落在脚本对象上，native 无解。两路并行参考：
+  ① <strong>脚本 polyfill</strong>：运行时给游戏 AffineLayer 系脚本类注入 <code>captureCanvas</code>/<code>unloadUnusedTextures</code>
+  no-op（需要游戏脚本类名/宿主，读 mainwindow.world 字节码确认）；② <strong>Kirikiroid2 同款</strong>（绝对参考）：
+  让 <code>Motion</code> 整体不存在 → 游戏 <code>_motionD3DAdaptor</code> 不赋值 → CPU 路径，根本不调 captureCanvas
+  （但会影响真用 motion 的 Z 游戏，需用户取舍）。
 - 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 <code>The object is already invalidated</code>
   （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
 - 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；
