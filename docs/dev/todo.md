@@ -42,14 +42,21 @@
 - **2026-09-09 宿主定位（脚本字节码符号表）**：4 个 data 脚本（patch/affinelayer/affinesourcemotion/motion.tjs
   均为编译后 `TJS2100` 字节码）。`captureCanvas` 是 **affinesourcemotion.tjs 里 AffineLayer 派生类的脚本类
   成员**（与 `D3DAdaptor`/`motionWorkLayer`/`motionD3DAdaptor`/`unloadUnusedTextures`/`updateImage`
-  同簇）；base `affinelayer.tjs` **不含**它。崩因=`_window.motionWorkLayer` 返回的是**核心原生 Layer**
-  （非脚本类实例），故脚本方法没挂上。
-- **修复（核心 Layer 原生 no-op）**：`cpp/core/visual/LayerIntf.cpp` 在 `assignImages` 后给 `tTJSNC_Layer`
-  补 `captureCanvas` + `unloadUnusedTextures` 两个 void no-op。无 D3D/CPU-GL 下 affine 已直接渲染进该
-  layer 光栅，"捕获进另一块 canvas" 可跳过；no-op 不 clear 目标 image 防连锁空图。
-- 待办：① ✅ 完成（宿主定位 + 原生 no-op，LayerIntf.cpp captureCanvas/unloadUnusedTextures）；② 真机复验
-  yuzulogo 点击后不再崩、可继续进入下一画面；③ 若后续游戏复用 captureCanvas **返回值**（贴到别处）出现
-  缺失图块，再按体补真实捕获。
+  同簇）；base `affinelayer.tjs` **不含**它。
+- **2026-09-09 根因反转（真机 engine(23/24) + GitHub compare 实证）**：
+  - 已确认 `b008020`（native Layer 补 captureCanvas no-op）进了 main@7927938 的构建（`get_file_contents` 命中、
+    构建 success），但真机**仍** `Member "captureCanvas" does not exist` → **motionWorkLayer 不是 native Layer
+    继承链对象，native Layer 补成员兜不住**。
+  - 真正根因=**我们把 `Motion.D3DAdaptor` 暴露为"已定义"**（`getD3DAdaptor` 返回 `new tTJSNativeClass`）。
+    游戏用 `typeof Motion.D3DAdaptor != "undefined"` 判定 D3D 可用 → `_useD3D=true` → 走 D3D capture 路径
+    （`new Motion.D3DAdaptor` + `captureCanvas`）。此前"不能 new 空 dict"致命错误同源（typeof 非 undefined 就走到 new）。
+- **修复（对齐 Kirikiroid2 移动端标准= undefined + useD3D=0）**：`cpp/plugins/motionplayer/main.cpp` **删除**
+  `Motion.D3DAdaptor` 属性与 `getD3DAdaptor`，让它保持 `undefined` → 游戏自动走 CPU/useD3D=0 路径，
+  **根本不会调 captureCanvas**。Layer 原生 `captureCanvas`/`unloadUnusedTextures` no-op 保留作兜底
+  （LayerIntf.cpp，无害）。
+- 待办：① ✅ 根因定位 + main.cpp 移除 D3DAdaptor（LayerIntf.cpp captureCanvas no-op 兜底）；② 真机复验
+  yuzulogo 点击后不再崩、走 CPU motion；③ 若仍进 D3D capture（说明游戏另有 D3D 判定源），再回溯
+  `_useD3D`/`enableD3D` 归属。
 
 ### P1 — §2b. motionplayer 的 `EmotePlayer`（emoteplayer.dll）未实现【NEW】
 - 现况：`cpp/plugins/motionplayer/EmotePlayer.{h,cpp}` 是**空壳 stub**（仅 `_useD3D` 读写，无 emote 物理/播放）。

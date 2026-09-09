@@ -113,11 +113,12 @@
 
 - **刻意不挂名**：krmovie（P0 引擎工作，挂名会让游戏期待视频能力而实际 Present 未实现）；
   KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。
-- **motionplayer（motionplayer.dll）伴生 Layer 成员**：千恋万花等 Yuzusoft 作品 data 自带
-  `affinesourcemotion.tjs`（编译字节码）声明的 AffineLayer 派生脚本类含 `captureCanvas`/`unloadUnusedTextures`/
-  `motionWorkLayer`/`motionD3DAdaptor` 等，游戏在 no-D3D 下对**原生 Layer** 调 `captureCanvas()`。
-  已给核心 `tTJSNC_Layer` 补 `captureCanvas`+`unloadUnusedTextures` 两个 **void no-op**
-  （`cpp/core/visual/LayerIntf.cpp`），使调用不再抛 Member does not exist（详见 todo.md §2a）。
+- **motionplayer（motionplayer.dll）D3DAdaptor**：千恋万花等 Yuzusoft 作品 data 自带 `affinesourcemotion.tjs`
+  （编译字节码）声明的 AffineLayer 派生脚本类含 `captureCanvas`/`unloadUnusedTextures`/`motionWorkLayer`/
+  `motionD3DAdaptor` 等。**移动端标准= `Motion.D3DAdaptor` 保持 `undefined`**，让游戏用
+  `typeof Motion.D3DAdaptor` 判定走 CPU/useD3D=0 路径、不调 captureCanvas（与 Kirikiroid2 一致）。
+  已删除 main.cpp 里 `getD3DAdaptor`（曾返回可 new 空类，反而令游戏误判 D3D 可用而进 captureCanvas 路径）。
+  核心 `tTJSNC_Layer` 另补 `captureCanvas`+`unloadUnusedTextures` void no-op 作兜底（详见 todo.md §2a）。
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）

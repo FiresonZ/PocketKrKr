@@ -605,25 +605,15 @@ public:
         return TJS_E_INVALIDPARAM;
     }
 
-    // Z（KIRIKIRI Z）游戏脚本会访问 Motion.D3DAdaptor（(property getter) motionD3DAdaptor）。
-    // 它是 D3D 版 motionplayer（drawdeviceD3DZ / motionplayer_nod3d）专有成员；移动端无
-    // D3D，我们已用 CPU/GL motion（Player::play 正常播 logo）。
-    // 真机日志（千恋万花 2026-09-08）显示 affinesourcemotion.tjs 会 `new Motion.D3DAdaptor(...)`
-    // （字节码 `45 new %1, %9(%-1, %2, %3, %4, %6)`），返回普通字典对象会报
-    // "Not a function or invalid method/property type" 致命错误。因此返回一个**可 new 的
-    // 空类**（tTJSNativeClass），让 `new` 成功创建实例；后续若脚本访问该实例的成员，
-    // 再按需补 stub 成员。
-    static tjs_error getD3DAdaptor(tTJSVariant *r, tjs_int, tTJSVariant **,
-                                   iTJSDispatch2 *) {
-        iTJSDispatch2 *cls = new tTJSNativeClass(TJS_W("D3DAdaptor"));
-        if (cls) {
-            *r = tTJSVariant(cls);
-            cls->Release();
-        } else {
-            *r = tTJSVariant();
-        }
-        return TJS_S_OK;
-    }
+    // Z（KIRIKIRI Z）游戏脚本用 `typeof Motion.D3DAdaptor != "undefined"` 判定 D3D
+    // motion 是否可用，从而决定走 D3D capture（captureCanvas/motionWorkLayer）还是
+    // CPU/useD3D=0 路径。移动端无 D3D：**必须保持 D3DAdaptor 为 undefined**，使游戏
+    // 自动走 CPU 路径、根本不会调 captureCanvas —— 这正是 Kirikiroid2 千恋万花能跑的办法
+    // （见 todo.md §2a）。
+    // ⚠️ 之前我们返回"可 new 的 tTJSNativeClass"导致 typeof 判定 D3D 存在 → 游戏进入
+    // D3D capture 路径 → 调 captureCanvas（且此前"不能 new 空 dict"致命错误也是同一根源
+    // ：typeof 非 undefined 就会走到 new）。因此这里不再注册 D3DAdaptor 属性。
+    // （Layer 原生已补 captureCanvas/unloadUnusedTextures no-op 作兜底，见 LayerIntf.cpp）
 
     static tjs_error getEnableD3D(tTJSVariant *r, tjs_int, tTJSVariant **,
                                   iTJSDispatch2 *) {
@@ -644,7 +634,8 @@ private:
 NCB_REGISTER_CLASS(Motion) {
     NCB_PROPERTY_RAW_CALLBACK(enableD3D, Motion::getEnableD3D,
                               Motion::setEnableD3D, TJS_STATICMEMBER);
-    NCB_PROPERTY_RAW_CALLBACK_RO(D3DAdaptor, Motion::getD3DAdaptor, TJS_STATICMEMBER);
+    // Motion.D3DAdaptor 不再注册：保持 undefined 让游戏走 CPU/useD3D=0 路径
+    // （见 getD3DAdaptor 删除处注释 / todo.md §2a）。
     NCB_PROPERTY_RAW_CALLBACK_RO(PlayFlagForce, Motion::getPlayFlagForce, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypePoint, Motion::getShapeTypePoint, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypeCircle, Motion::getShapeTypeCircle, TJS_STATICMEMBER);
