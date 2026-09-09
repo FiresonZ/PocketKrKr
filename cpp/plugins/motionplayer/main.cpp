@@ -564,6 +564,33 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
                             TJS_STATICMEMBER);
 }
 
+// D3DAdaptor —— 千恋万花等 Yuzusoft 作品的 D3D affine layer 适配器。
+// mainwindow.tjs 的 motionD3DAdaptor getter 会**无条件** `new Motion.D3DAdaptor(...)`
+// （先算 scWidth/2、pxHeight/2），affinesourcemotion.tjs 也在 D3D capture 路径 new 它
+// 并调用 captureCanvas/unloadUnusedTextures。移动端无 D3D：提供可 new 的正式 NCB 类，
+// 构造接受任意参数，captureCanvas/unloadUnusedTextures 为 no-op（cpu/GL motion 已把
+// affine 内容直接渲染进 layer 光栅，"捕获"可安全跳过；不 clear 目标 image 防连锁空图）。
+static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                          iTJSDispatch2 *) {
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
+static tjs_error D3DAdaptor_unloadUnusedTextures(tTJSVariant *r, tjs_int,
+                                                 tTJSVariant **,
+                                                 iTJSDispatch2 *) {
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
+class D3DAdaptor {};
+
+NCB_REGISTER_CLASS(D3DAdaptor) {
+    NCB_METHOD_RAW_CALLBACK(captureCanvas, D3DAdaptor_captureCanvas, 0);
+    NCB_METHOD_RAW_CALLBACK(unloadUnusedTextures,
+                            D3DAdaptor_unloadUnusedTextures, 0);
+}
+
 class Motion {
 public:
     static tjs_error getPlayFlagForce(tTJSVariant *r, tjs_int, tTJSVariant **,
@@ -617,9 +644,7 @@ public:
                                    iTJSDispatch2 *) {
         iTJSDispatch2 *cls = ncbClassInfo<class D3DAdaptor>::GetClassObject();
         if(cls) {
-            *r = tTJSVariant(cls);
-            cls->AddRef(); // 模块级类对象常驻，显式持有引用
-            cls->Release();
+            *r = tTJSVariant(cls); // tTJSVariant(obj) 内部 AddRef + 持有
         } else {
             *r = tTJSVariant();
         }
@@ -645,8 +670,7 @@ private:
 NCB_REGISTER_CLASS(Motion) {
     NCB_PROPERTY_RAW_CALLBACK(enableD3D, Motion::getEnableD3D,
                               Motion::setEnableD3D, TJS_STATICMEMBER);
-    // Motion.D3DAdaptor 不再注册：保持 undefined 让游戏走 CPU/useD3D=0 路径
-    // （见 getD3DAdaptor 删除处注释 / todo.md §2a）。
+    NCB_PROPERTY_RAW_CALLBACK_RO(D3DAdaptor, Motion::getD3DAdaptor, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(PlayFlagForce, Motion::getPlayFlagForce, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypePoint, Motion::getShapeTypePoint, TJS_STATICMEMBER);
     NCB_PROPERTY_RAW_CALLBACK_RO(ShapeTypeCircle, Motion::getShapeTypeCircle, TJS_STATICMEMBER);
