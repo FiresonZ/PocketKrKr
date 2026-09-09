@@ -50,10 +50,11 @@
     `mainwindow.tjs (property getter) motionD3DAdaptor`——它**无条件**取 `Motion.D3DAdaptor`
     （先算 scWidth/2、pxHeight/2 再访问），置 undefined → `Member "D3DAdaptor" does not exist`
     致命。Kirikiroid2 能跑此游戏正说明它**定义**了 D3DAdaptor（krkr2 motionplayer 本来就有该成员）。
-- **修复**：`cpp/plugins/motionplayer/main.cpp` 新增正式 NCB 类 `D3DAdaptor`（可 new、构造收任意参），
-  类上直接挂 `captureCanvas`/`unloadUnusedTextures` no-op；`Motion.D3DAdaptor` getter 返回该类对象。
-  Layer 原生同款 no-op（LayerIntf.cpp）保留兜底。无 D3D/CPU-GL 下 affine 已渲染进 layer 光栅，no-op 不
-  clear 目标 image 防连锁空图。
+- **修复**：`cpp/plugins/motionplayer/main.cpp` 用 **classic tjsNative 模式**定义 `D3DAdaptor`
+  原生类（`NI_D3DAdaptor` + 构造收任意参 + `captureCanvas`/`unloadUnusedTextures` no-op），
+  `Motion.D3DAdaptor` getter 返回 `Create_NC_D3DAdaptor()`。Layer 原生同款 no-op（LayerIntf.cpp）
+  保留兜底。⚠️ 迭代史：`815d8c3` 移除→undefined 崩（Member 不存在）；`4166901` NCB 空类无构造→
+  `new` 崩（"Called method is not implemented"）；**本次 = 显式构造函数 + 实例方法**。
 - 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 `The object is already invalidated`
   （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
 - 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖）；

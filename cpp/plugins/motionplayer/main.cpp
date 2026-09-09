@@ -566,29 +566,49 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
 
 // D3DAdaptor —— 千恋万花等 Yuzusoft 作品的 D3D affine layer 适配器。
 // mainwindow.tjs 的 motionD3DAdaptor getter 会**无条件** `new Motion.D3DAdaptor(...)`
-// （先算 scWidth/2、pxHeight/2），affinesourcemotion.tjs 也在 D3D capture 路径 new 它
-// 并调用 captureCanvas/unloadUnusedTextures。移动端无 D3D：提供可 new 的正式 NCB 类，
-// 构造接受任意参数，captureCanvas/unloadUnusedTextures 为 no-op（cpu/GL motion 已把
-// affine 内容直接渲染进 layer 光栅，"捕获"可安全跳过；不 clear 目标 image 防连锁空图）。
-static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
-                                          iTJSDispatch2 *) {
-    if(r) r->Clear();
-    return TJS_S_OK;
+// （VM ip45 实证：`new %1, %9(%-1, %2, %3, %4, %6)`，异常 "Called method is not
+// implemented" = ncb 空类无构造函数，new 失败——不能用 `class D3DAdaptor{}`+NCB 注册）。
+// affinesourcemotion.tjs 也在 D3D capture 路径 new 它并调用 captureCanvas/
+// unloadUnusedTextures。移动端无 D3D：classic tjsNative 模式定义可 new 类（构造收任意参），
+// 两个方法 no-op（CPU/GL motion 已把 affine 内容直接渲染进 layer 光栅，"捕获"可安全
+// 跳过；不 clear 目标 image 防连锁空图）。
+class NI_D3DAdaptor : public tTJSNativeInstance {};
+
+static iTJSNativeInstance *Create_NI_D3DAdaptor() {
+    return new NI_D3DAdaptor();
 }
 
-static tjs_error D3DAdaptor_unloadUnusedTextures(tTJSVariant *r, tjs_int,
-                                                 tTJSVariant **,
-                                                 iTJSDispatch2 *) {
-    if(r) r->Clear();
-    return TJS_S_OK;
-}
+static iTJSDispatch2 *Create_NC_D3DAdaptor() {
+    tTJSNativeClassForPlugin *classobj =
+        TJSCreateNativeClassForPlugin(TJS_W("D3DAdaptor"), Create_NI_D3DAdaptor);
 
-class D3DAdaptor {};
+    TJS_BEGIN_NATIVE_MEMBERS(/*TJS class name*/ D3DAdaptor)
+    TJS_DECL_EMPTY_FINALIZE_METHOD
 
-NCB_REGISTER_CLASS(D3DAdaptor) {
-    NCB_METHOD_RAW_CALLBACK(captureCanvas, D3DAdaptor_captureCanvas, 0);
-    NCB_METHOD_RAW_CALLBACK(unloadUnusedTextures,
-                            D3DAdaptor_unloadUnusedTextures, 0);
+    TJS_BEGIN_NATIVE_CONSTRUCTOR_DECL(/*var.name*/ _this,
+                                      /*var.type*/ NI_D3DAdaptor,
+                                      /*TJS class name*/ D3DAdaptor) {
+        // 忽略所有构造参数（游戏传 scWidth/2、pxHeight/2 等）
+        return TJS_S_OK;
+    }
+    TJS_END_NATIVE_CONSTRUCTOR_DECL(/*TJS class name*/ D3DAdaptor)
+
+    TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/ captureCanvas) {
+        TJS_GET_NATIVE_INSTANCE(/*var. name*/ _this,
+                                /*var. type*/ NI_D3DAdaptor);
+        return TJS_S_OK;
+    }
+    TJS_END_NATIVE_METHOD_DECL(/*func. name*/ captureCanvas)
+
+    TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/ unloadUnusedTextures) {
+        TJS_GET_NATIVE_INSTANCE(/*var. name*/ _this,
+                                /*var. type*/ NI_D3DAdaptor);
+        return TJS_S_OK;
+    }
+    TJS_END_NATIVE_METHOD_DECL(/*func. name*/ unloadUnusedTextures)
+    TJS_END_NATIVE_MEMBERS
+
+    return classobj;
 }
 
 class Motion {
@@ -635,16 +655,16 @@ public:
     // Z（KIRIKIRI Z）游戏脚本 `Motion.D3DAdaptor` 会被**无条件访问**：mainwindow.tjs 的
     // `motionD3DAdaptor` 属性 getter 先算 scWidth/2、pxHeight/2 后直接取 `Motion.D3DAdaptor`
     // 并 `new` 之（engine(5) 实证：保持 undefined → `Member "D3DAdaptor" does not exist`
-    // 致命崩溃）；affinesourcemotion.tjs 也在 D3D capture 路径 `new` 它。移动端无 D3D，
-    // 标准做法是**提供可 new 的空实现类**（此前 `new tTJSNativeClass` 空类即可 new）。
-    // 现改为正式 NCB 类 D3DAdaptor，并在类上直接提供 captureCanvas/unloadUnusedTextures
-    // no-op（engine(24) 实证 motionWorkLayer 调 captureCanvas 时该类/被捕获对象必须能
-    // 解析该方法；Layer 原生另有同款 no-op 兜底，见 LayerIntf.cpp）。
+    // 致命崩溃；engine(7) 实证：空 ncb 类无构造函数 → `new` 报 "Called method is not
+    // implemented"）。affinesourcemotion.tjs 也在 D3D capture 路径 `new` 它。移动端无 D3D：
+    // classic tjsNative 模式定义可 new 类（构造收任意参）+ 类上 captureCanvas/
+    // unloadUnusedTextures no-op（Layer 原生另有同款 no-op 兜底，见 LayerIntf.cpp）。
     static tjs_error getD3DAdaptor(tTJSVariant *r, tjs_int, tTJSVariant **,
                                    iTJSDispatch2 *) {
-        iTJSDispatch2 *cls = ncbClassInfo<class D3DAdaptor>::GetClassObject();
+        iTJSDispatch2 *cls = Create_NC_D3DAdaptor();
         if(cls) {
-            *r = tTJSVariant(cls); // tTJSVariant(obj) 内部 AddRef + 持有
+            *r = tTJSVariant(cls);
+            cls->Release();
         } else {
             *r = tTJSVariant();
         }
