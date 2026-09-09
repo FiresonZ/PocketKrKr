@@ -31,7 +31,15 @@ jobs:
         #       apt 的 nasm 2.15 生成的 .d 依赖会把 %include 写成裸文件名，导致
         #       "No rule to make target 'vp9itxfm_template.asm'"；yasm 则生成正确路径。
         run: |
-          sudo apt-get update
+          # 与 android_package.yml 相同：移除 runner 预装的 google-chrome 源，
+          # 避免其 dl.google.com CDN 偶发 Hash Sum mismatch 使 apt-get update 退出
+          # 100 拖垮整个 workflow。构建所需包全部来自 ubuntu 官方源。
+          # Same hardening as android_package.yml: drop the preinstalled
+          # google-chrome apt source so its intermittent Hash Sum mismatch on
+          # dl.google.com cannot abort `apt-get update` (exit 100) and fail the job.
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list \
+                     /etc/apt/sources.list.d/google.list
+          sudo apt-get update -o Acquire::Retries=3
           sudo apt-get install -y cmake ninja-build ccache bison mesa-common-dev nasm yasm
           cmake --version | head -1
           ninja --version
