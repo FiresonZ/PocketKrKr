@@ -28,13 +28,28 @@
   （核心均注册）；唯一可选缺项 `System.getDisplayMonitors`（K2COMPAT_SPEC_DESKTOPINFO 默认关）。
   真正未收口仍是 P0 引擎能力：Z 主层 DrawBuffer 合成 + krmovie Present。
 
-### P1 — §2a. motionplayer 缺 `Motion.D3DAdaptor`：千恋万花首屏后无法进入【属 motionplayer 兼容】
+### P1 — §2a. motionplayer 缺 `Motion.D3DAdaptor` + `captureCanvas`：千恋万花首屏后无法进入【属 motionplayer 兼容】
 > `Motion.D3DAdaptor` 是 **krkr2 motionplayer** 成员（Direct3D affine），非 krkrz/Z 专属——实证
 > Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 `typeof Motion.D3DAdaptor=="undefined"` 兜底，说明
 > 真机 krkr2 的 motionplayer.dll 确有 D3DAdaptor。移动端标准做法=undefined+useD3D=0；我们暂用「可 new 空类」
 > 让 `new Motion.D3DAdaptor(...)` 走通、由 CPU/GL motion 播 logo。
 - 现况：`getD3DAdaptor` 返回 `new tTJSNativeClass("D3DAdaptor")`（`cpp/plugins/motionplayer/main.cpp`）。
-- 待办：真机复验千恋万花首屏 logo 后不再崩；若还崩，补实例成员 stub 或改 Kirikiroid2 式 undefined+useD3D=0。
+- **2026-09-09 实测（engine(23)）**：三游戏(千恋万花) logo 能显示、渲染健康（SourceSample 25/25、PSB 14 图已缓存），
+  **点击后走 `yuzulogo` 动画 `drawAffine` 时，`_window.motionWorkLayer.captureCanvas()` 报
+  `Member "captureCanvas" does not exist` → 致命脚本错误 → 闪退**。
+- `captureCanvas`/`motionWorkLayer` 是**千恋万花 data 自带 `affinesourcemotion.tjs`** 动画辅助 API，
+  **krkrz/krkr2/Kirikiroid2/KrKr2-Next 源码全都没有该实现** ⇒ 无参考可抄。
+- **2026-09-09 宿主定位（脚本字节码符号表）**：4 个 data 脚本（patch/affinelayer/affinesourcemotion/motion.tjs
+  均为编译后 `TJS2100` 字节码）。`captureCanvas` 是 **affinesourcemotion.tjs 里 AffineLayer 派生类的脚本类
+  成员**（与 `D3DAdaptor`/`motionWorkLayer`/`motionD3DAdaptor`/`unloadUnusedTextures`/`updateImage`
+  同簇）；base `affinelayer.tjs` **不含**它。崩因=`_window.motionWorkLayer` 返回的是**核心原生 Layer**
+  （非脚本类实例），故脚本方法没挂上。
+- **修复（核心 Layer 原生 no-op）**：`cpp/core/visual/LayerIntf.cpp` 在 `assignImages` 后给 `tTJSNC_Layer`
+  补 `captureCanvas` + `unloadUnusedTextures` 两个 void no-op。无 D3D/CPU-GL 下 affine 已直接渲染进该
+  layer 光栅，"捕获进另一块 canvas" 可跳过；no-op 不 clear 目标 image 防连锁空图。
+- 待办：① ✅ 完成（宿主定位 + 原生 no-op，LayerIntf.cpp captureCanvas/unloadUnusedTextures）；② 真机复验
+  yuzulogo 点击后不再崩、可继续进入下一画面；③ 若后续游戏复用 captureCanvas **返回值**（贴到别处）出现
+  缺失图块，再按体补真实捕获。
 
 ### P1 — §2b. motionplayer 的 `EmotePlayer`（emoteplayer.dll）未实现【NEW】
 - 现况：`cpp/plugins/motionplayer/EmotePlayer.{h,cpp}` 是**空壳 stub**（仅 `_useD3D` 读写，无 emote 物理/播放）。

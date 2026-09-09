@@ -300,10 +300,12 @@ static void TVPRegisterGamepadStub() {
 }
 
 void TVPLoadPlugin(const ttstr &name) {
-    auto pluginName = name;
-    if(name == TJS_W("emoteplayer.dll"))
+    // name 可能是完整路径(自动加载)或纯文件名(Plugins.link)，统一先取 storage 名，
+    // 否则下面的名字映射对照纯文件名会因路径前缀而永远不命中。
+    auto pluginName = TVPExtractStorageName(name);
+    if(pluginName == TJS_W("emoteplayer.dll"))
         pluginName = "motionplayer.dll";
-    if(name == TJS_W("motionplayer_nod3d.dll")) // 千恋万花等 Z 游戏
+    if(pluginName == TJS_W("motionplayer_nod3d.dll")) // 千恋万花等 Z 游戏
         pluginName = "motionplayer.dll";
 
     if(TVPLoadInternalPlugin(pluginName)) {
