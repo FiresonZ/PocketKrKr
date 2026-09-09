@@ -16,8 +16,9 @@
   `kagexopt`、`multiimage`、`squirrel`、`PackinOne`。
 - **已做**：③ 挂名 + 逐个实现（`cpp/plugins/zcompat/`）：
   - 挂名 16 个 Z 插件名（link 不再 Failed）；drawdeviceD3DZ/D3D、kztouch、menu 确认功能已内建核心。
-  - **k2compat 真实现**：内嵌 Krkr2Compat 纯 TJS（`zcompat/k2compat_scripts.cpp`，10 脚本按依赖序
-    link/预加载时 `tTJS::ExecScript`），非挂名。
+  - **k2compat**：内嵌 Krkr2Compat 纯 TJS 层（`zcompat/k2compat_scripts.cpp`，10 脚本）已生成，
+    **但引擎启动(LoadAllModules)时强制执行抛异常 → 三游戏全黑（engine(22)），已回退为挂名**
+    （CMakeLists 不再编译该文件）。真实现待改走"游戏运行时显式 Plugins.link(k2compat.dll)"时机再放回。
   - **motionplayer_nod3d → motionplayer.dll 映射**（PluginImpl.cpp `TVPLoadPlugin`），复用已有实现。
 - **下一步**：① Windows 跑同游戏二分（引擎 vs 渲染链路）；② 对照 Kirikiroid2
   `src/core/visual/RenderManager_ogl.cpp`+`BasicDrawDevice.cpp` 与我们的 `RenderManager.*`，定位
