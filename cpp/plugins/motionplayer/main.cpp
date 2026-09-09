@@ -205,6 +205,10 @@ static tjs_error SeparateLayerAdaptor_getImageHeight(tTJSVariant *r, tjs_int, tT
 // 千恋万花等 Yuzusoft 作品：motion 的 work layer 由 SeparateLayerAdaptor 承载，
 // 游戏脚本 affinesourcemotion.tjs 会调 captureCanvas/canvasCaptureEnabled/
 // unloadUnusedTextures（Kirikiroid2 发布 APK 的 libgame.so 同款成员，实证）。
+// Senren Clinic etc. Yuzusoft titles: the motion work layer is carried by
+// SeparateLayerAdaptor; affinesourcemotion.tjs calls captureCanvas /
+// canvasCaptureEnabled / unloadUnusedTextures on it (same members verified in
+// the official Kirikiroid2 APK libgame.so).
 //
 // ⚠️ 空壳性质说明（与 D3DAdaptor 的成员属同一语义的两套宿主）：
 //   Kirikiroid2 的 D3DAdaptor 与 SeparateLayerAdaptor 都有 captureCanvas 等成员；
@@ -213,12 +217,23 @@ static tjs_error SeparateLayerAdaptor_getImageHeight(tTJSVariant *r, tjs_int, tT
 //     优先转发到目标 Layer（若它能处理则交给它），无目标/不可转发则 no-op 兜底。
 //   移动端无 D3D、motion 走 CPU/GL 已直接渲染，"捕获进另一块 canvas"可跳过。
 //   升级触发条件见 D3DAdaptor 注释：仅当游戏真的取用捕获结果作为后续图像源时。
+//   Empty-shell note (the two hosts share the same semantics as D3DAdaptor):
+//   both D3DAdaptor and SeparateLayerAdaptor expose captureCanvas et al.; we
+//   register them per host, and whichever instance motionWorkLayer actually is
+//   will win. Both follow: forward to target Layer first if possible, otherwise
+//   no-op fallback. Mobile has no D3D — motion renders straight to the layer via
+//   CPU/GL, so "capture into another canvas" is skippable. Upgrade condition is
+//   described next to D3DAdaptor: only when a game actually takes the captured
+//   result as a later image source.
 static tjs_error SeparateLayerAdaptor_getCanvasCaptureEnabled(tTJSVariant *r, tjs_int,
                                                               tTJSVariant **,
                                                               iTJSDispatch2 *) {
     // "是否可用 D3D canvas 捕获"：移动端无 D3D，但该属性被游戏脚本读取以决定
     // captureCanvas 可用性；返回 true 让游戏走"可捕获"的调用路径（其后 by no-op
     // 兜底），避免误判为不支持而走另一条更复杂/未实现的路径。与 Kirikiroid2 一致。
+    // Whether D3D canvas capture is enabled: mobile has no D3D, but the script
+    // reads this to decide captureCanvas usability; return true to route games
+    // through the captureCanvas no-op path (instead of an unimplemented branch).
     if(r) *r = tTJSVariant(true);
     return TJS_S_OK;
 }
@@ -628,17 +643,26 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
 }
 
 // D3DAdaptor —— 千恋万花等 Yuzusoft 作品的 D3D affine layer 适配器。
+// D3DAdaptor — D3D affine layer adapter for Senren Clinic etc. Yuzusoft titles.
 // mainwindow.tjs 的 motionD3DAdaptor getter 会**无条件** `new Motion.D3DAdaptor(...)`
 // （VM ip45 实证：`new %1, %9(%-1, %2, %3, %4, %6)`，异常 "Called method is not
 // implemented" = ncb 空类无构造函数，new 失败——不能用 `class D3DAdaptor{}`+NCB 注册）。
 // 也不能用 classic tjsNative 的 TJS_BEGIN_NATIVE_MEMBERS 放在自由函数里（该宏用 `this`，
 // 只能在类构造/成员函数内展开 → Android 编译报 invalid use of 'this'）。
+// mainwindow.tjs unconditionally does `new Motion.D3DAdaptor(...)`; an empty NCB
+// class has no constructor so `new` fails, and TJS_BEGIN_NATIVE_MEMBERS cannot be
+// used in a free function (it uses `this`, so Android fails to compile).
 //
 // 此处用公开的 TJSCreateNativeClassMethod + TJSNativeClassRegisterNCM 在创建类对象后
 // 动态注册 captureCanvas/unloadUnusedTextures 方法与 canvasCaptureEnabled 属性，
 // 使 `new Motion.D3DAdaptor(...)` 生成的实例带有这些成员（对齐 Kirikiroid2 APK：
 // 其 D3DAdaptor 类自带同款成员，实证）。affinesourcemotion.tjs 的 drawAffine 会
 // `_window.motionWorkLayer.captureCanvas()`——若 D3DAdaptor 实例无该方法即闪退。
+// We register captureCanvas/unloadUnusedTextures/canvasCaptureEnabled on the class
+// object via the public TJSCreateNativeClassMethod + TJSNativeClassRegisterNCM, so
+// instances created by `new Motion.D3DAdaptor(...)` carry these members — matching
+// the D3DAdaptor class in the official Kirikiroid2 APK. drawAffine calls
+// `_window.motionWorkLayer.captureCanvas()`, which otherwise crashes.
 //
 // ⚠️ 空壳性质说明（重要，防误判）：
 //   - captureCanvas / unloadUnusedTextures / canvasCaptureEnabled 是 **D3D canvas 捕获**
@@ -652,10 +676,26 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
 //   - **何时必须从 no-op 升级为真实现**：仅当某个游戏把 captureCanvas 的捕获结果当
 //     后续图像源使用（读取返回值 / 绘制到指定 layer）时。当前千恋万花反汇编证明它只是
 //     调用、不取返回值，故 no-op 足够。若未来遇依赖捕获结果的游戏再做真实现。
+//   Empty-shell note (important, do not misjudge as unfinished stub):
+//   - These members are placeholders for D3D canvas capture.
+//   - Mobile has no D3D9; motion renders directly into the target layer via
+//     CPU/GL and is shown immediately, so "capturing another copy" is pointless —
+//     returning empty while keeping the rendered content is a semantically
+//     correct no-op, not a half-written stub (Kirikiroid2 mobile is the same).
+//   - The real rendering that carries the picture is NOT in these empty methods:
+//     Motion.Player::draw caches PSB images and composites them to the layer, and
+//     Motion.ResourceManager does real PSB decode/cache/decrypt-seed. The empty
+//     methods only prevent "Member does not exist".
+//   - Upgrade to a real implementation ONLY when a game actually uses the
+//     captured result as a later image source (reads the return value or draws
+//     to a target layer). Current Senren Clinic disassembly shows it calls but
+//     ignores the return, so no-op is sufficient.
 static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
                                           iTJSDispatch2 *) {
     // 移动端无 D3D，motion 走 CPU/GL 已直接渲染；"捕获进另一块 canvas"可跳过，
     // 返回 void 让脚本 continue（not clear，保留已渲染内容）。
+    // Mobile has no D3D and motion is already rendered; return void so the script
+    // can continue while keeping the rendered content (no clear here).
     if(r) r->Clear();
     return TJS_S_OK;
 }
