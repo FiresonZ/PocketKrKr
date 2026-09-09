@@ -113,12 +113,17 @@
 
 - **刻意不挂名**：krmovie（P0 引擎工作，挂名会让游戏期待视频能力而实际 Present 未实现）；
   KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。
-- **motionplayer（motionplayer.dll）D3DAdaptor**：千恋万花等 Yuzusoft 作品 data 自带 `affinesourcemotion.tjs`
-  （编译字节码）声明的 AffineLayer 派生脚本类含 `captureCanvas`/`unloadUnusedTextures`/`motionWorkLayer`/
-  `motionD3DAdaptor` 等。**移动端标准= `Motion.D3DAdaptor` 保持 `undefined`**，让游戏用
-  `typeof Motion.D3DAdaptor` 判定走 CPU/useD3D=0 路径、不调 captureCanvas（与 Kirikiroid2 一致）。
-  已删除 main.cpp 里 `getD3DAdaptor`（曾返回可 new 空类，反而令游戏误判 D3D 可用而进 captureCanvas 路径）。
-  核心 `tTJSNC_Layer` 另补 `captureCanvas`+`unloadUnusedTextures` void no-op 作兜底（详见 todo.md §2a）。
+- **motionplayer（motionplayer.dll / emoteplayer.dll）+ D3DAdaptor**：千恋万花等 Yuzusoft 作品 data 自带
+  `affinesourcemotion.tjs`（编译字节码）声明的 AffineLayer 派生脚本类含 `captureCanvas`/
+  `unloadUnusedTextures`/`motionWorkLayer`/`motionD3DAdaptor` 等，且 `mainwindow.tjs` 的
+  `motionD3DAdaptor` getter **无条件 `new Motion.D3DAdaptor(...)`**（实测置 undefined 崩溃）。
+  **Kirikiroid2 实证（2026-09-09，反查官方 APK libgame.so）**：`Motion` 完整存在——`D3DEmotePlayer/
+  D3DEmoteModule/SeparateLayerAdaptor/D3DAdaptor/useD3D/captureCanvas/unloadUnusedTextures/
+  Motion::ResourceManager` 全在（GitHub 源码仓库虽搜不到，属源码未同步）。zeas2 补丁库
+  `Kirikiroid2_patch` 给千恋万花的 patch.tjs：`typeof Motion.D3DAdaptor` 两分支**都强制 `useD3D=0`**
+  （移动端无 D3D9 → CPU/GL 渲染）。⇒ 我们的做法对齐：`Motion.D3DAdaptor` 返回可 new 内建空类
+  （`main.cpp` `Create_NC_D3DAdaptor`）+ `useD3D` 默认 false + `SeparateLayerAdaptor` 与 `Layer` 双挂
+  `captureCanvas`/`unloadUnusedTextures` no-op 兜底（详见 todo.md §2a）。
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
@@ -133,6 +138,55 @@
 
 **结论**：插件/核心 API 层对"跑通 Z 游戏"已经基本不缺。真正未收口的仍是 P0 两个**引擎能力**
 （Z 主层 DrawBuffer 合成 + krmovie Present），不是缺类。
+
+### Kirikiroid2_patch 补丁库 → 内建状态对照（2026-09-09）
+
+> 实证来源：`github.com/zeas2/Kirikiroid2_patch`（zeas2 官方补丁库，474 款游戏 / 345 份
+> `patch.tjs` / 325 份 `xp3filter.tjs`）。逐游戏 patch 是模拟器式做法；我们引擎采用
+> **内建核心 + 挂名兜底**，不对游戏逐一打包。此表用于"遇到某款游戏时，它的常见依赖
+> 我们是否已就绪"，按需补缺口（用户决策：只产清单，后续按需补）。
+
+#### A. patch.tjs 高频链接的插件（按出现次数降序）→ 我们的内建状态
+| 插件（Patch 库 link） | 次数 | 宿主 | 我们状态 |
+|---|---|---|---|
+| `emoteplayer.dll` | 19 | M2-Emote | ✅ PluginImpl.cpp 映射到 `motionplayer.dll` 复用实现 |
+| `layerExAlpha.dll` | 19 | Layer.AlphaColorBlend 等 alpha 特效 | ❌ **缺**：核心 Layer 无 AlphaColorBlend/TranslucentColorBlend/LuminanceForAlpha；`layerExAlpha` 本身也未内建 |
+| `LayerExMosaic.dll` | 18 | Layer.AddMosaic/opacity 等 | 🟡 仅 NCB_MODULE_NAME 挂名（`extrans.cpp` stub），**无 AddMosaic 方法实现** |
+| `windowEx.dll` | 9 | Window 扩展 | ✅ 已内建 `cpp/plugins/windowEx.cpp` |
+| `fstat.dll` | 8 | 文件状态 | ✅ 已内建 `cpp/plugins/fstat/` |
+| `textrender.dll` | 5(+2) | 文本渲染 | ✅ 已内建 `cpp/plugins/textrender.cpp`（TextRender 大小写同名） |
+| `layerExImage.dll` | 5 | Layer 图像特效 | ✅ 已内建 `cpp/plugins/layerExImage.cpp`（colorize/gaussianBlur 等） |
+| `csvParser.dll` | 5 | CSV 解析 | ✅ 已内建 `cpp/plugins/csvParser.cpp` |
+| `util_generic.dll` | 5 | 通用工具 | ❌ 未内建（桌面通用概念，Patch 库也多为防御性 link） |
+| `extrans.dll` | 4 | 扩展 trans | ✅ 已内建 `cpp/plugins/extrans.cpp` |
+| `layerExRaster.dll` | 4 | Layer 光栅 | ✅ 已内建 |
+| `layerExSave.dll` | 3 | Layer 保存 | ✅ 已内建 |
+| `layerExMovie.dll` | 3 | Layer 视频 | ✅ 已内建 |
+| `perspective.dll`、`LayerExColor.dll`、`motionplayer.dll` | 各2 | PS/透视/运动 | ✅ 已内建 |
+| `KAGParserExb.dll` | 2 | KAG 扩展解析 | ❌ 未内建（KAGParserEx 类而非标准 KAGParser） |
+| `DrawDeviceD3D.dll`/`win32dialog.dll`/`getSample.dll`/`addFont.dll` | 各1 | — | ✅ zcompat 挂名 / 已内建 |
+| `kirikiroid2.dll` | 19 | 模拟器自有插件 | ⛔ 不适用（它是 Kirikiroid2 内部插件，非游戏依赖，我们无此项） |
+
+#### B. patch.tjs 高频调用的 Layer/Window/System API → 核心内建状态
+| API | 次数 | 我们核心（LayerIntf.cpp 等） |
+|---|---|---|
+| `Layer.AddMosaic` | 46 | ❌ 无 → layerExMosaic 方法，宿主缺 |
+| `Layer.AlphaColorBlend` | 34 | ❌ 无 → layerExAlpha 方法，宿主缺 |
+| `Layer.MaskImageRideRect` | 21 | ❌ 无 → layerEx 扩展，宿主缺 |
+| `Window.updateButton` / `Window.visible`/`opacity` | 45/45/45 | ✅（标准 Window/Layer 属性） |
+| `System.inform` / `Window.setMessageHook` / `getNotificationNum` / `registerExEvent` | — | ✅ / ✅ / ✅ / ✅（核心已有） |
+| `Layer.TranslucentColorBlend` / `LuminanceForAlpha` / `copyVertical*Raster` / `beginTransition` / `setupUvMap` / `applyTexture` | — | 🟡 部分：beginTransition ✅；copyVertical* / setupUvMap / applyTexture 为 layerEx 扩展，host 部分缺 |
+| `Window.movieQualitySelectMenuItem` / `-hdresomode` | 1/78 | ✅ 引擎支持 hdresomode；movieQualitySelectMenuItem 可清空 |
+
+#### C. `xp3filter.tjs`（325 份）→ 结论
+- **不复现**：每份是单游戏专属的 cxdec 加密解密 key，属游戏数据解密，与引擎无关。
+- 我们引擎已支持 Xp3 读取 + extraction filter；需对应游戏的 key 时才按需提供（用解包/解密目录版可跳过）。
+
+#### D. 未来按需补齐的优先级建议
+1. **layerExAlpha**（AlphaColorBlend/TranslucentColorBlend/LuminanceForAlpha）—— 19 游戏高频，若遇 Alpha 特效报 `Member does not exist` 则补核心 Layer no-op→真实现。
+2. **LayerExMosaic**（AddMosaic）—— 46 次最高频单项；Mosaic 特效暂无，若游戏调用报缺则补。
+3. `KAGParserExb`（2）—— 遇 KAGParserEx 体系游戏再评估。
+4. `util_generic`（5）默认跳过，防御性 link 报 Failed 不影响启动。
 
 ## drawdeviceD3DZ 深挖（2026-09-08）
 

@@ -202,6 +202,59 @@ static tjs_error SeparateLayerAdaptor_getImageHeight(tTJSVariant *r, tjs_int, tT
     return TJS_S_OK;
 }
 
+// 千恋万花等 Yuzusoft 作品：motion 的 work layer 由 SeparateLayerAdaptor 承载，
+// 游戏脚本 affinesourcemotion.tjs 会调 captureCanvas/canvasCaptureEnabled/
+// unloadUnusedTextures（Kirikiroid2 发布 APK 的 libgame.so 同款成员，实证）。
+// 移动端无 D3D、motion 走 CPU/GL，affine 已直接渲染进目标 layer，"捕获进另一块
+// canvas"可安全跳过。no-op（不清目标 image，保留已渲染内容）仅让脚本调用不抛
+// Member does not exist 致命错误。
+static tjs_error SeparateLayerAdaptor_getCanvasCaptureEnabled(tTJSVariant *r, tjs_int,
+                                                              tTJSVariant **,
+                                                              iTJSDispatch2 *) {
+    // "是否可用 D3D canvas 捕获"：移动端无 D3D，但该属性被游戏脚本读取以决定
+    // captureCanvas 可用性；返回 true 让游戏走"可捕获"的调用路径（其后 by no-op
+    // 兜底），避免误判为不支持而走另一条更复杂/未实现的路径。与 Kirikiroid2 一致。
+    if(r) *r = tTJSVariant(true);
+    return TJS_S_OK;
+}
+
+static tjs_error SeparateLayerAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                                    iTJSDispatch2 *objthis) {
+    auto *adaptor = GetSeparateLayerAdaptorInstance(objthis);
+    if(adaptor) {
+        auto *target = GetSeparateAdaptorRenderTarget(adaptor);
+        if(target) {
+            tTJSVariant value;
+            if(TJS_SUCCEEDED(target->FuncCall(0, TJS_W("captureCanvas"), nullptr, &value,
+                                              0, nullptr, target))) {
+                if(r) *r = value;
+                return TJS_S_OK;
+            }
+        }
+    }
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
+static tjs_error SeparateLayerAdaptor_unloadUnusedTextures(tTJSVariant *r, tjs_int,
+                                                           tTJSVariant **,
+                                                           iTJSDispatch2 *objthis) {
+    auto *adaptor = GetSeparateLayerAdaptorInstance(objthis);
+    if(adaptor) {
+        auto *target = GetSeparateAdaptorRenderTarget(adaptor);
+        if(target) {
+            tTJSVariant value;
+            if(TJS_SUCCEEDED(target->FuncCall(0, TJS_W("unloadUnusedTextures"), nullptr,
+                                              &value, 0, nullptr, target))) {
+                if(r) *r = value;
+                return TJS_S_OK;
+            }
+        }
+    }
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
 NCB_REGISTER_SUBCLASS_DELAY(SeparateLayerAdaptor) {
     NCB_CONSTRUCTOR((iTJSDispatch2 *));
     NCB_PROPERTY_RAW_CALLBACK_RO(width, SeparateLayerAdaptor_getWidth, 0);
@@ -212,6 +265,11 @@ NCB_REGISTER_SUBCLASS_DELAY(SeparateLayerAdaptor) {
     NCB_METHOD_RAW_CALLBACK(loadImages, SeparateLayerAdaptor_loadImages, 0);
     NCB_METHOD_RAW_CALLBACK(fillRect, SeparateLayerAdaptor_fillRect, 0);
     NCB_METHOD_RAW_CALLBACK(operateRect, SeparateLayerAdaptor_operateRect, 0);
+    NCB_METHOD_RAW_CALLBACK(captureCanvas, SeparateLayerAdaptor_captureCanvas, 0);
+    NCB_METHOD_RAW_CALLBACK(unloadUnusedTextures,
+                            SeparateLayerAdaptor_unloadUnusedTextures, 0);
+    NCB_PROPERTY_RAW_CALLBACK_RO(canvasCaptureEnabled,
+                                 SeparateLayerAdaptor_getCanvasCaptureEnabled, 0);
 }
 
 // 脚本意图: EmoteVariable.useD3D = (typeof Motion.Player.useD3D === "Object") ? Motion.Player.useD3D : Motion.enableD3D;
