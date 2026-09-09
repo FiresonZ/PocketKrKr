@@ -9643,6 +9643,30 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
     }
     TJS_END_NATIVE_METHOD_DECL(/*func. name*/ assignImages)
     //----------------------------------------------------------------------
+    // 千恋万花等 Yuzusoft 作品：data 自带 affinesourcemotion.tjs 会把 motion 的
+    // work layer 当 D3D canvas 捕获（captureCanvas / unloadUnusedTextures 均是该
+    // 脚本类成员）。移动端无 D3D、motion 走 CPU/GL：affine 内容已直接渲染进该
+    // layer 光栅，主 DrawBuffer/LLR 即时呈现，"捕获进另一块 canvas" 可安全跳过。
+    // 这里是 no-op（不 clear 目标 image，保留已渲染内容），仅让脚本调用不抛
+    // Member does not exist 致命错误。若后续发现游戏复用返回值再按体补。
+    TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/ captureCanvas) {
+        TJS_GET_NATIVE_INSTANCE(/*var. name*/ _this,
+                                /*var. type*/ tTJSNI_Layer);
+        if(result)
+            result->Clear();
+        return TJS_S_OK;
+    }
+    TJS_END_NATIVE_METHOD_DECL(/*func. name*/ captureCanvas)
+    //----------------------------------------------------------------------
+    TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/ unloadUnusedTextures) {
+        TJS_GET_NATIVE_INSTANCE(/*var. name*/ _this,
+                                /*var. type*/ tTJSNI_Layer);
+        if(result)
+            result->Clear();
+        return TJS_S_OK;
+    }
+    TJS_END_NATIVE_METHOD_DECL(/*func. name*/ unloadUnusedTextures)
+    //----------------------------------------------------------------------
     TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/ dump) {
         TJS_GET_NATIVE_INSTANCE(/*var. name*/ _this,
                                 /*var. type*/ tTJSNI_Layer);
