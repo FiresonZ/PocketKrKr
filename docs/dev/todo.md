@@ -42,14 +42,21 @@
 - **2026-09-09 宿主定位（脚本字节码符号表）**：4 个 data 脚本（patch/affinelayer/affinesourcemotion/motion.tjs
   均为编译后 `TJS2100` 字节码）。`captureCanvas` 是 **affinesourcemotion.tjs 里 AffineLayer 派生类的脚本类
   成员**（与 `D3DAdaptor`/`motionWorkLayer`/`motionD3DAdaptor`/`unloadUnusedTextures`/`updateImage`
-  同簇）；base `affinelayer.tjs` **不含**它。崩因=`_window.motionWorkLayer` 返回的是**核心原生 Layer**
-  （非脚本类实例），故脚本方法没挂上。
-- **修复（核心 Layer 原生 no-op）**：`cpp/core/visual/LayerIntf.cpp` 在 `assignImages` 后给 `tTJSNC_Layer`
-  补 `captureCanvas` + `unloadUnusedTextures` 两个 void no-op。无 D3D/CPU-GL 下 affine 已直接渲染进该
-  layer 光栅，"捕获进另一块 canvas" 可跳过；no-op 不 clear 目标 image 防连锁空图。
-- 待办：① ✅ 完成（宿主定位 + 原生 no-op，LayerIntf.cpp captureCanvas/unloadUnusedTextures）；② 真机复验
-  yuzulogo 点击后不再崩、可继续进入下一画面；③ 若后续游戏复用 captureCanvas **返回值**（贴到别处）出现
-  缺失图块，再按体补真实捕获。
+  同簇）；base `affinelayer.tjs` **不含**它。
+- **2026-09-09 根因反转（真机 engine(23/24) + GitHub compare 实证）**：
+  - 已确认 `b008020`（native Layer 补 captureCanvas no-op）进了 main@7927938 的构建（`get_file_contents` 命中、
+    构建 success），但真机**仍** `Member "captureCanvas" does not exist` → **motionWorkLayer 不是 native Layer
+    继承链对象，native Layer 补成员兜不住**。
+  - 真正根因=**我们把 `Motion.D3DAdaptor` 暴露为"已定义"**（`getD3DAdaptor` 返回 `new tTJSNativeClass`）。
+    游戏用 `typeof Motion.D3DAdaptor != "undefined"` 判定 D3D 可用 → `_useD3D=true` → 走 D3D capture 路径
+    （`new Motion.D3DAdaptor` + `captureCanvas`）。此前"不能 new 空 dict"致命错误同源（typeof 非 undefined 就走到 new）。
+- **修复（对齐 Kirikiroid2 移动端标准= undefined + useD3D=0）**：`cpp/plugins/motionplayer/main.cpp` **删除**
+  `Motion.D3DAdaptor` 属性与 `getD3DAdaptor`，让它保持 `undefined` → 游戏自动走 CPU/useD3D=0 路径，
+  **根本不会调 captureCanvas**。Layer 原生 `captureCanvas`/`unloadUnusedTextures` no-op 保留作兜底
+  （LayerIntf.cpp，无害）。
+- 待办：① ✅ 根因定位 + main.cpp 移除 D3DAdaptor（LayerIntf.cpp captureCanvas no-op 兜底）；② 真机复验
+  yuzulogo 点击后不再崩、走 CPU motion；③ 若仍进 D3D capture（说明游戏另有 D3D 判定源），再回溯
+  `_useD3D`/`enableD3D` 归属。
 
 ### P1 — §2b. motionplayer 的 `EmotePlayer`（emoteplayer.dll）未实现【NEW】
 - 现况：`cpp/plugins/motionplayer/EmotePlayer.{h,cpp}` 是**空壳 stub**（仅 `_useD3D` 读写，无 emote 物理/播放）。
@@ -69,6 +76,19 @@
 - 修复（提交，`StorageIntf.{h,cpp}`+`StorageImpl.cpp`）：新增 `TVPClearAutoPathListForRestart()`，
   `TVPResetStorageImplForRestart` 调用，reset 链清空累积 auto-path。
 - 待真机：两个不同 krkr2 游戏互切均正常渲染。
+
+### — §3d. 二次游玩（不杀进程 restart）二次进入 FBO incomplete → 黑屏【新增，待真机】
+- 现象（引擎 engine(4)/run 34311307313）：首次游玩正常；**退出不杀进程再进** → 闪屏 → 主界面
+  `FlutterWindowLayer::SourceSample: FBO incomplete 0x8cd6`(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
+  持续 → BlackScreen。
+- 根因：EGL context 在 restart 时先 Shutdown 再重建（run2 重新 "ANGLE EGL context created"），
+  但 run2 的 `blitSrcTex/nativeTex` 与 run1 **同 id(=83)** → 该 GL 纹理/渲染目标对象是进程级残留，
+  新 context 下附件失效。`_FBO` 已由 `5fd30da` 在 `FireRendererRecreated` 重建，但**纹理（主
+  DrawBuffer/背景等图形缓存 gcache 条目）没有在新 context 里重新上传**，被 continue 复用。
+- 修复（提交）：`RenderManager_ogl.cpp` 的 `OnRendererRecreated` 回调内追加 `TVPClearGraphicCache()`，
+  让残留 GL id 在下个 context 按需重新上传为有效纹理（对应 Kirikiroid2 式 context-loss 清缓存）。
+- 待真机：退出→不杀进程→二次游玩渲染正常；若仍黑，需运行时探针定位 id83 纹理确切宿主
+  （LayerManager DrawBuffer vs gcache），再针对性重建。
 
 ### — §3b. 快速 skip 消息框黑块【间歇，挂起低优先】
 - 现象：快速 skip 时本应透明的消息框偶发整块变黑；再次 skip 未复现。

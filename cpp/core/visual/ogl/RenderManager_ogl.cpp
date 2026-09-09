@@ -20,6 +20,7 @@
 #include "etcpak.h"
 #include "pvrtc.h"
 #include "pvr.h"
+#include "GraphicsLoaderIntf.h"
 
 // #define TEST_SHADER_ENABLED
 #ifndef GL_ETC1_RGB8_OES
@@ -3005,6 +3006,14 @@ protected:
                 _CurrentFBOValid = false;
                 _CurrentRenderTarget = 0;
             }
+            // runtime-restart（换游戏/二次游玩）时 EGL context 先 Shutdown 再重建，
+            // 新 context 里旧 context 的所有 GL 纹理 id 全部失效。图形缓存（gcache，
+            // 含主 DrawBuffer / 背景等经 CreateTexture2D 上传的像素纹理）里遗留的
+            // GL id 是旧的，直接复用会因附件失效 → FBO INCOMPLETE_ATTACHMENT →
+            // blit 源黑（真机 engine(4) 观察到 blitSrcTex 同 id(=83) 二次打开即
+            // SourceSample "FBO incomplete 0x8cd6" + BlackScreen）。这里清空图形缓存，
+            // 让这些纹理在下一个 context 里按需重新上传为有效 GL id。
+            TVPClearGraphicCache();
         });
         TVPSetPostUpdateEvent(_RestoreGLStatues);
     }
