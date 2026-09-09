@@ -628,11 +628,55 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
 // implemented" = ncb 空类无构造函数，new 失败——不能用 `class D3DAdaptor{}`+NCB 注册）。
 // 也不能用 classic tjsNative 的 TJS_BEGIN_NATIVE_MEMBERS 放在自由函数里（该宏用 `this`，
 // 只能在类构造/成员函数内展开 → Android 编译报 invalid use of 'this'）。
-// 因此这里直接返回内建空类 `tTJSNativeClass("D3DAdaptor")`：`new` 忽略任意参数创建
-// 实例（b008020/engine(24) 实证 new 能成功走到后续）。captureCanvas/unloadUnusedTextures
-// 的 no-op 由核心 native Layer 提供兜底（见 LayerIntf.cpp）。
+//
+// 此处用公开的 TJSCreateNativeClassMethod + TJSNativeClassRegisterNCM 在创建类对象后
+// 动态注册 captureCanvas/unloadUnusedTextures 方法与 canvasCaptureEnabled 属性，
+// 使 `new Motion.D3DAdaptor(...)` 生成的实例带有这些成员（对齐 Kirikiroid2 APK：
+// 其 D3DAdaptor 类自带同款成员，实证）。affinesourcemotion.tjs 的 drawAffine 会
+// `_window.motionWorkLayer.captureCanvas()`——若 D3DAdaptor 实例无该方法即闪退。
+static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
+                                          iTJSDispatch2 *) {
+    // 移动端无 D3D，motion 走 CPU/GL 已直接渲染；"捕获进另一块 canvas"可跳过，
+    // 返回 void 让脚本 continue（not clear，保留已渲染内容）。
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
+static tjs_error D3DAdaptor_unloadUnusedTextures(tTJSVariant *r, tjs_int,
+                                                 tTJSVariant **,
+                                                 iTJSDispatch2 *) {
+    if(r) r->Clear();
+    return TJS_S_OK;
+}
+
+static tjs_error D3DAdaptor_getCanvasCaptureEnabledProp(tTJSVariant *r,
+                                                        iTJSDispatch2 *) {
+    // "是否可用 D3D canvas 捕获"：移动端无 D3D，但返回 true 让游戏走 captureCanvas
+    // no-op 路径，避免误判为不支持而走另一条更复杂/未实现的路径。与 Kirikiroid2 一致。
+    if(r) *r = tTJSVariant(true);
+    return TJS_S_OK;
+}
+
 static iTJSDispatch2 *Create_NC_D3DAdaptor() {
-    return new tTJSNativeClass(TJS_W("D3DAdaptor"));
+    auto *cls = new tTJSNativeClass(TJS_W("D3DAdaptor"));
+    if(cls) {
+        // captureCanvas / unloadUnusedTextures 方法
+        TJSNativeClassRegisterNCM(cls, TJS_W("captureCanvas"),
+                                  TJSCreateNativeClassMethod(
+                                      D3DAdaptor_captureCanvas),
+                                  TJS_W("D3DAdaptor"), nitMethod);
+        TJSNativeClassRegisterNCM(cls, TJS_W("unloadUnusedTextures"),
+                                  TJSCreateNativeClassMethod(
+                                      D3DAdaptor_unloadUnusedTextures),
+                                  TJS_W("D3DAdaptor"), nitMethod);
+        // canvasCaptureEnabled 只读属性
+        iTJSDispatch2 *cProp = TJSCreateNativeClassProperty(
+            D3DAdaptor_getCanvasCaptureEnabledProp, nullptr);
+        TJSNativeClassRegisterNCM(cls, TJS_W("canvasCaptureEnabled"), cProp,
+                                  TJS_W("D3DAdaptor"), nitProperty);
+        if(cProp) cProp->Release();
+    }
+    return cls;
 }
 
 class Motion {
