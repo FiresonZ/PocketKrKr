@@ -160,7 +160,26 @@ namespace motion {
         void progress(tjs_int delta) {
             _tickCount += delta;
             if(_tickCount > _lastTime) _lastTime = _tickCount;
-            if(_playing && _tickCount >= 100) {
+            if(!_playing) return;
+            // Natural end of the motion: the last keyframe time across every
+            // loaded track, NOT a hard-coded 100 ms. The old hard-coded cap made
+            // logo animations stop after 100 ms no matter how long the timeline
+            // was, so players felt "no animation" for assets whose keyframes lie
+            // later (e.g. m2logo back_white reaching ~125 ms+).
+            // 运动自然结束：取所有已加载 track 的最后一个关键帧时间，而不是写死的
+            // 100 ms。旧的硬编码上限会让 logo 动画无论时间线多长都在 100 ms 后停，
+            // 因此时间线靠后的资产（如 m2logo back_white 到 ~125 ms 后）看起来"没有动画"。
+            tjs_int end = 0;
+            if(_motionTracksLoaded) {
+                for(const auto &tr : _motionTracks) {
+                    if(!tr.frames.empty()) {
+                        const tjs_int t = tr.frames.back().time;
+                        if(t > end) end = t;
+                    }
+                }
+            }
+            if(end <= 0) end = 100; // timeline-less fallback / 无时间线兜底
+            if(_tickCount >= end) {
                 _playing = false;
                 _allplaying = false;
             }
@@ -445,6 +464,12 @@ namespace motion {
             if(auto l = _logger()) {
                 l->info("loadMotionTracks: {} tracks for {}/{} motion={}",
                     _motionTracks.size(), storageStr, charaStr, motionStr);
+                for(const auto &tr : _motionTracks) {
+                    l->info("  track '{}': {} frames (first src='{}', last time={})",
+                        tr.label, tr.frames.size(),
+                        tr.frames.empty() ? std::string("") : tr.frames.front().src,
+                        tr.frames.empty() ? 0 : tr.frames.back().time);
+                }
             }
         }
 
@@ -487,12 +512,22 @@ namespace motion {
                     if(!found) continue;
                 }
                 if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) {
+                    if(auto l = logger) {
+                        l->warn("drawAnimated: skip track '{}' active src='{}' (len {}; not 'src/')",
+                                track.label, active->src, active->src.size());
+                    }
                     continue; // submotion refs / others not handled in MVP
                 }
                 const std::string res = MotionSrcToResource(active->src);
                 const ttstr path = TJS_W("psb://") +
                     ttstr((storageStr + "/" + res + "/pixel.png").c_str());
-                if(!TVPIsExistentStorage(path)) continue;
+                if(!TVPIsExistentStorage(path)) {
+                    if(auto l = logger) {
+                        l->warn("drawAnimated: skip track '{}' src='{}' -> missing '{}'",
+                                track.label, active->src, path.AsStdString());
+                    }
+                    continue;
+                }
 
                 iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
                 if(!temp) continue;
@@ -675,10 +710,24 @@ namespace motion {
                 if(!_psbImagesCached) {
                     cachePSBImages(storage, logger);
                 }
-                if(_psbImages.empty()) return;
+                if(_psbImages.empty() && _motionTracks.empty()) return;
                 iTJSDispatch2 *realLayer = resolveRealLayer(target);
                 iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
-                int drawn = compositeTo(target, tempParent, logger);
+                // IMPORTANT: captureCanvas's destination layer IS the layer that
+                // reaches the screen, so it must receive the ANIMATION frame, not
+                // the static full composite. Fall back to static only when the
+                // motion timeline cannot produce any frame (e.g. an empty / all-
+                // invisible track set), otherwise the user never sees motion.
+                // 重要：captureCanvas 的目标层就是真正上屏的层，必须画**动画帧**而非静态
+                // 全量合成。仅当当前 motion 时间线一张帧都画不出来（如空 track / 全部不可
+                // 见）时才回退静态，否则用户永远看不到动画。
+                int drawn = 0;
+                if(!_motionTracks.empty()) {
+                    drawn = drawAnimated(target, tempParent, logger);
+                }
+                if(drawn == 0) {
+                    drawn = compositeTo(target, tempParent, logger);
+                }
                 if(logger) logger->info("drawOnto: drew {} images onto capture target={}",
                                         drawn, static_cast<void*>(target));
             } catch(const std::exception &e) {
