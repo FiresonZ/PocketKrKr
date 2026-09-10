@@ -4,6 +4,8 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <iterator>
 #include <set>
 #include <unordered_map>
 #include <algorithm>
@@ -444,6 +446,59 @@ namespace motion {
             return src;
         }
 
+        // Recursively expand "motion/obj/submotion" src references inside a set
+        // of tracks into the referenced submotion's own layer tracks. M2 scenes
+        // (e.g. title_bg's "main" layer) reference a child motion (char_move)
+        // whose layers carry the actual animation; without expansion the player
+        // only sees one reference track whose src is "motion/..." and draws 0
+        // images (title static / char never animated).
+        // 递归展开 track 里的 "motion/对象/子motion" src 引用，把被引用的子 motion
+        // 自身图层时间线并入（如 title_bg 的 "main" 层引用 char_move，真正动画在
+        // char_move 的各层里）。不展开则 Player 只拿到一条 src="motion/..." 的引用
+        // track，一张都画不出来（title 立绘静止/不出现）。
+        void expandSubMotionRefs(PSB::PSBMedia *media,
+                                 const std::string &storageStr,
+                                 std::vector<PSB::PSBMedia::PSBMotionLayerTrack> &tracks,
+                                 const std::shared_ptr<spdlog::logger> &logger,
+                                 int depth = 0) {
+            if(!media || depth > 8) return;
+            std::vector<PSB::PSBMedia::PSBMotionLayerTrack> extra;
+            for(const auto &tr : tracks) {
+                for(const auto &f : tr.frames) {
+                    if(f.src.compare(0, 7, "motion/") != 0) continue;
+                    // f src = "motion/<obj>/<submotion>"
+                    std::string ref = f.src.substr(7);
+                    auto slash = ref.find('/');
+                    if(slash == std::string::npos) continue;
+                    const std::string obj = ref.substr(0, slash);
+                    const std::string submotion = ref.substr(slash + 1);
+                    auto sub = media->getMotionTracks(storageStr, obj, submotion);
+                    if(sub.empty() && submotion != "normal")
+                        sub = media->getMotionTracks(storageStr, obj, "normal");
+                    if(sub.empty()) {
+                        if(logger) logger->warn(
+                            "expandSubMotionRefs: no tracks for '{}' (obj='{}' sub='{}')",
+                            f.src, obj, submotion);
+                        continue;
+                    }
+                    if(logger) logger->info(
+                        "expandSubMotionRefs: '{}' -> {}/{} merged {} tracks",
+                        f.src, obj, submotion, sub.size());
+                    extra.insert(extra.end(),
+                                 std::make_move_iterator(sub.begin()),
+                                 std::make_move_iterator(sub.end()));
+                }
+            }
+            if(!extra.empty()) {
+                tracks.insert(tracks.end(),
+                              std::make_move_iterator(extra.begin()),
+                              std::make_move_iterator(extra.end()));
+                // keep expanding nested references inside the merged tracks
+                // 继续展开合并后 track 内嵌套的引用
+                expandSubMotionRefs(media, storageStr, tracks, logger, depth + 1);
+            }
+        }
+
         // Fetch the current motion's per-layer frame time-lines from PSBMedia.
         // 从 PSBMedia 取当前 motion 的每层帧时间线。
         void loadMotionTracks(const ttstr &storage) {
@@ -460,6 +515,13 @@ namespace motion {
             }
             if(_motionTracks.empty() && motionStr != "show") {
                 _motionTracks = media->getMotionTracks(storageStr, charaStr, "show");
+            }
+            // Expand "motion/<obj>/<sub>" references so the player can actually
+            // draw the submotion's layers (title char animation etc.).
+            // 展开 "motion/<对象>/<子motion>" 引用，让 Player 能真实画出子 motion 图层
+            //（title 立绘动画等）。
+            if(auto *m = PSB::GetGlobalPSBMedia()) {
+                expandSubMotionRefs(m, storageStr, _motionTracks, _logger());
             }
             if(auto l = _logger()) {
                 l->info("loadMotionTracks: {} tracks for {}/{} motion={}",
@@ -513,8 +575,17 @@ namespace motion {
                 }
                 if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) {
                     if(auto l = logger) {
-                        l->warn("drawAnimated: skip track '{}' active src='{}' (len {}; not 'src/')",
-                                track.label, active->src, active->src.size());
+                        // Print full frame fields so we can tell whether a
+                        // "layout" track carries real motion (coord/opacity deltas)
+                        // that we could apply to a cached base image.
+                        // 打印帧全部字段，判断 "layout" track 是否真的携带可应用到
+                        // 缓存底图上的位移/透明度变化。
+                        l->warn("drawAnimated: skip track '{}' active src='{}' (len {}; "
+                                "not 'src/') time={} ox={} oy={} cx={} cy={} op={} vis={}",
+                                track.label, active->src, active->src.size(),
+                                active->time, active->ox, active->oy,
+                                active->cx, active->cy, active->opacity,
+                                active->visible);
                     }
                     continue; // submotion refs / others not handled in MVP
                 }
