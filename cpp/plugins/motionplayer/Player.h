@@ -117,6 +117,12 @@ namespace motion {
         void setCompletionType(tjs_int v) { _completionType = v; }
 
         void play(const ttstr &motion, tjs_int all = 0) {
+            // Record this as the most recent motion source so the D3DAdaptor's
+            // captureCanvas(destLayer) callback can composite our frame onto the
+            // game-supplied destination layer every frame.
+            // 记录这是最近一次 motion 源，供 D3DAdaptor.captureCanvas(destLayer)
+            // 回调把当前帧合成到游戏传入的目标层（每帧）。
+            sLastDrawSource = this;
             if(auto l = _logger()) l->info("Player::play motion={} all={}", motion.AsStdString(), all);
             _motion = motion;
             _allplaying = (all != 0);
@@ -176,6 +182,11 @@ namespace motion {
 
         void draw(iTJSDispatch2 *target) {
             if(!target) return;
+            // Same as play(): mark this player as the latest motion source so the
+            // D3DAdaptor.captureCanvas callback can reach it. See play().
+            // 与 play() 相同：标记本 player 为最新 motion 源，供 D3DAdaptor.captureCanvas
+            // 回调取用。见 play() 注释。
+            sLastDrawSource = this;
             const ttstr storage = _loadedStorage.IsEmpty() ? ResourceManager::getLastLoadedPath()
                                                            : _loadedStorage;
             if(storage.IsEmpty()) return;
@@ -409,8 +420,27 @@ namespace motion {
                              static_cast<void*>(displayLayer));
             }
 
+            if(logger) logger->info("drawPSBImages: drew {} of {} images",
+                                    compositeTo(displayLayer, tempParent, logger),
+                                    _psbImages.size());
+            _composited = true;
+        }
+
+        // Composite every cached PSB image onto an explicit destination layer.
+        // Unlike drawPSBImages (single-shot onto our own display layer), this is
+        // called from captureCanvas on every frame, so it carries NO _composited
+        // guard: the capture target is game-managed and may be cleared between
+        // frames, so we must re-composite the whole image set on each call if the
+        // caller asks us to. Returns how many images were drawn.
+        // 把所有缓存 PSB 图层绘制到指定的目标层。与 drawPSBImages（一次性画到自带显示层）
+        // 不同，captureCanvas 每帧调用它，故不带 _composited 单次守卫：捕获目标是游戏管理
+        // 的层、帧间可能被清空，因此需要时每次都整组重绘。返回实际绘制的张数。
+        int compositeTo(iTJSDispatch2 *dest, iTJSDispatch2 *tempParent,
+                        const std::shared_ptr<spdlog::logger> &logger) {
+            if(!dest || _psbImages.empty()) return 0;
+
             tTJSVariant faceVal(static_cast<tjs_int>(0)); // dfAlpha
-            displayLayer->PropSet(0, TJS_W("face"), nullptr, &faceVal, displayLayer);
+            dest->PropSet(0, TJS_W("face"), nullptr, &faceVal, dest);
 
             int drawn = 0;
             for(size_t i = 0; i < _psbImages.size(); i++) {
@@ -418,13 +448,13 @@ namespace motion {
 
                 iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
                 if(!temp) {
-                    if(logger) logger->warn("drawPSBImages: getOrCreateTempLayer failed for {}",
+                    if(logger) logger->warn("compositeTo: getOrCreateTempLayer failed for {}",
                                             img.key);
                     continue;
                 }
 
                 if(!tryLoadImage(temp, img.path)) {
-                    if(logger) logger->warn("drawPSBImages: tryLoadImage failed for {}",
+                    if(logger) logger->warn("compositeTo: tryLoadImage failed for {}",
                                             img.path.AsStdString());
                     continue;
                 }
@@ -435,7 +465,7 @@ namespace motion {
                 int iw = static_cast<int>(wVar.AsInteger());
                 int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) {
-                    if(logger) logger->warn("drawPSBImages: bad image size {}/{} for {}",
+                    if(logger) logger->warn("compositeTo: bad image size {}/{} for {}",
                                             iw, ih, img.key);
                     continue;
                 }
@@ -458,16 +488,47 @@ namespace motion {
                                           &opArgs[3], &opArgs[4], &opArgs[5],
                                           &opArgs[6], &opArgs[7], &opArgs[8] };
                 try {
-                    displayLayer->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, displayLayer);
+                    dest->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, dest);
                     drawn++;
                 } catch(const std::exception &e) {
-                    if(auto l = _logger()) l->warn("drawPSBImages: operateRect exception: {}", e.what());
+                    if(auto l = _logger()) l->warn("compositeTo: operateRect exception: {}", e.what());
                 } catch(...) {
-                    if(auto l = _logger()) l->warn("drawPSBImages: operateRect unknown exception");
+                    if(auto l = _logger()) l->warn("compositeTo: operateRect unknown exception");
                 }
             }
-            if(logger) logger->info("drawPSBImages: drew {} of {} images", drawn, _psbImages.size());
-            _composited = true;
+            return drawn;
+        }
+
+        // Draw the current motion frame onto an arbitrary game-supplied destination
+        // layer. Used by D3DAdaptor.captureCanvas(destLayer): the game passes the
+        // target background/display layer so the motion lands exactly where the
+        // game's own layering expects it (e.g. rendered UNDER the title menu instead
+        // of a free-floating child layer above it). Re-composites on every call.
+        // 把当前 motion 帧绘制到游戏传入的任意目标层。供 D3DAdaptor.captureCanvas(dest)
+        // 使用——游戏传入目标背景/显示层，让 motion 恰好落在游戏自身层级期望的位置（例如
+        // 渲染在标题菜单**之下**，而不是压在菜单之上的自由子层）。每次调用都整组重绘。
+        void drawOnto(iTJSDispatch2 *target) {
+            if(!target) return;
+            sLastDrawSource = this;
+            const ttstr storage = _loadedStorage.IsEmpty() ? ResourceManager::getLastLoadedPath()
+                                                           : _loadedStorage;
+            if(storage.IsEmpty()) return;
+            auto logger = _logger();
+            try {
+                if(!_psbImagesCached) {
+                    cachePSBImages(storage, logger);
+                }
+                if(_psbImages.empty()) return;
+                iTJSDispatch2 *realLayer = resolveRealLayer(target);
+                iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
+                int drawn = compositeTo(target, tempParent, logger);
+                if(logger) logger->info("drawOnto: drew {} images onto capture target={}",
+                                        drawn, static_cast<void*>(target));
+            } catch(const std::exception &e) {
+                if(logger) logger->error("drawOnto: exception: {}", e.what());
+            } catch(...) {
+                if(logger) logger->error("drawOnto: unknown exception");
+            }
         }
 
         void drawFallback(iTJSDispatch2 *target, const ttstr &storage,
@@ -753,6 +814,21 @@ namespace motion {
 
     public:
         void skipToSync() {}
+
+        // Public accessor for the most recent motion source player, so the
+        // D3DAdaptor/SeparateLayerAdaptor captureCanvas callbacks (defined in a
+        // separate native class in main.cpp) can reach the active Player.
+        // sLastDrawSource 的公开访问器：main.cpp 中独立的 D3DAdaptor/
+        // SeparateLayerAdaptor captureCanvas 回调借此找到活动 Player。
+        static Player *getLastDrawSource() { return sLastDrawSource; }
+
+        // Public bridge used by D3DAdaptor/SeparateLayerAdaptor.captureCanvas in
+        // main.cpp: composite the current motion frame onto a game-supplied target
+        // layer (drawOnto stays private, this exposes a safe entry point).
+        // captureCanvas 回调（main.cpp）使用的公开入口：把当前 motion 帧合成到游戏传入的
+        // 目标层（drawOnto 保持私有，此处暴露安全入口）。
+        void captureDrawTo(iTJSDispatch2 *target) { drawOnto(target); }
+
         void setDrawAffineTranslateMatrix(tjs_real, tjs_real, tjs_real, tjs_real, tjs_real, tjs_real) {}
         void setCoord(tjs_real x, tjs_real y) {
             _coordX = x;
@@ -992,6 +1068,15 @@ namespace motion {
 
         inline static bool _useD3D = false;
         inline static bool _enableD3D = false;
+
+        // The most recent motion source player. The D3DAdaptor/SeparateLayerAdaptor
+        // native class is decoupled from Player instances, so captureCanvas on it
+        // uses this pointer to find the active Player and composite its frame onto
+        // the game-supplied destination layer. Set in play()/draw()/drawOnto().
+        // 最近的 motion 源 player。D3DAdaptor/SeparateLayerAdaptor 原生类与 Player 实例
+        // 解耦，其上的 captureCanvas 借该指针找到活动 Player，把当前帧合成到游戏传入的
+        // 目标层。在 play()/draw()/drawOnto() 中设置。
+        inline static Player *sLastDrawSource = nullptr;
 
         bool _playing = false;
         bool _allplaying = false;

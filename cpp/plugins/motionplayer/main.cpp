@@ -288,6 +288,16 @@ static tjs_error SeparateLayerAdaptor_captureCanvas(tTJSVariant *r, tjs_int nump
             }
         }
     }
+    // Fallback mirror of D3DAdaptor.captureCanvas: composite the current motion
+    // frame onto the game-supplied destination layer (param[0]).
+    // 与 D3DAdaptor.captureCanvas 相同的兜底：把当前 motion 帧合成到游戏传入的
+    // 目标层（param[0]）。
+    auto *player = motion::Player::getLastDrawSource();
+    if(player && numparams >= 1 && param[0] &&
+       (*param[0]).Type() == tvtObject) {
+        iTJSDispatch2 *dest = (*param[0]).AsObjectNoAddRef();
+        if(dest) player->captureDrawTo(dest);
+    }
     if(r) r->Clear();
     return TJS_S_OK;
 }
@@ -840,10 +850,22 @@ static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int numparams,
         }
         l->info("MCP D3DAdaptor.captureCanvas: {}", sig.AsStdString());
     }
-    // 移动端无 D3D，motion 走 CPU/GL 已直接渲染；"捕获进另一块 canvas"可跳过，
-    // 返回 void 让脚本 continue（not clear，保留已渲染内容）。
-    // Mobile has no D3D and motion is already rendered; return void so the script
-    // can continue while keeping the rendered content (no clear here).
+    // REAL integration: the game calls captureCanvas(destLayer) on every frame to
+    // hand the motion picture to a layer it controls. param[0] is that destination
+    // layer. We composite the current motion frame onto it so the content lands in
+    // the z-order the game script manages (e.g. under the title menu) instead of a
+    // free-floating child layer above everything.
+    // 真实现：游戏每帧调 captureCanvas(destLayer)，把 motion 画面交给它控制的层；
+    // param[0] 即该目标层。我们把当前 motion 帧合成到它上面，让内容落在游戏脚本管理的
+    // 层级序中（例如标题菜单之下），而不再是压在最上层的自由子层。
+    auto *player = motion::Player::getLastDrawSource();
+    if(player && numparams >= 1 && param[0] &&
+       (*param[0]).Type() == tvtObject) {
+        iTJSDispatch2 *dest = (*param[0]).AsObjectNoAddRef();
+        if(dest) player->captureDrawTo(dest);
+    }
+    // 返回 void 让脚本 continue；不 clear，保留已渲染内容。
+    // Return void so the script can continue; do not clear, keep rendered content.
     if(r) r->Clear();
     return TJS_S_OK;
 }
