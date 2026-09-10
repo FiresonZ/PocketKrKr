@@ -385,31 +385,32 @@ namespace motion {
                            const std::shared_ptr<spdlog::logger> &logger) {
             if(_psbImages.empty()) return;
 
-            // Composite onto the scene layer's own image (realLayer = the main
-            // window primaryLayer for Yuzusoft D3DAdaptor shells). A layer's own
-            // pixels render behind all of its child layers, so the full-screen
-            // motion background correctly sits behind the game menu with no
-            // reordering. We deliberately do NOT use bringToBack()/SetOrderIndex():
-            // both flip the primary layer to relative-order mode, which reorders
-            // the game's own layered scenes (title menu) and blacks out the blit.
-            // 合成到场景层自有图像（realLayer，即 Yuzusoft D3DAdaptor 空壳时回退的主窗口
-            // primaryLayer）。父层自有像素总渲染在所有子层之下，全屏 motion 背景因此能
-            // 排在游戏菜单之后，无需任何重排序。刻意不用 bringToBack()/SetOrderIndex()：
-            // 两者都会把 primaryLayer 切到相对序模式，重排游戏自身的多图层场景（标题菜单）
-            // 导致整屏发黑。
+            // Skip re-compositing when images haven't changed since last draw
+            if(_composited) return;
+
+            // Composite onto our own visible display layer (hung on the window
+            // tree) instead of the game's primary layer, so motion pixels never
+            // pollute the main scene (title text, background, etc.).
+            // 合成到我们自己的可见显示层（挂在窗口层树），而不是游戏主层，motion
+            // 像素不会污染主场景（标题文字、背景等）。
+            iTJSDispatch2 *displayLayer = getOrCreateDisplayLayer();
+            if(!displayLayer) {
+                if(logger) logger->warn("drawPSBImages: getOrCreateDisplayLayer failed");
+                return;
+            }
             iTJSDispatch2 *realLayer = resolveRealLayer(target);
-            iTJSDispatch2 *drawTarget = realLayer ? realLayer : target;
-            iTJSDispatch2 *tempParent = drawTarget;
+            iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
 
             if(logger) {
-                logger->info("drawPSBImages: {} images, target={} realLayer={}",
+                logger->info("drawPSBImages: {} images, target={} realLayer={} displayLayer={}",
                              _psbImages.size(),
                              static_cast<void*>(target),
-                             static_cast<void*>(realLayer));
+                             static_cast<void*>(realLayer),
+                             static_cast<void*>(displayLayer));
             }
 
             tTJSVariant faceVal(static_cast<tjs_int>(0)); // dfAlpha
-            drawTarget->PropSet(0, TJS_W("face"), nullptr, &faceVal, drawTarget);
+            displayLayer->PropSet(0, TJS_W("face"), nullptr, &faceVal, displayLayer);
 
             int drawn = 0;
             for(size_t i = 0; i < _psbImages.size(); i++) {
@@ -457,7 +458,7 @@ namespace motion {
                                           &opArgs[3], &opArgs[4], &opArgs[5],
                                           &opArgs[6], &opArgs[7], &opArgs[8] };
                 try {
-                    drawTarget->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, drawTarget);
+                    displayLayer->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, displayLayer);
                     drawn++;
                 } catch(const std::exception &e) {
                     if(auto l = _logger()) l->warn("drawPSBImages: operateRect exception: {}", e.what());
@@ -466,6 +467,7 @@ namespace motion {
                 }
             }
             if(logger) logger->info("drawPSBImages: drew {} of {} images", drawn, _psbImages.size());
+            _composited = true;
         }
 
         void drawFallback(iTJSDispatch2 *target, const ttstr &storage,
@@ -645,6 +647,65 @@ namespace motion {
             return newLayer;
         }
 
+        // A visible, full-window child layer used as the motion compositing target.
+        // Keeps motion pixels off the primary layer so the game's own layers stay
+        // clean (title text etc. render above/below independently).
+        // 可见的、铺满窗口的子层，作为 motion 合成目标；motion 像素不直接画到主层，
+        // 游戏自身图层（标题文字等）保持独立、干净。
+        iTJSDispatch2 *getOrCreateDisplayLayer() {
+            if(_displayLayer) return _displayLayer;
+
+            tTJSVariant windowVar, parentVar;
+            iTJSDispatch2 *probe = nullptr;
+            // Any real layer is enough to resolve window+parent; primaryLayer works.
+            if(TVPMainWindow) probe = TVPMainWindow->GetOwnerNoAddRef();
+            if(!probe) return nullptr;
+
+            tTJSVariant plVar;
+            if(!resolveWindowAndParent(probe, windowVar, parentVar)) return nullptr;
+
+            iTJSDispatch2 *layer = createChildLayer(windowVar, parentVar);
+            if(!layer) return nullptr;
+
+            tTJSVariant trueVar(true);
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("visible"), nullptr, &trueVar, layer);
+            tTJSVariant zeroVar(static_cast<tjs_int>(0));
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("left"), nullptr, &zeroVar, layer);
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("top"), nullptr, &zeroVar, layer);
+            // hitThreshold=256 makes hit test always fail (max alpha is 255), so
+            // the display layer never intercepts clicks meant for the game menu.
+            // hitThreshold=256 令命中测试始终失败（alpha 最大 255），显示层不会拦截
+            // 本应给游戏菜单的点击。
+            tTJSVariant htVal(static_cast<tjs_int>(256));
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("hitThreshold"), nullptr, &htVal, layer);
+            // Full-window size: copy primary layer's dimensions.
+            tTJSVariant pwVar, phVar;
+            if(TJS_SUCCEEDED(parentVar.AsObjectNoAddRef()->PropGet(
+                   0, TJS_W("width"), nullptr, &pwVar, parentVar.AsObjectNoAddRef()))) {
+                layer->PropSet(TJS_MEMBERENSURE, TJS_W("width"), nullptr, &pwVar, layer);
+            }
+            if(TJS_SUCCEEDED(parentVar.AsObjectNoAddRef()->PropGet(
+                   0, TJS_W("height"), nullptr, &phVar, parentVar.AsObjectNoAddRef()))) {
+                layer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &phVar, layer);
+            }
+
+            // NOTE: purposefully NOT calling bringToBack() here. BringToBack() (and
+            // SetOrderIndex/MoveBefore/..) all call parent->SetAbsoluteOrderMode(false),
+            // which flips the primary layer's children from absolute-order to relative-
+            // order mode. For layered scenes (title menu) that reorders the game's own
+            // layers and the whole blit goes black; only the sparse logo scene survives.
+            // So the full-screen motion background currently renders above the menu.
+            // Turning it behind the menu needs a mode-preserving reorder, not this.
+            // 注：这里刻意不调 bringToBack()。bringToBack/SetOrderIndex/MoveBefore 都会
+            // 调 parent->SetAbsoluteOrderMode(false)，把 primaryLayer 子层从绝对序切换为
+            // 相对序；对多图层场景（标题菜单）会重排游戏自身图层导致整屏发黑，只有稀疏的
+            // logo 场景不受影响。因此全屏 motion 背景现仍绘制在菜单之上；要让背景排在菜单
+            // 之后，需要不切换排序模式的置底方式，而不是这里的 bringToBack。
+
+            _displayLayer = layer;
+            return _displayLayer;
+        }
+
         iTJSDispatch2 *getOrCreateTempLayer(iTJSDispatch2 *realLayer) {
             if(_tempLayer) return _tempLayer;
             if(!realLayer) return nullptr;
@@ -675,6 +736,18 @@ namespace motion {
                 } catch(...) {}
                 _tempLayer->Release();
                 _tempLayer = nullptr;
+            }
+            // The display layer is our own per-motion compositing canvas hung on the
+            // window tree; destroy it together with the temp source layer so a scene
+            // change cannot leave stale motion pixels on screen.
+            // 显示层是我们挂在窗口层树上的逐-motion 合成画布；与临时源层一并销毁，
+            // 避免场景切换在屏幕上残留旧的 motion 像素。
+            if(_displayLayer) {
+                try {
+                    _displayLayer->FuncCall(0, TJS_W("invalidate"), nullptr, nullptr, 0, nullptr, _displayLayer);
+                } catch(...) {}
+                _displayLayer->Release();
+                _displayLayer = nullptr;
             }
         }
 
@@ -948,6 +1021,7 @@ namespace motion {
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;
+        iTJSDispatch2 *_displayLayer = nullptr;
 
         struct ButtonBounds {
             int left = 0, top = 0, width = 0, height = 0;
