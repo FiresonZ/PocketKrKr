@@ -103,6 +103,17 @@
   得 0 条并把空结果永久锁存（`_motionTracksLoaded=true`），此后只走静态 `drawPSBImages`、`drawAnimated`
   永不触发。已新增 `PSBMedia::ensureArchiveLoaded()`（幂等），在 `Player::draw` 里先强制解析归档再
   `cachePSBImages`/`loadMotionTracks`（engine(6) 实证 `Stored 13 tracks for LOGO/yuzulogo` 但读时却是 0）。
+- 进度：✅ **时间单位换算（2026-09-11，engine(11) 实证根因）**：PSB `frameList[].time` 是 **60fps 帧数**
+  （yuzulogo 尾帧 t=241=4s、m2logo back_white t=91=1.5s、title t=120=2s），而 `progress(delta)` 由脚本以
+  **毫秒**推进时钟 → 4 秒的 logo 时间线约 240ms 就播完，所有角色/字母瞬间同时出现（用户："人物没有依次
+  出现、时间太短；logo 动画特别乱"）。已改为在 `PSBMedia.cpp` 解析处统一 `time ×1000/60` 转毫秒
+  （扁平轨道 `CollectMotionTracksFromMotion` + 节点树 `CollectMotionNodeFrames` + `loopTime` 同换算），
+  下游 `progress`/`drawAnimatedTree`/`drawAnimatedFlat` 全用毫秒比较。
+- 进度：✅ **容器帧插值（2026-09-11）**：插值条件从"仅 `src/` 图像帧"放宽为"任意有内容帧"
+  （含 `src='layout'`/子运动容器帧），logo 字母/柚子汉字的滑入（cx 48→-24→0）与 m2logo 部件淡入
+  平滑过渡，不再在关键帧间跳变。
+- 待真机：① 三游戏 logo + 标题入场时序/速度对照 K2；② m2logo 仍缺 `iconXX` 部分纹理
+  （`Unsupported image format (header 19190519)` → 1x1 透明兜底）；③ yuzulogo 语音（脚本驱动）核对。
 - 参考提交/对照清单：见 [krkrz-compat.md](krkrz-compat.md)「krkrsdl3 emoteplayer 对照」。
 
 ### — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】

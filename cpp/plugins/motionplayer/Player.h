@@ -668,6 +668,11 @@ namespace motion {
                     l->info("  node[{}] '{}' parent={} frames={}",
                         ni, nd.label, nd.parentIndex,
                         static_cast<int>(nd.frames.size()));
+                    for(const auto &f : nd.frames) {
+                        l->info("    n[{}] t={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
+                            ni, f.time, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
+                            f.visible ? 1 : 0);
+                    }
                 }
             }
         }
@@ -780,14 +785,48 @@ namespace motion {
                         af = pf;
                     }
                 }
+                // Frame interpolation between the active frame and the next frame.
+                // M2 animates position/opacity smoothly between keyframes; taking
+                // only the active frame makes characters pop in instantly and logos
+                // look broken (reference has full bezier interpolation; linear is
+                // our v1). Interpolate between ANY two content frames — including
+                // `layout` / sub-motion CONTAINER frames (src not starting with
+                // "src/") so container slides/fades propagate smoothly to children
+                // instead of hopping keyframe to keyframe. An empty frame (vis=0)
+                // stops the tween (holds the active values). The src (image) is
+                // taken from the active frame; the image doesn't change mid-tween,
+                // only position/opacity do.
+                // 帧间插值：M2 在关键帧之间平滑过渡位置/透明度；只取 active 帧会让角色
+                // 瞬间出现、logo 看起来破碎（参考有完整贝塞尔插值，v1 用线性）。对任意
+                // 两个"有内容"帧之间插值——包括 src 不是 "src/" 的 layout/子运动容器帧，
+                // 让容器的滑入/淡入平滑传给子层而不是在关键帧间跳变；空帧（vis=0）终止
+                // 补间（保持当前值）。src（图像）取 active 帧，过渡期间只变位置/透明度。
+                float interpOx = af->ox, interpOy = af->oy;
+                float interpCx = af->cx, interpCy = af->cy;
+                float interpOp = af->opacity;
+                if(af->visible) {
+                    const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
+                    for(const auto &f : frames) {
+                        if(f.time > now) { next = &f; break; }
+                    }
+                    if(next && next->visible && next->time > af->time) {
+                        const float t = static_cast<float>(now - af->time) /
+                                        static_cast<float>(next->time - af->time);
+                        interpOx = af->ox + (next->ox - af->ox) * t;
+                        interpOy = af->oy + (next->oy - af->oy) * t;
+                        interpCx = af->cx + (next->cx - af->cx) * t;
+                        interpCy = af->cy + (next->cy - af->cy) * t;
+                        interpOp = af->opacity + (next->opacity - af->opacity) * t;
+                    }
+                }
                 const bool parentOn = (node.parentIndex >= 0) ? vis[node.parentIndex] : true;
                 if(!parentOn) { vis[i] = false; continue; } // hidden parent hides subtree
                 const float baseX = (node.parentIndex >= 0) ? wx[node.parentIndex] : 0.0f;
                 const float baseY = (node.parentIndex >= 0) ? wy[node.parentIndex] : 0.0f;
                 const int baseOp = (node.parentIndex >= 0) ? wo[node.parentIndex] : 255;
-                const float px = baseX + af->ox + af->cx;
-                const float py = baseY + af->oy + af->cy;
-                const int lop = std::clamp(static_cast<int>(af->opacity), 0, 255);
+                const float px = baseX + interpOx + interpCx;
+                const float py = baseY + interpOy + interpCy;
+                const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
                 wx[i] = px; wy[i] = py; wo[i] = wop;
                 vis[i] = (wop > 0);

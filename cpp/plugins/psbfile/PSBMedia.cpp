@@ -778,7 +778,18 @@ namespace PSB {
                     auto frame = std::dynamic_pointer_cast<PSBDictionary>((*frameList)[j]);
                     if(!frame) continue;
                     PSBMedia::PSBMotionFrame f;
-                    f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0));
+                    // M2 frameList "time" is a 60fps FRAME count (PSB motion
+                    // format); the Player clock (progress delta fed by the game
+                    // script) is in MILLISECONDS. Convert once at parse time so
+                    // every consumer compares the same unit — without this a
+                    // 4-second logo timeline (t=241) finishes in ~241 ms and all
+                    // characters pop in at once.
+                    // M2 frameList 的 "time" 是 60fps 帧数（PSB motion 格式）；
+                    // Player 时钟（脚本传给 progress 的增量）是毫秒。在解析处统一
+                    // 换算成毫秒，否则 4 秒的 logo 时间线（t=241）约 241ms 就播完，
+                    // 所有角色瞬间同时出现。
+                    f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0) *
+                                               1000.0 / 60.0);
                     auto content = std::dynamic_pointer_cast<PSBDictionary>((*frame)["content"]);
                     if(content) {
                         auto srcVal = std::dynamic_pointer_cast<PSBString>((*content)["src"]);
@@ -826,10 +837,13 @@ namespace PSB {
                     if(!motionDictObj) continue;
                     // M2 motion-level metadata: "loopTime" (>0 means the timeline
                     // loops, e.g. logo intros play until the script advances).
+                    // Same frames→ms conversion as frameList "time" — both are
+                    // 60fps frame counts in the PSB, the Player clock is in ms.
                     // M2 motion 级元数据："loopTime"（>0 表示时间线循环，如 logo 片头
-                    // 会一直播到脚本推进）。
+                    // 会一直播到脚本推进）。与 frameList "time" 同样的 帧→毫秒 换算——
+                    // PSB 里两者都是 60fps 帧数，Player 时钟是毫秒。
                     const tjs_int loopTime = static_cast<tjs_int>(
-                        GetPSBFloat((*motionDictObj)["loopTime"], 0));
+                        GetPSBFloat((*motionDictObj)["loopTime"], 0) * 1000.0 / 60.0);
                     if(loopTime > 0) {
                         media.setMotionLoopTime(archiveKey, sceneName, motionName,
                                                 loopTime);
@@ -862,7 +876,13 @@ namespace PSB {
                 auto frame = std::dynamic_pointer_cast<PSBDictionary>((*frameList)[j]);
                 if(!frame) continue;
                 PSBMedia::PSBMotionFrame f;
-                f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0));
+                // Same frames→ms conversion as the flat tracks (see
+                // CollectMotionTracksFromMotion): keep the Player clock (ms) and
+                // the node timeline in one unit.
+                // 与扁平轨道同样的 帧→毫秒 换算（见 CollectMotionTracksFromMotion）：
+                // 让 Player 时钟（毫秒）与节点时间线保持同一单位。
+                f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0) *
+                                           1000.0 / 60.0);
                 auto content = std::dynamic_pointer_cast<PSBDictionary>((*frame)["content"]);
                 if(content) {
                     auto srcVal = std::dynamic_pointer_cast<PSBString>((*content)["src"]);
