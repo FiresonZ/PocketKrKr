@@ -587,7 +587,12 @@ namespace motion {
             tTJSVariant zeroVar(static_cast<tjs_int>(0));
             layer->PropSet(TJS_MEMBERENSURE, TJS_W("left"), nullptr, &zeroVar, layer);
             layer->PropSet(TJS_MEMBERENSURE, TJS_W("top"), nullptr, &zeroVar, layer);
-            layer->PropSet(TJS_MEMBERENSURE, TJS_W("hitThreshold"), nullptr, &zeroVar, layer);
+            // hitThreshold=256 makes hit test always fail (max alpha is 255), so
+            // the display layer never intercepts clicks meant for the game menu.
+            // hitThreshold=256 令命中测试始终失败（alpha 最大 255），显示层不会拦截
+            // 本应给游戏菜单的点击。
+            tTJSVariant htVal(static_cast<tjs_int>(256));
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("hitThreshold"), nullptr, &htVal, layer);
             // Full-window size: copy primary layer's dimensions.
             tTJSVariant pwVar, phVar;
             if(TJS_SUCCEEDED(parentVar.AsObjectNoAddRef()->PropGet(

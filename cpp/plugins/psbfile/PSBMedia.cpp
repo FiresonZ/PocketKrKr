@@ -763,6 +763,21 @@ namespace PSB {
 
                 CollectLayersFromMotion(motionDict, motionName, sceneName,
                     0, 0, objectTree, positions, &buttons, logger);
+
+                // Some Yuzusoft scenes (e.g. yuzulogo.mtn "LOGO") name their
+                // animation arbitrarily instead of normal/show/bt, so the fixed
+                // list above yields nothing. Enumerate the whole motion dict so
+                // their source layers still get correct coordinates.
+                // 部分 Yuzusoft 场景（如 yuzulogo.mtn 的 "LOGO"）的动画命名并非
+                // normal/show/bt 固定名，上面的枚举取不到任何东西。遍历整个 motion
+                // 字典，让它们的源图层仍能获得正确坐标。
+                if(!std::dynamic_pointer_cast<PSBDictionary>((*motionDict)[motionName])) {
+                    for(const auto &[altName, altVal] : *motionDict) {
+                        if(!std::dynamic_pointer_cast<PSBDictionary>(altVal)) continue;
+                        CollectLayersFromMotion(motionDict, altName, sceneName,
+                            0, 0, objectTree, positions, &buttons, logger);
+                    }
+                }
             }
         }
 
