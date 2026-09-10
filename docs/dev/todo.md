@@ -204,6 +204,23 @@
 >- 已做：① 剥离 `PrerenderFont(...)` 前缀 + 等宽/全角优先回退（`8ec234c`）；② 绘制入口探针
 >  `[TextProbe]`（destRect/x/y/face/height/AscentOfs/prerender 是否非 0，`26ba8de`）；③ 动画修复同批
 >  待真机（`1aca7bf`）。
+>- **扫描结论（2026-09-11，对照 krkrz / Kirikiroid2 / KrKr2-Next 全字库管线）**：
+>  - 我们的 being 字体管线（FontSystem→FreeType→.tpf 解析/Find/Retrieve→TVPGetCharacter→
+>    InternalDrawText）与 krkrz/K2 **逐字节同构**，非管线逻辑差异；我们相对上游仅加探针/
+>    前缀剥离/等宽回退/restart 复位。
+>  - 探针实证（engine(11) 前后）：选项文本 `prerender=0xb4…` **非空**——`.tpf` 已映射并在走
+>    预渲染字形；对话 `*システム` 同样非空但**正常**。
+>  - **机制定位（高置信）**：`.tpf` 字形按**原始字体**（MS ゴシック，ascent≈0.86×h）预烘焙，
+>    定位 `data->OriginY = -pitem->OriginY + aofsy`，而 `aofsy` 取自**回退字体** ascent
+>    （Noto CJK≈1.16×h，实测 height=39→aofsy=45）。基线被压低约 0.3×h →
+>    字形下移、框底被裁 → 选项文字"偏左上 + 只见上半"。K2 用 DroidSansFallback（ascent≈0.9）
+>    偏差小所以正常。对话字符在 `.tpf` 里 MISS → 走栅格化（同字体自洽）所以正常。
+>  - 另发现差异（与尺寸无关，未改）：`tTJSNI_BaseLayer::DrawText/DrawGlyph` 我们对 color
+>    多做了一次 `TVP_REVRGB`（krkrz 没有），仅影响颜色、用户实测颜色正常。
+>- 待真机：用新增 `[TpfMap]`（映射的 .tpf 路径）与 `[TpfProbe]`（每 face/字符 hit-miss +
+>  .tpf 内置 W/H/Origin/Inc + aofs）日志确认：① 选项 face 是否 HIT .tpf；② .tpf 内建字号是否
+>  与请求 height 一致（排除映射错 .tpf）；③ 若确认命中且 Origin 与 aofsy 差 ~0.3×h → 修
+>  `aofsy`（对 .tpf 字形改用其原始字体 ascent，例如按 .tpf 内建 Origin 推导，而非回退字体）。
 >- 待做：① 与动画一起构建；② 依据新日志 `[TextProbe]`（destRect 高度 vs 行高；AscentOfs；prerender
 >  是否命中 .tpf）与 `[FontProbe]` 度量，定位是绘制区域被裁、基线偏移还是未走位图字体；③ 若指向
 >  .tpf 通道 → 按 §2d 实现。
