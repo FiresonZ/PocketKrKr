@@ -401,6 +401,37 @@ namespace motion {
             iTJSDispatch2 *realLayer = resolveRealLayer(target);
             iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
 
+            // TEMP DIAGNOSTIC (remove after analyzing title z-order): print the
+            // layer tree once so we can see where our display layer sits relative
+            // to the game menu/background in the real runtime hierarchy.
+            // 临时诊断（分析完标题层级后删除）：一次性打印层树，观察显示层相对游戏
+            // 菜单/背景在真实运行时层级中的位置。
+            if(!_layerTreeDumped) {
+                _layerTreeDumped = true;
+                if(logger) logger->info("===== MCP LAYER TREE (realLayer) =====");
+                try {
+                    if(realLayer)
+                        realLayer->FuncCall(0, TJS_W("dump"), nullptr, nullptr, 0, nullptr, realLayer);
+                } catch(...) {}
+                if(TVPMainWindow) {
+                    iTJSDispatch2 *winDsp = TVPMainWindow->GetOwnerNoAddRef();
+                    if(winDsp) {
+                        tTJSVariant plVar;
+                        if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
+                                                          nullptr, &plVar, winDsp)) &&
+                           plVar.Type() == tvtObject) {
+                            iTJSDispatch2 *pl = plVar.AsObjectNoAddRef();
+                            if(pl) {
+                                if(logger) logger->info("===== MCP LAYER TREE (window primaryLayer) =====");
+                                try {
+                                    pl->FuncCall(0, TJS_W("dump"), nullptr, nullptr, 0, nullptr, pl);
+                                } catch(...) {}
+                            }
+                        }
+                    }
+                }
+            }
+
             if(logger) {
                 logger->info("drawPSBImages: {} images, target={} realLayer={} displayLayer={}",
                              _psbImages.size(),
@@ -1018,6 +1049,7 @@ namespace motion {
 
         bool _psbImagesCached = false;
         bool _composited = false;
+        bool _layerTreeDumped = false; // TEMP diagnostic flag, remove after analysis
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;
