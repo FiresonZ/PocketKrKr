@@ -112,8 +112,22 @@
 - 进度：✅ **容器帧插值（2026-09-11）**：插值条件从"仅 `src/` 图像帧"放宽为"任意有内容帧"
   （含 `src='layout'`/子运动容器帧），logo 字母/柚子汉字的滑入（cx 48→-24→0）与 m2logo 部件淡入
   平滑过渡，不再在关键帧间跳变。
+- 进度：✅ **空帧即隐藏（2026-09-11，engine(3) 实证）**：去掉"时间线播完→保持末内容帧"回退，
+  空帧在覆盖时段内隐藏该层（含时间线末尾空帧）。此前 yuzulogo 字母/柚子汉字/software 在 t=215f
+  后仍被 keep 到 4s，导致"播放前背景有完整静止 yuzulogo"（真实动画 3.58s 字母即消失、只剩白底）。
+  节点树 `drawAnimatedTree` 与扁平 `drawAnimatedFlat` 同步修改；稳态 motion（normal/status）
+  末尾本来就是内容帧，不受影响。
+- 进度：✅ **M2 文本子树左对齐（2026-09-11，engine(3) 实证）**：m2logo "cheeseware" 字母
+  （str_clip/str_locate 子树）按文本笔位在 advance 锚点**左对齐**绘制，不再居中——居中会让
+  较宽的 'w'（icon39 比 'e' 宽 30px）向左压到前一个字母，整行字错乱。`_nodeInStrSubtree`
+  预计算（祖先链含 str_* 容器）；普通图像节点（yuzu 字母等）保持居中。
 - 待真机：① 三游戏 logo + 标题入场时序/速度对照 K2；② m2logo 仍缺 `iconXX` 部分纹理
-  （`Unsupported image format (header 19190519)` → 1x1 透明兜底）；③ yuzulogo 语音（脚本驱动）核对。
+  （`Unsupported image format (header 19190519)` → 1x1 透明兜底）；③ yuzulogo 语音（脚本驱动）核对；
+  ④ m2logo `str_clip`（src='clip'）裁剪未实现——cheeseware 文字无裁剪/擦除效果；
+  ⑤ 标题入场→steady 切换处"最后几像素瞬移"：日志确认人物滑入平滑，跳变在游戏切换稳态
+  （entrance 终位 vs normal 稳态坐标差）或亚像素截断，需含稳态段的日志复核；
+  ⑥ 若标题入场后（2000ms）背景变黑 → 说明游戏依赖 hold 而非切换稳态，届时对非 logo 场景
+  恢复"末尾保持"。
 - 参考提交/对照清单：见 [krkrz-compat.md](krkrz-compat.md)「krkrsdl3 emoteplayer 对照」。
 
 ### — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】

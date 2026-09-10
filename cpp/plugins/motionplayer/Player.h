@@ -641,6 +641,27 @@ namespace motion {
                     expandSubMotionNodes(m, storageStr, _motionNodes, _logger());
                 }
             }
+            // M2 text-layout subtrees: a node whose ancestor chain contains a
+            // "str_*" container (str_clip / str_locate, e.g. the m2logo
+            // "cheeseware" letters) is positioned by the TEXT pen — each glyph
+            // bitmap is drawn LEFT-ALIGNED at its advance anchor, so
+            // variable-width letters tile without overlapping. Ordinary image
+            // nodes (yuzu logo letters etc.) stay center-anchored. Precompute
+            // once per motion; parentIndex is guaranteed parent-before-child.
+            // M2 文本排版子树：祖先链含 "str_*" 容器（str_clip/str_locate，如 m2logo
+            // 的 "cheeseware" 字母）的节点按**文本笔位**定位——每个字形位图在它的
+            // advance 锚点处**左对齐**绘制，可变宽度字母才能依次排开不重叠；普通图像
+            // 节点（yuzu logo 字母等）保持居中锚定。每 motion 预计算一次；
+            // parentIndex 保证父先于子。
+            _nodeInStrSubtree.assign(_motionNodes.size(), false);
+            for(size_t ni = 0; ni < _motionNodes.size(); ni++) {
+                const int pi = _motionNodes[ni].parentIndex;
+                if(pi < 0) continue; // root: not a text leaf
+                if(_nodeInStrSubtree[static_cast<size_t>(pi)] ||
+                   _motionNodes[static_cast<size_t>(pi)].label.compare(0, 3, "str") == 0) {
+                    _nodeInStrSubtree[ni] = true;
+                }
+            }
             if(auto l = _logger()) {
                 l->info("loadMotionTracks: {} tracks for {}/{} motion={}",
                     _motionTracks.size(), storageStr, charaStr, motionStr);
@@ -755,11 +776,23 @@ namespace motion {
                 }
                 if(!af) { vis[i] = false; continue; }
                 if(!af->visible) {
-                    // No-content frame: hidden only if the timeline isn't exhausted
-                    // (i.e. a later content frame still exists). When exhausted,
-                    // hold the last content frame (motion finished, steady state).
-                    // 无内容帧：仅当时间线未播完（后面还有内容帧）时隐藏；播完则
-                    // 保持末内容帧（运动结束、静止态）。
+                    // No-content frame hides the node for its time range — INCLUDING
+                    // the final empty frames of the timeline. Logo scenes end by
+                    // hiding their layers (yuzulogo letters/kanji disappear at the
+                    // t=215f empty keyframe before the m2logo transition); holding
+                    // the last content frame instead left the complete static logo
+                    // visible in the background ("播放前背景有完整静止 yuzulogo").
+                    // Only container nodes (layout / submotion parents with no
+                    // content frame of their own) stay active so their children
+                    // keep driving visibility. Steady-state motions (normal/status)
+                    // simply have content frames at the end of their timeline.
+                    // 无内容帧在它所覆盖的时间段内隐藏节点——**包括时间线末尾的空帧**。
+                    // logo 场景以隐藏图层收尾（yuzulogo 字母/柚子汉字在 t=215f 的空
+                    // 关键帧处消失，再切 m2logo）；此前"保持最后一帧内容"反而让完整的
+                    // 静止 logo 一直留在背景里（"播放前背景有完整静止 yuzulogo"）。
+                    // 只有无自身内容帧的容器节点（layout/子运动父节点）保持活跃，
+                    // 由子层驱动可见性。稳态 motion（normal/status）时间线末尾
+                    // 本来就是内容帧，不受影响。
                     if(lastContentTime < 0) {
                         // Container node (layout / submotion parent) with no content
                         // frame of its own: it never hides its subtree (mirrors the
@@ -768,21 +801,9 @@ namespace motion {
                         // 无自身内容帧的容器节点（layout / 子运动父节点）：永远不隐藏
                         // 子树（对应参考中 type-3/motion 容器持续 active，由子运动决定可见性）。
                         vis[i] = true;
-                    } else if(now < lastContentTime) {
+                    } else {
                         vis[i] = false;
                         continue;
-                    } else {
-                        // Exhausted: fall back to the last content frame (steady).
-                        // 播完：回退到最后内容帧（静止）。
-                        const PSB::PSBMedia::PSBMotionFrame *pf = nullptr;
-                        for(const auto &f : frames) {
-                            if(f.visible && f.src.size() > 4 &&
-                               f.src.compare(0, 4, "src/") == 0) {
-                                pf = &f;
-                            }
-                        }
-                        if(!pf) { vis[i] = false; continue; }
-                        af = pf;
                     }
                 }
                 // Frame interpolation between the active frame and the next frame.
@@ -853,8 +874,22 @@ namespace motion {
                 const int iw = static_cast<int>(wVar.AsInteger());
                 const int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) continue;
-                const int left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
-                const int top  = _coordY + halfCh + static_cast<int>(py) - ih / 2;
+                // M2 text-layout letters (str_* subtree) are pen-positioned:
+                // left-align the glyph bitmap at the advance anchor so
+                // variable-width letters tile without overlapping (m2logo
+                // "cheeseware"; centering a wide glyph like 'w' overlaps the
+                // previous letter). Ordinary image nodes stay center-anchored.
+                // M2 文本字母（str_* 子树）按笔位排布：字形位图在 advance 锚点处
+                // 左对齐，可变宽度字母才不重叠（m2logo "cheeseware"；居中会让
+                // 较宽的 'w' 压到前一个字母）。普通图像节点仍居中锚定。
+                int left;
+                if(static_cast<size_t>(i) < _nodeInStrSubtree.size() &&
+                   _nodeInStrSubtree[static_cast<size_t>(i)]) {
+                    left = _coordX + halfCw + static_cast<int>(px);
+                } else {
+                    left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
+                }
+                const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
                 if(logger) logger->info("drawAnimatedTree: '{}' at ({},{}) op={} src='{}'",
                     node.label, left, top, wop, af->src);
                 tTJSVariant opArgs[9] = {
@@ -904,13 +939,13 @@ namespace motion {
                     if(f.time <= now) active = &f; else break;
                 }
                 if(!active) continue;
-                if(!active->visible) {
-                    bool found = false;
-                    for(auto it = track.frames.rbegin(); it != track.frames.rend(); ++it) {
-                        if(it->time <= now && it->visible) { active = &*it; found = true; break; }
-                    }
-                    if(!found) continue;
-                }
+                // Same semantics as the node-tree path: an empty frame hides the
+                // layer for its time range (incl. the timeline's final empty
+                // frames), instead of holding the last content frame — otherwise
+                // logo layers stay visible after they should have disappeared.
+                // 与节点树路径一致：空帧在覆盖时段内隐藏该层（含时间线末尾空帧），
+                // 而不是保持末内容帧——否则 logo 图层在应该消失后仍可见。
+                if(!active->visible) continue;
                 if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) continue;
                 const std::string res = MotionSrcToResource(active->src);
                 const ttstr path = TJS_W("psb://") +
@@ -1650,6 +1685,12 @@ namespace motion {
         bool _motionTracksLoaded = false;
         std::vector<PSB::PSBMedia::PSBMotionLayerTrack> _motionTracks;
         std::vector<PSB::PSBMedia::PSBMotionNode> _motionNodes;
+        // Per-node flag: node sits in an M2 text-layout subtree (str_* ancestor,
+        // e.g. m2logo "cheeseware" letters) → its glyph bitmap is left-aligned at
+        // the advance anchor instead of centered. Computed in loadMotionTracks().
+        // 每节点标记：是否处于 M2 文本排版子树（str_* 祖先，如 m2logo "cheeseware"
+        // 字母）→ 字形位图在 advance 锚点左对齐而非居中。loadMotionTracks() 计算。
+        std::vector<bool> _nodeInStrSubtree;
         // Set while D3DAdaptor/SeparateLayerAdaptor.captureCanvas is driving the
         // on-screen draw (single draw source); Player::draw then only caches/loads.
         // captureCanvas 驱动上屏绘制（单一画源）时置位；Player::draw 此时只缓存/加载。
