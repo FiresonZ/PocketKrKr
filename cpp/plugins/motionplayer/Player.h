@@ -416,6 +416,19 @@ namespace motion {
                              _psbImages.size(),
                              static_cast<void*>(target),
                              static_cast<void*>(realLayer));
+                // TEMP probe: realLayer's own origin/size. If it is not at (0,0),
+                // our screen-absolute operateRect coords are shifted by that origin,
+                // which would misplace drawn items (option boxes) vs game-drawn text.
+                // 临时探针：realLayer 自身原点/尺寸。若其 left/top 非 0，我们按屏幕绝对坐标
+                // 绘制的图会整体偏移该原点，导致画的方块与游戏文字错位。
+                tTJSVariant gl(0), gt(0), gw(0), gh(0);
+                realLayer->PropGet(0, TJS_W("left"), nullptr, &gl, realLayer);
+                realLayer->PropGet(0, TJS_W("top"), nullptr, &gt, realLayer);
+                realLayer->PropGet(0, TJS_W("width"), nullptr, &gw, realLayer);
+                realLayer->PropGet(0, TJS_W("height"), nullptr, &gh, realLayer);
+                logger->info("drawPSBImages: realLayer geo left={} top={} w={} h={}",
+                             (int)gl.AsInteger(), (int)gt.AsInteger(),
+                             (int)gw.AsInteger(), (int)gh.AsInteger());
             }
 
             if(logger) logger->info("drawPSBImages: drew {} of {} images",
