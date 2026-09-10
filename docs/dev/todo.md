@@ -166,6 +166,37 @@
 - 放回前提：用 [harness_ps.cpp](https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp) 实证位级一致的算法 = u8 混合核心+u32 打包 alpha；
   改写 Highway **u32 lane** 后放回。功能已由标量保证；非 PS 混合已对齐标量。
 
+### P1 — §2d. 真缺"功能实现"的 Z 插件/API 清单【新增，待排队】
+> 与挂名(ZCompatStub)区分：这些是**调用会崩/演出缺损的真正功能缺口**（对照 krkrz / Kirikiroid2）。
+> 现状核实于 2026-09-10（grep 核心无实现）：
+- **Layer alpha 特效三方法**（P1，Kirikiroid2_patch 19 款游戏高频）：`Layer.AlphaColorBlend` /
+  `TranslucentColorBlend` / `LuminanceForAlpha` —— 核心 Layer 无实现，调用报 `Member does not exist`。
+  方向：仿 layerExAlpha 实现（KrKr2 layerEx）并内建到 LayerIntf.cpp 的 Layer 类 / extrans 挂名处补真体。
+- **Layer.AddMosaic**（P1，Patch 库 46 次最高频单项）：`extrans.cpp` 仅 `NCB_MODULE_NAME` 挂名 stub，
+  **无方法体**。方向：Mosaic 马赛克绘制实现。
+- **PrerenderFont(...) → .tpf 位图字体通道**（P0 关联：选项框字偏小/偏左上/裁切，见下文独立条目）：
+  `PreRenderFont` 前缀未接入 `.tpf/.tpr` 预渲染位图字形；`PrerenderedFont` 类能解析 .tpf 结构但未被
+  `GetBeingFont`/字体通道启用。KrKr/Kirikiroid2 的该通道正是选项文字上屏正解（K2 正常而我们错位）。
+- **krmovie Present**（P0，视频 OP/过场）：ffmpeg 已解码，但"帧→场景叠加显示"仍是 stub——
+  引擎能力非插件，独立条目见 §P1/P2。
+- **Squirrel 插件**（P1）：`zcompat g_z_squirrel` 纯挂名，无 VM/类；部分 Z 游戏存档/系统脚本依赖。
+- 优先级：Alpha 三方法 + AddMosaic（高频、方法缺失、好落地）＞ .tpf 字体通道（连动选项框字）
+  ＞ Squirrel ＞ krmovie（引擎改动）。
+
+### P1 — §2e. Yuzusoft 选项框文字偏小/偏左上/只显示上部【当前在做，等日志】
+>- 现象（engine(7)，用户实测）：选项框文字比 Kirikiroid2 **小、位置偏到框左上、只显示上半约 2/3**，
+>  颜色样式正常；对话/消息框文字正常。
+>- 已明确矛盾：对话(`*ヘッダ`/`*システム`)与选项框(`PrerenderFont(スキップ),ＭＳ ゴシック`)**
+>  最终都被 `GetBeingFont` fallback 成同一个 `Noto Sans CJK JP`**（日志 `being='Noto Sans CJK JP'`），
+>  系统仅注册 `NotoSansCJK-Regular.ttc` 一个 CJK 字体 → 字体名解析造不出对话/选项的差异，
+>  根因更可能在绘制区域/基线/裁剪或 `.tpf` 预渲染位图字体通道。
+>- 已做：① 剥离 `PrerenderFont(...)` 前缀 + 等宽/全角优先回退（`8ec234c`）；② 绘制入口探针
+>  `[TextProbe]`（destRect/x/y/face/height/AscentOfs/prerender 是否非 0，`26ba8de`）；③ 动画修复同批
+>  待真机（`1aca7bf`）。
+>- 待做：① 与动画一起构建；② 依据新日志 `[TextProbe]`（destRect 高度 vs 行高；AscentOfs；prerender
+>  是否命中 .tpf）与 `[FontProbe]` 度量，定位是绘制区域被裁、基线偏移还是未走位图字体；③ 若指向
+>  .tpf 通道 → 按 §2d 实现。
+
 ### — §5. KAGEX / KAG 差异兼容（kagexopt 相关）
 - 调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（需求待明确）。
 
