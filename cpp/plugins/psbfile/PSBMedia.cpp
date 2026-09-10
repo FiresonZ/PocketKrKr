@@ -905,7 +905,7 @@ namespace PSB {
                 // Descend into children (the actual layer hierarchy).
                 // 下钻到 children（真正的图层层级）。
                 auto children = std::dynamic_pointer_cast<PSBList>((*layerDict)["children"]);
-                if(children && !children->empty()) {
+                if(children && children->size() > 0) {
                     CollectMotionNodesFromLayerList(children, myIndex, nodes, logger);
                 }
             }
