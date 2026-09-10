@@ -452,50 +452,67 @@ namespace motion {
         // whose layers carry the actual animation; without expansion the player
         // only sees one reference track whose src is "motion/..." and draws 0
         // images (title static / char never animated).
-        // 递归展开 track 里的 "motion/对象/子motion" src 引用，把被引用的子 motion
-        // 自身图层时间线并入（如 title_bg 的 "main" 层引用 char_move，真正动画在
-        // char_move 的各层里）。不展开则 Player 只拿到一条 src="motion/..." 的引用
-        // track，一张都画不出来（title 立绘静止/不出现）。
+        // Flatten "motion/<obj>/<submotion>" layer references into real tracks by
+        // pulling in the referenced submotion's own tracks (title char animation etc.).
+        //
+        // The old implementation re-scanned the whole list on every recursion, so the
+        // SAME parent ref (whose src='motion/...' frame stays in the list) was merged
+        // AGAIN at each depth — observed as "motion/title_bg/char_move merged 5 tracks"
+        // × 9 and 46 tracks instead of 6. The fix keeps a persistent `expanded` set of
+        // already-consumed refs and walks `tracks` with grow-safe indexing, so each
+        // sub-motion is pulled in exactly once, while nested refs found inside freshly
+        // appended tracks are still processed.
+        //
+        // 把 "motion/<对象>/<子motion>" 图层引用拍平成真实轨道：拉入被引用子 motion 的轨道
+        //（title 立绘动画等）。
+        // 旧实现每次递归都会重扫整个列表，导致同一条父引用（其 src='motion/...' 帧仍在列表里）
+        // 在每个深度再次被合并——日志表现为 "motion/title_bg/char_move merged 5 tracks" ×9、
+        // 轨道数 46 而非 6。修复：用持久的 `expanded` 集合记录已消费的引用，并用可增长索引遍历
+        // `tracks`，保证每个子 motion 只展开一次，同时仍能处理新追加轨道内部嵌套的引用。
         void expandSubMotionRefs(PSB::PSBMedia *media,
                                  const std::string &storageStr,
                                  std::vector<PSB::PSBMedia::PSBMotionLayerTrack> &tracks,
-                                 const std::shared_ptr<spdlog::logger> &logger,
-                                 int depth = 0) {
-            if(!media || depth > 8) return;
-            std::vector<PSB::PSBMedia::PSBMotionLayerTrack> extra;
-            for(const auto &tr : tracks) {
-                for(const auto &f : tr.frames) {
-                    if(f.src.compare(0, 7, "motion/") != 0) continue;
-                    // f src = "motion/<obj>/<submotion>"
+                                 const std::shared_ptr<spdlog::logger> &logger) {
+            if(!media) return;
+            std::set<std::string> expanded; // refs already merged / 已合并的引用
+            size_t i = 0;
+            while(i < tracks.size()) {
+                auto &tr = tracks[i];
+                for(auto &f : tr.frames) {
+                    if(f.src.size() < 7 || f.src.compare(0, 7, "motion/") != 0) continue;
+                    if(expanded.count(f.src)) {
+                        // Already consumed: neutralize so it won't be processed again.
+                        // 已消费：清空 src，避免重复处理。
+                        f.src.clear();
+                        continue;
+                    }
+                    // f.src = "motion/<obj>/<submotion>"
                     std::string ref = f.src.substr(7);
                     auto slash = ref.find('/');
                     if(slash == std::string::npos) continue;
                     const std::string obj = ref.substr(0, slash);
                     const std::string submotion = ref.substr(slash + 1);
-                    auto sub = media->getMotionTracks(storageStr, obj, submotion);
+                    std::vector<PSB::PSBMedia::PSBMotionLayerTrack> sub =
+                        media->getMotionTracks(storageStr, obj, submotion);
                     if(sub.empty() && submotion != "normal")
                         sub = media->getMotionTracks(storageStr, obj, "normal");
                     if(sub.empty()) {
                         if(logger) logger->warn(
                             "expandSubMotionRefs: no tracks for '{}' (obj='{}' sub='{}')",
                             f.src, obj, submotion);
+                        f.src.clear();
                         continue;
                     }
                     if(logger) logger->info(
                         "expandSubMotionRefs: '{}' -> {}/{} merged {} tracks",
                         f.src, obj, submotion, sub.size());
-                    extra.insert(extra.end(),
-                                 std::make_move_iterator(sub.begin()),
-                                 std::make_move_iterator(sub.end()));
+                    expanded.insert(f.src);
+                    f.src.clear(); // consumed / 已消费
+                    tracks.insert(tracks.end(),
+                                  std::make_move_iterator(sub.begin()),
+                                  std::make_move_iterator(sub.end()));
                 }
-            }
-            if(!extra.empty()) {
-                tracks.insert(tracks.end(),
-                              std::make_move_iterator(extra.begin()),
-                              std::make_move_iterator(extra.end()));
-                // keep expanding nested references inside the merged tracks
-                // 继续展开合并后 track 内嵌套的引用
-                expandSubMotionRefs(media, storageStr, tracks, logger, depth + 1);
+                ++i; // grow-safe: appended tracks are scanned by the same while loop
             }
         }
 
@@ -531,6 +548,16 @@ namespace motion {
                         tr.label, tr.frames.size(),
                         tr.frames.empty() ? std::string("") : tr.frames.front().src,
                         tr.frames.empty() ? 0 : tr.frames.back().time);
+                    // Dump every frame (time, src, ox/oy/cx/cy, opacity, visible) once
+                    // per loaded motion so we can see the real M2 timeline and implement
+                    // the coord/opacity animation correctly rather than guessing.
+                    // 每帧转储（time, src, ox/oy/cx/cy, opacity, visible），只在 motion
+                    // 装载时打一次，据此拿到真实的 M2 时间线，按真实坐标实现动画而非猜测。
+                    for(const auto &f : tr.frames) {
+                        l->info("    t={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
+                            f.time, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
+                            f.visible ? 1 : 0);
+                    }
                 }
             }
         }
