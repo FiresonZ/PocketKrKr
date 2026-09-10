@@ -155,6 +155,17 @@ namespace PSB {
         std::vector<std::string> getMotionNames(const std::string &archiveKey,
                                                 const std::string &sceneName) const;
 
+        // Force the archive identified by `archiveKey` (e.g. "yuzulogo.mtn") to be
+        // parsed and registered NOW, so layer positions and motion tracks become
+        // queryable before a consumer asks for them. Idempotent: after the first
+        // successful load later calls are no-ops. Needed because PSB archives load
+        // lazily on first resource access, and motion data must be ready before
+        // Player/captureCanvas reads it on the very first frame.
+        // 立即解析并注册 `archiveKey`（如 "yuzulogo.mtn"）对应的归档，让图层坐标与
+        // motion 时间线在消费者查询前就绪。幂等：首次成功后后续调用为空操作。用于
+        // 绕开"归档首次访问资源才懒加载"的时序，确保首帧时 motion 数据已可用。
+        bool ensureArchiveLoaded(const std::string &archiveKey);
+
     private:
         using ResourceMap = std::unordered_map<std::string, CacheEntry>;
 

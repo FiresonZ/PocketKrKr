@@ -99,6 +99,10 @@
 - 现状基础：`psbfile/PSBMedia` 已能解析对象树/图层坐标/motion 字典/`ExtractFrameInfo`（帧级 time/abort）。
 - 方案（MVP→完整）：① 帧步进：每 motion 关键帧按 time 取当前帧，只画当前帧引用的图层（先不做节点插值）；
   ② 补透明度/位置插值；③ 完整移植 krkrsdl3 emoteengine（网格/节点/物理/时间轴）为远期。
+- 进度：✅ 首屏动起来的主因已修：PSB 归档是**懒加载**的，`loadMotionTracks` 在首帧归档未解析时查
+  得 0 条并把空结果永久锁存（`_motionTracksLoaded=true`），此后只走静态 `drawPSBImages`、`drawAnimated`
+  永不触发。已新增 `PSBMedia::ensureArchiveLoaded()`（幂等），在 `Player::draw` 里先强制解析归档再
+  `cachePSBImages`/`loadMotionTracks`（engine(6) 实证 `Stored 13 tracks for LOGO/yuzulogo` 但读时却是 0）。
 - 参考提交/对照清单：见 [krkrz-compat.md](krkrz-compat.md)「krkrsdl3 emoteplayer 对照」。
 
 ### — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】

@@ -1351,6 +1351,15 @@ namespace PSB {
         }
     }
 
+    // Force-parse the archive so its layer positions and motion tracks are ready.
+    // tryLazyLoadArchive keys on a path containing '/', so append a sentinel path.
+    // Idempotent thanks to the _loadedArchives set inside tryLazyLoadArchive.
+    // 立即解析归档，使其图层坐标与 motion 时间线就绪。tryLazyLoadArchive 按含 '/'
+    // 的路径取归档名，故追加一个哨兵路径；内部 _loadedArchives 集合保证幂等。
+    bool PSBMedia::ensureArchiveLoaded(const std::string &archiveKey) {
+        return tryLazyLoadArchive(archiveKey + "/_probe");
+    }
+
     void PSBMedia::GetListAt(const ttstr &name, iTVPStorageLister *lister) {
         LOGGER->error("TODO: PSBMedia GetListAt");
     }

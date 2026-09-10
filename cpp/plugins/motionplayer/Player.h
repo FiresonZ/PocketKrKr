@@ -195,6 +195,16 @@ namespace motion {
 
             auto logger = _logger();
             try {
+                // PSB archives load lazily on first resource access; force the
+                // archive to be parsed BEFORE we query layer positions / motion
+                // tracks, otherwise the very first frame sees no motion data and
+                // loadMotionTracks() latches an empty result forever. Idempotent.
+                // PSB 归档在首次访问资源时才懒加载；在查询图层坐标/motion 时间线
+                // 之前强制其解析完成，否则首帧取不到 motion 数据，
+                // loadMotionTracks() 会把空结果永久锁存。幂等。
+                if(auto *media = PSB::GetGlobalPSBMedia()) {
+                    media->ensureArchiveLoaded(storage.AsStdString());
+                }
                 if(!_psbImagesCached) {
                     cachePSBImages(storage, logger);
                 }
