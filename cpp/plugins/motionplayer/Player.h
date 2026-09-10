@@ -14,6 +14,7 @@
 #include "tjsDictionary.h"
 #include "../core/base/StorageIntf.h"
 #include "../core/base/ScriptMgnIntf.h"
+#include "../core/base/SysInitIntf.h"
 #include "../core/visual/WindowIntf.h"
 #include "../psbfile/PSBMedia.h"
 #include "SeparateLayerAdaptor.h"
@@ -260,19 +261,44 @@ namespace motion {
 
                     if(!TVPIsExistentStorage(path)) continue;
 
-                    float cx, cy;
-                    resolveCanvasCenter(cx, cy);
+                    float cw, ch;
+                    resolveCanvasSize(cw, ch);
+                    const tjs_int origin = resolveCoordOrigin();
+
+                    // Heuristic: a layer whose size matches the canvas is a
+                    // full-screen background. Whatever the origin convention, it
+                    // must fill the canvas, so pin its top-left to (0,0) instead
+                    // of guessing center(top-left(-half)) or raw coords.
+                    // 启发式：尺寸等于画布的图层是全屏背景。无论原点约定如何它都必须
+                    // 铺满画布，因此直接固定其左上角为 (0,0)，不再猜中心/左上角。
+                    const bool fullscreenBg =
+                        cw > 0 && ch > 0 &&
+                        std::abs(w - static_cast<int>(cw)) <= 1 &&
+                        std::abs(h - static_cast<int>(ch)) <= 1;
 
                     PSBImageEntry img;
                     img.key = pngKey;
                     img.path = path;
-                    // PSB layer positions are relative to the CANVAS CENTER (0,0 is
-                    // mid-screen), while kag/layer operateRect uses top-left origin,
-                    // so add the canvas half-size before centering the image.
-                    // PSB 图层坐标以画布中心为原点（(0,0)=屏幕正中），而 kag/layer 的
-                    // operateRect 用左上角原点，因此先加上画布半宽/半高再按尺寸对中。
-                    img.left = _coordX + static_cast<int>(cx) + static_cast<int>(lp.left) - w / 2;
-                    img.top = _coordY + static_cast<int>(cy) + static_cast<int>(lp.top) - h / 2;
+                    if(fullscreenBg) {
+                        img.left = _coordX;
+                        img.top = _coordY;
+                    } else if(origin == 1) {
+                        // Top-left origin: the PSB position is already the layer's
+                        // top-left corner, so no half-size / half-canvas offset.
+                        // 左上角原点：PSB 坐标即图层左上角，无需半尺寸/半画布偏移。
+                        img.left = _coordX + static_cast<int>(lp.left);
+                        img.top = _coordY + static_cast<int>(lp.top);
+                    } else {
+                        // Center origin: PSB (0,0) is mid-canvas; shift by half the
+                        // canvas, then center the image on that point for the top-left
+                        // origin expected by Layer.operateRect.
+                        // 中心原点：PSB (0,0) 即画布正中；先平移半画布，再以该点对中
+                        // 图像，换算成 operateRect 需要的左上角坐标。
+                        img.left = _coordX + static_cast<int>(cw / 2.0f) +
+                            static_cast<int>(lp.left) - w / 2;
+                        img.top = _coordY + static_cast<int>(ch / 2.0f) +
+                            static_cast<int>(lp.top) - h / 2;
+                    }
                     img.width = w;
                     img.height = h;
                     img.opacity = lp.opacity;
@@ -513,15 +539,15 @@ namespace motion {
         // member), fall back to the main window + its primaryLayer.
         // 解析创建临时/显示层所需的 (window, parent)，与绘制目标类型无关；当目标是
         // D3DAdaptor 空壳（无 window 成员）时回退到主窗口 + primaryLayer。
-        // Resolve the animated scene's canvas half-size. Yuzusoft PSB files place
-        // layer coordinates relative to the canvas center, but screen/layer math
-        // uses a top-left origin, so every collected position must be shifted by
-        // half the canvas before it maps to the display layer.
-        // 解析动画画布的半宽/半高。Yuzusoft 的 PSB 以画布中心为坐标原点，而屏幕/图层是
-        // 左上角原点，因此每个采集到的坐标都需先平移半个画布再映射到显示层。
-        void resolveCanvasCenter(float &cx, float &cy) {
-            cx = 0;
-            cy = 0;
+        // Resolve the animated scene's canvas width/height (from the primary layer).
+        // Yuzusoft PSB files place layer coordinates relative to the canvas
+        // center, and a canvas-sized layer is a full-screen background, so these
+        // dimensions drive both coordinate mapping and the fullscreen heuristic.
+        // 解析动画画布的宽/高（取自 primaryLayer）。Yuzusoft 的 PSB 以画布中心为坐标
+        // 原点，尺寸等于画布的图层即为全屏背景，宽高同时用于坐标映射与全屏启发式。
+        void resolveCanvasSize(float &cw, float &ch) {
+            cw = 0;
+            ch = 0;
             iTJSDispatch2 *probe =
                 TVPMainWindow ? TVPMainWindow->GetOwnerNoAddRef() : nullptr;
             if(!probe) return;
@@ -532,17 +558,36 @@ namespace motion {
                 iTJSDispatch2 *pl = plVar.AsObjectNoAddRef();
                 if(pl) {
                     tTJSVariant wVar, hVar;
-                    tjs_real w = 0, h = 0;
                     if(TJS_SUCCEEDED(
                            pl->PropGet(0, TJS_W("width"), nullptr, &wVar, pl)))
-                        w = wVar.AsReal();
+                        cw = static_cast<float>(wVar.AsReal());
                     if(TJS_SUCCEEDED(
                            pl->PropGet(0, TJS_W("height"), nullptr, &hVar, pl)))
-                        h = hVar.AsReal();
-                    cx = static_cast<float>(w / 2.0);
-                    cy = static_cast<float>(h / 2.0);
+                        ch = static_cast<float>(hVar.AsReal());
                 }
             }
+        }
+
+        // Coordinate-origin convention for PSB layer positions.
+        // -1 = unset (auto), 0 = center (0,0 = mid-canvas), 1 = top-left.
+        // Read once from the "-psb_coord_origin=topleft|center|auto" command line
+        // option; default is center (the Yuzusoft/kag-affine convention). Options
+        // that are not honored on device are overridden here without touching git.
+        // PSB 图层坐标的原点约定：-1=未设(auto)，0=中心(0,0=画布正中)，1=左上角。
+        // 从命令行 "-psb_coord_origin=topleft|center|auto" 读取一次，默认中心原点
+        //（Yuzusoft / kag-affine 的惯例）。
+        tjs_int resolveCoordOrigin() {
+            if(_coordOrigin >= 0) return _coordOrigin;
+            _coordOrigin = 0; // default center (safe fallback)
+            tTJSVariant v;
+            if(TVPGetCommandLine(TJS_W("psb_coord_origin"), &v)) {
+                ttstr s = ttstr(v).AsLowerCase();
+                if(s == TJS_W("topleft") || s == TJS_W("top-left") ||
+                   s == TJS_W("left")) {
+                    _coordOrigin = 1;
+                }
+            }
+            return _coordOrigin;
         }
 
         bool resolveWindowAndParent(iTJSDispatch2 *realLayer,
@@ -956,6 +1001,9 @@ namespace motion {
         mutable std::string _pendingButtonName;
         tjs_real _coordX = 0;
         tjs_real _coordY = 0;
+        // -1 = origin convention not resolved yet (auto). See resolveCoordOrigin().
+        // -1 = 尚未解析的原点约定（auto）。见 resolveCoordOrigin()。
+        tjs_int _coordOrigin = -1;
         ttstr _motion;
         ttstr _chara;
         tjs_int _tickCount = 0;
