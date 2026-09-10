@@ -676,8 +676,8 @@ namespace motion {
                     // 每帧转储（time, src, ox/oy/cx/cy, opacity, visible），只在 motion
                     // 装载时打一次，据此拿到真实的 M2 时间线，按真实坐标实现动画而非猜测。
                     for(const auto &f : tr.frames) {
-                        l->info("    t={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
-                            f.time, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
+                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
+                            f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
                             f.visible ? 1 : 0);
                     }
                 }
@@ -690,8 +690,8 @@ namespace motion {
                         ni, nd.label, nd.parentIndex,
                         static_cast<int>(nd.frames.size()));
                     for(const auto &f : nd.frames) {
-                        l->info("    n[{}] t={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
-                            ni, f.time, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
+                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
+                            ni, f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
                             f.visible ? 1 : 0);
                     }
                 }

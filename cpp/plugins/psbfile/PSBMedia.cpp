@@ -790,8 +790,18 @@ namespace PSB {
                     // 所有角色瞬间同时出现。
                     f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0) *
                                                1000.0 / 60.0);
+                    // PSB frame "type" (0=invisible, 2=static, 3=interpolate) gates
+                    // visibility — reference sub_6926B4 parseFrame. A type==0 frame
+                    // is the layer's HIDDEN initial state even if it carries a
+                    // content/src (yuzulogo white/logo at t=0); drawing it made the
+                    // complete static logo appear before the intro started.
+                    // PSB 帧 "type"（0=不可见, 2=静态, 3=插值）决定可见性——参考
+                    // sub_6926B4 parseFrame。type==0 帧是图层的**隐藏初始态**，即使
+                    // 带 content/src（yuzulogo 的 white/logo t=0 帧）；画出它就会在
+                    // 片头开始前显示完整静态 logo。
+                    f.type = static_cast<int>(GetPSBFloat((*frame)["type"], 0));
                     auto content = std::dynamic_pointer_cast<PSBDictionary>((*frame)["content"]);
-                    if(content) {
+                    if(content && f.type != 0) {
                         auto srcVal = std::dynamic_pointer_cast<PSBString>((*content)["src"]);
                         if(srcVal) f.src = srcVal->value;
                         f.ox = GetPSBFloat((*content)["ox"], 0);
@@ -803,9 +813,10 @@ namespace PSB {
                         }
                         f.opacity = GetPSBFloat((*content)["op"], 255);
                     } else {
-                        // Frame without content only marks a time change: the layer
-                        // is invisible during this time range.
-                        // 无 content 的帧只是时间标记：该时段内图层不可见。
+                        // type==0 (invisible) or a frame without content only marks
+                        // a time change: the layer is invisible during this range.
+                        // type==0（不可见）或无 content 的帧只是时间标记：该时段内
+                        // 图层不可见。
                         f.visible = false;
                     }
                     track.frames.push_back(std::move(f));
@@ -883,8 +894,16 @@ namespace PSB {
                 // 让 Player 时钟（毫秒）与节点时间线保持同一单位。
                 f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0) *
                                            1000.0 / 60.0);
+                // PSB frame "type" (0=invisible) — see CollectMotionTracksFromMotion.
+                // A type==0 frame hides the node even when it carries a content/src
+                // (yuzulogo white/logo t=0: the static logo must not show before
+                // the intro animation starts).
+                // PSB 帧 "type"（0=不可见）——见 CollectMotionTracksFromMotion。
+                // type==0 帧即使带 content/src 也隐藏节点（yuzulogo white/logo 的
+                // t=0 帧：完整静态 logo 不该在片头动画开始前出现）。
+                f.type = static_cast<int>(GetPSBFloat((*frame)["type"], 0));
                 auto content = std::dynamic_pointer_cast<PSBDictionary>((*frame)["content"]);
-                if(content) {
+                if(content && f.type != 0) {
                     auto srcVal = std::dynamic_pointer_cast<PSBString>((*content)["src"]);
                     if(srcVal) f.src = srcVal->value;
                     f.ox = GetPSBFloat((*content)["ox"], 0);
@@ -896,9 +915,10 @@ namespace PSB {
                     }
                     f.opacity = GetPSBFloat((*content)["op"], 255);
                 } else {
-                    // A frame without content only marks a time change: the node is
-                    // invisible during this range.
-                    // 无 content 的帧只是时间标记：该时段内节点不可见。
+                    // type==0 (invisible) or a frame without content only marks
+                    // a time change: the node is invisible during this range.
+                    // type==0（不可见）或无 content 的帧只是时间标记：该时段内
+                    // 节点不可见。
                     f.visible = false;
                 }
                 node.frames.push_back(std::move(f));
@@ -928,6 +948,12 @@ namespace PSB {
                 node.label = labelVal ? labelVal->value : ("layer_" + std::to_string(i));
                 node.parentIndex = parentIndex;
                 node.type = static_cast<int>(GetPSBFloat((*layerDict)["type"], 0));
+                // Layer display size: the texture may be smaller than the layer
+                // (e.g. yuzulogo's 64x64 white_box stretched to fill the canvas).
+                // 图层显示尺寸：纹理可能小于图层（如 yuzulogo 的 64x64 white_box
+                // 需拉伸铺满画布）。
+                node.width = static_cast<int>(GetPSBFloat((*layerDict)["width"], 0));
+                node.height = static_cast<int>(GetPSBFloat((*layerDict)["height"], 0));
                 CollectMotionNodeFrames(layerDict, node);
                 if(logger) logger->info("  node[{}] '{}' parent={} type={} frames={} firstsrc='{}'",
                     static_cast<int>(nodes.size()), node.label, parentIndex, node.type,

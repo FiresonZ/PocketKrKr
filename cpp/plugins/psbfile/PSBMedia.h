@@ -135,14 +135,29 @@ namespace PSB {
         // time <= 时钟的最新一帧。这是 K2 里标题/logo 能动的数据基础。
         struct PSBMotionFrame {
             int time = 0;            // ms, when this frame takes effect / 生效时刻(ms)
+            // PSB frame "type": 0=invisible, 2=static, 3=interpolate. The
+            // reference (libkrkr2 sub_6926B4 parseFrame) treats type==0 as an
+            // INVISIBLE frame regardless of content — a layer's hidden initial
+            // state (e.g. yuzulogo's white/logo layers at t=0 carry a src but
+            // type==0, so the complete static logo must NOT appear before the
+            // intro animation starts). Previously we only checked "has content",
+            // which drew that static logo too early.
+            // PSB 帧 "type"：0=不可见, 2=静态, 3=插值。参考实现（libkrkr2
+            // sub_6926B4 parseFrame）把 type==0 一律视为**不可见帧**——图层的
+            // 隐藏初始态（如 yuzulogo 的 white/logo 层 t=0 帧带 src 但 type==0，
+            // 完整静止 logo 不该在片头动画开始前出现）。此前只按"有无 content"
+            // 判断可见性，导致该静态 logo 过早出现。
+            int type = 2;            // PSB frame type / 帧类型
             std::string src;         // content.src ("src/..." image path)
             float ox = 0, oy = 0;    // content origin offset / 原点偏移
             float cx = 0, cy = 0;    // content coord / 坐标
             float opacity = 255;     // 0..255 (m2 `op`) / 透明度
-            bool visible = true;     // frame has content / 本帧是否有内容
+            bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };
         struct PSBMotionLayerTrack {
             std::string label;                        // layer label / 图层名
+            int width = 0;                            // PSB layer display width / 图层显示宽
+            int height = 0;                           // PSB layer display height / 图层显示高
             std::vector<PSBMotionFrame> frames;       // sorted by time / 按时间排序
         };
         // A motion-layer NODE in the motion's layer tree. Unlike the flat track
@@ -158,6 +173,8 @@ namespace PSB {
             std::string label;                  // node label / 节点名
             int parentIndex = -1;               // parent node index (-1 = root-level)
             int type = 0;                       // PSB layer "type" / 图层类型
+            int width = 0;                      // PSB layer display width / 图层显示宽
+            int height = 0;                     // PSB layer display height / 图层显示高
             std::vector<PSBMotionFrame> frames; // own timeline, sorted by time
         };
         void addMotionNodes(const std::string &archiveKey,

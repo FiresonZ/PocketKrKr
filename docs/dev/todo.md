@@ -117,6 +117,13 @@
   后仍被 keep 到 4s，导致"播放前背景有完整静止 yuzulogo"（真实动画 3.58s 字母即消失、只剩白底）。
   节点树 `drawAnimatedTree` 与扁平 `drawAnimatedFlat` 同步修改；稳态 motion（normal/status）
   末尾本来就是内容帧，不受影响。
+- 进度：✅ **PSB 帧 `type` 解析（2026-09-11）**：此前只按"有无 content"判断帧可见性，从未读
+  PSB 帧的 `type` 字段。参考 libkrkr2 `sub_6926B4 parseFrame`：`type==0` 一律是**不可见帧**
+  （图层的隐藏初始态），即使带 content/src——yuzulogo 的 `white`/`logo` 层 t=0 帧带
+  `src='src/yuzu/yuzu_logo'` 但 type==0，被旧逻辑当可见帧画出，正是"播放前背景就有完整
+  静止 yuzulogo"的根因（用户澄清：不是播放完残留）。已改 `PSBMedia.cpp` 两处帧解析
+  （`CollectMotionTracksFromMotion` + `CollectMotionNodeFrames`）读 `type`，`type==0 → visible=false`；
+  `PSBMotionFrame` 增 `type` 字段，`Player.h` 帧 dump 日志加 `ty=` 便于真机核对。
 - 进度：✅ **M2 文本子树左对齐（2026-09-11，engine(3) 实证）**：m2logo "cheeseware" 字母
   （str_clip/str_locate 子树）按文本笔位在 advance 锚点**左对齐**绘制，不再居中——居中会让
   较宽的 'w'（icon39 比 'e' 宽 30px）向左压到前一个字母，整行字错乱。`_nodeInStrSubtree`
