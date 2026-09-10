@@ -17,6 +17,9 @@
 | krkrz/krkrz_dev | https://github.com/krkrz/krkrz_dev | Z 工具 + win32 插件（menu、fftgraph、theora…） |
 | zeas2/Kirikiroid2 | https://github.com/zeas2/Kirikiroid2 | **安卓端完整移植（最强参考）**：`src/core/visual/ogl`（RenderManager_ogl=GL drawdevice）、`src/core/movie/krmovie.cpp`+`ffmpeg/`、`src/core/visual/win32/DrawDevice.h`/`BasicDrawDevice.*`/`PassThroughDrawDevice.*`、`src/plugins/InternalPlugins.cpp` |
 | krkrz/Krkr2Compat | https://github.com/krkrz/Krkr2Compat | `k2compat/k2compat.tjs`：krkr2→Z 兼容层，纯 TJS 脚本 |
+| krkrsdl3/krkrsdl3 | https://github.com/krkrsdl3/krkrsdl3 | **SDL3 重实现 + 开源 emoteplayer**：`plugins/emoteplayer/emoteplayerclass.{h,cpp}` 有 `D3DAdaptor/SeparateLayerAdaptor/captureCanvas/motionWorkLayer` 全量 C++ 实现（GitHub 上仅此一家，Kirikiroid2 系闭源）。captureCanvas 契约：`void captureCanvas(iTJSDispatch2* targetLayer)`= 单 object 目标层，与我们日志 `p0=object` 吻合。GPU 离屏 target + `memcpy→目标层像素缓冲+Update()`（详见下方对照） |
+| krkrsdl2/krkrsdl2 | https://github.com/krkrsdl2/krkrsdl2 | krkrsdl3 前身（SDL2 + Kirikiri2/Z 基，更成熟）；同家族 emoteplayer 参考，架构同 krkrsdl3 |
+| crate-1556/tjs2-decompiler | https://github.com/crate-1556/tjs2-decompiler | **TJS2（TJS2100）字节码反编译器（Python）**：把游戏编译字节码脚本还原为可读/可执行 TJS2，支持反汇编+文件信息。用于读取加密 `.tjs`（如 affinesourcemotion.tjs），不再只靠运行时诊断猜契约 |
 
 ## 移植总原则
 
@@ -141,6 +144,23 @@
     motion/chara/tickCount/speed/outline/zpos. Missing members throw a fatal
     "Member ... does not exist" and freeze the scene (verified: loopTime then
     outline). On white screen, check the log for the missing member and add it.
+
+### krkrsdl3 emoteplayer 对照（2026-09-10，重读 `plugins/emoteplayer/emoteplayerclass.{h,cpp}`）
+
+> 这是 GitHub 上唯一开源的 Yuzusoft M2 emoteplayer 全实现（Kirikiroid2 系闭源），
+> 行为契约与千恋万花场景强相关。逐项对照我们 motionplayer：
+
+| 主题 | krkrsdl3 emoteplayer | 我们 motionplayer | 结论/参考价值 |
+|---|---|---|---|
+| `D3DAdaptor` 形态 | `D3DAdaptor(winRef,w,h,orgX,orgY)` 持 GPU 离屏 `_target`+`_maskTarget`+`_clearColor` | 可 new 空壳类（`Create_NC_D3DAdaptor`）+ 正字 `captureCanvas`/`unloadUnusedTextures`/`canvasCaptureEnabled` | 方向一致；krkrsdl3 是真 GPU target，我们无 D3D target |
+| `captureCanvas` 契约 | `void captureCanvas(iTJSDispatch2* targetLayer)`——**单 object 目标层**；实现=把离屏渲染帧 `memcpy` 进 targetLayer 像素缓冲 + `Update()` | 我们的诊断日志实测 `p0=object`，现用 `operateRect` 把 PSB 图逐张写进 `p0` | **契约验证**：`p0` 就是游戏传入的目标 Layer，理解正确；krkrsdl3 用整帧 memcpy 更贴近 D3D 语义，我们 operateRect 逐图等效但其实现更省 |
+| `SeparateLayerAdaptor` | 包一个真实 `Layer`（`tTJSNI_Layer*`，挂 `kag.poolLayer` 下，type=alpha, hitType=province）+ GPU target；`motionWorkLayer` 全局 = 它 | 我们也注册 `SeparateLayerAdaptor` 类，但它非真实 Layer（另走了 displayLayer 方案） | **关键差异**：krkrsdl3 的 motionWorkLayer 是真实子 Layer，**由游戏脚本自己控 absolute 序** → 印证"不加自有层，让游戏管层级"是正确方向 |
+| `Player::draw(objthis)` 目标类型 | 三种：SeparateLayerAdaptor / D3DAdaptor / 原始 Layer，分别走不同 target+ 回读 | 只处理通用 layer，经 `resolveRealLayer` 路由 | krkrsdl3 对 D3DAdaptor 只画离屏、随后由 captureCanvas 拷入目标层 → 支持我们 capture-only |
+| 渲染模型 | 真 M2 引擎（emoteengine 网格动画 + GL/渲染后端 `iTVPRenderBackend`） | 静态 PSB 图层合成（cache 图像 + operateRect） | krkrsdl3 是完整动画引擎，我们是近似；追求动画保真再移植，非短期补丁 |
+| 输出路径 | 画进游戏传入层（motionWorkLayer/captureCanvas targetLayer），不动层序 | 之前 displayLayer overlay（会盖菜单）+ 现 captureCanvas `p0` | **采纳**：删 overlay，只走 captureCanvas `p0`，即对齐 krkrsdl3/原版 |
+
+**一句话**：krkrsdl3 证实「captureCanvas(p0=目标Layer) + motion 只进游戏自己管的真实层、由脚本控 z-order」才是原版行为；我们的 capture-only 方向对，overlay 是多余且会干扰游戏后续渲染的层。
+
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
