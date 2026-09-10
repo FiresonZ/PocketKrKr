@@ -486,23 +486,52 @@ namespace motion {
                     }
                     if(!found) continue;
                 }
-                if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) {
+                // [anim probe] Every skip decision is logged so a track that yields
+                // 0 frames can be traced to one of the four gates below. Remove once
+                // motion playback is confirmed stable.
+                // [动画探针] 把每个跳过决策都打出来，便于把“画了 0 帧”归因到下面四个
+                // 关卡之一。动画播放稳定后可移除。
+                if(auto l = logger) {
+                    l->info("drawAnimated: probe track='{}' now={} frames={} src='{}' vis={}",
+                        track.label, now, track.frames.size(), active->src, active->visible);
+                }
+                const bool srcOk = (active->src.size() > 4 &&
+                    (active->src.compare(0, 4, "src/") == 0 ||
+                     active->src.compare(0, 7, "source/") == 0));
+                if(!srcOk) {
+                    if(auto l = logger) l->warn("drawAnimated: SKIP track='{}' src='{}' (not src/ or source/)",
+                        track.label, active->src);
                     continue; // submotion refs / others not handled in MVP
                 }
-                const std::string res = MotionSrcToResource(active->src);
+                std::string res = active->src.compare(0, 4, "src/") == 0
+                    ? MotionSrcToResource(active->src)
+                    : active->src;
                 const ttstr path = TJS_W("psb://") +
                     ttstr((storageStr + "/" + res + "/pixel.png").c_str());
-                if(!TVPIsExistentStorage(path)) continue;
+                if(!TVPIsExistentStorage(path)) {
+                    if(auto l = logger) l->warn("drawAnimated: SKIP track='{}' path not exist: {}",
+                        track.label, res);
+                    continue;
+                }
 
                 iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
-                if(!temp) continue;
-                if(!tryLoadImage(temp, path)) continue;
+                if(!temp) {
+                    if(auto l = logger) l->warn("drawAnimated: SKIP track='{}' no temp layer", track.label);
+                    continue;
+                }
+                if(!tryLoadImage(temp, path)) {
+                    if(auto l = logger) l->warn("drawAnimated: SKIP track='{}' load failed: {}", track.label, res);
+                    continue;
+                }
                 tTJSVariant wVar, hVar;
                 temp->PropGet(0, TJS_W("imageWidth"), nullptr, &wVar, temp);
                 temp->PropGet(0, TJS_W("imageHeight"), nullptr, &hVar, temp);
                 const int iw = static_cast<int>(wVar.AsInteger());
                 const int ih = static_cast<int>(hVar.AsInteger());
-                if(iw <= 0 || ih <= 0) continue;
+                if(iw <= 0 || ih <= 0) {
+                    if(auto l = logger) l->warn("drawAnimated: SKIP track='{}' bad dims {}x{}", track.label, iw, ih);
+                    continue;
+                }
 
                 // Same center-origin mapping as cachePSBImages.
                 // 与 cachePSBImages 相同的中心原点映射。
