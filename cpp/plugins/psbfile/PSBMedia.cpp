@@ -837,6 +837,109 @@ namespace PSB {
             }
         }
 
+        // Recursively build a node's frame timeline from its "frameList" (same
+        // content fields as the flat track: time + content{src,ox,oy,coord,op}).
+        // 递归解析节点自身的 "frameList" 帧时间线（字段与扁平轨道一致）。
+        void CollectMotionNodeFrames(const std::shared_ptr<PSBDictionary> &layerDict,
+                                     PSBMedia::PSBMotionNode &node) {
+            auto frameList = std::dynamic_pointer_cast<PSBList>((*layerDict)["frameList"]);
+            if(!frameList) return;
+            node.frames.reserve(frameList->size());
+            for(int j = 0; j < static_cast<int>(frameList->size()); j++) {
+                auto frame = std::dynamic_pointer_cast<PSBDictionary>((*frameList)[j]);
+                if(!frame) continue;
+                PSBMedia::PSBMotionFrame f;
+                f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0));
+                auto content = std::dynamic_pointer_cast<PSBDictionary>((*frame)["content"]);
+                if(content) {
+                    auto srcVal = std::dynamic_pointer_cast<PSBString>((*content)["src"]);
+                    if(srcVal) f.src = srcVal->value;
+                    f.ox = GetPSBFloat((*content)["ox"], 0);
+                    f.oy = GetPSBFloat((*content)["oy"], 0);
+                    auto coord = std::dynamic_pointer_cast<PSBList>((*content)["coord"]);
+                    if(coord && coord->size() >= 2) {
+                        f.cx = GetPSBFloat((*coord)[0], 0);
+                        f.cy = GetPSBFloat((*coord)[1], 0);
+                    }
+                    f.opacity = GetPSBFloat((*content)["op"], 255);
+                } else {
+                    // A frame without content only marks a time change: the node is
+                    // invisible during this range.
+                    // 无 content 的帧只是时间标记：该时段内节点不可见。
+                    f.visible = false;
+                }
+                node.frames.push_back(std::move(f));
+            }
+            std::stable_sort(node.frames.begin(), node.frames.end(),
+                [](const PSBMedia::PSBMotionFrame &a, const PSBMedia::PSBMotionFrame &b) {
+                    return a.time < b.time;
+                });
+        }
+
+        // Recursively build the M2 layer NODE TREE from the motion's "layer" array,
+        // descending into the PSB "children" key. Pre-order insertion guarantees
+        // parents come before their children in `nodes`, which is what top-down
+        // position/opacity accumulation requires.
+        // 递归从 motion 的 "layer" 数组构建 M2 图层**节点树**，沿 PSB "children" 下钻。
+        // 先序插入保证 `nodes` 中父节点总在子节点之前——这正是自顶向下累加坐标/透明度所需。
+        void CollectMotionNodesFromLayerList(const std::shared_ptr<PSBList> &layerList,
+                                             int parentIndex,
+                                             std::vector<PSBMedia::PSBMotionNode> &nodes,
+                                             const std::shared_ptr<spdlog::logger> &logger) {
+            if(!layerList) return;
+            for(int i = 0; i < static_cast<int>(layerList->size()); i++) {
+                auto layerDict = std::dynamic_pointer_cast<PSBDictionary>((*layerList)[i]);
+                if(!layerDict) continue;
+                PSBMedia::PSBMotionNode node;
+                auto labelVal = std::dynamic_pointer_cast<PSBString>((*layerDict)["label"]);
+                node.label = labelVal ? labelVal->value : ("layer_" + std::to_string(i));
+                node.parentIndex = parentIndex;
+                node.type = static_cast<int>(GetPSBFloat((*layerDict)["type"], 0));
+                CollectMotionNodeFrames(layerDict, node);
+                if(logger) logger->info("  node[{}] '{}' parent={} type={} frames={} firstsrc='{}'",
+                    static_cast<int>(nodes.size()), node.label, parentIndex, node.type,
+                    static_cast<int>(node.frames.size()),
+                    node.frames.empty() ? std::string("") : node.frames.front().src);
+                const int myIndex = static_cast<int>(nodes.size());
+                nodes.push_back(std::move(node));
+                // Descend into children (the actual layer hierarchy).
+                // 下钻到 children（真正的图层层级）。
+                auto children = std::dynamic_pointer_cast<PSBList>((*layerDict)["children"]);
+                if(children && !children->empty()) {
+                    CollectMotionNodesFromLayerList(children, myIndex, nodes, logger);
+                }
+            }
+        }
+
+        // Extract the layered node tree for every scene/motion in the object tree.
+        // 对对象树里每个场景/每个 motion 提取分层节点树。
+        void CollectAllMotionNodeTrees(PSBMedia &media,
+                                       const std::string &archiveKey,
+                                       const std::shared_ptr<PSBDictionary> &objectTree,
+                                       const std::shared_ptr<spdlog::logger> &logger) {
+            if(!objectTree) return;
+            for(const auto &[sceneName, sceneVal] : *objectTree) {
+                auto sceneDict = std::dynamic_pointer_cast<PSBDictionary>(sceneVal);
+                if(!sceneDict) continue;
+                auto motionDict = std::dynamic_pointer_cast<PSBDictionary>((*sceneDict)["motion"]);
+                if(!motionDict) continue;
+                for(const auto &[motionName, motionVal] : *motionDict) {
+                    auto targetMotion = std::dynamic_pointer_cast<PSBDictionary>(motionVal);
+                    if(!targetMotion) continue;
+                    auto layerList = std::dynamic_pointer_cast<PSBList>((*targetMotion)["layer"]);
+                    if(!layerList) continue;
+                    std::vector<PSBMedia::PSBMotionNode> nodes;
+                    CollectMotionNodesFromLayerList(layerList, -1, nodes, logger);
+                    if(!nodes.empty()) {
+                        media.addMotionNodes(archiveKey, sceneName, motionName,
+                                             std::move(nodes));
+                        if(logger) logger->info("Stored {} nodes for {}/{}",
+                            static_cast<int>(nodes.size()), sceneName, motionName);
+                    }
+                }
+            }
+        }
+
         void CollectLayerPositionsFromMotion(
             std::vector<PSBMedia::LayerPosition> &positions,
             std::vector<PSBMedia::ButtonBoundInfo> &buttons,
@@ -968,6 +1071,9 @@ namespace PSB {
                     // Frame time-lines for every scene/motion (M2 animation).
                     // 提取全部场景/motion 的帧时间线（M2 动画）。
                     CollectAllMotionTracks(media, archiveKey, objectTree, logger);
+                    // Layered node trees (parent→child) for generic M2 accumulation.
+                    // 分层节点树（父子关系），供通用 M2 坐标/透明度累加。
+                    CollectAllMotionNodeTrees(media, archiveKey, objectTree, logger);
                 }
             }
         }
@@ -1548,6 +1654,26 @@ namespace PSB {
         std::lock_guard<std::mutex> lock(_mutex);
         _motionTracks[archiveKey + "|" + sceneName + "|" + motionName] =
             std::move(tracks);
+    }
+
+    void PSBMedia::addMotionNodes(const std::string &archiveKey,
+                                  const std::string &sceneName,
+                                  const std::string &motionName,
+                                  std::vector<PSBMotionNode> nodes) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _motionNodes[archiveKey + "|" + sceneName + "|" + motionName] =
+            std::move(nodes);
+    }
+
+    std::vector<PSBMedia::PSBMotionNode>
+    PSBMedia::getMotionNodes(const std::string &archiveKey,
+                             const std::string &sceneName,
+                             const std::string &motionName) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        auto it = _motionNodes.find(archiveKey + "|" + sceneName + "|" + motionName);
+        if(it != _motionNodes.end())
+            return it->second;
+        return {};
     }
 
     std::vector<PSBMedia::PSBMotionLayerTrack>

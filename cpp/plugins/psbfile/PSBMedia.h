@@ -145,6 +145,28 @@ namespace PSB {
             std::string label;                        // layer label / 图层名
             std::vector<PSBMotionFrame> frames;       // sorted by time / 按时间排序
         };
+        // A motion-layer NODE in the motion's layer tree. Unlike the flat track
+        // list, nodes keep the parent→child relationship (PSB "children" key),
+        // which is what lets a `layout` container's position/opacity propagate
+        // down to its child layers (generic M2 semantics — see libkrkr2.so's
+        // Player_buildNodeTree). `frames` holds this node's own key-frame timeline.
+        // M2 motion 的图层**节点**。与扁平轨道不同，节点保留 parent→child 父子关系
+        //（PSB 的 "children" 键），这正是 `layout` 容器的位移/透明度能传给子层的
+        // 通用基础（参考 libkrkr2.so 的 Player_buildNodeTree）。`frames` 是该节点
+        // 自身的帧时间线。
+        struct PSBMotionNode {
+            std::string label;                  // node label / 节点名
+            int parentIndex = -1;               // parent node index (-1 = root-level)
+            int type = 0;                       // PSB layer "type" / 图层类型
+            std::vector<PSBMotionFrame> frames; // own timeline, sorted by time
+        };
+        void addMotionNodes(const std::string &archiveKey,
+                            const std::string &sceneName,
+                            const std::string &motionName,
+                            std::vector<PSBMotionNode> nodes);
+        std::vector<PSBMotionNode> getMotionNodes(const std::string &archiveKey,
+                                                  const std::string &sceneName,
+                                                  const std::string &motionName) const;
         void addMotionTracks(const std::string &archiveKey,
                              const std::string &sceneName,
                              const std::string &motionName,
@@ -191,5 +213,6 @@ namespace PSB {
         std::unordered_map<std::string, std::vector<LayerPosition>> _layerPositions;
         std::unordered_map<std::string, std::vector<ButtonBoundInfo>> _buttonBoundsMap;
         std::unordered_map<std::string, std::vector<PSBMotionLayerTrack>> _motionTracks;
+        std::unordered_map<std::string, std::vector<PSBMotionNode>> _motionNodes;
     };
 } // namespace PSB

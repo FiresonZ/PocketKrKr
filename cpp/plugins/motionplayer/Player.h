@@ -141,6 +141,7 @@ namespace motion {
             _psbCacheRetries = 0;
             _motionTracksLoaded = false;
             _motionTracks.clear();
+            _motionNodes.clear();
             cleanupTempLayer();
             buildButtonBounds(_loadedStorage);
 
@@ -516,11 +517,70 @@ namespace motion {
             }
         }
 
+        // Expand "motion/<obj>/<sub>" sub-motion references inside the layered node tree.
+        // The referencing node becomes a passive container; the target motion's node
+        // subtree is appended with its roots re-parented to the referencing node, so
+        // the referencing node's accumulated transform still wraps the sub- motion
+        // (generic M2 child-motion). Deduped like the flat version; grow-safe walk.
+        // 在分层节点树里展开 "motion/<对象>/<子motion>" 子运动引用。引用节点退化为
+        // 被动容器，被引用 motion 的子树以引用节点为父追加进来，使引用节点的累加变换
+        // 仍包住子运动（通用 M2 子运动）。与扁平版同样去重、增长安全遍历。
+        void expandSubMotionNodes(PSB::PSBMedia *media,
+                                  const std::string &storageStr,
+                                  std::vector<PSB::PSBMedia::PSBMotionNode> &nodes,
+                                  const std::shared_ptr<spdlog::logger> &logger) {
+            if(!media) return;
+            std::set<std::string> expanded;
+            size_t i = 0;
+            while(i < nodes.size()) {
+                auto &node = nodes[i];
+                for(auto &f : node.frames) {
+                    if(f.src.size() < 7 || f.src.compare(0, 7, "motion/") != 0) continue;
+                    if(expanded.count(f.src)) { f.src.clear(); continue; }
+                    std::string ref = f.src.substr(7);
+                    auto slash = ref.find('/');
+                    if(slash == std::string::npos) { f.src.clear(); continue; }
+                    const std::string obj = ref.substr(0, slash);
+                    const std::string sub = ref.substr(slash + 1);
+                    std::vector<PSB::PSBMedia::PSBMotionNode> child =
+                        media->getMotionNodes(storageStr, obj, sub);
+                    if(child.empty() && sub != "normal")
+                        child = media->getMotionNodes(storageStr, obj, "normal");
+                    if(child.empty()) {
+                        if(logger) logger->warn(
+                            "expandSubMotionNodes: no nodes for '{}' (obj='{}' sub='{}')",
+                            f.src, obj, sub);
+                        f.src.clear();
+                        continue;
+                    }
+                    if(logger) logger->info(
+                        "expandSubMotionNodes: '{}' -> {}/{} appended {} nodes",
+                        f.src, obj, sub, static_cast<int>(child.size()));
+                    expanded.insert(f.src);
+                    f.src.clear();
+                    // Append the sub-subtree rooted under this referencing node,
+                    // remapping internal parent edges by the insertion offset.
+                    // 把子子树以本引用节点为父追加，按插入偏移重映射内部父子边。
+                    const int selfIdx = static_cast<int>(i);
+                    const int offset = static_cast<int>(nodes.size());
+                    for(auto &c : child) {
+                        if(c.parentIndex == -1) c.parentIndex = selfIdx;
+                        else c.parentIndex += offset;
+                    }
+                    nodes.insert(nodes.end(),
+                                 std::make_move_iterator(child.begin()),
+                                 std::make_move_iterator(child.end()));
+                }
+                ++i;
+            }
+        }
+
         // Fetch the current motion's per-layer frame time-lines from PSBMedia.
         // 从 PSBMedia 取当前 motion 的每层帧时间线。
         void loadMotionTracks(const ttstr &storage) {
             _motionTracksLoaded = true;
             _motionTracks.clear();
+            _motionNodes.clear();
             auto *media = PSB::GetGlobalPSBMedia();
             if(!media) return;
             const std::string storageStr = storage.AsStdString();
@@ -533,12 +593,23 @@ namespace motion {
             if(_motionTracks.empty() && motionStr != "show") {
                 _motionTracks = media->getMotionTracks(storageStr, charaStr, "show");
             }
+            // Layered node tree (parent→child) — the primary source for generic M2
+            // accumulation. Falls back to the flat track list when no tree exists.
+            // 分层节点树（父子关系）——通用 M2 累加的主数据源；无树时回退扁平轨道。
+            _motionNodes = media->getMotionNodes(storageStr, charaStr, motionStr);
+            if(_motionNodes.empty() && motionStr != "normal")
+                _motionNodes = media->getMotionNodes(storageStr, charaStr, "normal");
+            if(_motionNodes.empty() && motionStr != "show")
+                _motionNodes = media->getMotionNodes(storageStr, charaStr, "show");
             // Expand "motion/<obj>/<sub>" references so the player can actually
             // draw the submotion's layers (title char animation etc.).
             // 展开 "motion/<对象>/<子motion>" 引用，让 Player 能真实画出子 motion 图层
             //（title 立绘动画等）。
             if(auto *m = PSB::GetGlobalPSBMedia()) {
                 expandSubMotionRefs(m, storageStr, _motionTracks, _logger());
+                if(!_motionNodes.empty()) {
+                    expandSubMotionNodes(m, storageStr, _motionNodes, _logger());
+                }
             }
             if(auto l = _logger()) {
                 l->info("loadMotionTracks: {} tracks for {}/{} motion={}",
@@ -559,56 +630,48 @@ namespace motion {
                             f.visible ? 1 : 0);
                     }
                 }
-            }
-        }
-
-        // Repair 1: resolve the motion-global "layout" transform.
-        //
-        // A `layout` layer is a transform container (position offset + overall alpha)
-        // and carries no image of its own. The frame-timeline extraction flattens the
-        // layer tree, so the exact parent->child linkage is not recoverable here. For
-        // these logo files the `slide` layout layers turn out to be the SAME container
-        // repeated (identical resting pos, see the repeated labels in the track log),
-        // so we take the FIRST active visible layout frame rather than summing all of
-        // them — summing would over-shift by the count of duplicate tracks. frame0 is
-        // normally "no content", so the offset/alpha stays identity until the slide
-        // frame kicks in, which reproduces the intended slide/fade. With no active
-        // layout frame the transform is identity, i.e. identical to the old static
-        // path (no regression).
-        //
-        // 修复1：解析 motion 全局 "layout" 变换。
-        // `layout` 层是变换容器（位移 + 整体透明），自身不带图像。帧时间线提取会拍平
-        // 图层树，这里无法还原精确父子关系。对这些 logo 文件，`slide` layout 层是同一
-        // 容器的重复（静止位置一致，见轨道日志中重复的标签），故取第一个生效可见的
-        // layout 帧而非累加所有帧（累加会按重复轨道数量过量位移）。帧 0 通常 "无内容"，
-        // 在滑入帧到来前位移/透明保持单位，正好还原游戏想要的滑入/淡入。无生效 layout
-        // 帧时变换为单位，等价于旧静态路径（不回归）。
-        static void ResolveLayoutTransform(const std::vector<PSB::PSBMedia::PSBMotionLayerTrack> &tracks,
-                                           tjs_int now,
-                                           float &dx, float &dy, int &alpha) {
-            dx = 0; dy = 0; alpha = 255;
-            for(const auto &track : tracks) {
-                const PSB::PSBMedia::PSBMotionFrame *lf = nullptr;
-                for(const auto &f : track.frames) {
-                    if(f.time <= now) lf = &f; else break;
+                l->info("loadMotionTracks: {} nodes for {}/{} motion={} (tree, "
+                        "parent-before-child)",
+                    _motionNodes.size(), storageStr, charaStr, motionStr);
+                for(size_t ni = 0; ni < _motionNodes.size(); ni++) {
+                    const auto &nd = _motionNodes[ni];
+                    l->info("  node[{}] '{}' parent={} frames={}",
+                        ni, nd.label, nd.parentIndex,
+                        static_cast<int>(nd.frames.size()));
                 }
-                if(!lf || !lf->visible) continue;
-                if(lf->src.size() < 6 || lf->src.compare(0, 6, "layout") != 0) continue;
-                // Position of a container follows the same ox+cx rule as image lines.
-                // 容器位置与图像行一致，取 ox+cx。
-                dx = lf->ox + lf->cx;
-                dy = lf->oy + lf->cy;
-                alpha = static_cast<int>(std::clamp(lf->opacity, 0.0f, 255.0f));
-                return; // first active container wins; later duplicates are siblings
             }
         }
 
-        // Evaluate the motion at the current clock and draw only the active frame
-        // of each layer (M2 timeline). Returns how many images were drawn.
-        // 按当前时钟求值 motion，只画每层在该时刻生效的帧（M2 时间轴）。返回绘制张数。
+        // Evaluate the motion at the current clock and draw the active frame of every
+        // layer (M2 timeline). Prefers the layered node tree (generic parent→child
+        // accumulation); falls back to the flat per-track path when no tree exists.
+        // 按当前时钟求值 motion，绘制每层生效帧（M2 时间轴）。优先用分层节点树（通用
+        // 父子累加）；无节点树时回退扁平按轨道路径。
         int drawAnimated(iTJSDispatch2 *dest, iTJSDispatch2 *tempParent,
                          const std::shared_ptr<spdlog::logger> &logger) {
-            if(!dest || _motionTracks.empty()) return 0;
+            if(!dest) return 0;
+            if(!_motionNodes.empty()) return drawAnimatedTree(dest, tempParent, logger);
+            if(_motionTracks.empty()) return 0;
+            return drawAnimatedFlat(dest, tempParent, logger);
+        }
+
+        // Generic M2 node-tree path: for each node in pre-order (parent before child),
+        // evaluate its active frame's LOCAL pos (ox+cx, oy+cy) and opacity, then
+        // accumulate top-down:
+        //   worldPos      = parent.worldPos + localPos        (axis-aligned)
+        //   worldOpacity  = parent.worldOpacity * localOpacity / 255
+        // A `layout` / sub-motion container node (no "src/..." image) contributes its
+        // transform to children but draws nothing itself — this is how a container's
+        // slide/fade propagates to child layers (generic M2, mirrors libkrkr2.so's
+        // Player_updateLayers).
+        // 通用 M2 节点树路径：按先序（父先于子）求每个节点 active 帧的**局部**坐标
+        //（ox+cx, oy+cy）与透明度，再自顶向下累加：
+        //   世界坐标   = 父世界坐标 + 局部坐标（axis-aligned）
+        //   世界透明度 = 父世界透明度 * 局部透明度 / 255
+        // `layout`/子运动容器节点（无 "src/..." 图像）把自身变换传给子层但自身不画
+        //——容器的滑入/淡入由此传给子层（通用 M2，对应 libkrkr2.so 的 Player_updateLayers）。
+        int drawAnimatedTree(iTJSDispatch2 *dest, iTJSDispatch2 *tempParent,
+                             const std::shared_ptr<spdlog::logger> &logger) {
             const tjs_int now = _tickCount; // ms clock, advanced by progress()
             float cw = 0, ch = 0;
             resolveCanvasSize(cw, ch);
@@ -617,63 +680,53 @@ namespace motion {
             const std::string storageStr = _loadedStorage.IsEmpty()
                 ? ResourceManager::getLastLoadedPath().AsStdString()
                 : _loadedStorage.AsStdString();
-
-            // Motion-global layout drift applied to every drawn image line.
-            // 应用到每条图像线的 layout 全局位移/透明。
-            float layoutDx = 0, layoutDy = 0;
-            int layoutAlpha = 255;
-            ResolveLayoutTransform(_motionTracks, now, layoutDx, layoutDy, layoutAlpha);
-            if(layoutAlpha < 255 || layoutDx != 0 || layoutDy != 0) {
-                if(auto l = logger) {
-                    l->info("drawAnimated: layout dx={:.1f} dy={:.1f} alpha={}",
-                            layoutDx, layoutDy, layoutAlpha);
-                }
-            }
-
+            const int n = static_cast<int>(_motionNodes.size());
+            std::vector<float> wx(n, 0.0f), wy(n, 0.0f);
+            std::vector<int> wo(n, 255);
+            std::vector<bool> vis(n, true);
             int drawn = 0;
-            for(const auto &track : _motionTracks) {
-                // Active frame = last frame with time <= now; if it has no content
-                // (invisible), walk backwards to the last visible one so the layer
-                // never blanks at the motion end.
-                // 活跃帧 = time <= now 的最后一帧；若该帧无内容（不可见），回退到最近
-                // 可见帧，避免 motion 结束时图层消失。
-                const PSB::PSBMedia::PSBMotionFrame *active = nullptr;
-                for(const auto &f : track.frames) {
-                    if(f.time <= now) active = &f;
-                    else break;
+            for(int i = 0; i < n; i++) {
+                const auto &node = _motionNodes[i];
+                // Active frame = last frame with time <= now; if invisible, walk back
+                // to the last visible one so the layer never blanks.
+                // 活跃帧 = time <= now 的最后一帧；不可见则回退最近可见帧，避免图层空白。
+                const PSB::PSBMedia::PSBMotionFrame *af = nullptr;
+                for(const auto &f : node.frames) {
+                    if(f.time <= now) af = &f; else break;
                 }
-                if(!active) continue;
-                if(!active->visible) {
-                    bool found = false;
-                    for(auto it = track.frames.rbegin(); it != track.frames.rend(); ++it) {
-                        if(it->time <= now && it->visible) {
-                            active = &*it;
-                            found = true;
-                            break;
-                        }
+                if(af && !af->visible) {
+                    const PSB::PSBMedia::PSBMotionFrame *pf = nullptr;
+                    for(auto it = node.frames.rbegin(); it != node.frames.rend(); ++it) {
+                        if(it->time <= now && it->visible) { pf = &*it; break; }
                     }
-                    if(!found) continue;
+                    af = pf;
                 }
-                if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) {
-                    // Not an image line: `src='layout'` was already resolved above as
-                    // the motion-global transform; `src='motion/...'` parent refs are
-                    // expanded into their own tracks by expandSubMotionRefs and the
-                    // ref itself carries no drawable image. Neither draws here.
-                    // 非图像行：`src='layout'` 已在上方解析为全局变换；`src='motion/...'`
-                    // 父引用由 expandSubMotionRefs 展开成独立轨道，引用本身无可画图像。
-                    continue;
-                }
-                const std::string res = MotionSrcToResource(active->src);
+                if(!af) { vis[i] = false; continue; }
+                const bool parentOn = (node.parentIndex >= 0) ? vis[node.parentIndex] : true;
+                if(!parentOn) { vis[i] = false; continue; } // hidden parent hides subtree
+                const float baseX = (node.parentIndex >= 0) ? wx[node.parentIndex] : 0.0f;
+                const float baseY = (node.parentIndex >= 0) ? wy[node.parentIndex] : 0.0f;
+                const int baseOp = (node.parentIndex >= 0) ? wo[node.parentIndex] : 255;
+                const float px = baseX + af->ox + af->cx;
+                const float py = baseY + af->oy + af->cy;
+                const int lop = std::clamp(static_cast<int>(af->opacity), 0, 255);
+                const int wop = baseOp * lop / 255;
+                wx[i] = px; wy[i] = py; wo[i] = wop;
+                vis[i] = (wop > 0);
+                if(!vis[i]) continue;
+                // Only image lines draw; layout/motion containers only accumulate.
+                // 仅图像行绘制；layout/motion 容器只累加不绘制。
+                if(af->src.size() <= 4 || af->src.compare(0, 4, "src/") != 0) continue;
+                const std::string res = MotionSrcToResource(af->src);
                 const ttstr path = TJS_W("psb://") +
                     ttstr((storageStr + "/" + res + "/pixel.png").c_str());
                 if(!TVPIsExistentStorage(path)) {
                     if(auto l = logger) {
-                        l->warn("drawAnimated: skip track '{}' src='{}' -> missing '{}'",
-                                track.label, active->src, path.AsStdString());
+                        l->warn("drawAnimatedTree: skip node '{}' src='{}' -> missing '{}'",
+                                node.label, af->src, path.AsStdString());
                     }
                     continue;
                 }
-
                 iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
                 if(!temp) continue;
                 if(!tryLoadImage(temp, path)) continue;
@@ -683,23 +736,90 @@ namespace motion {
                 const int iw = static_cast<int>(wVar.AsInteger());
                 const int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) continue;
-
-                // Same center-origin mapping as cachePSBImages, plus the layout drift
-                // so slide/fade actually moves the artwork.
-                // 与 cachePSBImages 相同的中心原点映射，叠加 layout 位移实现滑入。
-                const float px = active->ox + active->cx + layoutDx;
-                const float py = active->oy + active->cy + layoutDy;
                 const int left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 const int top  = _coordY + halfCh + static_cast<int>(py) - ih / 2;
+                if(logger) logger->info("drawAnimatedTree: '{}' at ({},{}) op={} src='{}'",
+                    node.label, left, top, wop, af->src);
+                tTJSVariant opArgs[9] = {
+                    tTJSVariant(static_cast<tjs_int>(left)),
+                    tTJSVariant(static_cast<tjs_int>(top)),
+                    tTJSVariant(temp, temp),
+                    tTJSVariant(static_cast<tjs_int>(0)),
+                    tTJSVariant(static_cast<tjs_int>(0)),
+                    tTJSVariant(static_cast<tjs_int>(iw)),
+                    tTJSVariant(static_cast<tjs_int>(ih)),
+                    tTJSVariant(static_cast<tjs_int>(2)),  // omAlpha
+                    tTJSVariant(static_cast<tjs_int>(wop)),
+                };
+                tTJSVariant *opArgv[] = { &opArgs[0], &opArgs[1], &opArgs[2],
+                                          &opArgs[3], &opArgs[4], &opArgs[5],
+                                          &opArgs[6], &opArgs[7], &opArgs[8] };
+                try {
+                    dest->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, dest);
+                    drawn++;
+                } catch(const std::exception &e) {
+                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateRect exception: {}", e.what());
+                } catch(...) {
+                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateRect unknown exception");
+                }
+            }
+            return drawn;
+        }
 
-                // Combine the layer's own alpha with the motion-global layout alpha
-                // (255 when absent, so the original behaviour is unchanged).
-                // 层自身透明度乘上 layout 全局透明度（无 layout 时为 255，原行为不变）。
-                int opacity = std::clamp(
-                    static_cast<int>(active->opacity) * layoutAlpha / 255,
-                    0, 255);
+        // Flat per-track fallback (archives without a node tree). Keeps the previous
+        // active-frame selection and center-origin mapping.
+        // 扁平按轨道回退（无节点树的归档）。沿用原有 active 帧选择与中心原点映射。
+        int drawAnimatedFlat(iTJSDispatch2 *dest, iTJSDispatch2 *tempParent,
+                             const std::shared_ptr<spdlog::logger> &logger) {
+            if(!dest || _motionTracks.empty()) return 0;
+            const tjs_int now = _tickCount; // ms clock
+            float cw = 0, ch = 0;
+            resolveCanvasSize(cw, ch);
+            const tjs_int halfCw = static_cast<tjs_int>(cw / 2.0f);
+            const tjs_int halfCh = static_cast<tjs_int>(ch / 2.0f);
+            const std::string storageStr = _loadedStorage.IsEmpty()
+                ? ResourceManager::getLastLoadedPath().AsStdString()
+                : _loadedStorage.AsStdString();
+            int drawn = 0;
+            for(const auto &track : _motionTracks) {
+                const PSB::PSBMedia::PSBMotionFrame *active = nullptr;
+                for(const auto &f : track.frames) {
+                    if(f.time <= now) active = &f; else break;
+                }
+                if(!active) continue;
+                if(!active->visible) {
+                    bool found = false;
+                    for(auto it = track.frames.rbegin(); it != track.frames.rend(); ++it) {
+                        if(it->time <= now && it->visible) { active = &*it; found = true; break; }
+                    }
+                    if(!found) continue;
+                }
+                if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) continue;
+                const std::string res = MotionSrcToResource(active->src);
+                const ttstr path = TJS_W("psb://") +
+                    ttstr((storageStr + "/" + res + "/pixel.png").c_str());
+                if(!TVPIsExistentStorage(path)) {
+                    if(auto l = logger) {
+                        l->warn("drawAnimatedFlat: skip track '{}' src='{}' -> missing '{}'",
+                                track.label, active->src, path.AsStdString());
+                    }
+                    continue;
+                }
+                iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
+                if(!temp) continue;
+                if(!tryLoadImage(temp, path)) continue;
+                tTJSVariant wVar, hVar;
+                temp->PropGet(0, TJS_W("imageWidth"), nullptr, &wVar, temp);
+                temp->PropGet(0, TJS_W("imageHeight"), nullptr, &hVar, temp);
+                const int iw = static_cast<int>(wVar.AsInteger());
+                const int ih = static_cast<int>(hVar.AsInteger());
+                if(iw <= 0 || ih <= 0) continue;
+                const float px = active->ox + active->cx;
+                const float py = active->oy + active->cy;
+                const int left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
+                const int top  = _coordY + halfCh + static_cast<int>(py) - ih / 2;
+                const int opacity = std::clamp(static_cast<int>(active->opacity), 0, 255);
                 if(opacity <= 0) continue;
-
                 tTJSVariant opArgs[9] = {
                     tTJSVariant(static_cast<tjs_int>(left)),
                     tTJSVariant(static_cast<tjs_int>(top)),
@@ -718,9 +838,9 @@ namespace motion {
                     dest->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, dest);
                     drawn++;
                 } catch(const std::exception &e) {
-                    if(auto l = _logger()) l->warn("drawAnimated: operateRect exception: {}", e.what());
+                    if(auto l = _logger()) l->warn("drawAnimatedFlat: operateRect exception: {}", e.what());
                 } catch(...) {
-                    if(auto l = _logger()) l->warn("drawAnimated: operateRect unknown exception");
+                    if(auto l = _logger()) l->warn("drawAnimatedFlat: operateRect unknown exception");
                 }
             }
             return drawn;
@@ -1397,6 +1517,7 @@ namespace motion {
         // 在 cachePSBImages() 解析归档后加载；play() 时重置以便新 motion 重载。
         bool _motionTracksLoaded = false;
         std::vector<PSB::PSBMedia::PSBMotionLayerTrack> _motionTracks;
+        std::vector<PSB::PSBMedia::PSBMotionNode> _motionNodes;
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;
