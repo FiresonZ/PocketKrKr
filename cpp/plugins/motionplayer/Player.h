@@ -137,12 +137,6 @@ namespace motion {
             _psbImagesCached = false;
             _composited = false;
             _psbCacheRetries = 0;
-            // Reset the capture switch for a new motion: until captureCanvas hands
-            // us a valid destination layer again, we draw to the overlay display
-            // layer so the content is never blank.
-            // 新 motion 重置捕获开关：在 captureCanvas 再次传入有效目标层之前，先画到
-            // overlay displayLayer，避免画面空白。
-            _captureIsActive = false;
             cleanupTempLayer();
             buildButtonBounds(_loadedStorage);
 
@@ -405,15 +399,6 @@ namespace motion {
             // Skip re-compositing when images haven't changed since last draw
             if(_composited) return;
 
-            // When captureCanvas has handed us the game's destination target layer,
-            // that layer carries the motion picture in the z-order the game manages.
-            // Skip our own overlay display layer so we can SEE the capture result
-            // (previously the overlay covered it up and hid the menu below).
-            // 当 captureCanvas 已把 motion 画到游戏传入的目标层（层级由游戏管理）时，
-            // 跳过我们自己的 overlay displayLayer，以看到 capture 的结果（之前 overlay
-            // 盖住了它并遮住下面的菜单）。
-            if(_captureIsActive) return;
-
             // Composite onto our own visible display layer (hung on the window
             // tree) instead of the game's primary layer, so motion pixels never
             // pollute the main scene (title text, background, etc.).
@@ -537,28 +522,6 @@ namespace motion {
                 iTJSDispatch2 *realLayer = resolveRealLayer(target);
                 iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
                 int drawn = compositeTo(target, tempParent, logger);
-                // Only switch to capture-only when we actually drew something onto
-                // the game's layer; if the target is unusable (drawn==0) we keep
-                // the overlay fallback so the picture never goes blank.
-                // 仅当真正向游戏目标层绘制了内容才切到 capture-only；若目标不可用
-                //（drawn==0）则保留 overlay 兜底，避免画面空白。
-                if(drawn > 0) {
-                    _captureIsActive = true;
-                    // The overlay display layer may already have been painted in an
-                    // earlier frame; hide it now so it stops covering the game's own
-                    // layers (and the menu) and we can see the capture result below.
-                    // overlay 可能在更早的帧已被画上；现在隐藏它，让它不再盖住游戏自身
-                    // 图层（以及菜单），从而能看到下方 capture 的结果。
-                    if(_displayLayer) {
-                        try {
-                            tTJSVariant falseVar(false);
-                            _displayLayer->PropSet(TJS_MEMBERENSURE, TJS_W("visible"),
-                                                   nullptr, &falseVar, _displayLayer);
-                        } catch(...) {
-                            if(auto l = _logger()) l->warn("drawOnto: hide displayLayer exception");
-                        }
-                    }
-                }
                 if(logger) logger->info("drawOnto: drew {} images onto capture target={}",
                                         drawn, static_cast<void*>(target));
             } catch(const std::exception &e) {
@@ -1121,14 +1084,6 @@ namespace motion {
         bool _isTransition = false;
         bool _stopCommandSent = false;
 
-        // Has captureCanvas successfully drawn to a game-supplied target layer?
-        // If true, we skip drawing to our own display layer (which would otherwise
-        // cover everything up) so we can see the result of capture in the game's
-        // own layer hierarchy.
-        // captureCanvas 是否成功向游戏传入的目标层绘制过？若是，跳过我们自己的
-        // displayLayer 绘制（否则 displayLayer 会盖住），让 capture 的结果在游戏
-        // 自有层级中显示出来。
-        bool _captureIsActive = false;
         tjs_int _loopTime = 0;
         bool _animating = false;
         tjs_int _outline = 0;
