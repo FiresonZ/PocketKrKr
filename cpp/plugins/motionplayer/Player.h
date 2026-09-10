@@ -703,21 +703,69 @@ namespace motion {
             int drawn = 0;
             for(int i = 0; i < n; i++) {
                 const auto &node = _motionNodes[i];
-                // Active frame = last frame with time <= now; if invisible, walk back
-                // to the last visible one so the layer never blanks.
-                // 活跃帧 = time <= now 的最后一帧；不可见则回退最近可见帧，避免图层空白。
+                // Reference semantics (PlayerFrameProgress + PlayerUpdateLayerEval):
+                // - A content frame marks the node visible; a "no content" frame
+                //   (src empty / type-0) marks it invisible only while later content
+                //   still exists in the timeline.
+                // - Once the timeline is exhausted (now >= last frame time), the
+                //   node HOLDS the last content frame (静止, motion finished) — it
+                //   does NOT hide. Only a declared loopTime (loop motion) rewinds.
+                // - Mid-timeline empty frames (e.g. a layer that appears at t=90)
+                //   are hidden before their first content frame.
+                // 参考语义（PlayerFrameProgress + PlayerUpdateLayerEval）：
+                // - 有内容帧使节点可见；"无内容"帧（src 空/type-0）仅在时间线后面还有
+                //   内容帧时代表不可见。
+                // - 时间线播完（now >= 末帧时间）后节点**保持最后一帧内容**（静止），
+                //   不隐藏；仅声明了 loopTime 的循环 motion 才回绕。
+                // - 时间线中间的空帧（如 t=90 才出现的层）在首个内容帧之前隐藏。
+                const auto &frames = node.frames;
+                // Last content frame time (the "end" of this node's timeline).
+                // 该节点时间线的末内容帧时间。
+                tjs_int lastContentTime = -1;
+                for(const auto &f : frames) {
+                    if(f.visible && f.src.size() > 4 &&
+                       f.src.compare(0, 4, "src/") == 0) {
+                        if(f.time > lastContentTime) lastContentTime = f.time;
+                    }
+                }
+                // Active frame = last frame with time <= now (per-frame evaluation).
+                // 活跃帧 = time <= now 的最后一帧（逐帧求值）。
                 const PSB::PSBMedia::PSBMotionFrame *af = nullptr;
-                for(const auto &f : node.frames) {
+                for(const auto &f : frames) {
                     if(f.time <= now) af = &f; else break;
                 }
-                if(af && !af->visible) {
-                    const PSB::PSBMedia::PSBMotionFrame *pf = nullptr;
-                    for(auto it = node.frames.rbegin(); it != node.frames.rend(); ++it) {
-                        if(it->time <= now && it->visible) { pf = &*it; break; }
-                    }
-                    af = pf;
-                }
                 if(!af) { vis[i] = false; continue; }
+                if(!af->visible) {
+                    // No-content frame: hidden only if the timeline isn't exhausted
+                    // (i.e. a later content frame still exists). When exhausted,
+                    // hold the last content frame (motion finished, steady state).
+                    // 无内容帧：仅当时间线未播完（后面还有内容帧）时隐藏；播完则
+                    // 保持末内容帧（运动结束、静止态）。
+                    if(lastContentTime < 0) {
+                        // Container node (layout / submotion parent) with no content
+                        // frame of its own: it never hides its subtree (mirrors the
+                        // reference where a type-3/motion container stays active and
+                        // the child motion drives visibility).
+                        // 无自身内容帧的容器节点（layout / 子运动父节点）：永远不隐藏
+                        // 子树（对应参考中 type-3/motion 容器持续 active，由子运动决定可见性）。
+                        vis[i] = true;
+                    } else if(now < lastContentTime) {
+                        vis[i] = false;
+                        continue;
+                    } else {
+                        // Exhausted: fall back to the last content frame (steady).
+                        // 播完：回退到最后内容帧（静止）。
+                        const PSB::PSBMedia::PSBMotionFrame *pf = nullptr;
+                        for(const auto &f : frames) {
+                            if(f.visible && f.src.size() > 4 &&
+                               f.src.compare(0, 4, "src/") == 0) {
+                                pf = &f;
+                            }
+                        }
+                        if(!pf) { vis[i] = false; continue; }
+                        af = pf;
+                    }
+                }
                 const bool parentOn = (node.parentIndex >= 0) ? vis[node.parentIndex] : true;
                 if(!parentOn) { vis[i] = false; continue; } // hidden parent hides subtree
                 const float baseX = (node.parentIndex >= 0) ? wx[node.parentIndex] : 0.0f;
