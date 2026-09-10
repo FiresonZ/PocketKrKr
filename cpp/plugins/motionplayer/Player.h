@@ -689,14 +689,18 @@ namespace motion {
                 layer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &phVar, layer);
             }
 
-            // Send the display layer to the back of the primary layer's children so
-            // the full-screen motion background renders BEHIND the game's own UI
-            // (menu/options). Without this the animated title bg covers the menu.
-            // 将显示层置到底部（primaryLayer 子层最下），让全屏 motion 背景排在游戏自身
-            // UI（菜单/选项）之后，否则动画标题背景会盖住可点击的菜单。
-            try {
-                layer->FuncCall(0, TJS_W("bringToBack"), nullptr, nullptr, 0, nullptr, layer);
-            } catch(...) {}
+            // NOTE: purposefully NOT calling bringToBack() here. BringToBack() (and
+            // SetOrderIndex/MoveBefore/..) all call parent->SetAbsoluteOrderMode(false),
+            // which flips the primary layer's children from absolute-order to relative-
+            // order mode. For layered scenes (title menu) that reorders the game's own
+            // layers and the whole blit goes black; only the sparse logo scene survives.
+            // So the full-screen motion background currently renders above the menu.
+            // Turning it behind the menu needs a mode-preserving reorder, not this.
+            // 注：这里刻意不调 bringToBack()。bringToBack/SetOrderIndex/MoveBefore 都会
+            // 调 parent->SetAbsoluteOrderMode(false)，把 primaryLayer 子层从绝对序切换为
+            // 相对序；对多图层场景（标题菜单）会重排游戏自身图层导致整屏发黑，只有稀疏的
+            // logo 场景不受影响。因此全屏 motion 背景现仍绘制在菜单之上；要让背景排在菜单
+            // 之后，需要不切换排序模式的置底方式，而不是这里的 bringToBack。
 
             _displayLayer = layer;
             return _displayLayer;
