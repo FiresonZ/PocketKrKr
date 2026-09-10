@@ -1168,7 +1168,7 @@ void tTVPNativeBaseBitmap::DrawTextSingle(
         std::string fkey = Font.Face.AsNarrowStdString() + "|" +
                            std::to_string(Font.Height);
         if(sProbedSingleFaces.insert(fkey).second) {
-            if(auto *tl = spdlog::get("core")) {
+            if(auto tl = spdlog::get("core")) {
                 std::string ttext = text.AsNarrowStdString();
                 if (ttext.size() > 16) ttext = ttext.substr(0, 16);
                 tl->info("[TextProbe] single destRect=({},{},{},{}) xy=({},{}) face='{}' "
@@ -1363,7 +1363,7 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
         std::string fkey = Font.Face.AsNarrowStdString() + "|" +
                            std::to_string(Font.Height);
         if(sProbedFaces.insert(fkey).second) {
-            if(auto *tl = spdlog::get("core")) {
+            if(auto tl = spdlog::get("core")) {
                 std::string ttext = text.AsNarrowStdString();
                 if (ttext.size() > 24) ttext = ttext.substr(0, 24);
                 tl->info("[TextProbe] multi destRect=({},{},{},{}) xy=({},{}) face='{}' "
