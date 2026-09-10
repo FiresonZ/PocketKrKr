@@ -426,6 +426,42 @@ namespace motion {
                                 try {
                                     pl->FuncCall(0, TJS_W("dump"), nullptr, nullptr, 0, nullptr, pl);
                                 } catch(...) {}
+                                // Enumerate primaryLayer's direct children with their
+                                // absolute order, so we can pick a safe insertion point
+                                // for our display layer (between bg and the menu) that
+                                // does NOT toggle the parent's order mode (which is what
+                                // made bringToBack() black out the scene).
+                                // 枚举 primaryLayer 直接子层的 absolute 序，为显示层找不切换
+                                // 父层排序模式的安全插入点（背景之后、菜单之前）。
+                                tTJSVariant childArr;
+                                if(TJS_SUCCEEDED(pl->PropGet(0, TJS_W("children"), nullptr,
+                                                             &childArr, pl)) &&
+                                   childArr.Type() == tvtObject) {
+                                    iTJSDispatch2 *ca = childArr.AsObjectNoAddRef();
+                                    tjs_int n = ca->GetCount(0, nullptr, nullptr, ca);
+                                    for(tjs_int ci = 0; ci < n; ci++) {
+                                        tTJSVariant lv;
+                                        if(TJS_SUCCEEDED(ca->PropGetByNum(0, ci, &lv, ca)) &&
+                                           lv.Type() == tvtObject) {
+                                            iTJSDispatch2 *lay = lv.AsObjectNoAddRef();
+                                            tTJSVariant av, ov, vv, wv, hv;
+                                            tjs_real a = -1, o = -1, vv2 = -1;
+                                            tjs_int w = 0, h = 0;
+                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("absolute"),
+                                                                                 nullptr, &av, lay))) a = av.AsReal();
+                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("order"),
+                                                                                 nullptr, &ov, lay))) o = ov.AsReal();
+                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("visible"),
+                                                                                 nullptr, &vv, lay))) vv2 = vv.AsInteger();
+                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("width"),
+                                                                                 nullptr, &wv, lay))) w = (tjs_int)wv.AsReal();
+                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("height"),
+                                                                                 nullptr, &hv, lay))) h = (tjs_int)hv.AsReal();
+                                            if(logger) logger->info("  primaryChild[{}] abs={} order={} vis={} size={}x{}",
+                                                ci, (tjs_int)a, (tjs_int)o, (tjs_int)vv2, w, h);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
