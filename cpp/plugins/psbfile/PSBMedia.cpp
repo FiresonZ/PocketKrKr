@@ -739,6 +739,104 @@ namespace PSB {
             }
         }
 
+        // Extract the full frame time-line for one motion: each layer's frameList
+        // becomes a PSBMotionLayerTrack whose frames (sorted by time) drive the
+        // animation. Mirrors CollectLayersFromMotion but keeps EVERY frame, not
+        // just frame0, so the player can pick the frame active at the current
+        // clock — this is what makes logo/title actually animate.
+        // 提取单个 motion 的完整帧时间线：每个图层的 frameList 变成一条
+        // PSBMotionLayerTrack（帧按 time 排序）。与 CollectLayersFromMotion 同构，
+        // 但保留所有帧（而非只取 frame0），播放器可按当前时钟选取生效帧——让
+        // logo/标题真正动起来的基础。
+        void CollectMotionTracksFromMotion(
+            const std::shared_ptr<PSBDictionary> &motionDict,
+            const std::string &motionName,
+            const std::string &sceneName,
+            std::vector<PSBMedia::PSBMotionLayerTrack> &tracks,
+            const std::shared_ptr<spdlog::logger> &logger,
+            int depth = 0) {
+            if(depth > 8) return;
+            auto targetMotion = std::dynamic_pointer_cast<PSBDictionary>((*motionDict)[motionName]);
+            if(!targetMotion) return;
+            auto layerList = std::dynamic_pointer_cast<PSBList>((*targetMotion)["layer"]);
+            if(!layerList) return;
+            if(logger) logger->debug("CollectTracks: {}/{} {} layers", sceneName, motionName, layerList->size());
+
+            for(int i = 0; i < static_cast<int>(layerList->size()); i++) {
+                auto layerDict = std::dynamic_pointer_cast<PSBDictionary>((*layerList)[i]);
+                if(!layerDict) continue;
+                auto labelVal = std::dynamic_pointer_cast<PSBString>((*layerDict)["label"]);
+                std::string label = labelVal ? labelVal->value : ("layer_" + std::to_string(i));
+
+                auto frameList = std::dynamic_pointer_cast<PSBList>((*layerDict)["frameList"]);
+                if(!frameList || frameList->size() == 0) continue;
+
+                PSBMedia::PSBMotionLayerTrack track;
+                track.label = sceneName + "/" + motionName + "/" + label;
+                track.frames.reserve(frameList->size());
+                for(int j = 0; j < static_cast<int>(frameList->size()); j++) {
+                    auto frame = std::dynamic_pointer_cast<PSBDictionary>((*frameList)[j]);
+                    if(!frame) continue;
+                    PSBMedia::PSBMotionFrame f;
+                    f.time = static_cast<int>(GetPSBFloat((*frame)["time"], 0));
+                    auto content = std::dynamic_pointer_cast<PSBDictionary>((*frame)["content"]);
+                    if(content) {
+                        auto srcVal = std::dynamic_pointer_cast<PSBString>((*content)["src"]);
+                        if(srcVal) f.src = srcVal->value;
+                        f.ox = GetPSBFloat((*content)["ox"], 0);
+                        f.oy = GetPSBFloat((*content)["oy"], 0);
+                        auto coord = std::dynamic_pointer_cast<PSBList>((*content)["coord"]);
+                        if(coord && coord->size() >= 2) {
+                            f.cx = GetPSBFloat((*coord)[0], 0);
+                            f.cy = GetPSBFloat((*coord)[1], 0);
+                        }
+                        f.opacity = GetPSBFloat((*content)["op"], 255);
+                    } else {
+                        // Frame without content only marks a time change: the layer
+                        // is invisible during this time range.
+                        // 无 content 的帧只是时间标记：该时段内图层不可见。
+                        f.visible = false;
+                    }
+                    track.frames.push_back(std::move(f));
+                }
+                if(track.frames.empty()) continue;
+                std::stable_sort(track.frames.begin(), track.frames.end(),
+                    [](const PSBMedia::PSBMotionFrame &a, const PSBMedia::PSBMotionFrame &b) {
+                        return a.time < b.time;
+                    });
+                tracks.push_back(std::move(track));
+            }
+        }
+
+        // Extract the time-line for every scene/motion in the object tree.
+        // 对对象树里每个场景/每个 motion 都提取时间线。
+        void CollectAllMotionTracks(
+            PSBMedia &media,
+            const std::string &archiveKey,
+            const std::shared_ptr<PSBDictionary> &objectTree,
+            const std::shared_ptr<spdlog::logger> &logger) {
+            if(!objectTree) return;
+            for(const auto &[sceneName, sceneVal] : *objectTree) {
+                auto sceneDict = std::dynamic_pointer_cast<PSBDictionary>(sceneVal);
+                if(!sceneDict) continue;
+                auto motionDict = std::dynamic_pointer_cast<PSBDictionary>((*sceneDict)["motion"]);
+                if(!motionDict) continue;
+                for(const auto &[motionName, motionVal] : *motionDict) {
+                    if(!std::dynamic_pointer_cast<PSBDictionary>(motionVal)) continue;
+                    std::vector<PSBMedia::PSBMotionLayerTrack> tracks;
+                    CollectMotionTracksFromMotion(motionDict, motionName, sceneName,
+                        tracks, logger);
+                    size_t trackCount = tracks.size();
+                    if(trackCount > 0) {
+                        media.addMotionTracks(archiveKey, sceneName, motionName,
+                            std::move(tracks));
+                        if(logger) logger->info("Stored {} tracks for {}/{}",
+                            trackCount, sceneName, motionName);
+                    }
+                }
+            }
+        }
+
         void CollectLayerPositionsFromMotion(
             std::vector<PSBMedia::LayerPosition> &positions,
             std::vector<PSBMedia::ButtonBoundInfo> &buttons,
@@ -867,6 +965,9 @@ namespace PSB {
                         if(logger) logger->info("Stored {} button bounds for {}",
                             count, archiveKey);
                     }
+                    // Frame time-lines for every scene/motion (M2 animation).
+                    // 提取全部场景/motion 的帧时间线（M2 动画）。
+                    CollectAllMotionTracks(media, archiveKey, objectTree, logger);
                 }
             }
         }
@@ -1429,5 +1530,39 @@ namespace PSB {
         if(it != _buttonBoundsMap.end())
             return it->second;
         return {};
+    }
+
+    void PSBMedia::addMotionTracks(const std::string &archiveKey,
+                                   const std::string &sceneName,
+                                   const std::string &motionName,
+                                   std::vector<PSBMotionLayerTrack> tracks) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _motionTracks[archiveKey + "|" + sceneName + "|" + motionName] =
+            std::move(tracks);
+    }
+
+    std::vector<PSBMedia::PSBMotionLayerTrack>
+    PSBMedia::getMotionTracks(const std::string &archiveKey,
+                              const std::string &sceneName,
+                              const std::string &motionName) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        auto it = _motionTracks.find(archiveKey + "|" + sceneName + "|" + motionName);
+        if(it != _motionTracks.end())
+            return it->second;
+        return {};
+    }
+
+    std::vector<std::string>
+    PSBMedia::getMotionNames(const std::string &archiveKey,
+                             const std::string &sceneName) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::string> names;
+        const std::string prefix = archiveKey + "|" + sceneName + "|";
+        for(const auto &[key, tracks] : _motionTracks) {
+            if(key.size() > prefix.size() && key.compare(0, prefix.size(), prefix) == 0) {
+                names.push_back(key.substr(prefix.size()));
+            }
+        }
+        return names;
     }
 } // namespace PSB

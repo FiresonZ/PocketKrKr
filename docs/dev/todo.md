@@ -90,6 +90,27 @@
 - 影响：M2-Emote 型作品（如 limelight-lemonade-jam 那类）派 motion 时无真正向量骨骼动画。
 - 优先级：**排在 §2（krkrz 黑屏）之后**；与 §2a/§6 独立，无前置依赖。无稳定环境复现，属"有空再做"补齐。
 
+### P1 — §2c. motion 动画播放（M2 时间轴，logo/标题真正动起来）【当前在做】
+- 现象（K2 对照）：K2 里首屏 logo、首页标题是**连续播放的动画**；我们目前**静态合成**——把动画所有
+  帧的图层一次性画出来（`yuzu_logo` 两帧 y 差 17px 叠出重影 + 中心黑线；`title_bg` 的 `char_move`
+  运动角色钉在某一帧）。能出画面但"不还原游戏表现"。
+- 目标：按时间推进播放 motion 帧（`progress()` 推时钟 → draw 时只画当前时刻该出现的帧/节点，
+  带位置/透明度取值），对齐 krkrsdl3 `emoteengine`（`plugins/emoteplayer/{emotefile,emoterunner}.{cpp,h}`）。
+- 现状基础：`psbfile/PSBMedia` 已能解析对象树/图层坐标/motion 字典/`ExtractFrameInfo`（帧级 time/abort）。
+- 方案（MVP→完整）：① 帧步进：每 motion 关键帧按 time 取当前帧，只画当前帧引用的图层（先不做节点插值）；
+  ② 补透明度/位置插值；③ 完整移植 krkrsdl3 emoteengine（网格/节点/物理/时间轴）为远期。
+- 参考提交/对照清单：见 [krkrz-compat.md](krkrz-compat.md)「krkrsdl3 emoteplayer 对照」。
+
+### — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】
+- 现象：同款游戏文字 K2 略大一点点；选项框文字在框的左上（K2 里框内正常）。首次上报于 engine(5)，
+  早于 motion 改动；且选项界面无 motion 活动（engine(30) 实证 drawPSBImages/drawOnto 未出现）→
+  与 motionplayer 无关，是引擎**文本渲染/字形度量或全局文本缩放**问题。
+- 已排除：`realLayer geo left=0 top=0 w=1920 h=1080`（合成目标层无原点偏移，engine(30)）；
+  letterbox 缩放链路结构正确（ui_stubs.cpp FlutterWindowLayer 等比 letterbox + SetWindowSize 不动虚拟屏）。
+- krkrz 源码无 `hdresomode`/全局字号常量 → 字号为每游戏脚本自定（虚拟屏+Font），模拟器不统一。
+- 待做：拿 K2 与我们**同画面对照截图**（最好带像素标尺）量字号倍率，区分"全局缩放/度量系数"（可能连带
+  修好选项框偏移）vs"字体度量"（改文本渲染 `textrender`/字形）。
+
 ### P1/P2 — krmovie Present 未实现（视频帧→场景合成）
 - 现状：ffmpeg 解码链路完整（`cpp/core/movie/ffmpeg/`），但 `VideoPresentOverlay::PresentPicture` 及 overlay
   合成到场景/纹理仍是 stub（只打 warn）。

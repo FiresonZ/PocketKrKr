@@ -137,6 +137,8 @@ namespace motion {
             _psbImagesCached = false;
             _composited = false;
             _psbCacheRetries = 0;
+            _motionTracksLoaded = false;
+            _motionTracks.clear();
             cleanupTempLayer();
             buildButtonBounds(_loadedStorage);
 
@@ -196,8 +198,14 @@ namespace motion {
                 if(!_psbImagesCached) {
                     cachePSBImages(storage, logger);
                 }
+                // Load motion frame time-lines once per play. Requires the archive
+                // to be parsed (done above by cachePSBImages).
+                // 每次 play 加载一次帧时间线（需要归档已解析，上面 cachePSBImages 已完成）。
+                if(!_motionTracksLoaded) {
+                    loadMotionTracks(storage);
+                }
 
-                if(!_psbImages.empty()) {
+                if(!_motionTracks.empty() || !_psbImages.empty()) {
                     drawPSBImages(target, storage, logger);
                 } else {
                     drawFallback(target, storage, logger);
@@ -392,9 +400,139 @@ namespace motion {
             }
         }
 
+        // Same src→resource mapping as PSBMedia::MapSrcToResourcePath
+        // ("src/title/bg" → "source/title/icon/bg") so we can build the psb:// key.
+        // 与 PSBMedia::MapSrcToResourcePath 相同的 src→resource 映射，用于构造 psb:// key。
+        static std::string MotionSrcToResource(const std::string &src) {
+            if(src.size() > 4 && src.substr(0, 4) == "src/") {
+                std::string rest = src.substr(4);
+                auto slashPos = rest.find('/');
+                if(slashPos != std::string::npos) {
+                    return "source/" + rest.substr(0, slashPos) +
+                           "/icon/" + rest.substr(slashPos + 1);
+                }
+            }
+            return src;
+        }
+
+        // Fetch the current motion's per-layer frame time-lines from PSBMedia.
+        // 从 PSBMedia 取当前 motion 的每层帧时间线。
+        void loadMotionTracks(const ttstr &storage) {
+            _motionTracksLoaded = true;
+            _motionTracks.clear();
+            auto *media = PSB::GetGlobalPSBMedia();
+            if(!media) return;
+            const std::string storageStr = storage.AsStdString();
+            const std::string charaStr = _chara.AsStdString();
+            const std::string motionStr = _motion.AsStdString();
+            _motionTracks = media->getMotionTracks(storageStr, charaStr, motionStr);
+            if(_motionTracks.empty() && motionStr != "normal") {
+                _motionTracks = media->getMotionTracks(storageStr, charaStr, "normal");
+            }
+            if(_motionTracks.empty() && motionStr != "show") {
+                _motionTracks = media->getMotionTracks(storageStr, charaStr, "show");
+            }
+            if(auto l = _logger()) {
+                l->info("loadMotionTracks: {} tracks for {}/{} motion={}",
+                    _motionTracks.size(), storageStr, charaStr, motionStr);
+            }
+        }
+
+        // Evaluate the motion at the current clock and draw only the active frame
+        // of each layer (M2 timeline). Returns how many images were drawn.
+        // 按当前时钟求值 motion，只画每层在该时刻生效的帧（M2 时间轴）。返回绘制张数。
+        int drawAnimated(iTJSDispatch2 *dest, iTJSDispatch2 *tempParent,
+                         const std::shared_ptr<spdlog::logger> &logger) {
+            if(!dest || _motionTracks.empty()) return 0;
+            const tjs_int now = _tickCount; // ms clock, advanced by progress()
+            float cw = 0, ch = 0;
+            resolveCanvasSize(cw, ch);
+            const tjs_int halfCw = static_cast<tjs_int>(cw / 2.0f);
+            const tjs_int halfCh = static_cast<tjs_int>(ch / 2.0f);
+            const std::string storageStr = _loadedStorage.IsEmpty()
+                ? ResourceManager::getLastLoadedPath().AsStdString()
+                : _loadedStorage.AsStdString();
+            int drawn = 0;
+            for(const auto &track : _motionTracks) {
+                // Active frame = last frame with time <= now; if it has no content
+                // (invisible), walk backwards to the last visible one so the layer
+                // never blanks at the motion end.
+                // 活跃帧 = time <= now 的最后一帧；若该帧无内容（不可见），回退到最近
+                // 可见帧，避免 motion 结束时图层消失。
+                const PSB::PSBMedia::PSBMotionFrame *active = nullptr;
+                for(const auto &f : track.frames) {
+                    if(f.time <= now) active = &f;
+                    else break;
+                }
+                if(!active) continue;
+                if(!active->visible) {
+                    bool found = false;
+                    for(auto it = track.frames.rbegin(); it != track.frames.rend(); ++it) {
+                        if(it->time <= now && it->visible) {
+                            active = &*it;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(!found) continue;
+                }
+                if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) {
+                    continue; // submotion refs / others not handled in MVP
+                }
+                const std::string res = MotionSrcToResource(active->src);
+                const ttstr path = TJS_W("psb://") +
+                    ttstr((storageStr + "/" + res + "/pixel.png").c_str());
+                if(!TVPIsExistentStorage(path)) continue;
+
+                iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
+                if(!temp) continue;
+                if(!tryLoadImage(temp, path)) continue;
+                tTJSVariant wVar, hVar;
+                temp->PropGet(0, TJS_W("imageWidth"), nullptr, &wVar, temp);
+                temp->PropGet(0, TJS_W("imageHeight"), nullptr, &hVar, temp);
+                const int iw = static_cast<int>(wVar.AsInteger());
+                const int ih = static_cast<int>(hVar.AsInteger());
+                if(iw <= 0 || ih <= 0) continue;
+
+                // Same center-origin mapping as cachePSBImages.
+                // 与 cachePSBImages 相同的中心原点映射。
+                const float px = active->ox + active->cx;
+                const float py = active->oy + active->cy;
+                const int left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
+                const int top  = _coordY + halfCh + static_cast<int>(py) - ih / 2;
+
+                int opacity = std::min(static_cast<int>(active->opacity), 255);
+                if(opacity <= 0) continue;
+
+                tTJSVariant opArgs[9] = {
+                    tTJSVariant(static_cast<tjs_int>(left)),
+                    tTJSVariant(static_cast<tjs_int>(top)),
+                    tTJSVariant(temp, temp),
+                    tTJSVariant(static_cast<tjs_int>(0)),
+                    tTJSVariant(static_cast<tjs_int>(0)),
+                    tTJSVariant(static_cast<tjs_int>(iw)),
+                    tTJSVariant(static_cast<tjs_int>(ih)),
+                    tTJSVariant(static_cast<tjs_int>(2)),  // omAlpha
+                    tTJSVariant(static_cast<tjs_int>(opacity)),
+                };
+                tTJSVariant *opArgv[] = { &opArgs[0], &opArgs[1], &opArgs[2],
+                                          &opArgs[3], &opArgs[4], &opArgs[5],
+                                          &opArgs[6], &opArgs[7], &opArgs[8] };
+                try {
+                    dest->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, dest);
+                    drawn++;
+                } catch(const std::exception &e) {
+                    if(auto l = _logger()) l->warn("drawAnimated: operateRect exception: {}", e.what());
+                } catch(...) {
+                    if(auto l = _logger()) l->warn("drawAnimated: operateRect unknown exception");
+                }
+            }
+            return drawn;
+        }
+
         void drawPSBImages(iTJSDispatch2 *target, const ttstr &storage,
                            const std::shared_ptr<spdlog::logger> &logger) {
-            if(_psbImages.empty()) return;
+            if(_psbImages.empty() && _motionTracks.empty()) return;
 
             // Follow the game's OWN logic: render the motion into the layer the game
             // handed to Player::draw (the resolved real game layer, e.g. motionWorkLayer)
@@ -416,6 +554,19 @@ namespace motion {
                              _psbImages.size(),
                              static_cast<void*>(target),
                              static_cast<void*>(realLayer));
+            }
+
+            // M2 animation: when the per-motion frame time-lines are available,
+            // evaluate the active frame at the current clock instead of compositing
+            // every cached frame statically. Falls back to the static composite
+            // when no tracks were extracted.
+            // M2 动画：有该 motion 的帧时间线时，按当前时钟画活跃帧，而不是把所有缓存帧
+            // 一次静态合成；无时间线时回退静态合成。
+            if(!_motionTracks.empty()) {
+                int d = drawAnimated(realLayer, tempParent, logger);
+                if(logger) logger->info("drawAnimated: drew {} images at tick={}",
+                                        d, static_cast<tjs_int>(_tickCount));
+                return;
             }
 
             if(logger) logger->info("drawPSBImages: drew {} of {} images",
@@ -1029,6 +1180,13 @@ namespace motion {
 
         bool _psbImagesCached = false;
         bool _composited = false;
+        // M2 animation: per-motion layer frame time-lines (see PSBMedia). Empty →
+        // fall back to the static full-frame composite. Loaded after the archive
+        // is parsed by cachePSBImages(). Reset on play() so a new motion reloads.
+        // M2 动画：每个 motion 图层的帧时间线（见 PSBMedia）。为空则回退静态合成。
+        // 在 cachePSBImages() 解析归档后加载；play() 时重置以便新 motion 重载。
+        bool _motionTracksLoaded = false;
+        std::vector<PSB::PSBMedia::PSBMotionLayerTrack> _motionTracks;
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;

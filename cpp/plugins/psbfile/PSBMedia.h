@@ -124,6 +124,37 @@ namespace PSB {
                              std::vector<ButtonBoundInfo> bounds);
         std::vector<ButtonBoundInfo> getButtonBounds(const std::string &prefix) const;
 
+        // ---- M2 motion timeline (frame animation) ----
+        // One keyframe of a motion layer: becomes active at `time` ms. M2 PSB
+        // layers carry a frameList whose frames have `time` + `content{src,ox,oy,
+        // coord,op}`; an M2 player advances a clock and shows the latest frame
+        // with time <= clock. This is what makes kirkiroid2's title/logo animate
+        // instead of our current static full-frame composite.
+        // M2 motion 时间轴：motion 图层上的一个关键帧，于 `time` 毫秒时刻生效。M2 的 PSB
+        // 图层带 frameList，帧含 time + content{src,ox,oy,coord,op}；播放器推进时钟并显示
+        // time <= 时钟的最新一帧。这是 K2 里标题/logo 能动的数据基础。
+        struct PSBMotionFrame {
+            int time = 0;            // ms, when this frame takes effect / 生效时刻(ms)
+            std::string src;         // content.src ("src/..." image path)
+            float ox = 0, oy = 0;    // content origin offset / 原点偏移
+            float cx = 0, cy = 0;    // content coord / 坐标
+            float opacity = 255;     // 0..255 (m2 `op`) / 透明度
+            bool visible = true;     // frame has content / 本帧是否有内容
+        };
+        struct PSBMotionLayerTrack {
+            std::string label;                        // layer label / 图层名
+            std::vector<PSBMotionFrame> frames;       // sorted by time / 按时间排序
+        };
+        void addMotionTracks(const std::string &archiveKey,
+                             const std::string &sceneName,
+                             const std::string &motionName,
+                             std::vector<PSBMotionLayerTrack> tracks);
+        std::vector<PSBMotionLayerTrack> getMotionTracks(const std::string &archiveKey,
+                                                         const std::string &sceneName,
+                                                         const std::string &motionName) const;
+        std::vector<std::string> getMotionNames(const std::string &archiveKey,
+                                                const std::string &sceneName) const;
+
     private:
         using ResourceMap = std::unordered_map<std::string, CacheEntry>;
 
@@ -148,5 +179,6 @@ namespace PSB {
         std::unordered_set<std::string> _loadedArchives;
         std::unordered_map<std::string, std::vector<LayerPosition>> _layerPositions;
         std::unordered_map<std::string, std::vector<ButtonBoundInfo>> _buttonBoundsMap;
+        std::unordered_map<std::string, std::vector<PSBMotionLayerTrack>> _motionTracks;
     };
 } // namespace PSB
