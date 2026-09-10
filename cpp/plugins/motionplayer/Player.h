@@ -260,11 +260,19 @@ namespace motion {
 
                     if(!TVPIsExistentStorage(path)) continue;
 
+                    float cx, cy;
+                    resolveCanvasCenter(cx, cy);
+
                     PSBImageEntry img;
                     img.key = pngKey;
                     img.path = path;
-                    img.left = _coordX + static_cast<int>(lp.left) - w / 2;
-                    img.top = _coordY + static_cast<int>(lp.top) - h / 2;
+                    // PSB layer positions are relative to the CANVAS CENTER (0,0 is
+                    // mid-screen), while kag/layer operateRect uses top-left origin,
+                    // so add the canvas half-size before centering the image.
+                    // PSB 图层坐标以画布中心为原点（(0,0)=屏幕正中），而 kag/layer 的
+                    // operateRect 用左上角原点，因此先加上画布半宽/半高再按尺寸对中。
+                    img.left = _coordX + static_cast<int>(cx) + static_cast<int>(lp.left) - w / 2;
+                    img.top = _coordY + static_cast<int>(cy) + static_cast<int>(lp.top) - h / 2;
                     img.width = w;
                     img.height = h;
                     img.opacity = lp.opacity;
@@ -505,6 +513,38 @@ namespace motion {
         // member), fall back to the main window + its primaryLayer.
         // 解析创建临时/显示层所需的 (window, parent)，与绘制目标类型无关；当目标是
         // D3DAdaptor 空壳（无 window 成员）时回退到主窗口 + primaryLayer。
+        // Resolve the animated scene's canvas half-size. Yuzusoft PSB files place
+        // layer coordinates relative to the canvas center, but screen/layer math
+        // uses a top-left origin, so every collected position must be shifted by
+        // half the canvas before it maps to the display layer.
+        // 解析动画画布的半宽/半高。Yuzusoft 的 PSB 以画布中心为坐标原点，而屏幕/图层是
+        // 左上角原点，因此每个采集到的坐标都需先平移半个画布再映射到显示层。
+        void resolveCanvasCenter(float &cx, float &cy) {
+            cx = 0;
+            cy = 0;
+            iTJSDispatch2 *probe =
+                TVPMainWindow ? TVPMainWindow->GetOwnerNoAddRef() : nullptr;
+            if(!probe) return;
+            tTJSVariant plVar;
+            if(TJS_SUCCEEDED(probe->PropGet(0, TJS_W("primaryLayer"), nullptr,
+                                             &plVar, probe)) &&
+               plVar.Type() == tvtObject) {
+                iTJSDispatch2 *pl = plVar.AsObjectNoAddRef();
+                if(pl) {
+                    tTJSVariant wVar, hVar;
+                    tjs_real w = 0, h = 0;
+                    if(TJS_SUCCEEDED(
+                           pl->PropGet(0, TJS_W("width"), nullptr, &wVar, pl)))
+                        w = wVar.AsReal();
+                    if(TJS_SUCCEEDED(
+                           pl->PropGet(0, TJS_W("height"), nullptr, &hVar, pl)))
+                        h = hVar.AsReal();
+                    cx = static_cast<float>(w / 2.0);
+                    cy = static_cast<float>(h / 2.0);
+                }
+            }
+        }
+
         bool resolveWindowAndParent(iTJSDispatch2 *realLayer,
                                     tTJSVariant &windowVar,
                                     tTJSVariant &parentVar) {
@@ -603,6 +643,15 @@ namespace motion {
                    0, TJS_W("height"), nullptr, &phVar, parentVar.AsObjectNoAddRef()))) {
                 layer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &phVar, layer);
             }
+
+            // Send the display layer to the back of the primary layer's children so
+            // the full-screen motion background renders BEHIND the game's own UI
+            // (menu/options). Without this the animated title bg covers the menu.
+            // 将显示层置到底部（primaryLayer 子层最下），让全屏 motion 背景排在游戏自身
+            // UI（菜单/选项）之后，否则动画标题背景会盖住可点击的菜单。
+            try {
+                layer->FuncCall(0, TJS_W("bringToBack"), nullptr, nullptr, 0, nullptr, layer);
+            } catch(...) {}
 
             _displayLayer = layer;
             return _displayLayer;
