@@ -401,73 +401,6 @@ namespace motion {
             iTJSDispatch2 *realLayer = resolveRealLayer(target);
             iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
 
-            // TEMP DIAGNOSTIC (remove after analyzing title z-order): print the
-            // layer tree once so we can see where our display layer sits relative
-            // to the game menu/background in the real runtime hierarchy.
-            // 临时诊断（分析完标题层级后删除）：一次性打印层树，观察显示层相对游戏
-            // 菜单/背景在真实运行时层级中的位置。
-            if(!_layerTreeDumped) {
-                _layerTreeDumped = true;
-                if(logger) logger->info("===== MCP LAYER TREE (realLayer) =====");
-                try {
-                    if(realLayer)
-                        realLayer->FuncCall(0, TJS_W("dump"), nullptr, nullptr, 0, nullptr, realLayer);
-                } catch(...) {}
-                if(TVPMainWindow) {
-                    iTJSDispatch2 *winDsp = TVPMainWindow->GetOwnerNoAddRef();
-                    if(winDsp) {
-                        tTJSVariant plVar;
-                        if(TJS_SUCCEEDED(winDsp->PropGet(0, TJS_W("primaryLayer"),
-                                                          nullptr, &plVar, winDsp)) &&
-                           plVar.Type() == tvtObject) {
-                            iTJSDispatch2 *pl = plVar.AsObjectNoAddRef();
-                            if(pl) {
-                                if(logger) logger->info("===== MCP LAYER TREE (window primaryLayer) =====");
-                                try {
-                                    pl->FuncCall(0, TJS_W("dump"), nullptr, nullptr, 0, nullptr, pl);
-                                } catch(...) {}
-                                // Enumerate primaryLayer's direct children with their
-                                // absolute order, so we can pick a safe insertion point
-                                // for our display layer (between bg and the menu) that
-                                // does NOT toggle the parent's order mode (which is what
-                                // made bringToBack() black out the scene).
-                                // 枚举 primaryLayer 直接子层的 absolute 序，为显示层找不切换
-                                // 父层排序模式的安全插入点（背景之后、菜单之前）。
-                                tTJSVariant childArr;
-                                if(TJS_SUCCEEDED(pl->PropGet(0, TJS_W("children"), nullptr,
-                                                             &childArr, pl)) &&
-                                   childArr.Type() == tvtObject) {
-                                    iTJSDispatch2 *ca = childArr.AsObjectNoAddRef();
-                                    tjs_int n = ca->GetCount(0, nullptr, nullptr, ca);
-                                    for(tjs_int ci = 0; ci < n; ci++) {
-                                        tTJSVariant lv;
-                                        if(TJS_SUCCEEDED(ca->PropGetByNum(0, ci, &lv, ca)) &&
-                                           lv.Type() == tvtObject) {
-                                            iTJSDispatch2 *lay = lv.AsObjectNoAddRef();
-                                            tTJSVariant av, ov, vv, wv, hv;
-                                            tjs_real a = -1, o = -1, vv2 = -1;
-                                            tjs_int w = 0, h = 0;
-                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("absolute"),
-                                                                                 nullptr, &av, lay))) a = av.AsReal();
-                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("order"),
-                                                                                 nullptr, &ov, lay))) o = ov.AsReal();
-                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("visible"),
-                                                                                 nullptr, &vv, lay))) vv2 = vv.AsInteger();
-                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("width"),
-                                                                                 nullptr, &wv, lay))) w = (tjs_int)wv.AsReal();
-                                            if(lay && TJS_SUCCEEDED(lay->PropGet(0, TJS_W("height"),
-                                                                                 nullptr, &hv, lay))) h = (tjs_int)hv.AsReal();
-                                            if(logger) logger->info("  primaryChild[{}] abs={} order={} vis={} size={}x{}",
-                                                ci, (tjs_int)a, (tjs_int)o, (tjs_int)vv2, w, h);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             if(logger) {
                 logger->info("drawPSBImages: {} images, target={} realLayer={} displayLayer={}",
                              _psbImages.size(),
@@ -756,18 +689,21 @@ namespace motion {
                 layer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &phVar, layer);
             }
 
-            // NOTE: purposefully NOT calling bringToBack() here. BringToBack() (and
-            // SetOrderIndex/MoveBefore/..) all call parent->SetAbsoluteOrderMode(false),
-            // which flips the primary layer's children from absolute-order to relative-
-            // order mode. For layered scenes (title menu) that reorders the game's own
-            // layers and the whole blit goes black; only the sparse logo scene survives.
-            // So the full-screen motion background currently renders above the menu.
-            // Turning it behind the menu needs a mode-preserving reorder, not this.
-            // 注：这里刻意不调 bringToBack()。bringToBack/SetOrderIndex/MoveBefore 都会
-            // 调 parent->SetAbsoluteOrderMode(false)，把 primaryLayer 子层从绝对序切换为
-            // 相对序；对多图层场景（标题菜单）会重排游戏自身图层导致整屏发黑，只有稀疏的
-            // logo 场景不受影响。因此全屏 motion 背景现仍绘制在菜单之上；要让背景排在菜单
-            // 之后，需要不切换排序模式的置底方式，而不是这里的 bringToBack。
+            // Place our display layer at child order 1 so it renders ABOVE the
+            // stage/background layer (表-背景, order 0) yet BELOW the game's UI
+            // binder (SystemBaseLayer/QuickMenu, order >= 2). This keeps the full-
+            // screen motion background behind the menu. We do NOT use bringToBack()
+            // (order 0): that drops the display below the opaque background layer
+            // and blacks out the scene. Keeping order 1 also stays in relative order
+            // mode for the primary layer, avoiding the reorder-mode side effects
+            // that blacked out the title when using bringToBack().
+            // 把显示层放到子序 1：让它排在舞台/背景层（表-背景，序 0）之上、游戏 UI 容器
+            //（SystemBaseLayer/QuickMenu，序>=2）之下，全屏 motion 背景于是位于菜单之后。
+            // 不用 bringToBack()（序 0）：那会把显示层沉到不透明背景层之下导致整屏发黑；
+            // 用序 1 同时保持 primaryLayer 处于相对序模式，规避 bringToBack 带来的
+            // 重排副作用（此前正是它让标题整屏发黑）。
+            tTJSVariant orderVar(static_cast<tjs_int>(1));
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("order"), nullptr, &orderVar, layer);
 
             _displayLayer = layer;
             return _displayLayer;
@@ -1085,7 +1021,6 @@ namespace motion {
 
         bool _psbImagesCached = false;
         bool _composited = false;
-        bool _layerTreeDumped = false; // TEMP diagnostic flag, remove after analysis
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;
