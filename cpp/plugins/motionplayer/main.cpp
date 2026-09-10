@@ -588,7 +588,20 @@ static tjs_error Player_progress(tTJSVariant *, tjs_int count, tTJSVariant **p,
                                  iTJSDispatch2 *objthis) {
     auto *player = GetPlayerInstance(objthis);
     if(!player || count < 1) return TJS_E_INVALIDPARAM;
-    player->progress(static_cast<tjs_int>(p[0]->AsInteger()));
+    const bool finished = player->progress(static_cast<tjs_int>(p[0]->AsInteger()));
+    // On motion end (non-looping), fire the game's onSync so the script can
+    // advance / replay the next round (e.g. the title screen re-plays the
+    // character entrance). Mirrors reference PlayerFrameProgress dispatch.
+    // motion 播完（不循环）时触发游戏 onSync，让脚本推进/重播下一轮（如主界面
+    // 每轮重播角色入场）。对应参考 PlayerFrameProgress 的事件派发。
+    if(finished && objthis) {
+        try {
+            objthis->FuncCall(0, TJS_W("onSync"), nullptr, nullptr, 0, nullptr, objthis);
+        } catch(...) {
+            // onSync may be absent / not implemented by this Player; ignore.
+            // onSync 可能未实现，忽略。
+        }
+    }
     return TJS_S_OK;
 }
 

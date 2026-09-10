@@ -164,10 +164,20 @@ namespace motion {
         // M2 motion 级循环时长（ms），0=不循环。片头（yuzulogo/m2logo）在 K2 里是
         // 循环播到语音/脚本推进，不是到 lastTime 就停。读取自 PSB "loopTime"。
         tjs_int _motionLoopTime = 0;
-        void progress(tjs_int delta) {
+        // Advance the motion clock. Returns true when the motion just finished
+        // this frame (timeline exhausted and not looping) — the caller should
+        // fire the game's onSync callback so the script can advance / replay the
+        // next motion round (reference PlayerFrameProgress: on timeline end it
+        // queues an onSync event; the title screen re-plays the entrance each
+        // round via script, which is why "characters keep cycling" in K2).
+        // 推进 motion 时钟。返回 true 表示本帧 motion 刚播完（时间线耗尽且不循环）
+        // ——调用方应触发游戏的 onSync 回调，让脚本推进/重播下一轮 motion
+        //（参考 PlayerFrameProgress：时间线结束时排队 onSync 事件；主界面靠脚本
+        // 每轮重播入场，K2 里"角色持续切换"即由此而来）。
+        bool progress(tjs_int delta) {
             _tickCount += delta;
             if(_tickCount > _lastTime) _lastTime = _tickCount;
-            if(!_playing) return;
+            if(!_playing) return false;
             // Natural end of the motion: the last keyframe time across every
             // loaded track, NOT a hard-coded 100 ms. The old hard-coded cap made
             // logo animations stop after 100 ms no matter how long the timeline
@@ -189,17 +199,21 @@ namespace motion {
             if(_tickCount >= end) {
                 // Loop only when the motion declares loopTime > 0 (M2 logo intros):
                 // wrap the clock so the timeline keeps replaying until the script
-                // advances. Non-looping motions still stop at end.
+                // advances. Non-looping motions stop at end and return true so the
+                // caller fires onSync (script advances / replays next round).
                 // 仅当 motion 声明 loopTime > 0（M2 logo 片头）时循环：回绕时钟让时间线
-                // 持续重播直到脚本推进。非循环 motion 仍在 end 处停止。
+                // 持续重播直到脚本推进。非循环 motion 在 end 处停止并返回 true，由调用方
+                // 触发 onSync（脚本推进/重播下一轮）。
                 if(_motionLoopTime > 0 && end > 0) {
                     _tickCount %= _motionLoopTime;
                     if(_tickCount < 0) _tickCount += _motionLoopTime;
-                } else {
-                    _playing = false;
-                    _allplaying = false;
+                    return false;
                 }
+                _playing = false;
+                _allplaying = false;
+                return true; // finished this frame / 本帧播完
             }
+            return false;
         }
         void clear(iTJSDispatch2 *target, tjs_int color) {
             if(!target) return;
