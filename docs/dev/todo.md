@@ -225,6 +225,36 @@
 >  是否命中 .tpf）与 `[FontProbe]` 度量，定位是绘制区域被裁、基线偏移还是未走位图字体；③ 若指向
 >  .tpf 通道 → 按 §2d 实现。
 
+### — §R. krkr2-tools 反编译参考资源清单（2026-09-11 盘点）【参考索引，非待办】
+> 位置：宿主机本地 `/tmp/krkr2-tools`（K2 完整移植源码 + libkrkr2.so 反编译重建，**不 commit 进仓库**；
+> 若环境清理需重新获取：`git clone` 对应工程 + IDA 反编译产物重建）。配套参考：
+> `/tmp/krkrz`（Z 引擎）、`/tmp/Kirikiroid2`（K2 移植）、`/tmp/krkrz_dev`（Z 工具/插件）。
+- **`analysis/`（24 份 libkrkr2.so 反编译分析，全 motion/渲染）**：Player_Draw_Full_RenderPath.md、
+  PlayerUpdateLayers / player_updateLayers_accum.md、Player_Rendering_Architecture_libkrkr2so.md、
+  EmotePlayer_Internal_Implementation.md（contains 支持圆/矩形/凸四边形、setVariable 9 类分发、
+  progress 物理步进）、NodeTree_Construction.md、PSB_RL_Decompression_libkrkr2so.md、
+  GPU_RenderPath_libkrkr2so.md、Window_DrawDevice_Scaling_libkrkr2so.md 等。
+- **`cpp/plugins/motionplayer/`（44 文件，反编译重建的完整 motionplayer/emoteplayer）**：
+  PlayerCore / PlayerRender / PlayerRenderItems / PlayerRenderTargets / PlayerDrawDispatch /
+  PlayerUpdateLayers / PlayerUpdateGeometry / PlayerUpdateChildMotion / PlayerUpdateAnchor /
+  PlayerUpdateParticles / PlayerTimeline / PlayerFrameProgress / PlayerMotionLoad / PlayerResource /
+  PlayerLayerQuery / PlayerVariable / NodeTree / MotionNode / D3DAdaptor / D3DEmoteModule /
+  SeparateLayerAdaptor / SourceCache / ResourceManager / RuntimeSupport / EmotePlayer / main.cpp。
+  注意：其中的 EmotePlayer.cpp 本身也多为 stub（STUB_WARN），真实现靠 analysis 文档 + D3DEmoteModule.h。
+- **`cpp/core/movie/ffmpeg/KRMoviePlayer.cpp`**：`VideoPresentOverlay::PresentPicture` 真实实现
+  （pts 同步 + 按 pts 跳帧 + YUV 上屏）——krmovie Present（P0）的目标参考；K2 用 cocos2d sprite
+  上屏，移植时换成我们自己的纹理路径。
+- **`tools/`**：tjsdump（TJS 字节码反汇编）、ksdec（KAG 脚本反编译）、mtndump（motion 转储）、
+  motionsim（motion 模拟器 + 轨迹对比，可验证 Player 与真实引擎逐帧一致）、xp3 / xp3pack。
+- **目标映射（"空函数能不能用它实现"结论）**：
+  - ✅ 能直接照做：**krmovie Present**（P0，当前 stub）；**motionplayer 完整管线补齐**
+    （粒子 / mesh 透视 / anchor / 物理等，当前 Player.h 为简化版）；**EmotePlayer**（按 analysis 文档）。
+  - ✅ 工具可复用：tjsdump / ksdec / mtndump / motionsim / xp3。
+  - ❌ 参考里也没有、需自研：**AddMosaic**（layerExMosaic）、**TranslucentColorBlend / LuminanceForAlpha**
+    （layerExColor）、**squirrel**、**multiimage**（todo 已注明"源码不可得"）、**kagexopt**、**kztouch**、
+    **drawdeviceD3DZ**（D3D 桌面概念）。
+  - ✅ 已有内建能力、挂名正确勿动：wuvorbis / wuopus / wuflac / extrans。
+
 ### — §5. KAGEX / KAG 差异兼容（kagexopt 相关）
 - 调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（需求待明确）。
 
