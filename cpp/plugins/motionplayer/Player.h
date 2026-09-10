@@ -535,6 +535,47 @@ namespace motion {
             }
         }
 
+        // Repair 1: resolve the motion-global "layout" transform.
+        //
+        // A `layout` layer is a transform container (position offset + overall alpha)
+        // and carries no image of its own. The frame-timeline extraction flattens the
+        // layer tree, so the exact parent->child linkage is not recoverable here. For
+        // these logo files the `slide` layout layers turn out to be the SAME container
+        // repeated (identical resting pos, see the repeated labels in the track log),
+        // so we take the FIRST active visible layout frame rather than summing all of
+        // them — summing would over-shift by the count of duplicate tracks. frame0 is
+        // normally "no content", so the offset/alpha stays identity until the slide
+        // frame kicks in, which reproduces the intended slide/fade. With no active
+        // layout frame the transform is identity, i.e. identical to the old static
+        // path (no regression).
+        //
+        // 修复1：解析 motion 全局 "layout" 变换。
+        // `layout` 层是变换容器（位移 + 整体透明），自身不带图像。帧时间线提取会拍平
+        // 图层树，这里无法还原精确父子关系。对这些 logo 文件，`slide` layout 层是同一
+        // 容器的重复（静止位置一致，见轨道日志中重复的标签），故取第一个生效可见的
+        // layout 帧而非累加所有帧（累加会按重复轨道数量过量位移）。帧 0 通常 "无内容"，
+        // 在滑入帧到来前位移/透明保持单位，正好还原游戏想要的滑入/淡入。无生效 layout
+        // 帧时变换为单位，等价于旧静态路径（不回归）。
+        static void ResolveLayoutTransform(const std::vector<PSB::PSBMedia::PSBMotionLayerTrack> &tracks,
+                                           tjs_int now,
+                                           float &dx, float &dy, int &alpha) {
+            dx = 0; dy = 0; alpha = 255;
+            for(const auto &track : tracks) {
+                const PSB::PSBMedia::PSBMotionFrame *lf = nullptr;
+                for(const auto &f : track.frames) {
+                    if(f.time <= now) lf = &f; else break;
+                }
+                if(!lf || !lf->visible) continue;
+                if(lf->src.size() < 6 || lf->src.compare(0, 6, "layout") != 0) continue;
+                // Position of a container follows the same ox+cx rule as image lines.
+                // 容器位置与图像行一致，取 ox+cx。
+                dx = lf->ox + lf->cx;
+                dy = lf->oy + lf->cy;
+                alpha = static_cast<int>(std::clamp(lf->opacity, 0.0f, 255.0f));
+                return; // first active container wins; later duplicates are siblings
+            }
+        }
+
         // Evaluate the motion at the current clock and draw only the active frame
         // of each layer (M2 timeline). Returns how many images were drawn.
         // 按当前时钟求值 motion，只画每层在该时刻生效的帧（M2 时间轴）。返回绘制张数。
@@ -549,6 +590,19 @@ namespace motion {
             const std::string storageStr = _loadedStorage.IsEmpty()
                 ? ResourceManager::getLastLoadedPath().AsStdString()
                 : _loadedStorage.AsStdString();
+
+            // Motion-global layout drift applied to every drawn image line.
+            // 应用到每条图像线的 layout 全局位移/透明。
+            float layoutDx = 0, layoutDy = 0;
+            int layoutAlpha = 255;
+            ResolveLayoutTransform(_motionTracks, now, layoutDx, layoutDy, layoutAlpha);
+            if(layoutAlpha < 255 || layoutDx != 0 || layoutDy != 0) {
+                if(auto l = logger) {
+                    l->info("drawAnimated: layout dx={:.1f} dy={:.1f} alpha={}",
+                            layoutDx, layoutDy, layoutAlpha);
+                }
+            }
+
             int drawn = 0;
             for(const auto &track : _motionTracks) {
                 // Active frame = last frame with time <= now; if it has no content
@@ -574,20 +628,13 @@ namespace motion {
                     if(!found) continue;
                 }
                 if(active->src.size() <= 4 || active->src.compare(0, 4, "src/") != 0) {
-                    if(auto l = logger) {
-                        // Print full frame fields so we can tell whether a
-                        // "layout" track carries real motion (coord/opacity deltas)
-                        // that we could apply to a cached base image.
-                        // 打印帧全部字段，判断 "layout" track 是否真的携带可应用到
-                        // 缓存底图上的位移/透明度变化。
-                        l->warn("drawAnimated: skip track '{}' active src='{}' (len {}; "
-                                "not 'src/') time={} ox={} oy={} cx={} cy={} op={} vis={}",
-                                track.label, active->src, active->src.size(),
-                                active->time, active->ox, active->oy,
-                                active->cx, active->cy, active->opacity,
-                                active->visible);
-                    }
-                    continue; // submotion refs / others not handled in MVP
+                    // Not an image line: `src='layout'` was already resolved above as
+                    // the motion-global transform; `src='motion/...'` parent refs are
+                    // expanded into their own tracks by expandSubMotionRefs and the
+                    // ref itself carries no drawable image. Neither draws here.
+                    // 非图像行：`src='layout'` 已在上方解析为全局变换；`src='motion/...'`
+                    // 父引用由 expandSubMotionRefs 展开成独立轨道，引用本身无可画图像。
+                    continue;
                 }
                 const std::string res = MotionSrcToResource(active->src);
                 const ttstr path = TJS_W("psb://") +
@@ -610,14 +657,20 @@ namespace motion {
                 const int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) continue;
 
-                // Same center-origin mapping as cachePSBImages.
-                // 与 cachePSBImages 相同的中心原点映射。
-                const float px = active->ox + active->cx;
-                const float py = active->oy + active->cy;
+                // Same center-origin mapping as cachePSBImages, plus the layout drift
+                // so slide/fade actually moves the artwork.
+                // 与 cachePSBImages 相同的中心原点映射，叠加 layout 位移实现滑入。
+                const float px = active->ox + active->cx + layoutDx;
+                const float py = active->oy + active->cy + layoutDy;
                 const int left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 const int top  = _coordY + halfCh + static_cast<int>(py) - ih / 2;
 
-                int opacity = std::min(static_cast<int>(active->opacity), 255);
+                // Combine the layer's own alpha with the motion-global layout alpha
+                // (255 when absent, so the original behaviour is unchanged).
+                // 层自身透明度乘上 layout 全局透明度（无 layout 时为 255，原行为不变）。
+                int opacity = std::clamp(
+                    static_cast<int>(active->opacity) * layoutAlpha / 255,
+                    0, 255);
                 if(opacity <= 0) continue;
 
                 tTJSVariant opArgs[9] = {
