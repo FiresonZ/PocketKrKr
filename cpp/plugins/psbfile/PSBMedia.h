@@ -167,6 +167,18 @@ namespace PSB {
         std::vector<PSBMotionNode> getMotionNodes(const std::string &archiveKey,
                                                   const std::string &sceneName,
                                                   const std::string &motionName) const;
+        // M2 motion-level loop metadata. loopTime > 0 means the timeline loops
+        // (e.g. the yuzulogo/m2logo intros keep playing until the script advances),
+        // mirroring Player_initNonEmoteMotion's read of PSB "loopTime".
+        // M2 motion 级循环元数据。loopTime > 0 表示时间线循环（如 yuzulogo/m2logo
+        // 片头会一直播到脚本推进），对应 Player_initNonEmoteMotion 读取 PSB "loopTime"。
+        void setMotionLoopTime(const std::string &archiveKey,
+                               const std::string &sceneName,
+                               const std::string &motionName,
+                               tjs_int loopTime);
+        tjs_int getMotionLoopTime(const std::string &archiveKey,
+                                  const std::string &sceneName,
+                                  const std::string &motionName) const;
         void addMotionTracks(const std::string &archiveKey,
                              const std::string &sceneName,
                              const std::string &motionName,
@@ -214,5 +226,6 @@ namespace PSB {
         std::unordered_map<std::string, std::vector<ButtonBoundInfo>> _buttonBoundsMap;
         std::unordered_map<std::string, std::vector<PSBMotionLayerTrack>> _motionTracks;
         std::unordered_map<std::string, std::vector<PSBMotionNode>> _motionNodes;
+        std::unordered_map<std::string, tjs_int> _motionLoopTimes;
     };
 } // namespace PSB

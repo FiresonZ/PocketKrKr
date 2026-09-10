@@ -142,6 +142,7 @@ namespace motion {
             _motionTracksLoaded = false;
             _motionTracks.clear();
             _motionNodes.clear();
+            _captureActive = false;
             cleanupTempLayer();
             buildButtonBounds(_loadedStorage);
 
@@ -160,6 +161,9 @@ namespace motion {
             _playing = false;
             _allplaying = false;
         }
+        // M2 motion 级循环时长（ms），0=不循环。片头（yuzulogo/m2logo）在 K2 里是
+        // 循环播到语音/脚本推进，不是到 lastTime 就停。读取自 PSB "loopTime"。
+        tjs_int _motionLoopTime = 0;
         void progress(tjs_int delta) {
             _tickCount += delta;
             if(_tickCount > _lastTime) _lastTime = _tickCount;
@@ -183,8 +187,18 @@ namespace motion {
             }
             if(end <= 0) end = 100; // timeline-less fallback / 无时间线兜底
             if(_tickCount >= end) {
-                _playing = false;
-                _allplaying = false;
+                // Loop only when the motion declares loopTime > 0 (M2 logo intros):
+                // wrap the clock so the timeline keeps replaying until the script
+                // advances. Non-looping motions still stop at end.
+                // 仅当 motion 声明 loopTime > 0（M2 logo 片头）时循环：回绕时钟让时间线
+                // 持续重播直到脚本推进。非循环 motion 仍在 end 处停止。
+                if(_motionLoopTime > 0 && end > 0) {
+                    _tickCount %= _motionLoopTime;
+                    if(_tickCount < 0) _tickCount += _motionLoopTime;
+                } else {
+                    _playing = false;
+                    _allplaying = false;
+                }
             }
         }
         void clear(iTJSDispatch2 *target, tjs_int color) {
@@ -581,11 +595,13 @@ namespace motion {
             _motionTracksLoaded = true;
             _motionTracks.clear();
             _motionNodes.clear();
+            _motionLoopTime = 0;
             auto *media = PSB::GetGlobalPSBMedia();
             if(!media) return;
             const std::string storageStr = storage.AsStdString();
             const std::string charaStr = _chara.AsStdString();
             const std::string motionStr = _motion.AsStdString();
+            _motionLoopTime = media->getMotionLoopTime(storageStr, charaStr, motionStr);
             _motionTracks = media->getMotionTracks(storageStr, charaStr, motionStr);
             if(_motionTracks.empty() && motionStr != "normal") {
                 _motionTracks = media->getMotionTracks(storageStr, charaStr, "normal");
@@ -849,6 +865,16 @@ namespace motion {
         void drawPSBImages(iTJSDispatch2 *target, const ttstr &storage,
                            const std::shared_ptr<spdlog::logger> &logger) {
             if(_psbImages.empty() && _motionTracks.empty()) return;
+            // When captureCanvas is active it is the single source that draws the
+            // animation onto the on-screen layer each frame; Player::draw would
+            // double-draw the same frames onto the game layer and cause overlap
+            // artifacts. Only cache/load here; the actual draw happens in drawOnto.
+            // 当 captureCanvas 活跃时，它是唯一把动画画上屏层的画源；Player::draw 若再画
+            // 会双画同一份帧到游戏层导致叠影。此处只缓存/加载，真正绘制由 drawOnto 完成。
+            if(_captureActive) {
+                if(logger) logger->info("drawPSBImages: captureCanvas active, skip draw (cache only)");
+                return;
+            }
 
             // Follow the game's OWN logic: render the motion into the layer the game
             // handed to Player::draw (the resolved real game layer, e.g. motionWorkLayer)
@@ -973,6 +999,7 @@ namespace motion {
         void drawOnto(iTJSDispatch2 *target) {
             if(!target) return;
             sLastDrawSource = this;
+            _captureActive = true;
             const ttstr storage = _loadedStorage.IsEmpty() ? ResourceManager::getLastLoadedPath()
                                                            : _loadedStorage;
             if(storage.IsEmpty()) return;
@@ -992,6 +1019,10 @@ namespace motion {
                 // 重要：captureCanvas 的目标层就是真正上屏的层，必须画**动画帧**而非静态
                 // 全量合成。仅当当前 motion 时间线一张帧都画不出来（如空 track / 全部不可
                 // 见）时才回退静态，否则用户永远看不到动画。
+                // Clear the capture layer FIRST so per-frame animation replaces the
+                // previous frame instead of stacking (which produced color blocks).
+                // 先清空 capture 层，让每帧动画**替换**上一帧而非叠加（叠加曾产生色块）。
+                clear(target, 0);
                 int drawn = 0;
                 if(!_motionTracks.empty()) {
                     drawn = drawAnimated(target, tempParent, logger);
@@ -1518,6 +1549,10 @@ namespace motion {
         bool _motionTracksLoaded = false;
         std::vector<PSB::PSBMedia::PSBMotionLayerTrack> _motionTracks;
         std::vector<PSB::PSBMedia::PSBMotionNode> _motionNodes;
+        // Set while D3DAdaptor/SeparateLayerAdaptor.captureCanvas is driving the
+        // on-screen draw (single draw source); Player::draw then only caches/loads.
+        // captureCanvas 驱动上屏绘制（单一画源）时置位；Player::draw 此时只缓存/加载。
+        bool _captureActive = false;
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;

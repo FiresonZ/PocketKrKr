@@ -822,7 +822,20 @@ namespace PSB {
                 auto motionDict = std::dynamic_pointer_cast<PSBDictionary>((*sceneDict)["motion"]);
                 if(!motionDict) continue;
                 for(const auto &[motionName, motionVal] : *motionDict) {
-                    if(!std::dynamic_pointer_cast<PSBDictionary>(motionVal)) continue;
+                    auto motionDictObj = std::dynamic_pointer_cast<PSBDictionary>(motionVal);
+                    if(!motionDictObj) continue;
+                    // M2 motion-level metadata: "loopTime" (>0 means the timeline
+                    // loops, e.g. logo intros play until the script advances).
+                    // M2 motion 级元数据："loopTime"（>0 表示时间线循环，如 logo 片头
+                    // 会一直播到脚本推进）。
+                    const tjs_int loopTime = static_cast<tjs_int>(
+                        GetPSBFloat((*motionDictObj)["loopTime"], 0));
+                    if(loopTime > 0) {
+                        media.setMotionLoopTime(archiveKey, sceneName, motionName,
+                                                loopTime);
+                        if(logger) logger->info("motion {}/{} loopTime={}",
+                            sceneName, motionName, loopTime);
+                    }
                     std::vector<PSBMedia::PSBMotionLayerTrack> tracks;
                     CollectMotionTracksFromMotion(motionDict, motionName, sceneName,
                         tracks, logger);
@@ -1674,6 +1687,24 @@ namespace PSB {
         if(it != _motionNodes.end())
             return it->second;
         return {};
+    }
+
+    void PSBMedia::setMotionLoopTime(const std::string &archiveKey,
+                                     const std::string &sceneName,
+                                     const std::string &motionName,
+                                     tjs_int loopTime) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _motionLoopTimes[archiveKey + "|" + sceneName + "|" + motionName] = loopTime;
+    }
+
+    tjs_int PSBMedia::getMotionLoopTime(const std::string &archiveKey,
+                                        const std::string &sceneName,
+                                        const std::string &motionName) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        auto it = _motionLoopTimes.find(archiveKey + "|" + sceneName + "|" + motionName);
+        if(it != _motionLoopTimes.end())
+            return it->second;
+        return 0;
     }
 
     std::vector<PSBMedia::PSBMotionLayerTrack>
