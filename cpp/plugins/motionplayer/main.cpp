@@ -203,6 +203,22 @@ static tjs_error SeparateLayerAdaptor_getImageHeight(tTJSVariant *r, tjs_int, tT
 }
 
 // 千恋万花等 Yuzusoft 作品：motion 的 work layer 由 SeparateLayerAdaptor 承载，
+// helper: map a TJS value / dispatch to a short type name, for captureCanvas diagnostics.
+// 辅助：把 TJS 值/调度对象映射为简短类型名，供 captureCanvas 诊断使用。
+static ttstr VariantTypeName(const tTJSVariant &v) {
+    switch(v.Type()) {
+        case tvtVoid:   return TJS_W("void");
+        case tvtObject: return TJS_W("object");
+        case tvtString: return TJS_W("string");
+        case tvtInteger:return TJS_W("int");
+        case tvtReal:   return TJS_W("real");
+        case tvtOctet:  return TJS_W("octet");
+        default:        return TJS_W("?");
+    }
+}
+static ttstr VariantTypeName(iTJSDispatch2 *o) {
+    return o ? TJS_W("obj") : TJS_W("void");
+}
 // 游戏脚本 affinesourcemotion.tjs 会调 captureCanvas/canvasCaptureEnabled/
 // unloadUnusedTextures（Kirikiroid2 发布 APK 的 libgame.so 同款成员，实证）。
 // Senren Clinic etc. Yuzusoft titles: the motion work layer is carried by
@@ -238,8 +254,28 @@ static tjs_error SeparateLayerAdaptor_getCanvasCaptureEnabled(tTJSVariant *r, tj
     return TJS_S_OK;
 }
 
-static tjs_error SeparateLayerAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
+static tjs_error SeparateLayerAdaptor_captureCanvas(tTJSVariant *r, tjs_int numparams,
+                                                    tTJSVariant **param,
                                                     iTJSDispatch2 *objthis) {
+    auto dl = spdlog::get("plugin");
+    if(dl) {
+        // TEMP DIAGNOSTIC: observe the real captureCanvas call contract from the
+        // running game (bytecode-encrypted script). Removed once known.
+        // 临时诊断：观察 captureCanvas 的真实调用契约（游戏脚本为加密字节码）。
+        ttstr sig;
+        sig += TJS_W("objthis=");
+        sig += VariantTypeName(objthis);
+        sig += TJS_W(" count=");
+        sig += ttstr((tjs_int)numparams);
+        for(tjs_int i = 0; i < numparams && i < 16; i++) {
+            sig += TJS_W(" p"); sig += ttstr(i); sig += TJS_W("=");
+            if(!param[i]) { sig += TJS_W("null"); continue; }
+            sig += VariantTypeName(*param[i]);
+            if((*param[i]).Type() == tvtInteger) { sig += TJS_W("("); sig += ttstr((tjs_int)*param[i]); sig += TJS_W(")"); }
+            else if((*param[i]).Type() == tvtReal) { sig += TJS_W("("); sig += ttstr(tTJSVariant((tjs_real)*param[i])); sig += TJS_W(")"); }
+        }
+        dl->info("MCP SeparateLayerAdaptor.captureCanvas: {}", sig.AsStdString());
+    }
     auto *adaptor = GetSeparateLayerAdaptorInstance(objthis);
     if(adaptor) {
         auto *target = GetSeparateAdaptorRenderTarget(adaptor);
@@ -778,10 +814,32 @@ NCB_REGISTER_SUBCLASS(ResourceManager) {
 //     methods only prevent "Member does not exist".
 //   - Upgrade to a real implementation ONLY when a game actually uses the
 //     captured result as a later image source (reads the return value or draws
-//     to a target layer). Current Senren Clinic disassembly shows it calls but
-//     ignores the return, so no-op is sufficient.
-static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int, tTJSVariant **,
-                                          iTJSDispatch2 *) {
+//     to a target layer). Current Senren Clinic disassembly shows it calls
+//     but ignores the return, so no-op is sufficient.
+static tjs_error D3DAdaptor_captureCanvas(tTJSVariant *r, tjs_int numparams,
+                                          tTJSVariant **param,
+                                          iTJSDispatch2 *objthis) {
+    auto l = spdlog::get("plugin");
+    if(l) {
+        // TEMP DIAGNOSTIC: observe the real captureCanvas call contract (param
+        // count/types) from the running game, since the game script is bytecode-
+        // encrypted. Removed once the contract is known.
+        // 临时诊断：从运行中的游戏观察 captureCanvas 的真实调用契约（入参个数/类型），
+        // 因为游戏脚本是加密字节码。确认契约后移除。
+        ttstr sig;
+        sig += TJS_W("objthis=");
+        sig += VariantTypeName(objthis);
+        sig += TJS_W(" count=");
+        sig += ttstr((tjs_int)numparams);
+        for(tjs_int i = 0; i < numparams && i < 16; i++) {
+            sig += TJS_W(" p"); sig += ttstr(i); sig += TJS_W("=");
+            if(!param[i]) { sig += TJS_W("null"); continue; }
+            sig += VariantTypeName(*param[i]);
+            if((*param[i]).Type() == tvtInteger) { sig += TJS_W("("); sig += ttstr((tjs_int)*param[i]); sig += TJS_W(")"); }
+            else if((*param[i]).Type() == tvtReal) { sig += TJS_W("("); sig += ttstr(tTJSVariant((tjs_real)*param[i])); sig += TJS_W(")"); }
+        }
+        l->info("MCP D3DAdaptor.captureCanvas: {}", sig.AsStdString());
+    }
     // 移动端无 D3D，motion 走 CPU/GL 已直接渲染；"捕获进另一块 canvas"可跳过，
     // 返回 void 让脚本 continue（not clear，保留已渲染内容）。
     // Mobile has no D3D and motion is already rendered; return void so the script
