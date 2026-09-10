@@ -689,21 +689,24 @@ namespace motion {
                 layer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &phVar, layer);
             }
 
-            // Place our display layer at child order 1 so it renders ABOVE the
-            // stage/background layer (表-背景, order 0) yet BELOW the game's UI
-            // binder (SystemBaseLayer/QuickMenu, order >= 2). This keeps the full-
-            // screen motion background behind the menu. We do NOT use bringToBack()
-            // (order 0): that drops the display below the opaque background layer
-            // and blacks out the scene. Keeping order 1 also stays in relative order
-            // mode for the primary layer, avoiding the reorder-mode side effects
-            // that blacked out the title when using bringToBack().
-            // 把显示层放到子序 1：让它排在舞台/背景层（表-背景，序 0）之上、游戏 UI 容器
-            //（SystemBaseLayer/QuickMenu，序>=2）之下，全屏 motion 背景于是位于菜单之后。
-            // 不用 bringToBack()（序 0）：那会把显示层沉到不透明背景层之下导致整屏发黑；
-            // 用序 1 同时保持 primaryLayer 处于相对序模式，规避 bringToBack 带来的
-            // 重排副作用（此前正是它让标题整屏发黑）。
-            tTJSVariant orderVar(static_cast<tjs_int>(1));
-            layer->PropSet(TJS_MEMBERENSURE, TJS_W("order"), nullptr, &orderVar, layer);
+            // Place our display layer at absolute order 1 so it renders ABOVE the
+            // stage/background layer (表-背景, absolute 0) yet BELOW the game's UI
+            // binder (SystemBaseLayer/QuickMenu, absolute >= 2). Runtime dump shows
+            // primary children use absolute order indices and our display is appended
+            // last (absolute 6, top). We set the "absolute" property rather than the
+            // "order" one: the order setter flips the primary layer to relative-order
+            // mode, which the game may then revert, putting the display back on top;
+            // an explicit absolute index matches the game's own ordering mechanism and
+            // stays put. Using absolute 1 (not bringToBack's 0) keeps us above the
+            // opaque background layer.
+            // 把显示层放到绝对序 1：排在舞台/背景层（表-背景，绝对序 0）之上、游戏 UI 容器
+            //（SystemBaseLayer/QuickMenu，绝对序>=2）之下。运行时 dump 显示 primary 子层用
+            // 绝对序，我们的显示层被追加到最后（绝对序 6，最顶）。这里设的是 absolute 属性
+            // 而非 order：order 的 setter 会把 primaryLayer 切成相对序模式，游戏随后可能再
+            // 切回绝对序、把显示层顶回最上；用明确的绝对序则与游戏自身的排序机制一致且稳定。
+            // 用绝对序 1（而非 bringToBack 的 0）保证显示层仍在不透明背景层之上。
+            tTJSVariant absVar(static_cast<tjs_int>(1));
+            layer->PropSet(TJS_MEMBERENSURE, TJS_W("absolute"), nullptr, &absVar, layer);
 
             _displayLayer = layer;
             return _displayLayer;
