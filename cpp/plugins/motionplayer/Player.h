@@ -388,29 +388,33 @@ namespace motion {
             // Skip re-compositing when images haven't changed since last draw
             if(_composited) return;
 
-            // Composite onto our own visible display layer (hung on the window
-            // tree) instead of the game's primary layer, so motion pixels never
-            // pollute the main scene (title text, background, etc.).
-            // 合成到我们自己的可见显示层（挂在窗口层树），而不是游戏主层，motion
-            // 像素不会污染主场景（标题文字、背景等）。
-            iTJSDispatch2 *displayLayer = getOrCreateDisplayLayer();
-            if(!displayLayer) {
-                if(logger) logger->warn("drawPSBImages: getOrCreateDisplayLayer failed");
-                return;
-            }
+            // Composite onto the game's FOREGROUND BASE layer's own image (table-背景
+            // = the primary child with absolute order 0). A layer's own pixels render
+            // below ALL of its children, and the foreground base sits below every UI the
+            // game stacks above it, so the full-screen motion background ends up behind
+            // the menu no matter where that menu lives. Drawing onto primary's own image
+            // instead places us below the opaque foreground base (black), and a separate
+            // top display layer places us above the menu -- this base is the correct slot.
+            // 合成到游戏 foreground 基座自身的图像（表-背景 = primary 中绝对序 0 的子层）。
+            // 父层自有像素总渲染在它所有子层之下，而 foreground 基座又在其上所有游戏 UI 之下，
+            // 因此全屏 motion 背景无论菜单在哪一层都会落在它后面。画到 primary 自身图像会把
+            // 我们沉到不透明 foreground 基座之下（黑屏），独立顶层显示层又会盖住菜单，基座才是
+            // 正确的一层。
+            iTJSDispatch2 *foreBase = resolveForegroundBaseLayer();
             iTJSDispatch2 *realLayer = resolveRealLayer(target);
+            iTJSDispatch2 *drawTarget = foreBase ? foreBase : realLayer;
             iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
 
             if(logger) {
-                logger->info("drawPSBImages: {} images, target={} realLayer={} displayLayer={}",
+                logger->info("drawPSBImages: {} images, target={} realLayer={} foreBase={}",
                              _psbImages.size(),
                              static_cast<void*>(target),
                              static_cast<void*>(realLayer),
-                             static_cast<void*>(displayLayer));
+                             static_cast<void*>(foreBase));
             }
 
             tTJSVariant faceVal(static_cast<tjs_int>(0)); // dfAlpha
-            displayLayer->PropSet(0, TJS_W("face"), nullptr, &faceVal, displayLayer);
+            drawTarget->PropSet(0, TJS_W("face"), nullptr, &faceVal, drawTarget);
 
             int drawn = 0;
             for(size_t i = 0; i < _psbImages.size(); i++) {
@@ -458,7 +462,7 @@ namespace motion {
                                           &opArgs[3], &opArgs[4], &opArgs[5],
                                           &opArgs[6], &opArgs[7], &opArgs[8] };
                 try {
-                    displayLayer->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, displayLayer);
+                    drawTarget->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, drawTarget);
                     drawn++;
                 } catch(const std::exception &e) {
                     if(auto l = _logger()) l->warn("drawPSBImages: operateRect exception: {}", e.what());
@@ -500,6 +504,56 @@ namespace motion {
                 }
             }
             if(logger) logger->warn("drawFallback: no image loaded for {}", storage.AsStdString());
+        }
+
+        // Find the game's foreground base layer (表-背景): the primary layer's child
+        // with absolute order 0. The foreground base's own image renders behind all of
+        // its children and behind every layer the game stacks above it, so compositing
+        // a full-screen animation background there keeps it behind the menu.
+        // 找出游戏的 foreground 基座层（表-背景）：primaryLayer 中绝对序为 0 的子层。
+        // 其自有图像总渲染在它所有子层及其他所有更高层之后，把全屏动画背景合成到该层的
+        // 自有图像即可保证它排在菜单后面。
+        iTJSDispatch2 *resolveForegroundBaseLayer() {
+            iTJSDispatch2 *probe =
+                TVPMainWindow ? TVPMainWindow->GetOwnerNoAddRef() : nullptr;
+            if(!probe) return nullptr;
+            tTJSVariant plVar;
+            if(TJS_FAILED(probe->PropGet(0, TJS_W("primaryLayer"), nullptr, &plVar, probe)) ||
+               plVar.Type() != tvtObject) {
+                return nullptr;
+            }
+            iTJSDispatch2 *pl = plVar.AsObjectNoAddRef();
+            if(!pl) return nullptr;
+            tTJSVariant childArr;
+            if(TJS_FAILED(pl->PropGet(0, TJS_W("children"), nullptr, &childArr, pl)) ||
+               childArr.Type() != tvtObject) {
+                return nullptr;
+            }
+            iTJSDispatch2 *ca = childArr.AsObjectNoAddRef();
+            tjs_int n = 0;
+            if(TJS_FAILED(ca->GetCount(&n, nullptr, nullptr, ca))) return nullptr;
+            for(tjs_int i = 0; i < n; i++) {
+                tTJSVariant lv;
+                if(TJS_FAILED(ca->PropGetByNum(0, i, &lv, ca)) ||
+                   lv.Type() != tvtObject) {
+                    continue;
+                }
+                iTJSDispatch2 *lay = lv.AsObjectNoAddRef();
+                if(!lay) continue;
+                tTJSVariant av;
+                if(TJS_SUCCEEDED(lay->PropGet(0, TJS_W("absolute"), nullptr, &av, lay)) &&
+                   (tjs_int)av.AsReal() == 0) {
+                    return lay;
+                }
+            }
+            // Fallback: the first child is the foreground base in KAG.
+            // 回退：KAG 中第一个子层即 foreground 基座。
+            tTJSVariant lv0;
+            if(TJS_SUCCEEDED(ca->PropGetByNum(0, 0, &lv0, ca)) &&
+               lv0.Type() == tvtObject) {
+                return lv0.AsObjectNoAddRef();
+            }
+            return nullptr;
         }
 
         iTJSDispatch2 *resolveRealLayer(iTJSDispatch2 *target) {
@@ -647,71 +701,6 @@ namespace motion {
             return newLayer;
         }
 
-        // A visible, full-window child layer used as the motion compositing target.
-        // Keeps motion pixels off the primary layer so the game's own layers stay
-        // clean (title text etc. render above/below independently).
-        // 可见的、铺满窗口的子层，作为 motion 合成目标；motion 像素不直接画到主层，
-        // 游戏自身图层（标题文字等）保持独立、干净。
-        iTJSDispatch2 *getOrCreateDisplayLayer() {
-            if(_displayLayer) return _displayLayer;
-
-            tTJSVariant windowVar, parentVar;
-            iTJSDispatch2 *probe = nullptr;
-            // Any real layer is enough to resolve window+parent; primaryLayer works.
-            if(TVPMainWindow) probe = TVPMainWindow->GetOwnerNoAddRef();
-            if(!probe) return nullptr;
-
-            tTJSVariant plVar;
-            if(!resolveWindowAndParent(probe, windowVar, parentVar)) return nullptr;
-
-            iTJSDispatch2 *layer = createChildLayer(windowVar, parentVar);
-            if(!layer) return nullptr;
-
-            tTJSVariant trueVar(true);
-            layer->PropSet(TJS_MEMBERENSURE, TJS_W("visible"), nullptr, &trueVar, layer);
-            tTJSVariant zeroVar(static_cast<tjs_int>(0));
-            layer->PropSet(TJS_MEMBERENSURE, TJS_W("left"), nullptr, &zeroVar, layer);
-            layer->PropSet(TJS_MEMBERENSURE, TJS_W("top"), nullptr, &zeroVar, layer);
-            // hitThreshold=256 makes hit test always fail (max alpha is 255), so
-            // the display layer never intercepts clicks meant for the game menu.
-            // hitThreshold=256 令命中测试始终失败（alpha 最大 255），显示层不会拦截
-            // 本应给游戏菜单的点击。
-            tTJSVariant htVal(static_cast<tjs_int>(256));
-            layer->PropSet(TJS_MEMBERENSURE, TJS_W("hitThreshold"), nullptr, &htVal, layer);
-            // Full-window size: copy primary layer's dimensions.
-            tTJSVariant pwVar, phVar;
-            if(TJS_SUCCEEDED(parentVar.AsObjectNoAddRef()->PropGet(
-                   0, TJS_W("width"), nullptr, &pwVar, parentVar.AsObjectNoAddRef()))) {
-                layer->PropSet(TJS_MEMBERENSURE, TJS_W("width"), nullptr, &pwVar, layer);
-            }
-            if(TJS_SUCCEEDED(parentVar.AsObjectNoAddRef()->PropGet(
-                   0, TJS_W("height"), nullptr, &phVar, parentVar.AsObjectNoAddRef()))) {
-                layer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &phVar, layer);
-            }
-
-            // Place our display layer at absolute order 1 so it renders ABOVE the
-            // stage/background layer (表-背景, absolute 0) yet BELOW the game's UI
-            // binder (SystemBaseLayer/QuickMenu, absolute >= 2). Runtime dump shows
-            // primary children use absolute order indices and our display is appended
-            // last (absolute 6, top). We set the "absolute" property rather than the
-            // "order" one: the order setter flips the primary layer to relative-order
-            // mode, which the game may then revert, putting the display back on top;
-            // an explicit absolute index matches the game's own ordering mechanism and
-            // stays put. Using absolute 1 (not bringToBack's 0) keeps us above the
-            // opaque background layer.
-            // 把显示层放到绝对序 1：排在舞台/背景层（表-背景，绝对序 0）之上、游戏 UI 容器
-            //（SystemBaseLayer/QuickMenu，绝对序>=2）之下。运行时 dump 显示 primary 子层用
-            // 绝对序，我们的显示层被追加到最后（绝对序 6，最顶）。这里设的是 absolute 属性
-            // 而非 order：order 的 setter 会把 primaryLayer 切成相对序模式，游戏随后可能再
-            // 切回绝对序、把显示层顶回最上；用明确的绝对序则与游戏自身的排序机制一致且稳定。
-            // 用绝对序 1（而非 bringToBack 的 0）保证显示层仍在不透明背景层之上。
-            tTJSVariant absVar(static_cast<tjs_int>(1));
-            layer->PropSet(TJS_MEMBERENSURE, TJS_W("absolute"), nullptr, &absVar, layer);
-
-            _displayLayer = layer;
-            return _displayLayer;
-        }
-
         iTJSDispatch2 *getOrCreateTempLayer(iTJSDispatch2 *realLayer) {
             if(_tempLayer) return _tempLayer;
             if(!realLayer) return nullptr;
@@ -742,18 +731,6 @@ namespace motion {
                 } catch(...) {}
                 _tempLayer->Release();
                 _tempLayer = nullptr;
-            }
-            // The display layer is our own per-motion compositing canvas hung on the
-            // window tree; destroy it together with the temp source layer so a scene
-            // change cannot leave stale motion pixels on screen.
-            // 显示层是我们挂在窗口层树上的逐-motion 合成画布；与临时源层一并销毁，
-            // 避免场景切换在屏幕上残留旧的 motion 像素。
-            if(_displayLayer) {
-                try {
-                    _displayLayer->FuncCall(0, TJS_W("invalidate"), nullptr, nullptr, 0, nullptr, _displayLayer);
-                } catch(...) {}
-                _displayLayer->Release();
-                _displayLayer = nullptr;
             }
         }
 
@@ -1027,7 +1004,6 @@ namespace motion {
         int _psbCacheRetries = 0;
         std::vector<PSBImageEntry> _psbImages;
         iTJSDispatch2 *_tempLayer = nullptr;
-        iTJSDispatch2 *_displayLayer = nullptr;
 
         struct ButtonBounds {
             int left = 0, top = 0, width = 0, height = 0;
