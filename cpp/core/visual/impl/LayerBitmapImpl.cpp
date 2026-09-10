@@ -14,6 +14,8 @@
 #include <memory>
 #include <stdlib.h>
 #include <math.h>
+#include <set>
+#include <string>
 
 #include "LayerBitmapIntf.h"
 #include "LayerBitmapImpl.h"
@@ -1159,6 +1161,27 @@ void tTVPNativeBaseBitmap::DrawTextSingle(
 
     ApplyFont();
 
+    // [text probe] single-char draw, mirror of the multi-char probe above (deduped).
+    // [文字探针] 单字符绘制，与上文多字符探针对应（去重）。
+    {
+        static std::set<std::string> sProbedSingleFaces;
+        std::string fkey = Font.Face.AsNarrowStdString() + "|" +
+                           std::to_string(Font.Height);
+        if(sProbedSingleFaces.insert(fkey).second) {
+            if(auto *tl = spdlog::get("core")) {
+                std::string ttext = text.AsNarrowStdString();
+                if (ttext.size() > 16) ttext = ttext.substr(0, 16);
+                tl->info("[TextProbe] single destRect=({},{},{},{}) xy=({},{}) face='{}' "
+                         "height={} ascentOfs=({},{}) prerender={} text='{}'",
+                         destrect.left, destrect.top, destrect.right, destrect.bottom,
+                         x, y, Font.Face.AsNarrowStdString(), Font.Height,
+                         AscentOfsX, AscentOfsY,
+                         PrerenderedFont ? static_cast<void *>(PrerenderedFont) : nullptr,
+                         ttext);
+            }
+        }
+    }
+
     const tjs_char *p = text.c_str();
     tTVPDrawTextData dtdata;
     dtdata.rect = destrect;
@@ -1329,6 +1352,30 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
     Independ();
 
     ApplyFont();
+
+    // [text probe] Option/menu text sizing & placement diagnostics (deduped per
+    // face so it does not spam for every character). See FreeTypeFontRasterizer
+    // FontProbe for glyph metrics.
+    // [文字探针] 选项/菜单文字的尺寸与定位诊断（按 face 去重，避免逐字符刷屏）。
+    // 字形度量见 FreeTypeFontRasterizer 的 FontProbe。
+    {
+        static std::set<std::string> sProbedFaces;
+        std::string fkey = Font.Face.AsNarrowStdString() + "|" +
+                           std::to_string(Font.Height);
+        if(sProbedFaces.insert(fkey).second) {
+            if(auto *tl = spdlog::get("core")) {
+                std::string ttext = text.AsNarrowStdString();
+                if (ttext.size() > 24) ttext = ttext.substr(0, 24);
+                tl->info("[TextProbe] multi destRect=({},{},{},{}) xy=({},{}) face='{}' "
+                         "height={} ascentOfs=({},{}) prerender={} text='{}'",
+                         destrect.left, destrect.top, destrect.right, destrect.bottom,
+                         x, y, Font.Face.AsNarrowStdString(), Font.Height,
+                         AscentOfsX, AscentOfsY,
+                         PrerenderedFont ? static_cast<void *>(PrerenderedFont) : nullptr,
+                         ttext);
+            }
+        }
+    }
 
     const tjs_char *p = text.c_str();
     tTVPDrawTextData dtdata;
