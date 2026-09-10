@@ -5,6 +5,7 @@
 #include "FontSystem.h"
 #include "StringUtil.h"
 #include "MsgIntf.h"
+#include "DebugIntf.h"
 #include <vector>
 #include "ConfigManager/IndividualConfigManager.h"
 
