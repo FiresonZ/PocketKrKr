@@ -1023,8 +1023,13 @@ namespace motion {
                 //（m2logo str_clip s=9 + str_locate cx -114→23）滑过这个固定窗口，得到
                 // 从左到右的显现。
                 float winMin = 1e9f, winMax = -1e9f;
+                // Canonical signal: PSB type 7 = M2 text-clip container (str_clip /
+                // str_locate family). Label and src are fallbacks; type==7 is the generic
+                // discriminator libkrkr2 uses, so this is not asset-specific naming.
+                // 规范判据：PSB type 7 = M2 文本裁剪容器（str_clip/str_locate 族）。label 与
+                // src 只是兜底；type==7 才是 libkrkr2 用的通用判据，不与具体资产命名绑定。
                 const bool strClipCandidate =
-                    node.label.compare(0, 8, "str_clip") == 0;
+                    node.type == 7 || node.label.compare(0, 8, "str_clip") == 0;
                 bool isStrClipContainer = false;
                 if(clipSupported && strClipCandidate) {
                     // Descendants are laid out contiguously after this node in pre-order;
