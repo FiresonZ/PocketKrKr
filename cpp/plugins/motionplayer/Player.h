@@ -739,6 +739,7 @@ namespace motion {
             const int n = static_cast<int>(_motionNodes.size());
             std::vector<float> wx(n, 0.0f), wy(n, 0.0f);
             std::vector<float> wsx(n, 1.0f), wsy(n, 1.0f); // accumulated scale / 累加缩放
+            std::vector<bool> wfx(n, false), wfy(n, false); // accumulated flip (XOR) / 累加翻转
             std::vector<int> wo(n, 255);
             std::vector<bool> vis(n, true);
             int drawn = 0;
@@ -867,6 +868,18 @@ namespace motion {
                 const int baseOp = (node.parentIndex >= 0) ? wo[node.parentIndex] : 255;
                 const float baseSx = (node.parentIndex >= 0) ? wsx[node.parentIndex] : 1.0f;
                 const float baseSy = (node.parentIndex >= 0) ? wsy[node.parentIndex] : 1.0f;
+                // Accumulate flip as XOR through the parent chain (reference
+                // Player_Rendering_Architecture: node.flipX ^= parent.flipX). A
+                // parent container's flip must mirror the whole subtree, and two
+                // flips on the same axis cancel — ignoring it made the yuzusoft
+                // leaf render with the wrong handedness ("叶子方向反了").
+                // 沿父链 XOR 累加翻转（参考 Player_Rendering_Architecture：
+                // node.flipX ^= parent.flipX）。父容器的翻转要镜像整棵子树，同一轴
+                // 两次翻转相消——此前忽略它导致 yuzusoft 绿叶朝向相反（"叶子方向反了"）。
+                const bool effFx = af->flipX ^
+                    ((node.parentIndex >= 0) ? wfx[node.parentIndex] : false);
+                const bool effFy = af->flipY ^
+                    ((node.parentIndex >= 0) ? wfy[node.parentIndex] : false);
                 const float px = baseX + interpOx + interpCx;
                 const float py = baseY + interpOy + interpCy;
                 // Accumulate scale through the parent chain (B round 3 partial: a
@@ -877,6 +890,7 @@ namespace motion {
                 const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
                 wx[i] = px; wy[i] = py; wsx[i] = scx; wsy[i] = scy;
+                wfx[i] = effFx; wfy[i] = effFy;
                 wo[i] = wop;
                 vis[i] = (wop > 0);
                 if(!vis[i]) continue;
@@ -918,11 +932,22 @@ namespace motion {
                     left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 }
                 const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} anchor={} fl=({},{}) at ({},{}) op={} scale=({},{}) bm={} src='{}'",
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} anchor={} fl=({},{}) eff=({},{}) parent{} at ({},{}) op={} scale=({},{}) bm={} src='{}'",
                     node.label, af->type, static_cast<tjs_int>(now), interpRatio,
                     (static_cast<size_t>(i) < _nodeInStrSubtree.size() && _nodeInStrSubtree[static_cast<size_t>(i)]) ? 1 : 0,
                     af->flipX ? 1 : 0, af->flipY ? 1 : 0,
+                    effFx ? 1 : 0, effFy ? 1 : 0,
+                    node.parentIndex,
                     left, top, wop, interpSx, interpSy, af->blendMode, af->src);
+                // m2logo 专属探针：把文本子树(cheeseware 字母)的笔位排布与翻转一起
+                // 打出来，用于确认字母是否按 advance 锚点左对齐、有无被父翻转镜像。
+                // m2logo probe: print the text-subtree letter pen layout together with
+                // the effective flip, to verify left-alignment at the advance anchor.
+                if(logger && static_cast<size_t>(i) < _nodeInStrSubtree.size() &&
+                   _nodeInStrSubtree[static_cast<size_t>(i)]) {
+                    logger->info("[M2Logo] '{}' letter at pen=({},{}) iw={} ih={} eff=({},{}) parentEff=(n/a) t={}",
+                        node.label, left, top, iw, ih, effFx ? 1 : 0, effFy ? 1 : 0, af->time);
+                }
                 // B 第一段（round 1）:用 operateAffine 而非 operateRect 绘制，
                 // 让图层按自身显示盒(width×height)拉伸。operateRect 只做原生尺寸
                 // blit，yuzulogo 的 64×64 white_box 永远铺不满全屏；operateAffine
@@ -962,10 +987,10 @@ namespace motion {
                 // place (src(iw)->ax, src(0)->ax+rW when flipped X).
                 // 第二轮翻转（content "fx"/"fy"）：沿盒中心镜象 = 缩放取负并向内回移
                 // 原点，让盒保持在原位置（翻转 X 时 src(iw)→ax、src(0)→ax+rW）。
-                const tjs_real efA = af->flipX ? -totalScX : totalScX;
-                const tjs_real efD = af->flipY ? -totalScY : totalScY;
-                const tjs_int efTx = af->flipX ? ax + rW : ax;
-                const tjs_int efTy = af->flipY ? ay + rH : ay;
+                const tjs_real efA = effFx ? -totalScX : totalScX;
+                const tjs_real efD = effFy ? -totalScY : totalScY;
+                const tjs_int efTx = effFx ? ax + rW : ax;
+                const tjs_int efTy = effFy ? ay + rH : ay;
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha

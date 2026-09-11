@@ -144,6 +144,13 @@
   （entrance 终位 vs normal 稳态坐标差）或亚像素截断，需含稳态段的日志复核；
   ⑥ 若标题入场后（2000ms）背景变黑 → 说明游戏依赖 hold 而非切换稳态，届时对非 logo 场景
   恢复"末尾保持"。
+- 进度：⚠️ **翻转沿父链 XOR 累加（2026-09-11）**：绿叶"方向反了"根因=只对叶子自身 `fx/fy`
+  做单层盒中心镜像、父容器翻转未继承。已改为沿 parent 链 `wfx ^= parent.wfx` XOR 累加
+  （参考 Player_Rendering_Architecture `node.flipX ^= parent.flipX`），并用累加后翻转
+  `effFx/effFy` 驱动仿射；draw 探针加 `eff=` + `parent#`，另加 `[M2Logo]` 字母笔位探针。
+  待真机确认 yuzusoft 绿叶朝向与 K2 一致。
+- **第二轮遗留（未实现）**：`clip` 裁切矩形只探针未应用、`str_clip`(src='clip') 文字裁剪、
+  m2logo 文字组装(字母笔位)仍未完全对齐。见 todo 上方 m2logo 条。
 - 参考提交/对照清单：见 [krkrz-compat.md](krkrz-compat.md)「krkrsdl3 emoteplayer 对照」。
 
 ### — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】
