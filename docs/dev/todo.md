@@ -197,9 +197,23 @@
   含父级缩放）设 dest 层 `setClip`，子树画完/出现兄弟节点时恢复之前裁剪，drawAnimatedTree 结束
   兜底恢复。当前用 `strclip:` 探针（打在容器帧）确认裁剪盒取值；若盒不对（如 label 前缀不同/
   width/height 非裁剪区），据探针改判据。字母笔位(擦除方向)若仍不对，结合 [M2Logo] 探针复核。
-- **第二轮遗留（已推进）**：`clip` 裁切矩形(content "clip" [l,t,r,b])仍只探针未应用（m2logo 该值
+- 第二輪遗留（已推进）：`clip` 裁切矩形(content "clip" [l,t,r,b])仍只探针未应用（m2logo 该值
   恒 0，非主因）；`str_clip`(src='clip') 文字裁剪已按容器显示盒实现（上方条目）；m2logo 字母笔位
   左对齐已完成（上方 M2 文本子树条目）。
+- 进度：✅ **原点锚定统一模型（2026-09-11，B7，对齐 AetherKiri 全链路比对）**：与 AetherKiri
+  （libkrkr2 逆向移植）完整比对后，把 `drawAnimatedTree` 的锚点语义整块改成参考模型：
+  - 位置只累加 coord(cx,cy)；content ox/oy **不进位置**（此前 ox+cx 双计，yuzusoft 叶子
+    ox=91 因此整体漂移/镜像，是叶子"摆向反"的真正结构根因，推翻之前手性镜像猜测）。
+  - 绘制统一为 `org = pos - M*(iconOrigin+ox, iconOriginY+oy)`、四边形 `org+M*[0..iw,0..ih]`，
+    仿射直接用已累加世界矩阵 `wm11..wm22`（flip/angle/scale 经 transformOrder+inheritMask）；
+    废除显示盒折叠/居中锚定/独立枢轴 hack，并**删除 str 笔位左对齐特判**（参考无 pen 系统，
+    字母就是普通节点，各自动画自己的 coord）。
+  - 新解析 **icon originX/originY**（ImageMetadata→MotionType icon dict→CachedImageInfo→
+    getImageInfo）：全画布居中 logo（如 yuzu_logo）与各字形枢轴由此正确；icon 无该字段时
+    默认 0（与参考一致）。
+  - 遗留风险：若个别图标 dict 无 originX/originY 且作者以"中心"语义编坐标，原点锚定会偏移
+    半盒——待真机日志（`origin=`/`pos=`/`org=` 探针）核对；确认后按 asset 补 icon origin 或
+    修正解析。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
