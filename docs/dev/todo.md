@@ -219,6 +219,17 @@
     半盒。修复：`drawAnimatedTree` 恢复 `resolveCoordOrigin()`（默认0=中心）锚定，左上角减半宽/半高，
     与静态合成 `cachePSBImages`（坐标=盒中心）一致；**保留** B7 两处真修（ox/oy 不进位置、旋转绕
     ox/oy 热区）。若个别 asset 确按左上角编码，用命令行 `-psb_coord_origin=topleft` 切回。
+  - ✅ **B8 单一世界矩阵+原点锚定（2026-09-11，7dcefa7）+源文件实证**：用户提供 title/m2logo/yuzulogo
+    三个 .mtn + title.pimg，用自写 PSB 解析器（.uploads/psb_dump.py、motion_dump.py）读取真实数据后
+    **证实根因 = icon origin 非中心**：`ch1_芳乃` originX=529（宽973，中心应为486，偏右43px），其余
+    字符/bg/logo 均为 w/2。此前"中心锚定"把 ch1 画到偏右43px，末尾被按真实 origin 烘焙的
+    `title_charall` 盖住时"向左挪43px"（正是"只有 ch1 挪"）。B8 按 icon origin 锚定（`org=pos-M·
+    (origin+ox,oy)`）即修。**坐标系确认是画布中心**（logo coord -705、head -954，负值在左）。
+  - ✅ 叶子枢轴实证：`yuzu_ha` icon origin=(w/2,h/2)=(93,28)=中心、帧 ox=91/oy=21 → 参考枢轴=
+    origin+ox=(184,49)；旧代码用 top-left+ox=(91,21) 致摆动绕错点（叶子小问题），B8 已按参考修正。
+  - ⏳ **遗留：M2 用 `ccc` 贝塞尔缓动，我们仍线性插值**（叶子 22.9→−39.5 跳变、m2logo 字母滑入
+    时序由此而来）。已确证这些 .mtn 帧都带 `ccc={c,x,y}` 贝塞尔控制，是"未完全对齐参考"的最后一环，
+    待实现 keyframe 贝塞尔插值后再放回平滑。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
