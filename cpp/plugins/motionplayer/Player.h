@@ -676,9 +676,9 @@ namespace motion {
                     // 每帧转储（time, src, ox/oy/cx/cy, opacity, visible），只在 motion
                     // 装载时打一次，据此拿到真实的 M2 时间线，按真实坐标实现动画而非猜测。
                     for(const auto &f : tr.frames) {
-                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
-                            f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
-                            f.visible ? 1 : 0);
+                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} op={} vis={}",
+                            f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
+                            f.opacity, f.visible ? 1 : 0);
                     }
                 }
                 l->info("loadMotionTracks: {} nodes for {}/{} motion={} (tree, "
@@ -690,9 +690,9 @@ namespace motion {
                         ni, nd.label, nd.parentIndex,
                         static_cast<int>(nd.frames.size()));
                     for(const auto &f : nd.frames) {
-                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} op={} vis={}",
-                            ni, f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.opacity,
-                            f.visible ? 1 : 0);
+                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} op={} vis={}",
+                            ni, f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
+                            f.opacity, f.visible ? 1 : 0);
                     }
                 }
             }
@@ -738,6 +738,7 @@ namespace motion {
                 : _loadedStorage.AsStdString();
             const int n = static_cast<int>(_motionNodes.size());
             std::vector<float> wx(n, 0.0f), wy(n, 0.0f);
+            std::vector<float> wsx(n, 1.0f), wsy(n, 1.0f); // accumulated scale / 累加缩放
             std::vector<int> wo(n, 255);
             std::vector<bool> vis(n, true);
             int drawn = 0;
@@ -825,6 +826,7 @@ namespace motion {
                 float interpOx = af->ox, interpOy = af->oy;
                 float interpCx = af->cx, interpCy = af->cy;
                 float interpOp = af->opacity;
+                float interpSx = af->scaleX, interpSy = af->scaleY;
                 if(af->visible) {
                     const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
                     for(const auto &f : frames) {
@@ -838,6 +840,8 @@ namespace motion {
                         interpCx = af->cx + (next->cx - af->cx) * t;
                         interpCy = af->cy + (next->cy - af->cy) * t;
                         interpOp = af->opacity + (next->opacity - af->opacity) * t;
+                        interpSx = af->scaleX + (next->scaleX - af->scaleX) * t;
+                        interpSy = af->scaleY + (next->scaleY - af->scaleY) * t;
                     }
                 }
                 const bool parentOn = (node.parentIndex >= 0) ? vis[node.parentIndex] : true;
@@ -845,11 +849,19 @@ namespace motion {
                 const float baseX = (node.parentIndex >= 0) ? wx[node.parentIndex] : 0.0f;
                 const float baseY = (node.parentIndex >= 0) ? wy[node.parentIndex] : 0.0f;
                 const int baseOp = (node.parentIndex >= 0) ? wo[node.parentIndex] : 255;
+                const float baseSx = (node.parentIndex >= 0) ? wsx[node.parentIndex] : 1.0f;
+                const float baseSy = (node.parentIndex >= 0) ? wsy[node.parentIndex] : 1.0f;
                 const float px = baseX + interpOx + interpCx;
                 const float py = baseY + interpOy + interpCy;
+                // Accumulate scale through the parent chain (B round 3 partial: a
+                // container's scale now propagates to its children multiplicatively).
+                // 沿父链累加缩放（B 第 3 轮的一部分：容器的缩放以乘法传给子层）。
+                const float scx = baseSx * std::max(interpSx, 0.0f);
+                const float scy = baseSy * std::max(interpSy, 0.0f);
                 const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
-                wx[i] = px; wy[i] = py; wo[i] = wop;
+                wx[i] = px; wy[i] = py; wsx[i] = scx; wsy[i] = scy;
+                wo[i] = wop;
                 vis[i] = (wop > 0);
                 if(!vis[i]) continue;
                 // Only image lines draw; layout/motion containers only accumulate.
@@ -890,8 +902,8 @@ namespace motion {
                     left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 }
                 const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
-                if(logger) logger->info("drawAnimatedTree: '{}' at ({},{}) op={} src='{}'",
-                    node.label, left, top, wop, af->src);
+                if(logger) logger->info("drawAnimatedTree: '{}' at ({},{}) op={} scale=({},{}) src='{}'",
+                    node.label, left, top, wop, interpSx, interpSy, af->src);
                 // B 第一段（round 1）:用 operateAffine 而非 operateRect 绘制，
                 // 让图层按自身显示盒(width×height)拉伸。operateRect 只做原生尺寸
                 // blit，yuzulogo 的 64×64 white_box 永远铺不满全屏；operateAffine
@@ -907,17 +919,25 @@ namespace motion {
                 // matrix is identity+NOP (sx=sy=1, tx=left, ty=top), identical to
                 // the old operateRect path — a safe fallback. Round 3 will feed the
                 // parent matrix into a~d here.
-                const int oW = node.width > 0 ? node.width : iw;
-                const int oH = node.height > 0 ? node.height : ih;
-                const float sx = oW > iw && iw > 0 ? static_cast<float>(oW) / iw : 1.0f;
-                const float sy = oH > ih && ih > 0 ? static_cast<float>(oH) / ih : 1.0f;
-                const int boxW = static_cast<int>(iw * sx);
-                const int boxH = static_cast<int>(ih * sy);
-                // 把显示盒居中到与原尺寸绘制相同的锚点，仿射原点即盒的左上角。
-                // Center the display box on the same anchor as the native draw; the
-                // affine origin becomes the box top-left.
-                const int ax = left - (boxW - iw) / 2;
-                const int ay = top - (boxH - ih) / 2;
+                // Combine the per-frame scale (scx/scy, from zx/zy or coord z) with
+                // any display-box scale (node width/height > texture). This is what
+                // stretches a logo backdrop like yuzulogo's 64x64 white_box to
+                // fullscreen (zx/zy ~30). When no scale and no box are present this
+                // stays 1/1 → identical to the old operateRect native blit.
+                // 把帧内缩放(scx/scy，来自 zx/zy 或 coord z)与显示盒缩放(节点
+                // width/height > 纹理)合并。这才把 yuzulogo 的 64×64 white_box 拉伸
+                // 到全屏(zx/zy≈30)。无缩放且无显示盒时为 1/1，等于旧的 operateRect。
+                const float boxScX = (node.width > 0 && node.width > iw) ? static_cast<float>(node.width) / iw : 1.0f;
+                const float boxScY = (node.height > 0 && node.height > ih) ? static_cast<float>(node.height) / ih : 1.0f;
+                const float totalScX = scx * boxScX;
+                const float totalScY = scy * boxScY;
+                const int rW = std::max(1, static_cast<int>(iw * totalScX));
+                const int rH = std::max(1, static_cast<int>(ih * totalScY));
+                // 把显示盒(缩放后)居中到与原尺寸绘制相同的锚点，仿射原点即盒的左上角。
+                // Center the scaled display box on the same anchor as the native draw;
+                // the affine origin becomes the box top-left.
+                const int ax = left - (rW - iw) / 2;
+                const int ay = top - (rH - ih) / 2;
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // 参数依 Layer.operateAffine(src, x, y, w, h, affine, a,b,c,d,
                 // tx,ty, mode, opa, ...)。dst 对象绑定到 dest（调用对象），src 是
@@ -932,10 +952,10 @@ namespace motion {
                     tTJSVariant(static_cast<tjs_int>(iw)),        // 3 src width
                     tTJSVariant(static_cast<tjs_int>(ih)),        // 4 src height
                     tTJSVariant(true),                            // 5 affine (matrix mode)
-                    tTJSVariant(static_cast<tjs_real>(sx)),       // 6 a (x scale)
+                    tTJSVariant(static_cast<tjs_real>(totalScX)),  // 6 a (x scale)
                     tTJSVariant(static_cast<tjs_real>(0)),        // 7 b
                     tTJSVariant(static_cast<tjs_real>(0)),        // 8 c
-                    tTJSVariant(static_cast<tjs_real>(sy)),       // 9 d (y scale)
+                    tTJSVariant(static_cast<tjs_real>(totalScY)), // 9 d (y scale)
                     tTJSVariant(static_cast<tjs_int>(ax)),        // 10 tx
                     tTJSVariant(static_cast<tjs_int>(ay)),        // 11 ty
                     tTJSVariant(static_cast<tjs_int>(2)),         // 12 omAlpha

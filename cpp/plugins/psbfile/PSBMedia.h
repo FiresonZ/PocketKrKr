@@ -151,6 +151,14 @@ namespace PSB {
             std::string src;         // content.src ("src/..." image path)
             float ox = 0, oy = 0;    // content origin offset / 原点偏移
             float cx = 0, cy = 0;    // content coord / 坐标
+            // M2 per-frame scale from content keys "zx"/"zy" (libkrkr2 sub_692AB0
+            // mask 0x60; also coord[2] 'z'). Logo backdrops magnify a tiny source
+            // image (yuzulogo's 64x64 white_box → fullscreen) via zx/zy — without
+            // this the white bg can never cover the canvas. Default 1 = no scale.
+            // M2 帧内缩放来自 content 的 "zx"/"zy"（libkrkr2 sub_692AB0 mask 0x60；
+            // 也有 coord[2] 'z'）。logo 背景用 zx/zy 把小图放大（yuzulogo 的 64×64
+            // white_box → 全屏）；不读这个字段，白底永远铺不满画布。默认 1=不缩放。
+            float scaleX = 1, scaleY = 1; // content scale "zx"/"zy" / 缩放
             float opacity = 255;     // 0..255 (m2 `op`) / 透明度
             bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };

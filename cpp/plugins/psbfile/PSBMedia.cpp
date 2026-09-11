@@ -811,6 +811,28 @@ namespace PSB {
                             f.cx = GetPSBFloat((*coord)[0], 0);
                             f.cy = GetPSBFloat((*coord)[1], 0);
                         }
+                        // M2 per-frame scale: content "zx"/"zy" (libkrkr2 sub_692AB0
+                        // mask 0x60) drive logo backdrops that magnify a tiny source
+                        // (yuzulogo's 64x64 white_box → fullscreen). coord[2] 'z' is a
+                        // fallback scale (reference also stores coord[2] into slot z).
+                        // M2 帧内缩放：content 的 "zx"/"zy"（libkrkr2 sub_692AB0 mask 0x60）
+                        // 驱动 logo 背景把 64×64 white_box 放大到全屏；coord[2] 'z' 作为
+                        // 兜底缩放（参考也会把 coord[2] 存入 slot z）。
+                        {
+                            const float zx = GetPSBFloat((*content)["zx"], 0.0f);
+                            const float zy = GetPSBFloat((*content)["zy"], 0.0f);
+                            if(zx != 0.0f) f.scaleX = zx;
+                            if(zy != 0.0f) f.scaleY = zy;
+                            if(zx == 0.0f || zy == 0.0f) {
+                                if(coord && coord->size() >= 3) {
+                                    const float z = GetPSBFloat((*coord)[2], 0.0f);
+                                    if(z != 0.0f) {
+                                        if(zx == 0.0f) f.scaleX = z;
+                                        if(zy == 0.0f) f.scaleY = z;
+                                    }
+                                }
+                            }
+                        }
                         // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the
                         // wrong key always yielded the fallback 255, so any layer whose entrance is
                         // driven by opacity (e.g. yuzulogo's `white`/`logo` t=0 frame has `opa:0`
@@ -922,6 +944,26 @@ namespace PSB {
                     if(coord && coord->size() >= 2) {
                         f.cx = GetPSBFloat((*coord)[0], 0);
                         f.cy = GetPSBFloat((*coord)[1], 0);
+                    }
+                    // M2 per-frame scale from content "zx"/"zy" (and coord[2] 'z'
+                    // fallback) — same as the flat track path. Logo backdrops
+                    // magnify a tiny source image to fullscreen via zx/zy.
+                    // M2 帧内缩放来自 content "zx"/"zy"（及 coord[2] 'z' 兜底）——
+                    // 与扁平轨道一致。logo 背景以小图 + zx/zy 放大到全屏。
+                    {
+                        const float zx = GetPSBFloat((*content)["zx"], 0.0f);
+                        const float zy = GetPSBFloat((*content)["zy"], 0.0f);
+                        if(zx != 0.0f) f.scaleX = zx;
+                        if(zy != 0.0f) f.scaleY = zy;
+                        if(zx == 0.0f || zy == 0.0f) {
+                            if(coord && coord->size() >= 3) {
+                                const float z = GetPSBFloat((*coord)[2], 0.0f);
+                                if(z != 0.0f) {
+                                    if(zx == 0.0f) f.scaleX = z;
+                                    if(zy == 0.0f) f.scaleY = z;
+                                }
+                            }
+                        }
                     }
                     // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the
                     // wrong key always yielded the fallback 255, so any layer whose entrance is
