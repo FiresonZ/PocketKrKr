@@ -188,6 +188,17 @@ namespace PSB {
             // M2 翻转标志来自 content "fx"/"fy"（libkrkr2 sub_692F6C，mask 0x4/0x8）。
             // 叶片等镜像精灵用它们；不应用则叶片朝向与原版相反。
             bool flipX = false, flipY = false; // content flipX "fx" / flipY "fy" / 翻转
+            // M2 cubic-bezier easing for THIS frame's interpolation toward the NEXT
+            // keyframe (content "ccc": a bezier from (0,0) to (1,1); control points
+            // are (x[1],y[1]) and (x[2],y[2]), endpoints (0,0)/(1,1)). Absent => linear.
+            // This is the "last alignment gap": without it the leaf swings violently
+            // through large angle keyframes and the m2logo letters slide/jump harshly.
+            // M2 三次贝塞尔缓动：用于本帧**向下一帧**的插值（content "ccc"，是 (0,0)→(1,1)
+            // 的贝塞尔；控制点为 (x[1],y[1])、(x[2],y[2])，端点是 (0,0)/(1,1)）。无 ccc 则线性。
+            // 这是"未对齐参考的最后一环"：缺它叶子在大角度关键帧间甩得太猛、m2logo 字母
+            // 滑入生硬。
+            bool hasEasing = false;
+            float easeX1 = 0, easeY1 = 0, easeX2 = 0, easeY2 = 0; // ccc 贝塞尔控制点
             bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };
         struct PSBMotionLayerTrack {

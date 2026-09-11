@@ -860,8 +860,19 @@ namespace motion {
                     // 不可见的关键（t=0 帧 type2 opa0 → 保持 0）；此前我们对它做
                     // 0→255 插值，导致整段 intro 叠上一层"印痕"幻影。
                     if(af->type == 3 && next && next->visible && next->time > af->time) {
-                        const float t = static_cast<float>(now - af->time) /
-                                        static_cast<float>(next->time - af->time);
+                        // Raw linear progress over the frame; if the DEPARTURE frame
+                        // carries M2 cubic-bezier easing (ccc), remap via the bezier so
+                        // the leaf swing / letter slide decelerates smoothly like the
+                        // reference instead of subjecting velocity through big keyframes.
+                        // 帧内线性进度；若**出发帧**带 M2 三次贝塞尔缓动(ccc)，用贝塞尔重映射，
+                        // 让叶子摆动/字母滑入像参考一样平滑减速，而不是在大关键帧间生硬直连。
+                        float t = static_cast<float>(now - af->time) /
+                                  static_cast<float>(next->time - af->time);
+                        if(t < 0.0f) t = 0.0f; else if(t > 1.0f) t = 1.0f;
+                        if(af->hasEasing) {
+                            t = static_cast<float>(BezierEase(t, af->easeX1, af->easeY1,
+                                                              af->easeX2, af->easeY2));
+                        }
                         interpOx = af->ox + (next->ox - af->ox) * t;
                         interpOy = af->oy + (next->oy - af->oy) * t;
                         interpCx = af->cx + (next->cx - af->cx) * t;
@@ -2072,7 +2083,34 @@ namespace motion {
         // 依 `order`（默认 [0,1,2,3]=flip,angle,scale,s slant）把 flip/angle/scale 左乘到
         // 局部 2×2 线性矩阵。忠实移植 libkrkr2 sub_699940 / applyLocalTransform。用于算
         // 每个节点的**世界矩阵**，使旋转/缩放的父节点能变换子节点位置（缺口①对齐）。
-        static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
+        // Cubic-bezier easing solver for M2 `ccc` curves (a bezier from (0,0) to (1,1),
+        // control points (x1,y1),(x2,y2)); given linear progress u in [0,1] it returns the
+        // eased value. Mirrors the reference's per-frame easing so the leaf swing and the
+        // m2logo letter slides decelerate smoothly instead of hitting big keyframes
+        // linearly. Solution via bisection on x(t)=u (x(t) is monotonic for valid easing).
+        // 三次贝塞尔缓动求解器（M2 `ccc` 曲线：从 (0,0) 到 (1,1)，控制点 (x1,y1),(x2,y2)）；
+        // 给定线性进度 u∈[0,1]，返回缓动后的值。对准参考的逐帧缓动，让叶子摆动与 m2logo
+        // 字母滑入平滑减速，而不是在大关键帧间线性生硬直连。用二分求解 x(t)=u（对合法
+        // 缓动 x(t) 单调）。
+        static double BezierEase(double u, double x1, double y1, double x2, double y2) {
+    double lo = 0.0, hi = 1.0;
+    for(int it = 0; it < 40; ++it) {
+        const double t = (lo + hi) * 0.5;
+        const double inv = 1.0 - t;
+        const double xt = 3.0 * inv * inv * t * x1 +
+                          3.0 * inv * t * t * x2 + t * t * t;
+        if(xt < u) {
+            lo = t;
+        } else {
+            hi = t;
+        }
+    }
+    const double t = (lo + hi) * 0.5;
+    const double inv = 1.0 - t;
+    return 3.0 * inv * inv * t * y1 + 3.0 * inv * t * t * y2 + t * t * t;
+}
+
+static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
                                      const int (&order)[4],
                                      double &l11, double &l12, double &l21, double &l22) {
             l11 = 1.0; l12 = 0.0; l21 = 0.0; l22 = 1.0;

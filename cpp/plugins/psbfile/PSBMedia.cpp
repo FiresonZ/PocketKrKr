@@ -1025,6 +1025,20 @@ namespace PSB {
                     f.opacity = GetPSBFloat((*content)["opa"], -1.0f);
                     if(f.opacity < 0.0f)
                         f.opacity = GetPSBFloat((*content)["op"], 255.0f);
+                    // M2 cubic-bezier easing (content "ccc") for this frame's
+                    // interpolation toward the NEXT keyframe, if present.
+                    // M2 三次贝塞尔缓动（content "ccc"）：本帧向下一帧插值用，若存在。
+                    if(auto cccObj = std::dynamic_pointer_cast<PSBDictionary>((*content)["ccc"])) {
+                        if(auto xl = std::dynamic_pointer_cast<PSBList>((*cccObj)["x"]),
+                                   yl = std::dynamic_pointer_cast<PSBList>((*cccObj)["y"]);
+                           xl && yl && xl->size() >= 3 && yl->size() >= 3) {
+                            f.hasEasing = true;
+                            f.easeX1 = GetPSBFloat((*xl)[1], 0.0f);
+                            f.easeY1 = GetPSBFloat((*yl)[1], 0.0f);
+                            f.easeX2 = GetPSBFloat((*xl)[2], 1.0f);
+                            f.easeY2 = GetPSBFloat((*yl)[2], 1.0f);
+                        }
+                    }
                 } else {
                     // type==0 (invisible) or a frame without content only marks
                     // a time change: the node is invisible during this range.
