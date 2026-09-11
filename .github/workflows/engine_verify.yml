@@ -73,7 +73,7 @@ jobs:
           # cache is reusable (see build/build_android.sh VCPKG_PINNED_COMMIT).
           if [ ! -d ".devtools/vcpkg/.git" ]; then
             git clone https://github.com/microsoft/vcpkg.git .devtools/vcpkg
-            (cd .devtools/vcpkg && git checkout --detach 98d7cb0cf1f4686a3e43aa5672b6230c1d56bce8 && ./bootstrap-vcpkg.sh -disableMetrics)
+            (cd .devtools/vcpkg && git checkout --detach 52d80838fb40c755b1615fbc9c7b994a33742a22 && ./bootstrap-vcpkg.sh -disableMetrics)
           fi
           export VCPKG_ROOT="$PWD/.devtools/vcpkg"
           cmake --preset "Linux Debug Config"

@@ -100,7 +100,7 @@ FLUTTER_APP_DIR="$PROJECT_ROOT/apps/flutter_app"
 # 版本漂移 → vcpkg 二进制缓存每次失效 → 每次全量重编所有依赖(~40 分钟)。
 # 钉住 commit（理想上再把 .devtools/vcpkg 纳入缓存）后 ABI 稳定，二进制缓存才
 # 能被真正复用。
-VCPKG_PINNED_COMMIT="98d7cb0cf1f4686a3e43aa5672b6230c1d56bce8"  # 2026-07-27（对齐上次 CI 用的基线）
+VCPKG_PINNED_COMMIT="52d80838fb40c755b1615fbc9c7b994a33742a22"  # vcpkg master @2026-09-11（任意固定 CSV 均可，只需稳定）
 if [[ -d "$PROJECT_ROOT/.devtools/vcpkg/.git" ]]; then
     VCPKG_ROOT="$PROJECT_ROOT/.devtools/vcpkg"
     # 目录已存在（本地/未来被缓存）也强制钉到目标 commit，防止版本漂移。

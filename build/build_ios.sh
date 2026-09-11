@@ -65,7 +65,7 @@ FLUTTER_APP_DIR="$PROJECT_ROOT/apps/flutter_app"
 # stays stable and the vcpkg binary cache stays reusable across CI runs.
 # 固定 vcpkg commit（与 build_android.sh 同一基线），保证 ABI 稳定、vcpkg 二进制
 # 缓存可跨 CI 复现，避免每次全量重编。
-VCPKG_PINNED_COMMIT="98d7cb0cf1f4686a3e43aa5672b6230c1d56bce8"  # 2026-07-27
+VCPKG_PINNED_COMMIT="52d80838fb40c755b1615fbc9c7b994a33742a22"  # vcpkg master @2026-09-11
 if [[ -d "$PROJECT_ROOT/.devtools/vcpkg/.git" ]]; then
     VCPKG_ROOT="$PROJECT_ROOT/.devtools/vcpkg"
     # 目录已存在也强制钉到目标 commit，防止版本漂移。
