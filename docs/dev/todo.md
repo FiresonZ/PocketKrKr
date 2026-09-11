@@ -230,6 +230,11 @@
   - ⏳ **遗留：M2 用 `ccc` 贝塞尔缓动，我们仍线性插值**（叶子 22.9→−39.5 跳变、m2logo 字母滑入
     时序由此而来）。已确证这些 .mtn 帧都带 `ccc={c,x,y}` 贝塞尔控制，是"未完全对齐参考"的最后一环，
     待实现 keyframe 贝塞尔插值后再放回平滑。
+  - ✅ **B9 已实现 ccc 三次贝塞尔缓动（2026-09-11，216a3d6）**：源文件证实 ccc 是"出发帧→下一帧"
+    的三次贝塞尔（(0,0)→(1,1)，控制点 (x[1],y[1]),(x[2],y[2])）。`PSBMotionFrame` 增 easing 字段 +
+    PSBMedia 解析 content "ccc"；`drawAnimatedTree` 插值时用 `BezierEase`（二分解 x(t)=u 求 y(t)）
+    重映射进度，应用到 ox/oy/cx/cy/opacity/scale/angle 全部插值属性；无 ccc 帧保持线性。待真机确认
+    叶子摆动平滑、m2logo 字母滑入顺。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
