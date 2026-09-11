@@ -1010,10 +1010,11 @@ namespace PSB {
                     std::vector<PSBMedia::PSBMotionNode> nodes;
                     CollectMotionNodesFromLayerList(layerList, -1, nodes, logger);
                     if(!nodes.empty()) {
+                        const size_t storedNodeCount = nodes.size();
                         media.addMotionNodes(archiveKey, sceneName, motionName,
                                              std::move(nodes));
                         if(logger) logger->info("Stored {} nodes for {}/{}",
-                            static_cast<int>(nodes.size()), sceneName, motionName);
+                            storedNodeCount, sceneName, motionName);
                     }
                 }
             }
