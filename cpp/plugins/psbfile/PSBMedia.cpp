@@ -833,6 +833,23 @@ namespace PSB {
                                 }
                             }
                         }
+                        // Round 2: blend mode (content "bm") and clipping rect (content
+                        // "clip" → [l,t,r,b]). bm maps to the operate blend op; clip is
+                        // probed this round (applied once confirmed present on device).
+                        // 第二轮：混合模式(content "bm")与裁切矩形(content "clip"→
+                        // [l,t,r,b])。bm 映射到 operate 混合算子；clip 本轮先探针，
+                        // 真机确认存在后再应用。
+                        f.blendMode = static_cast<int>(GetPSBFloat((*content)["bm"], 0));
+                        if(auto clipList =
+                               std::dynamic_pointer_cast<PSBList>((*content)["clip"])) {
+                            if(clipList->size() >= 4) {
+                                f.hasClip = true;
+                                f.clipL = static_cast<int>(GetPSBFloat((*clipList)[0], 0));
+                                f.clipT = static_cast<int>(GetPSBFloat((*clipList)[1], 0));
+                                f.clipR = static_cast<int>(GetPSBFloat((*clipList)[2], 0));
+                                f.clipB = static_cast<int>(GetPSBFloat((*clipList)[3], 0));
+                            }
+                        }
                         // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the
                         // wrong key always yielded the fallback 255, so any layer whose entrance is
                         // driven by opacity (e.g. yuzulogo's `white`/`logo` t=0 frame has `opa:0`
@@ -963,6 +980,19 @@ namespace PSB {
                                     if(zy == 0.0f) f.scaleY = z;
                                 }
                             }
+                        }
+                    }
+                    // Round 2 same as flat path: blend (bm) + clip probe.
+                    // 第二轮同扁平路径：混合(bm)+裁切探针。
+                    f.blendMode = static_cast<int>(GetPSBFloat((*content)["bm"], 0));
+                    if(auto clipList =
+                           std::dynamic_pointer_cast<PSBList>((*content)["clip"])) {
+                        if(clipList->size() >= 4) {
+                            f.hasClip = true;
+                            f.clipL = static_cast<int>(GetPSBFloat((*clipList)[0], 0));
+                            f.clipT = static_cast<int>(GetPSBFloat((*clipList)[1], 0));
+                            f.clipR = static_cast<int>(GetPSBFloat((*clipList)[2], 0));
+                            f.clipB = static_cast<int>(GetPSBFloat((*clipList)[3], 0));
                         }
                     }
                     // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the

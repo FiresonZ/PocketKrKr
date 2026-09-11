@@ -160,6 +160,14 @@ namespace PSB {
             // white_box → 全屏）；不读这个字段，白底永远铺不满画布。默认 1=不缩放。
             float scaleX = 1, scaleY = 1; // content scale "zx"/"zy" / 缩放
             float opacity = 255;     // 0..255 (m2 `op`) / 透明度
+            // M2 blend mode (content "bm") and clipping rect (round 2). bm drives
+            // the operate blend op; clip limits the node to a sub-rect (probed
+            // this round — applied once data confirmed present).
+            // M2 混合模式(content "bm")与裁切矩形(第二轮)。bm 决定 operate 的混合
+            // 算子；clip 把节点限制在子矩形内（本轮先探针，确认存在后再应用）。
+            int blendMode = 0;         // content "bm" / 混合模式
+            bool hasClip = false;      // content "clip" present / 是否有裁切
+            int clipL = 0, clipT = 0, clipR = 0, clipB = 0; // clip rect / 裁切矩形
             bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };
         struct PSBMotionLayerTrack {

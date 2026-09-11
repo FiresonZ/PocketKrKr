@@ -676,9 +676,9 @@ namespace motion {
                     // 每帧转储（time, src, ox/oy/cx/cy, opacity, visible），只在 motion
                     // 装载时打一次，据此拿到真实的 M2 时间线，按真实坐标实现动画而非猜测。
                     for(const auto &f : tr.frames) {
-                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} op={} vis={}",
+                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} bm={} clip={} op={} vis={}",
                             f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
-                            f.opacity, f.visible ? 1 : 0);
+                            f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
                     }
                 }
                 l->info("loadMotionTracks: {} nodes for {}/{} motion={} (tree, "
@@ -690,9 +690,9 @@ namespace motion {
                         ni, nd.label, nd.parentIndex,
                         static_cast<int>(nd.frames.size()));
                     for(const auto &f : nd.frames) {
-                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} op={} vis={}",
+                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} bm={} clip={} op={} vis={}",
                             ni, f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
-                            f.opacity, f.visible ? 1 : 0);
+                            f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
                     }
                 }
             }
@@ -918,9 +918,9 @@ namespace motion {
                     left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 }
                 const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} at ({},{}) op={} scale=({},{}) src='{}'",
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} at ({},{}) op={} scale=({},{}) bm={} src='{}'",
                     node.label, af->type, static_cast<tjs_int>(now), interpRatio,
-                    left, top, wop, interpSx, interpSy, af->src);
+                    left, top, wop, interpSx, interpSy, af->blendMode, af->src);
                 // B 第一段（round 1）:用 operateAffine 而非 operateRect 绘制，
                 // 让图层按自身显示盒(width×height)拉伸。operateRect 只做原生尺寸
                 // blit，yuzulogo 的 64×64 white_box 永远铺不满全屏；operateAffine
@@ -956,6 +956,22 @@ namespace motion {
                 const int ax = left - (rW - iw) / 2;
                 const int ay = top - (rH - ih) / 2;
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
+                // Round 2 blend mode: map M2 content "bm" to an operate blend op.
+                // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
+                // (om ints from drawable.h: alpha=2,add=3,sub=4,mul=5,addalpha=12).
+                // 第二轮混合模式：把 M2 content "bm" 映射为 operate 混合算子。
+                // 0=正常(alpha),1=加,2=减,3=乘,4=加alpha（int 见 drawable.h）。
+                int blendOm = 2;
+                switch(af->blendMode) {
+                    case 1: blendOm = 3; break;  // additive / 加
+                    case 2: blendOm = 4; break;  // subtractive / 减
+                    case 3: blendOm = 5; break;  // multiplicative / 乘
+                    case 4: blendOm = 12; break; // addalpha / 加 alpha
+                    default: blendOm = 2; break; // alpha (normal) / 正常
+                }
+                if(logger && af->hasClip)
+                    logger->info("drawAnimatedTree clip: '{}' clip=({},{},{},{})", node.label,
+                        af->clipL, af->clipT, af->clipR, af->clipB);
                 // 参数依 Layer.operateAffine(src, x, y, w, h, affine, a,b,c,d,
                 // tx,ty, mode, opa, ...)。dst 对象绑定到 dest（调用对象），src 是
                 // 临时层上的纹理。
@@ -975,7 +991,7 @@ namespace motion {
                     tTJSVariant(static_cast<tjs_real>(totalScY)), // 9 d (y scale)
                     tTJSVariant(static_cast<tjs_int>(ax)),        // 10 tx
                     tTJSVariant(static_cast<tjs_int>(ay)),        // 11 ty
-                    tTJSVariant(static_cast<tjs_int>(2)),         // 12 omAlpha
+                    tTJSVariant(blendOm),                                // 12 blend mode / 混合模式
                     tTJSVariant(opaClamp),                        // 13 opacity
                 };
                 tTJSVariant *opArgv[] = { &opArgs[0], &opArgs[1], &opArgs[2],
