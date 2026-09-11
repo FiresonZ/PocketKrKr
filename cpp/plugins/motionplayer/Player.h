@@ -1147,23 +1147,38 @@ namespace motion {
                 if(_psbImages.empty() && _motionTracks.empty()) return;
                 iTJSDispatch2 *realLayer = resolveRealLayer(target);
                 iTJSDispatch2 *tempParent = realLayer ? realLayer : target;
+                // Ensure the per-motion timeline is loaded BEFORE drawing. Without
+                // this the capture path could hit its first frame with an empty
+                // _motionTracks and emit the STATIC full image set (background +
+                // full yuzu_logo at full opacity) onto the white screen — the
+                // "播放前背景有完整静止 logo" artifact.
+                // 绘制前务必已加载该 motion 的帧时间线。否则 capture 路径第一帧可能
+                // _motionTracks 仍为空，退回去画**静态全量图集**（背景 + 完整静止
+                // yuzu_logo、不透明）——这正是"播放前背景有完整静止 logo"的来源。
+                if(!_motionTracksLoaded) {
+                    loadMotionTracks(storage);
+                }
                 // IMPORTANT: captureCanvas's destination layer IS the layer that
                 // reaches the screen, so it must receive the ANIMATION frame, not
-                // the static full composite. Fall back to static only when the
-                // motion timeline cannot produce any frame (e.g. an empty / all-
-                // invisible track set), otherwise the user never sees motion.
+                // the static full composite. When a motion timeline exists it is
+                // AUTHORITATIVE: an empty (all-invisible) frame at the current tick
+                // means "draw nothing" for that motion — NOT "fall back to the
+                // static composite" (which would pop in a full logo that the
+                // timeline keeps transparent). Static composite is used only when
+                // this motion has NO timeline at all (a plain image scene).
                 // 重要：captureCanvas 的目标层就是真正上屏的层，必须画**动画帧**而非静态
-                // 全量合成。仅当当前 motion 时间线一张帧都画不出来（如空 track / 全部不可
-                // 见）时才回退静态，否则用户永远看不到动画。
+                // 全量合成。一旦存在 motion 时间线它就是**权威**：当前 tick 为空
+                //（全部不可见）时表示该 motion 此刻"不画任何东西"——绝不能回退成静态
+                // 全量合成（那会把时间线始终保持透明的完整 logo 闪回屏上）。仅当该
+                // motion 完全没有时间线（纯图像场景）时才用静态合成。
                 // Clear the capture layer FIRST so per-frame animation replaces the
                 // previous frame instead of stacking (which produced color blocks).
                 // 先清空 capture 层，让每帧动画**替换**上一帧而非叠加（叠加曾产生色块）。
                 clear(target, 0);
                 int drawn = 0;
-                if(!_motionTracks.empty()) {
+                if(!_motionTracks.empty() || !_motionNodes.empty()) {
                     drawn = drawAnimated(target, tempParent, logger);
-                }
-                if(drawn == 0) {
+                } else {
                     drawn = compositeTo(target, tempParent, logger);
                 }
                 if(logger) logger->info("drawOnto: drew {} images onto capture target={}",
