@@ -1128,11 +1128,39 @@ namespace motion {
                 // ox/oy 不进位置（上面的 loX=interpCx），旋转绕 ox/oy 热区
                 //（Round-3）而非盒子中心。
                 const int coordOrigin = resolveCoordOrigin();
-                int left = _coordX + halfCw + static_cast<int>(px);
-                int top  = _coordY + halfCh + static_cast<int>(py);
-                if(coordOrigin != 1) {          // center convention (default) / 中心约定
-                    left -= iw / 2;
-                    top  -= ih / 2;
+                const int centerX = _coordX + halfCw + static_cast<int>(px);
+                const int centerY = _coordY + halfCh + static_cast<int>(py);
+                // Anchor = the source icon's baked hotspot (originX/originY) when set,
+                // so the animated frame lands EXACTLY where the author composed it in
+                // the final static/composite image — fixes "last frame ≠ static/pop".
+                // This is the reference model (libkrkr2 findPSBResourceBySourceName:
+                // org = pos - M*(originX+ox, originY+oy)). Fall back to resolveCoordOrigin
+                // (center by default) when the icon carries no origin, so full-canvas
+                // icons/backgrounds keep centered and we don't re-introduce the "整体
+                // 向右下偏移" (B7 anchored everything at top-left = origin 0).
+                // 锚点优先取源 icon 已烘焙的热点(originX/originY)——让动画末帧精确落在
+                // 作者在最终静态/合成图里编排的位置，消除"末帧≠静态"的跳变（参考模型
+                // libkrkr2：org = pos - M*(originX+ox, originY+oy)）。icon 无 origin 时
+                // 回退到 resolveCoordOrigin（默认中心），保证整图 logo/背景仍居中，也
+                // 不会重犯 B7 把所有精灵钉在左上角(=origin 0)导致的整体向右下偏移。
+                int left = centerX, top = centerY;
+                float iconOrX = 0.0f, iconOrY = 0.0f;
+                bool hasIconOrigin = false;
+                if(auto *med = PSB::GetGlobalPSBMedia()) {
+                    PSB::PSBMedia::CachedImageInfo gi;
+                    if(med->getImageInfo(storageStr + "/" + res + "/pixel.png", gi) &&
+                       (gi.originX != 0.0f || gi.originY != 0.0f)) {
+                        iconOrX = gi.originX;
+                        iconOrY = gi.originY;
+                        hasIconOrigin = true;
+                    }
+                }
+                if(hasIconOrigin) {                // icon baked hotspot (origin-anchored)
+                    left = centerX - static_cast<int>(iconOrX);
+                    top  = centerY - static_cast<int>(iconOrY);
+                } else if(coordOrigin != 1) {      // center convention (default) / 中心约定
+                    left = centerX - iw / 2;
+                    top  = centerY - ih / 2;
                 }
                 // Display-box scale (layer larger than its texture) + per-frame
                 // scale; stretch the box and center it on the same anchor.
@@ -1176,8 +1204,9 @@ namespace motion {
                 // title ch1_芳乃 end-of-motion shift or where each m2logo glyph lands.
                 // 探针输出最终四边形位置（局部 px/py + 锚定后的 left/top），便于真机定位
                 // 标题 ch1_芳乃 播放末尾左移、或 m2logo 各字形落点等动画错位。
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} t={} pos=({:.1f},{:.1f}) leftTop=({},{}) box=({},{}) totalSc=({:.2f},{:.2f}) ang={:.1f} op={} bm={} src='{}'",
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} iconOrigin={} t={} pos=({:.1f},{:.1f}) leftTop=({},{}) box=({},{}) totalSc=({:.2f},{:.2f}) ang={:.1f} op={} bm={} src='{}'",
                     node.label, af->type, static_cast<tjs_int>(now), coordOrigin,
+                    hasIconOrigin ? (std::to_string(static_cast<int>(iconOrX)) + "," + std::to_string(static_cast<int>(iconOrY))) : std::string("-"),
                     static_cast<tjs_int>(af->time), px, py, left, top,
                     iw, ih, totalScX, totalScY, effAngle, wop, af->blendMode, af->src);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
