@@ -1207,10 +1207,7 @@ namespace motion {
                 // 方向反、抖动。无旋转节点保持原矩阵（无回归）。
                 tjs_real mA = efA, mB = 0, mC = 0, mD = efD, mTx = static_cast<tjs_real>(efTx), mTy = static_cast<tjs_real>(efTy);
                 if(effAngle != 0.0f) {
-                    // Angle negated to match K2's Y-up rotation convention (see
-                    // buildLocalMatrix) so the leaf swings the correct direction.
-                    // 角度取反以匹配 K2 的 Y-up 旋转约定（见 buildLocalMatrix），使叶子摆向正确。
-                    const double rad = -effAngle * 2.0 * 3.14159265358979323846 / 360.0;
+                    const double rad = effAngle * 2.0 * 3.14159265358979323846 / 360.0;
                     const double c = std::cos(rad), s = std::sin(rad);
                     // Pivot = where the texture origin (ox,oy) lands inside the drawn
                     // (already flipped) display box.
@@ -2044,14 +2041,7 @@ namespace motion {
                         break;
                     case 1: // angle: left-multiply [[c,-s],[s,c]]
                         if(ang != 0.0) {
-                            // Negate the angle: K2 renders logo/leaf rotation in a Y-up
-                            // convention, ours is Y-down, so the same +angle visually
-                            // swings the opposite way ("叶子应向左却向右"). Mirroring the
-                            // rotation (R(-θ)) fixes the handedness for ALL rotated nodes.
-                            // 把角度取反：K2 以 Y-up 渲染 logo/叶子的旋转，我们是 Y-down，
-                            // 同一 +角度视觉上摆向相反（"叶子应向左却向右"）。取反旋转
-                            // (R(-θ)) 对所有旋转节点修正朝向。
-                            const double rad = -ang * 2.0 * 3.14159265358979323846 / 360.0;
+                            const double rad = ang * 2.0 * 3.14159265358979323846 / 360.0;
                             const double c = std::cos(rad), s = std::sin(rad);
                             const double t11 = c * l11 - s * l21;
                             const double t12 = c * l12 - s * l22;
