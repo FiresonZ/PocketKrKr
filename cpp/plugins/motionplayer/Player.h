@@ -130,7 +130,7 @@ namespace motion {
             _allplaying = (all != 0);
             _playWasCalled = true;
             _stopCommandSent = false;
-            _strClipActive = false;
+            _strClipActiveParent = -1;
             _tickCount = 0;
             _lastTime = 0;
             auto newStorage = ResourceManager::getLastLoadedPath();
@@ -1010,41 +1010,79 @@ namespace motion {
                 // 一个 clip（=paintBox 与 viewport 求交），operate 前对子层 SetClip，
                 // 否则 ResetClip。缺它则 m2logo 的 "cheeseware" 字母互相重叠、永远
                 // 没有打字机擦除效果。
-                // The clip box maps this container's display box to layer coords with
-                // the same convention as the text letters (left-aligned pen anchor,
-                // scale applied to the box too).
-                // 裁剪盒用与文本字母相同的约定把容器显示盒映射到层坐标（笔位左对齐，
-                // 缩放同样作用于盒）。
-                const int wcL = _coordX + halfCw + static_cast<int>(wx[i]);
-                const int wcT = _coordY + halfCh + static_cast<int>(wy[i]);
-                const int wcR = wcL + std::max(1, static_cast<int>(node.width * std::max(scx, 0.0f)));
-                const int wcB = wcT + std::max(1, static_cast<int>(node.height * std::max(scy, 0.0f)));
-                const bool isStrClipContainer =
-                    clipSupported && node.width > 0 && node.height > 0 &&
+                // The clip window is anchored at the str_clip's OWN accumulated position (it is
+                // a fixed type-7 text-clip window; node.width/height may be 0). Its size is
+                // derived from the letters it reveals: the horizontal extent of the
+                // descendants' active-frame pen positions (cx+ox) plus a per-letter width
+                // estimate. The letters slide through this fixed window via str_locate's
+                // cx animation (m2logo str_clip s=9 + str_locate cx -114->23), giving the
+                // left-to-right reveal.
+                // 裁剪窗口锚定在 str_clip **自身**的累加位置（它是固定的 type-7 文本裁剪窗，
+                // node.width/height 可能为 0）。窗口尺寸按它揭示的字母派生：各后代节点当前帧
+                // 笔位 (cx+ox) 的水平范围 + 每字母宽度估计。字母经 str_locate 的 cx 动画
+                //（m2logo str_clip s=9 + str_locate cx -114→23）滑过这个固定窗口，得到
+                // 从左到右的显现。
+                float winMin = 1e9f, winMax = -1e9f;
+                const bool strClipCandidate =
                     node.label.compare(0, 8, "str_clip") == 0;
+                bool isStrClipContainer = false;
+                if(clipSupported && strClipCandidate) {
+                    // Descendants are laid out contiguously after this node in pre-order;
+                    // gather the active-frame pen x-extent of its leaf letters.
+                    // 后代先序连续排在本节点之后；收集其字母叶节点当前帧笔位 x 范围。
+                    for(int j = i + 1; j < n; j++) {
+                        int p = _motionNodes[j].parentIndex;
+                        bool desc = false;
+                        while(p >= 0) { if(p == i) { desc = true; break; } p = _motionNodes[p].parentIndex; }
+                        if(!desc) break; // pre-order: children immediately follow; stop at first non-descendant
+                        const auto &fr = _motionNodes[j].frames;
+                        const PSB::PSBMedia::PSBMotionFrame *cf = nullptr;
+                        for(const auto &f : fr) { if(f.time <= now) cf = &f; else break; }
+                        if(!cf || !cf->visible) continue;
+                        if(cf->src.size() <= 4 || cf->src.compare(0, 4, "src/") != 0) continue; // letters only / 只统计字母
+                        const float lx = cf->cx + cf->ox;
+                        if(lx < winMin) winMin = lx;
+                        const float rx = lx + 60.0f; // per-letter width estimate / 字母宽度估计
+                        if(rx > winMax) winMax = rx;
+                    }
+                    isStrClipContainer = winMax > winMin;
+                }
+                float wcL = 0, wcT = 0, wcR = 0, wcB = 0;
+                if(isStrClipContainer) {
+                    // Window box in layer coords. Window top-left = str_clip's accumulated pos.
+                    // 窗口盒转到层坐标；窗口左上 = str_clip 累加位置。
+                    wcL = static_cast<float>(_coordX + halfCw) + wx[i];
+                    wcT = static_cast<float>(_coordY + halfCh) + wy[i];
+                    const float winW = (winMax - winMin);
+                    wcR = wcL + std::max(1.0f, winW);
+                    wcB = wcT + 120.0f; // enough height for the glyph / 足够容纳字形
+                }
                 if(logger && isStrClipContainer)
-                    logger->info("drawAnimatedTree strclip: '{}' set clip=({},{},{},{})",
-                        node.label, wcL, wcT, wcR, wcB);
+                    logger->info("drawAnimatedTree strclip: '{}' clip=({},{},{},{}) win=[{},{}]",
+                        node.label, static_cast<int>(wcL), static_cast<int>(wcT),
+                        static_cast<int>(wcR), static_cast<int>(wcB), winMin, winMax);
                 // Only image lines draw; layout/motion containers only accumulate.
                 // 仅图像行绘制；layout/motion 容器只累加不绘制。
-                if(af->src.size() <= 4 || af->src.compare(0, 4, "src/") != 0) {
-                    // Container node: only accumulate transform. Apply/clear the
-                    // str_clip crop here so it wraps the letter subtree that renders
-                    // right after (pre-order: container first, then its children).
-                    // 容器节点只累加变换。在此应用/清除 str_clip 裁剪，使其包住紧随其
-                    // 后渲染的字母子树（先序：容器在前，之后是它的子节点）。
-                    if(isStrClipContainer) {
-                        writeClip(dest, ClipState{wcL, wcT, wcR - wcL, wcB - wcT});
-                        _strClipActive = true;
-                    } else if(_strClipActive) {
-                        // A sibling/other node after the str_clip subtree separates
-                        // the letters from the next chapter of the scene: restore the
-                        // previous full-layer clip so non-text nodes aren't cropped.
-                        // 文本子树之后出现的兄弟/其他节点把字母与下一段场景隔开：恢复
-                        // 此前的整层裁剪，避免非文本节点被裁掉。
-                        writeClip(dest, prevClip);
-                        _strClipActive = false;
+                // --- str_clip clip lifecycle (runs for containers AND images) ---
+                // --- str_clip 裁剪生命周期（容器与图像都执行）---
+                if(_strClipActiveParent >= 0 && i != _strClipActiveParent) {
+                    // Is this node still inside the active str_clip's subtree? If not,
+                    // the crop ended — restore the previous layer clip.
+                    // 本节点是否仍在生效 str_clip 的子树内？若否，裁切结束，恢复之前裁剪。
+                    bool under = false;
+                    for(int p = node.parentIndex; p >= 0; p = _motionNodes[p].parentIndex) {
+                        if(p == _strClipActiveParent) { under = true; break; }
                     }
+                    if(!under) { writeClip(dest, prevClip); _strClipActiveParent = -1; }
+                }
+                if(isStrClipContainer) {
+                    writeClip(dest, ClipState{static_cast<int>(wcL), static_cast<int>(wcT),
+                                              static_cast<int>(wcR - wcL), static_cast<int>(wcB - wcT)});
+                    _strClipActiveParent = i;
+                }
+                if(af->src.size() <= 4 || af->src.compare(0, 4, "src/") != 0) {
+                    // Container node: only accumulate transform (clip already handled above).
+                    // 容器节点只累加变换（裁剪已在上方处理）。
                     continue;
                 }
                 // An image node: if a str_clip subtree previously set a clip, an
@@ -1246,9 +1284,9 @@ namespace motion {
             // active region cannot leak into the next frame/motion. Idempotent.
             // 恢复此前保存的层裁剪，确保 str_clip 若为最后一个活跃区域也不会残留到
             // 下一帧/motion。幂等。
-            if(_strClipActive) {
+            if(_strClipActiveParent >= 0) {
                 writeClip(dest, prevClip);
-                _strClipActive = false;
+                _strClipActiveParent = -1;
             }
             return drawn;
         }
@@ -2094,12 +2132,12 @@ namespace motion {
         bool _playWasCalled = false;
         bool _isTransition = false;
         bool _stopCommandSent = false;
-        // True while a str_clip text crop is active on the dest layer for the current
-        // frame; reset on play() and cleared once the subtree ends. Prevents a clip
-        // from leaking across motions/frames.
-        // 当前帧 dest 层是否处于 str_clip 文本裁切中；play() 重置，子树结束后清除。
-        // 防止裁切跨 motion/帧残留。
-        bool _strClipActive = false;
+        // Node index of the currently active str_clip text crop, or -1 when none. Reset on
+        // play() and cleared as soon as a node outside that str_clip's subtree is drawn,
+        // so the crop can't leak across motions/frames.
+        // 当前生效的 str_clip 文本裁切的节点索引，-1=无。play() 重置；一旦画到该
+        // str_clip 子树之外的节点就清除，防止裁剪跨 motion/帧残留。
+        int _strClipActiveParent = -1;
 
         tjs_int _loopTime = 0;
         bool _animating = false;
