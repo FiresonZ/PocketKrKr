@@ -169,6 +169,17 @@
   main/layout 祖先拿到 logo 真实缩放）。另 `str_clip` 节点 `type=7`、`box=0x0`，此前按
   width/height>0 判段永不触发的 str_clip 裁剪逻辑实际没生效——已在日志确认为死分支，未造成
   回归。待真机确认字母大小可读。
+- 进度：⚠️ **m2logo "M 字/十字缺失" 根因（engine(22) 确认）：静态图层被动画跳过**。m2logo
+  动画=只有 `back_white` 这一条 motion（play 了 2 次），它应显示 M 字(icon25/27/28 碎片)+
+  十字+ CHEESEWARE。但 M 碎片是**静态图层位置**（在 `_psbImages`/getLayerPositions 里），
+  `drawPSBImages` 只要有 motion 轨道就只走 `drawAnimated`（motion 节点），**从不合成静态
+  _psbImages** → M 碎片全程没画。修法：动画时把静态 _psbImages 里属于当前 motion 的 M 碎片
+  一并合成（需匹配当前 motion 的底布白/黑，避免另一底色像素点叠上去）；z 序要在动画底布之后、
+  CHEESEWARE 之下。这是 m2logo 显示的真正根因，之前字级/裁剪方向上的工作是错的层面。
+- 进度：✅ **叶子"摆向反"（engine(5) 复验）已被推翻**：叶子可摆、背景正常，但"应向左却向
+  右"。矩阵与参考逐位一致、数据 flip=0 → 是**渲染坐标手性**的左右镜像，**不是角度符号**
+  （取反角度后仍向右，`6d70869` 已撤销）。真正成因待定：可能需对该叶子做水平镜像(flipX)或
+  坐标 x 镜像，需对照 K2 参考帧才能定论。
 - 进度：✅ **inheritMask + transformOrder 已解析并按位门控（2026-09-11，对齐 libkrkr2）**：
   - `PSBMotionNode` 新增 `inheritMask`（默认 0x1FC=全部继承）、`transformOrder[4]`（默认
     [0,1,2,3]=flip,angle,scale,s slant）；`PSBMedia.cpp` 节点构建处读取并打探针（`inh=0x..
