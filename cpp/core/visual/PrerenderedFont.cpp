@@ -11,6 +11,8 @@ tTVPPrerenderedFont::tTVPPrerenderedFont(const ttstr &storage)
 {
     RefCount = 1;
     Storage = storage;
+    AscentValid = false;
+    CachedAscent = 0;
 
     tTJSBinaryStream *stream = TVPCreateBinaryStreamForRead(storage, TJS_W(""));
     if(stream == nullptr) {
@@ -110,6 +112,30 @@ const tTVPPrerenderedCharacterItem *tTVPPrerenderedFont::Find(tjs_char ch) {
         else
             s = m;
     }
+}
+//---------------------------------------------------------------------------
+tjs_int tTVPPrerenderedFont::GetAscent() const {
+    // 惰性推导该 .tft 生成时的原始字体 ascent。
+    // tTVPCharacterData::OriginY 定义为"与 ascent 位置的垂直(向下为正)偏移"；
+    // 显示公式 data->OriginY = -pitem->OriginY + aofsy。当 aofsy 取原始字体
+    // ascent 时，一个顶到 ascent 线的满高字形应得到 data->OriginY = 0，因此其
+    // 存储的 OriginY 恰等于原始字体 ascent。取全部字形 OriginY 的最大值即为
+    // 真实 ascent（满高 CJK 字形通常存在，故 max≈ascent）。
+    // Lazy derive the origin-font ascent of this .tft. Because data->OriginY is
+    // defined as the offset (positive = down) from the ascent line, a full-height
+    // glyph reaching the ascent line evaluates to data->OriginY = 0 only when
+    // aofsy equals the origin ascent, hence its stored OriginY equals that ascent.
+    // The maximum stored OriginY over all glyphs is therefore the true ascent.
+    if(!AscentValid) {
+        tjs_int maxAscent = 0;
+        for(tjs_uint i = 0; i < IndexCount; ++i) {
+            tjs_int y = Index[i].OriginY;
+            if(y > maxAscent) maxAscent = y;
+        }
+        CachedAscent = maxAscent;
+        AscentValid = true;
+    }
+    return CachedAscent;
 }
 //---------------------------------------------------------------------------
 void tTVPPrerenderedFont::Retrieve(const tTVPPrerenderedCharacterItem *item,

@@ -247,13 +247,19 @@
 >    偏差小所以正常。对话字符在 `.tpf` 里 MISS → 走栅格化（同字体自洽）所以正常。
 >  - 另发现差异（与尺寸无关，未改）：`tTJSNI_BaseLayer::DrawText/DrawGlyph` 我们对 color
 >    多做了一次 `TVP_REVRGB`（krkrz 没有），仅影响颜色、用户实测颜色正常。
->- 待真机：用新增 `[TpfMap]`（映射的 .tpf 路径）与 `[TpfProbe]`（每 face/字符 hit-miss +
->  .tpf 内置 W/H/Origin/Inc + aofs）日志确认：① 选项 face 是否 HIT .tpf；② .tpf 内建字号是否
->  与请求 height 一致（排除映射错 .tpf）；③ 若确认命中且 Origin 与 aofsy 差 ~0.3×h → 修
->  `aofsy`（对 .tpf 字形改用其原始字体 ascent，例如按 .tpf 内建 Origin 推导，而非回退字体）。
->- 待做：① 与动画一起构建；② 依据新日志 `[TextProbe]`（destRect 高度 vs 行高；AscentOfs；prerender
->  是否命中 .tpf）与 `[FontProbe]` 度量，定位是绘制区域被裁、基线偏移还是未走位图字体；③ 若指向
->  .tpf 通道 → 按 §2d 实现。
+>- **已实现（2026-09-11，待真机验证）**：按上面"待真机"第 ③ 项直接修 `aofsy`。
+>  - `tTVPPrerenderedFont::GetAscent()`：从 `.tft` 字形度量惰性推导**原始字体** ascent
+>    （`max(pitem->OriginY)`；因为 `data->OriginY=-OriginY+aofsy`，aofsy 取原始 ascent 时
+>    顶满 high 字形 OriginY==ascent，故 max 即真 ascent）。
+>  - `tTVPNativeBaseBitmap::ApplyFont()`：当 `PrerenderedFont`（映射了 .tft）非空时，
+>    `AscentOfsY` 改用 `PrerenderedFont->GetAscent()`，而非回退字体 `GetAscentHeight()`。
+>  - 作用于 .tpf hit 与 miss 字形**统一**偏移，与 desktop 行为一致（其 ascent 亦取自原字体）。
+>    预期把 aofsy 从 ~45(h=39) 降回 ~34，停止把字形下压/裁框底。
+>- 待真机：
+>  - 用 `[TpfMap]`/`[TpfProbe]` 日志复核：选项 face hit .tpf 后 aofsy≈max OriginY，文字不再
+>    被压下去、不是只剩上半。
+>  - 若仍有"偏小"残留，再核对 .tpf 内建字号是否与请求 height 一致（排除映射错 .tpf）与
+>    DrawText destRect 高度 vs 行高。
 
 ### — §R. krkr2-tools 反编译参考资源清单（2026-09-11 盘点）【参考索引，非待办】
 > 位置：宿主机本地 `/tmp/krkr2-tools`（K2 完整移植源码 + libkrkr2.so 反编译重建，**不 commit 进仓库**；

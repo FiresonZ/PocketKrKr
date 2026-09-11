@@ -39,6 +39,10 @@ private:
     const tTVPPrerenderedCharacterItem *Index;
     tjs_uint IndexCount;
 
+    // 原始字体 ascent 的惰性推导缓存 (derived lazily from the .tft glyph metrics)
+    mutable bool AscentValid;
+    mutable tjs_int CachedAscent;
+
 public:
     tTVPPrerenderedFont(const ttstr &storage);
     ~tTVPPrerenderedFont();
@@ -48,6 +52,15 @@ public:
     const tTVPPrerenderedCharacterItem *Find(tjs_char ch); // serch character
     void Retrieve(const tTVPPrerenderedCharacterItem *item, tjs_uint8 *buffer,
                   tjs_int bufferpitch);
+
+    // 返回该 .tft 生成时所依据的**原始字体** ascent（即垂直排版偏移依据）。
+    // 移动端回退字体(Noto CJK)的 ascent≈1.16×字号，与 .tft 预烘焙的原始
+    // 字体(如 MS ゴシック ≈0.86×字号)不符，会导致字形下移/裁切；此处直接
+    // 从 .tft 字形度量推导真实 ascent。
+    // Returns the ascent of the ORIGIN font this .tft was baked with, used as the
+    // vertical placement reference. Recovered from the glyph metrics themselves so
+    // the mobile fallback font (larger ascent) cannot mis-position the glyphs.
+    tjs_int GetAscent() const;
 };
 
 #endif // __TVP_PRERENDERED_FONT_H__
