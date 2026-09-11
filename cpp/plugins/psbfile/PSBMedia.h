@@ -71,6 +71,12 @@ namespace PSB {
             int height = 0;
             int left = 0;
             int top = 0;
+            // Icon hotspot (anchor/rotation pivot of the source bitmap; from the
+            // icon's originX/originY). Draw anchor: org = pos - M*(originX+ox, ...).
+            // 图标热点（源位图锚点/旋转枢轴；来自 icon 的 originX/originY）。
+            // 绘制锚点：org = pos - M*(originX+ox, ...)。
+            float originX = 0;
+            float originY = 0;
             int opacity = 255;
             bool visible = true;
             int layerType = 0;

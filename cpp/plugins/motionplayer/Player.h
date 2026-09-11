@@ -642,27 +642,18 @@ namespace motion {
                     expandSubMotionNodes(m, storageStr, _motionNodes, _logger());
                 }
             }
-            // M2 text-layout subtrees: a node whose ancestor chain contains a
-            // "str_*" container (str_clip / str_locate, e.g. the m2logo
-            // "cheeseware" letters) is positioned by the TEXT pen — each glyph
-            // bitmap is drawn LEFT-ALIGNED at its advance anchor, so
-            // variable-width letters tile without overlapping. Ordinary image
-            // nodes (yuzu logo letters etc.) stay center-anchored. Precompute
-            // once per motion; parentIndex is guaranteed parent-before-child.
-            // M2 文本排版子树：祖先链含 "str_*" 容器（str_clip/str_locate，如 m2logo
-            // 的 "cheeseware" 字母）的节点按**文本笔位**定位——每个字形位图在它的
-            // advance 锚点处**左对齐**绘制，可变宽度字母才能依次排开不重叠；普通图像
-            // 节点（yuzu logo 字母等）保持居中锚定。每 motion 预计算一次；
-            // parentIndex 保证父先于子。
-            _nodeInStrSubtree.assign(_motionNodes.size(), false);
-            for(size_t ni = 0; ni < _motionNodes.size(); ni++) {
-                const int pi = _motionNodes[ni].parentIndex;
-                if(pi < 0) continue; // root: not a text leaf
-                if(_nodeInStrSubtree[static_cast<size_t>(pi)] ||
-                   _motionNodes[static_cast<size_t>(pi)].label.compare(0, 3, "str") == 0) {
-                    _nodeInStrSubtree[ni] = true;
-                }
-            }
+            // M2 text-layout subtrees (str_* containers like m2logo's
+            // "cheeseware"): every node — including these letters — is drawn
+            // ORIGIN-ANCHORED via org = pos - M*(iconOrigin+ox, ...) (reference
+            // updateLayersPhase3_VertexComputation). There is NO separate pen /
+            // left-align path: each letter node animates its own coord (cx/cy)
+            // keyframes, and the icon origin + content ox carry the anchor. The
+            // str_clip container merely clips the subtree (type-7 shapeAABB).
+            // M2 文本排版子树（str_* 容器，如 m2logo 的 "cheeseware"）：所有节点
+            // 包括这些字母都按**原点锚定**绘制 org = pos - M*(iconOrigin+ox, ...)
+            //（参考 updateLayersPhase3_VertexComputation）。不存在独立的笔位/左对齐
+            // 路径：每个字母节点各自动画自己的 coord(cx/cy) 关键帧，图标原点与 content
+            // 的 ox 承载锚点；str_clip 容器只负责裁剪子树（type-7 shapeAABB）。
             if(auto l = _logger()) {
                 l->info("loadMotionTracks: {} tracks for {}/{} motion={}",
                     _motionTracks.size(), storageStr, charaStr, motionStr);
@@ -849,7 +840,6 @@ namespace motion {
                 float interpOp = af->opacity;
                 float interpSx = af->scaleX, interpSy = af->scaleY;
                 float interpAngle = af->angle;
-                float interpRatio = 1.0f; // 1=hold/native, else [0,1] interp / 插值比率(1=不插值)
                 if(af->visible) {
                     const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
                     for(const auto &f : frames) {
@@ -872,7 +862,6 @@ namespace motion {
                     if(af->type == 3 && next && next->visible && next->time > af->time) {
                         const float t = static_cast<float>(now - af->time) /
                                         static_cast<float>(next->time - af->time);
-                        interpRatio = t;
                         interpOx = af->ox + (next->ox - af->ox) * t;
                         interpOy = af->oy + (next->oy - af->oy) * t;
                         interpCx = af->cx + (next->cx - af->cx) * t;
@@ -916,17 +905,26 @@ namespace motion {
                                                  : af->flipX;
                 const bool effFy = (inh & 0x008) ? (af->flipY ^ (pOn ? wfy[node.parentIndex] : false))
                                                  : af->flipY;
-                // Position: the node's local offset (ox+cx, oy+cy) is transformed by the PARENT's
-                // world matrix and added to the parent's world pos, per libkrkr2
+                // Position: the node's local **coord** (cx, cy) is transformed by the
+                // PARENT's world matrix and added to the parent's world pos, per libkrkr2
                 // `pos = parentM·local + parentPos`. This is gap-1 alignment so a
                 // rotated/scaled parent correctly carries its children. Roots and nodes
-                // under an identity parent reduce to px=ox+cx (no change to bg/letters).
-                // 位置：节点的局部偏移 (ox+cx, oy+cy) 用**父节点世界矩阵**变换后加到父世界
-                // 坐标（libkrkr2：`pos = parentM·local + parentPos`）。这是缺口①对齐，让
-                // 旋转/缩放的父节点正确带动子节点。根节点及恒等父矩阵下退化为 px=ox+cx
-                //（背景与字母不变）。
-                const float loX = interpOx + interpCx;
-                const float loY = interpOy + interpCy;
+                // under an identity parent reduce to px=cx (no change to bg/letters).
+                // NOTE (anchoring): content "ox"/"oy" is NOT added to the position —
+                // it is the texture's anchor/pivot offset applied at draw time via
+                // org = pos - M*(iconOrigin+ox, iconOriginY+oy) (reference
+                // updateLayersPhase3_VertexComputation). Adding ox to the position
+                // double-counted it and moved the whole sprite (e.g. yuzusoft's leaf
+                // ox=91 drifted / looked mirrored while swaying).
+                // 位置：节点的局部**坐标**(cx, cy) 经**父节点世界矩阵**变换后加到父世界坐标
+                //（libkrkr2：`pos = parentM·local + parentPos`）。这是缺口①对齐，让旋转/
+                // 缩放的父节点正确带动子节点。根节点及恒等父矩阵下退化为 px=cx。
+                // 注意（锚点）：content 的 "ox"/"oy" **不进位置**——它是纹理锚点/枢轴偏移，
+                // 在绘制时经 org = pos - M*(iconOrigin+ox, iconOriginY+oy) 生效（参考
+                // updateLayersPhase3_VertexComputation）。把 ox 加进位置等于**双计**，会让
+                // 整个精灵漂移（如 yuzusoft 叶子 ox=91 摆动时偏移/呈镜像）。
+                const float loX = interpCx;
+                const float loY = interpCy;
                 const float px = pOn
                     ? static_cast<float>(wm11[node.parentIndex] * loX +
                                          wm12[node.parentIndex] * loY) + baseX
@@ -1115,120 +1113,58 @@ namespace motion {
                 const int iw = static_cast<int>(wVar.AsInteger());
                 const int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) continue;
-                // M2 text-layout letters (str_* subtree) are pen-positioned:
-                // left-align the glyph bitmap at the advance anchor so
-                // variable-width letters tile without overlapping (m2logo
-                // "cheeseware"; centering a wide glyph like 'w' overlaps the
-                // previous letter). Ordinary image nodes stay center-anchored.
-                // M2 文本字母（str_* 子树）按笔位排布：字形位图在 advance 锚点处
-                // 左对齐，可变宽度字母才不重叠（m2logo "cheeseware"；居中会让
-                // 较宽的 'w' 压到前一个字母）。普通图像节点仍居中锚定。
-                int left;
-                if(static_cast<size_t>(i) < _nodeInStrSubtree.size() &&
-                   _nodeInStrSubtree[static_cast<size_t>(i)]) {
-                    left = _coordX + halfCw + static_cast<int>(px);
-                } else {
-                    left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
+                // Origin-anchored draw (reference updateLayersPhase3_VertexComputation):
+                // org = pos - M*(iconOrigin+ox, iconOriginY+oy); the drawn quad is
+                // org + M*[0..iw,0..ih]. The world matrix wm[i] already accumulates
+                // flip/angle/scale (buildLocalMatrix over transformOrder+inheritMask),
+                // so ONE matrix drives both the child-position transform and this
+                // sprite's own affine — no display-box folding, no center anchoring,
+                // no separate pivot hack. The texture's anchor point
+                // (iconOrigin+ox, iconOriginY+oy) lands exactly on (px,py): this is
+                // what keeps full-canvas logos centered and per-glyph pivots (e.g.
+                // the yuzusoft leaf ox=91) in place while flipping/rotating.
+                // 原点锚定绘制（参考 updateLayersPhase3_VertexComputation）：
+                // org = pos - M*(iconOrigin+ox, iconOriginY+oy)；绘制四边形 =
+                // org + M*[0..iw,0..ih]。世界矩阵 wm[i] 已累加 flip/angle/scale
+                //（buildLocalMatrix 按 transformOrder+inheritMask），**同一矩阵**既
+                // 驱动子节点位置变换、也驱动精灵自身仿射——不再有显示盒折叠、居中锚定、
+                // 单独的枢轴 hack。纹理锚点 (iconOrigin+ox, ...) 恰好落在 (px,py)：
+                // 这正是全画布 logo 居中、以及各字形枢轴（如 yuzusoft 叶子 ox=91）
+                // 在翻转/旋转时保持不动的关键。
+                float iconOriginX = 0, iconOriginY = 0;
+                PSB::PSBMedia::CachedImageInfo imgInfo;
+                if(PSB::GetGlobalPSBMedia() &&
+                   PSB::GetGlobalPSBMedia()->getImageInfo(storageStr + "/" + res, imgInfo)) {
+                    iconOriginX = imgInfo.originX;
+                    iconOriginY = imgInfo.originY;
                 }
-                const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} anchor={} fl=({},{}) eff=({},{}) parent{} at ({},{}) op={} scale=({},{}) ang={:.1f} bm={} src='{}'",
-                    node.label, af->type, static_cast<tjs_int>(now), interpRatio,
-                    (static_cast<size_t>(i) < _nodeInStrSubtree.size() && _nodeInStrSubtree[static_cast<size_t>(i)]) ? 1 : 0,
-                    af->flipX ? 1 : 0, af->flipY ? 1 : 0,
-                    effFx ? 1 : 0, effFy ? 1 : 0,
-                    node.parentIndex,
-                    left, top, wop, interpSx, interpSy, effAngle, af->blendMode, af->src);
-                // m2logo 专属探针：把文本子树(cheeseware 字母)的笔位排布与翻转一起
-                // 打出来，用于确认字母是否按 advance 锚点左对齐、有无被父翻转镜像。
-                // m2logo probe: print the text-subtree letter pen layout together with
-                // the effective flip, to verify left-alignment at the advance anchor.
-                if(logger && static_cast<size_t>(i) < _nodeInStrSubtree.size() &&
-                   _nodeInStrSubtree[static_cast<size_t>(i)]) {
-                    logger->info("[M2Logo] '{}' letter at pen=({},{}) iw={} ih={} eff=({},{}) parentEff=(n/a) t={}",
-                        node.label, left, top, iw, ih, effFx ? 1 : 0, effFy ? 1 : 0, af->time);
-                }
-                // B 第一段（round 1）:用 operateAffine 而非 operateRect 绘制，
-                // 让图层按自身显示盒(width×height)拉伸。operateRect 只做原生尺寸
-                // blit，yuzulogo 的 64×64 white_box 永远铺不满全屏；operateAffine
-                // 接收 2×3 仿射矩阵(a,b,c,d,tx,ty)，把纹理缩放/平移到显示盒。
-                // 当节点显示盒未给出(=0)或等于纹理尺寸时 sx=sy=1、tx=left、ty=top，
-                // 与原生 operateRect 完全一致——天然回退，无回归风险。后续(round 3)
-                // 只需在此矩阵里累加父节点的旋转/缩放(a~d)即可。
-                // B round 1: draw via operateAffine (affine matrix a,b,c,d,tx,ty)
-                // instead of operateRect so a layer whose display box (width×height)
-                // is larger than its texture gets STRETCHED (yuzulogo's 64×64
-                // white_box fills the canvas). operateRect can only blit native
-                // size. When no box is given (0) or it equals the texture, the
-                // matrix is identity+NOP (sx=sy=1, tx=left, ty=top), identical to
-                // the old operateRect path — a safe fallback. Round 3 will feed the
-                // parent matrix into a~d here.
-                // Combine the per-frame scale (scx/scy, from zx/zy or coord z) with
-                // any display-box scale (node width/height > texture). This is what
-                // stretches a logo backdrop like yuzulogo's 64x64 white_box to
-                // fullscreen (zx/zy ~30). When no scale and no box are present this
-                // stays 1/1 → identical to the old operateRect native blit.
-                // 把帧内缩放(scx/scy，来自 zx/zy 或 coord z)与显示盒缩放(节点
-                // width/height > 纹理)合并。这才把 yuzulogo 的 64×64 white_box 拉伸
-                // 到全屏(zx/zy≈30)。无缩放且无显示盒时为 1/1，等于旧的 operateRect。
-                const float boxScX = (node.width > 0 && node.width > iw) ? static_cast<float>(node.width) / iw : 1.0f;
-                const float boxScY = (node.height > 0 && node.height > ih) ? static_cast<float>(node.height) / ih : 1.0f;
-                const float totalScX = scx * boxScX;
-                const float totalScY = scy * boxScY;
-                const int rW = std::max(1, static_cast<int>(iw * totalScX));
-                const int rH = std::max(1, static_cast<int>(ih * totalScY));
-                // 把显示盒(缩放后)居中到与原尺寸绘制相同的锚点，仿射原点即盒的左上角。
-                // Center the scaled display box on the same anchor as the native draw;
-                // the affine origin becomes the box top-left.
-                const int ax = left - (rW - iw) / 2;
-                const int ay = top - (rH - ih) / 2;
-                // Round 2 flip (content "fx"/"fy"): mirror about the box center by
-                // negating the scale axis and shifting the origin so the box stays in
-                // place (src(iw)->ax, src(0)->ax+rW when flipped X).
-                // 第二轮翻转（content "fx"/"fy"）：沿盒中心镜象 = 缩放取负并向内回移
-                // 原点，让盒保持在原位置（翻转 X 时 src(iw)→ax、src(0)→ax+rW）。
-                const tjs_real efA = effFx ? -totalScX : totalScX;
-                const tjs_real efD = effFy ? -totalScY : totalScY;
-                const tjs_int efTx = effFx ? ax + rW : ax;
-                const tjs_int efTy = effFy ? ay + rH : ay;
-                // Round 3 angle: rotate the sprite about its ORIGIN hotspot by the
-                // accumulated angle (content "angle", deg). libkrkr2 (sub_699940/
-                // applyLocalTransform + PlayerUpdateGeometry vertex math) builds the
-                // 2x2 matrix M and computes orgX = posX - (m12*OY + OX*m11): the
-                // texture's origin point (OX,OY)=(ox,oy) is the rotation pivot; it is
-                // NOT the display-box center. Rotation about the box center pivoted the
-                // yuzusoft leaf (ox=91,oy=21) around the wrong point → it looked
-                // reversed and jittered as the angle swung ±40°. Non-rotated nodes keep
-                // the exact matrix above (no regression).
-                // 第三轮 angle：绕**原点热区**按累加角度（content "angle"，度）旋转精灵。
-                // libkrkr2（sub_699940/applyLocalTransform + PlayerUpdateGeometry 顶点
-                // 计算）构建 2×2 矩阵 M，并按 orgX = posX - (m12*OY + OX*m11) 计算：纹理
-                // 的原点 (OX,OY)=(ox,oy) 才是旋转枢轴，**不是**显示盒中心。绕显示盒中心
-                // 会让 yuzusoft 叶子（ox=91,oy=21）绕错点摆动——角度 ±40° 摆动时显得
-                // 方向反、抖动。无旋转节点保持原矩阵（无回归）。
-                tjs_real mA = efA, mB = 0, mC = 0, mD = efD, mTx = static_cast<tjs_real>(efTx), mTy = static_cast<tjs_real>(efTy);
-                if(effAngle != 0.0f) {
-                    const double rad = effAngle * 2.0 * 3.14159265358979323846 / 360.0;
-                    const double c = std::cos(rad), s = std::sin(rad);
-                    // Pivot = where the texture origin (ox,oy) lands inside the drawn
-                    // (already flipped) display box.
-                    // 枢轴 = 纹理原点 (ox,oy) 落在（已翻转）显示盒内的位置。
-                    const double pivotX = effFx ? (ax + rW - af->ox * totalScX)
-                                                : (ax + af->ox * totalScX);
-                    const double pivotY = effFy ? (ay + rH - af->oy * totalScY)
-                                                : (ay + af->oy * totalScY);
-                    // Linear part: R * diag(efA, efD)
-                    // 线性部分：R * diag(efA, efD)
-                    mA = static_cast<tjs_real>(c * efA);
-                    mB = static_cast<tjs_real>(-s * efD);
-                    mC = static_cast<tjs_real>(s * efA);
-                    mD = static_cast<tjs_real>(c * efD);
-                    // Translation: R*T0 + pivot - R*pivot
-                    // 平移：R*T0 + pivot - R*pivot
-                    mTx = static_cast<tjs_real>(
-                        c * efTx - s * efTy + pivotX - (c * pivotX - s * pivotY));
-                    mTy = static_cast<tjs_real>(
-                        s * efTx + c * efTy + pivotY - (s * pivotX + c * pivotY));
-                }
+                const double totalOX = static_cast<double>(iconOriginX) + interpOx;
+                const double totalOY = static_cast<double>(iconOriginY) + interpOy;
+                const double m11 = wm11[i], m12 = wm12[i], m21 = wm21[i], m22 = wm22[i];
+                const double orgX = px - (m12 * totalOY + totalOX * m11);
+                const double orgY = py - (totalOY * m22 + totalOX * m21);
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} origin=({:.1f},{:.1f}) ox,oy=({:.1f},{:.1f}) pos=({:.2f},{:.2f}) org=({:.2f},{:.2f}) M=({:.3f},{:.3f},{:.3f},{:.3f}) op={} scale=({:.2f},{:.2f}) bm={} src='{}'",
+                    node.label, af->type, static_cast<tjs_int>(now),
+                    iconOriginX, iconOriginY, interpOx, interpOy,
+                    static_cast<double>(px), static_cast<double>(py), orgX, orgY,
+                    m11, m12, m21, m22, wop, interpSx, interpSy, af->blendMode, af->src);
+                // The affine passed to operateAffine is the SAME world matrix we
+                // accumulated above (wm11..wm22, buildLocalMatrix over the node's
+                // transformOrder + inheritMask-gated flip/angle/scale through the
+                // parent chain) with the origin-anchored translation from E3a.
+                // A node WITHOUT transform degenerates to a=1,b=0,c=0,d=1,
+                // tx=_coordX+halfCw+(px-ox), which places the texture top-left at
+                // (px-ox) — still origin-anchored, never center-anchored.
+                // 传给 operateAffine 的仿射就是上面累加的**世界矩阵**
+                //（wm11..wm22，沿父链按 transformOrder+inheritMask 门控的
+                // flip/angle/scale 构建）搭配 E3a 的原点锚定平移。无变换节点退化为
+                // a=1,b=0,c=0,d=1、tx=画面居中+(px-ox)——仍是原点锚定，绝不居中。
+                const tjs_real mA = static_cast<tjs_real>(wm11[i]);
+                const tjs_real mB = static_cast<tjs_real>(wm12[i]);
+                const tjs_real mC = static_cast<tjs_real>(wm21[i]);
+                const tjs_real mD = static_cast<tjs_real>(wm22[i]);
+                const tjs_real mTx = static_cast<tjs_real>(_coordX + halfCw + orgX);
+                const tjs_real mTy = static_cast<tjs_real>(_coordY + halfCh + orgY);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
@@ -2238,12 +2174,6 @@ namespace motion {
         bool _motionTracksLoaded = false;
         std::vector<PSB::PSBMedia::PSBMotionLayerTrack> _motionTracks;
         std::vector<PSB::PSBMedia::PSBMotionNode> _motionNodes;
-        // Per-node flag: node sits in an M2 text-layout subtree (str_* ancestor,
-        // e.g. m2logo "cheeseware" letters) → its glyph bitmap is left-aligned at
-        // the advance anchor instead of centered. Computed in loadMotionTracks().
-        // 每节点标记：是否处于 M2 文本排版子树（str_* 祖先，如 m2logo "cheeseware"
-        // 字母）→ 字形位图在 advance 锚点左对齐而非居中。loadMotionTracks() 计算。
-        std::vector<bool> _nodeInStrSubtree;
         // Set while D3DAdaptor/SeparateLayerAdaptor.captureCanvas is driving the
         // on-screen draw (single draw source); Player::draw then only caches/loads.
         // captureCanvas 驱动上屏绘制（单一画源）时置位；Player::draw 此时只缓存/加载。

@@ -228,6 +228,17 @@ namespace PSB {
             meta.setHeight(GetNumberValue((*dict)["height"], meta.getHeight()));
             meta.setTop(GetNumberValue((*dict)["top"], meta.getTop()));
             meta.setLeft(GetNumberValue((*dict)["left"], meta.getLeft()));
+            // Icon hotspot (rotation/anchor pivot). The M2 reference reads the
+            // source icon's originX/originY for the draw anchor formula
+            // org = pos - M*(originX+ox, originY+oy). Without it full-canvas
+            // logos (e.g. yuzusoft's centered yuzu_logo) lose their centering
+            // pivot and per-glyph pivot points.
+            // 图标热点（旋转/锚点枢轴）。M2 参考读取源 icon 的 originX/originY，
+            // 用于绘制锚点公式 org = pos - M*(originX+ox, originY+oy)。缺它则
+            // 全画布 logo（如居中的 yuzusoft yuzu_logo）丢失居中枢轴、各字形的
+            // 枢轴点也会漂移。
+            meta.setOriginX(GetNumberValue((*dict)["originX"], meta.getOriginX()));
+            meta.setOriginY(GetNumberValue((*dict)["originY"], meta.getOriginY()));
             meta.setOpacity(GetNumberValue((*dict)["opacity"], meta.getOpacity()));
             meta.setVisible(GetNumberValue((*dict)["visible"],
                                            meta.getVisible() ? 1 : 0) != 0);

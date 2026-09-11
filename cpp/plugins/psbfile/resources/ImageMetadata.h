@@ -127,6 +127,21 @@ namespace PSB {
         [[nodiscard]] int getLayerType() const { return this->_layerType; }
         void setLayerType(int layerType) { this->_layerType = layerType; }
 
+        // Icon hotspot (rotation/anchor pivot of the source bitmap). The M2
+        // reference (libkrkr2 findPSBResourceBySourceName) reads the source
+        // icon's originX/originY: the final draw anchor is
+        // org = pos - M*(originX+ox, originY+oy), which is what centers
+        // full-canvas logos and keeps per-glyph pivot points.
+        // 图标热点（源位图的旋转/锚点枢轴）。M2 参考（libkrkr2
+        // findPSBResourceBySourceName）读取源 icon 的 originX/originY：
+        // 最终绘制锚点为 org = pos - M*(originX+ox, originY+oy)，正是
+        // 全画布 logo 居中、以及各字形枢轴保持正确的关键。
+        [[nodiscard]] float getOriginX() const { return this->_originX; }
+        void setOriginX(float originX) { this->_originX = originX; }
+
+        [[nodiscard]] float getOriginY() const { return this->_originY; }
+        void setOriginY(float originY) { this->_originY = originY; }
+
         [[nodiscard]] std::shared_ptr<PSBResource> getResource() const {
             return this->_resource;
         }

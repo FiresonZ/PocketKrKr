@@ -1687,6 +1687,8 @@ namespace PSB {
                 it->second.imageInfo.height = imageMeta->getHeight();
                 it->second.imageInfo.left = imageMeta->getLeft();
                 it->second.imageInfo.top = imageMeta->getTop();
+                it->second.imageInfo.originX = imageMeta->getOriginX();
+                it->second.imageInfo.originY = imageMeta->getOriginY();
                 it->second.imageInfo.opacity = imageMeta->getOpacity();
                 it->second.imageInfo.visible = imageMeta->getVisible();
                 it->second.imageInfo.layerType = imageMeta->getLayerType();
@@ -1710,6 +1712,8 @@ namespace PSB {
                 entry.imageInfo.height = imageMeta->getHeight();
                 entry.imageInfo.left = imageMeta->getLeft();
                 entry.imageInfo.top = imageMeta->getTop();
+                entry.imageInfo.originX = imageMeta->getOriginX();
+                entry.imageInfo.originY = imageMeta->getOriginY();
                 entry.imageInfo.opacity = imageMeta->getOpacity();
                 entry.imageInfo.visible = imageMeta->getVisible();
                 entry.imageInfo.layerType = imageMeta->getLayerType();
