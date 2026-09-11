@@ -1419,12 +1419,88 @@ namespace motion {
                 int d = drawAnimated(realLayer, tempParent, logger);
                 if(logger) logger->info("drawAnimated: drew {} images at tick={}",
                                         d, static_cast<tjs_int>(_tickCount));
+                // M2 multi-layer: the motion node tree animates SOME layers (backdrop,
+                // text, confetti) while OTHER layers are STATIC elements that must still
+                // composite each frame (e.g. the m2logo "M"/cross pieces in
+                // _psbImages — without this they never appear during back_white). Port:
+                // composite the cached static images whose src the motion does NOT draw.
+                // M2 多层：motion 节点树只动画部分图层（底布/文字/纸屑），其它图层是
+                // **静态元素**（如 m2logo 的 M 字/十字碎片在 _psbImages 里）——动画时若
+                // 不补合成，它们全程不显示（back_white 缺 M 字即此因）。移植：把 motion
+                // 没画到的静态缓存图也合成。
+                compositeStaticLayersNotAnimated(realLayer, tempParent, logger);
                 return;
             }
 
             if(logger) logger->info("drawPSBImages: drew {} of {} images",
                                     compositeTo(realLayer, tempParent, logger),
                                     _psbImages.size());
+        }
+
+        // Composite the cached STATIC layer images that the current motion does NOT
+        // animate. In M2 a logo is a multi-layer composition: the motion node tree
+        // drives SOME layers (backdrop/text/confetti) while OTHER layers are static
+        // elements that must still render every frame (e.g. the m2logo "M"/cross pieces).
+        // drawAnimated only renders the motion nodes, so without this the static pieces
+        // never appear. Skip images whose src the motion already drew (avoid double-draw).
+        // 合成当前 motion **没有动画**的静态缓存图层。M2 的 logo 是多图层合成：motion 节点树
+        // 只驱动部分图层（底布/文字/纸屑），其它是**静态元素**，每帧都要渲染（如 m2logo 的
+        // M 字/十字碎片）。drawAnimated 只渲染 motion 节点，缺此则静态碎片从不显示。跳过
+        // motion 已画到的图（避免双画）。
+        int compositeStaticLayersNotAnimated(iTJSDispatch2 *dest, iTJSDispatch2 *tempParent,
+                                             const std::shared_ptr<spdlog::logger> &logger) {
+            if(!dest || _psbImages.empty()) return 0;
+            std::set<std::string> animRes;
+            for(const auto &nd : _motionNodes)
+                for(const auto &f : nd.frames)
+                    if(f.src.size() > 4 && f.src.compare(0, 4, "src/") == 0)
+                        animRes.insert(MotionSrcToResource(f.src));
+            for(const auto &tr : _motionTracks)
+                for(const auto &f : tr.frames)
+                    if(f.src.size() > 4 && f.src.compare(0, 4, "src/") == 0)
+                        animRes.insert(MotionSrcToResource(f.src));
+            int drawn = 0;
+            for(const auto &img : _psbImages) {
+                bool animated = false;
+                for(const auto &r : animRes)
+                    if(img.key.find(r) != std::string::npos) { animated = true; break; }
+                if(animated) continue; // already drawn by the motion / 已由 motion 画出
+                iTJSDispatch2 *temp = getOrCreateTempLayer(tempParent);
+                if(!temp) continue;
+                if(!tryLoadImage(temp, img.path)) continue;
+                tTJSVariant wVar, hVar;
+                temp->PropGet(0, TJS_W("imageWidth"), nullptr, &wVar, temp);
+                temp->PropGet(0, TJS_W("imageHeight"), nullptr, &hVar, temp);
+                int iw = static_cast<int>(wVar.AsInteger());
+                int ih = static_cast<int>(hVar.AsInteger());
+                if(iw <= 0 || ih <= 0) continue;
+                int op = std::min(img.opacity, 255);
+                if(op <= 0) continue;
+                if(logger) logger->info("compositeStatic: add '{}' @({},{}) {}x{}", img.key,
+                    img.left, img.top, iw, ih);
+                tTJSVariant opArgs[9] = {
+                    tTJSVariant(static_cast<tjs_int>(img.left)),
+                    tTJSVariant(static_cast<tjs_int>(img.top)),
+                    tTJSVariant(temp, temp),
+                    tTJSVariant(static_cast<tjs_int>(0)),
+                    tTJSVariant(static_cast<tjs_int>(0)),
+                    tTJSVariant(static_cast<tjs_int>(iw)),
+                    tTJSVariant(static_cast<tjs_int>(ih)),
+                    tTJSVariant(static_cast<tjs_int>(2)),  // omAlpha
+                    tTJSVariant(static_cast<tjs_int>(op)),
+                };
+                tTJSVariant *opArgv[] = { &opArgs[0], &opArgs[1], &opArgs[2],
+                                          &opArgs[3], &opArgs[4], &opArgs[5],
+                                          &opArgs[6], &opArgs[7], &opArgs[8] };
+                try {
+                    dest->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, dest);
+                    drawn++;
+                } catch(const std::exception &e) {
+                    if(auto l = _logger()) l->warn("compositeStatic: operateRect exception: {}", e.what());
+                } catch(...) {}
+            }
+            if(logger) logger->info("compositeStatic: drew {} static pieces", drawn);
+            return drawn;
         }
 
         // Composite every cached PSB image onto an explicit destination layer. It carries
