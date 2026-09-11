@@ -1171,8 +1171,14 @@ namespace motion {
                     mTy = static_cast<tjs_real>(
                         s * efTx + c * efTy + pivotY - (s * pivotX + c * pivotY));
                 }
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} box=({},{}) totalSc=({:.2f},{:.2f}) ang={:.1f} op={} bm={} src='{}'",
+                // Probe logs the FINAL quad position (px/py local + the center/top-left
+                // anchored left/top) so a real-device run can pin down glitches like the
+                // title ch1_芳乃 end-of-motion shift or where each m2logo glyph lands.
+                // 探针输出最终四边形位置（局部 px/py + 锚定后的 left/top），便于真机定位
+                // 标题 ch1_芳乃 播放末尾左移、或 m2logo 各字形落点等动画错位。
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} t={} pos=({:.1f},{:.1f}) leftTop=({},{}) box=({},{}) totalSc=({:.2f},{:.2f}) ang={:.1f} op={} bm={} src='{}'",
                     node.label, af->type, static_cast<tjs_int>(now), coordOrigin,
+                    static_cast<tjs_int>(af->time), px, py, left, top,
                     iw, ih, totalScX, totalScY, effAngle, wop, af->blendMode, af->src);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
