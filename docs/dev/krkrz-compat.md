@@ -23,6 +23,28 @@
 | AetherKiri/AetherKiri | https://github.com/AetherKiri/AetherKiri | **开源 M2/EMotionPlayer 权威参考（2026-09-11 用户提供）**：对 `libkrkr2.so` 的完整反向移植，自带全套 `cpp/plugins/motionplayer/`（Player.h/PlayerUpdateLayers.cpp/NodeTree.h/EmotePlayer.h）+ `cpp/plugins/psbfile/`。与本项目 motionplayer 逐项对照**全一致**：旋转矩阵 `[[c,-s],[s,c]]` 左乘（applyLocalTransform/sub_699940）、transformOrder 默认 [0,1,2,3]、inheritMask 位门控（+slant 0x080/0x100）、angle 相加(度)/scale 相乘/flip XOR、绕纹理原点枢轴 `orgX=posX-(m12*totalOY+totalOX*m11)`、str_clip type-7 裁剪（SetClip/ResetClip + 字形省略 scale）。自带 `logoChainTrace` 顶点校验可作对拍基准。比对这次最相关：修 yuzulogo 叶子 angle/枢轴 与 m2logo str_clip 裁剪 |
 | YuriSizuku/Kirikiroid2Yuri | https://github.com/YuriSizuku/Kirikiroid2Yuri | **zeas2/Kirikiroid2 的 fork（2026-09-11 用户提供，价值低）**：仅 Android UI 壳/插件小幅演进，**无 M2/PSB motionplayer 实现**，对本项目 M2 动画无参考价值；仅作维护版 fork 备查 |
 
+### AetherKiri 对本项目其余缺口的价值（2026-09-11，本地下 `/tmp/akiri` 全量 clone）
+
+> AetherKiri 几乎是完整 KiriKiri 引擎（AE/Kirikiroid2 血统 + 完整 ffmpeg 视频），不止 motionplayer。
+> 下面按我们对齐清单里的缺口逐条列"它有啥、在哪"，后续需要时按路径取源码即可（勿直接 commit 进仓库）。
+
+| 缺口（krkrz-compat 清单） | AetherKiri 位置 | 说明 |
+|---|---|---|
+| **krmovie 视频回放（P0，缺 Present/合成到 Layer）** | `cpp/core/movie/ffmpeg/`：`KRMoviePlayer.cpp/.h`、`VideoPlayer.cpp`、`DemuxFFmpeg.cpp`、`VideoReferenceClock`、`Timer.cpp`、`Thread/MessageQueue`；配套 `cpp/core/visual/VideoOvlIntf.cpp/.h` | **整套 ffmpeg 播放器**，含时钟/线程/消息队列与播放调度——可直接对照/移植 KRMoviePlayer+VideoPlayer 补我们缺的 Present + 帧→Layer 合成 |
+| multiimage（我们 P2 疑闭源） | `cpp/plugins/multiimage.cpp` | **有真实现**，可解除"无源码"顾虑 |
+| packinone（我们 C 级跳过/疑闭源） | `cpp/plugins/packinone.cpp` | 有真实现 |
+| extNagano（我们 C 级跳过） | `cpp/plugins/extNagano.cpp` | 有真实现 |
+| kagparserex / extkagparser | `cpp/plugins/kagparserex/`、`cpp/plugins/extkagparser/` | KAGParserEx 体系真实现 |
+| layerExAlpha（AlphaColorBlend 等，P1 缺） | `cpp/plugins/layerExBTOA.cpp` + `layerExBase.hpp` | AlphaColorBlend/TranslucentColorBlend 等 |
+| Layer.AddMosaic / layerEx 特效（P1 缺） | `cpp/plugins/layerExImage.cpp`、`layerExLongExposure.cpp`、`layerExAreaAverage.cpp`、`layerExPerspective.cpp`、`layerExRaster.cpp`、`layerExSaveCompat.cpp`、`layerex_draw/` | Mosaic 等特效方法真实现 |
+| layerExMovie（视频层 vs） | `cpp/plugins/layerExMovie.cpp` | 有 |
+| captureCanvas GPU 捕获 | `cpp/plugins/GlesCaptureUtils.h` | GL 像素捕获，贴 motionplayer captureCanvas/D3DAdaptor |
+| 其它 z 插件 / 系统 | `cpp/plugins/kirikiroid2.cpp`、`krkrgles.cpp`、`drawDeviceD2DCompat.cpp`、`saveStruct.cpp`、`sqliteXp3Vfs.cpp`、`windowEx.cpp`、`addFont.cpp`、`getSample.cpp`、`csvParser`、`dirlist`、`fftgraph`、`json`、`qrcode`、`tomlPlugin`、`wutcwf` | 多数我们已内建；个别可对照 |
+| 渲染核心对拍（同源） | `cpp/core/visual/`：`RenderManager.cpp`、`LayerBitmapIntf.cpp`、`LayerManager.cpp`、`BitmapLayerTreeOwner.cpp`，含 `impl/`、`ogl/`、`gl/` 后端变体；`LoadBPG/JXR/PVRv3/AMV`、`SaveTLG6` | 我们与它同源（都源自 AE/Kirikiroid2），主要交叉核对某段 DrawBuffer/合成实现 |
+| 音频 | `cpp/core/sound/`：`FFWaveDecoder`、MIDI、PhaseVocoder | 次要 |
+
+> ⚠️ 优先级建议：开局 logo（yuzusoft/m2logo）不影响游玩体验。若 logo 动画长期修不好，**换方向优先做 krmovie（P0，影响视频 OP/通关回放）与 zcompat 插件真实现**，把 krmovie 回放先从 AetherKiri 整套搬到我们 core。
+
 ## 移植总原则
 
 1. **插件 = TJS Native Class（ncb）**：用 `tvpRegisterClass`/`ncb`/`simplebinder` 实现，
