@@ -1351,6 +1351,15 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _overlayItem(
+                  icon: Icons.arrow_back,
+                  label: 'Back',
+                  onTap: () async {
+                    setState(() => _showOverlay = false);
+                    await _surfaceKey.currentState?.sendBack();
+                  },
+                ),
+                const Divider(color: Colors.white24, height: 1),
+                _overlayItem(
                   icon: Icons.bug_report,
                   label: _showDebug ? 'Hide Debug' : 'Show Debug',
                   onTap: _toggleDebug,

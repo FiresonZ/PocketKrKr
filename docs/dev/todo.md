@@ -151,6 +151,13 @@
   待真机确认 yuzusoft 绿叶朝向与 K2 一致。
 - **第二轮遗留（未实现）**：`clip` 裁切矩形只探针未应用、`str_clip`(src='clip') 文字裁剪、
   m2logo 文字组装(字母笔位)仍未完全对齐。见 todo 上方 m2logo 条。
+- 进度：✅ **yuzuusoft 绿叶"抖动/方向反"（2026-09-11）**：`yuzu_ha` 全程 fl=0/eff=0/
+  scale=1，证明它的摆动是 **angle（旋转）机制**而非翻转/缩放。当前 PSBMotionFrame 未解析
+  angle，仿射 b/c=0，故叶子既不摆也不朝向正确。**待做**：解析 content 帧 angle 并代入仿射。
+- 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
+  + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
+  无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
+  （`EngineSurface.sendBack()`），走游戏正常退出逻辑。
 - 进度：✅ **主界面黑屏修复（2026-09-11，engine(21) 实证根因）**：title 是非循环
   motion（loopTime=0），其 `main`/`bg`/角色在时间线末尾的空帧被"空帧即隐藏"逻辑
   整棵藏掉 → 入场播完后 `nonBlack=0/25 avg=(0,0,0,255)` 全黑（15:53:47~15:54:04
