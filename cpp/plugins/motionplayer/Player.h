@@ -1112,103 +1112,90 @@ namespace motion {
                 const int iw = static_cast<int>(wVar.AsInteger());
                 const int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) continue;
-                // Center (default) or top-left anchored draw, per the asset's
-                // coordinate-origin convention (resolveCoordOrigin: 0=center,
-                // 1=top-left). This matches the static composite path
-                // (cachePSBImages) and the real M2 data, whose `coord` is the box
-                // CENTER. (B7 briefly force-anchored the TOP-LEFT at pos →
-                // everything shifted down-right by half its box — the "整体向右下
-                // 偏移" you saw.) We KEEP B7's genuine fixes: ox/oy are NOT part
-                // of position (loX=interpCx above), and rotation pivots about the
-                // ox/oy hotspot (Round-3) instead of the box center.
-                // 按资产坐标原点约定做锚定（resolveCoordOrigin：0=中心默认、
-                // 1=左上角）。与静态合成路径(cachePSBImages)及真实 M2 数据一致——
-                // 其 `coord` 是盒子**中心**。（B7 曾把左上角钉在 pos，导致所有精灵
-                // 向右下移半盒，即"整体向右下偏移"。）**保留** B7 的两处真修：
-                // ox/oy 不进位置（上面的 loX=interpCx），旋转绕 ox/oy 热区
-                //（Round-3）而非盒子中心。
+                // Draw an M2 content sprite with the REFERENCE single-world-matrix + origin
+                // anchor model (`org = pos - M*(originX+ox, originY+oy)`, quad
+                // `org + M*[0..iw,0..ih]`). A sprite's position px,py is its world
+                // position (loX=interpCx, ox/oy NOT in position — adding ox double-counts
+                // and drifts the sprite); the transform (flip×angle×scale, wm11..wm22)
+                // and the anchored translation are ONE matrix, so rotation pivots about
+                // the icon/ox hotspot rather than the box center. Anchor resolution
+                // (resolveCoordOrigin + per-icon origin) is below.
+                // 用参考的**单一世界矩阵+原点锚定**模型绘制 M2 内容精灵（`org = pos -
+                // M*(originX+ox, oy)`，四边形 `org + M*[0..iw,0..ih]`）。精灵位置
+                // px,py 即世界位置（loX=interpCx，ox/oy **不进位置**——加 ox 会双计并使
+                // 精灵漂移）；变换(flip×angle×scale，wm11..wm22)与锚定平移合成一个矩阵，
+                // 旋转天然绕 icon/ox 热区而非盒子中心。锚点解析见下（resolveCoordOrigin
+                // + 逐 icon origin）。
                 const int coordOrigin = resolveCoordOrigin();
-                const int centerX = _coordX + halfCw + static_cast<int>(px);
-                const int centerY = _coordY + halfCh + static_cast<int>(py);
-                // Anchor = the source icon's baked hotspot (originX/originY) when set,
-                // so the animated frame lands EXACTLY where the author composed it in
-                // the final static/composite image — fixes "last frame ≠ static/pop".
-                // This is the reference model (libkrkr2 findPSBResourceBySourceName:
-                // org = pos - M*(originX+ox, originY+oy)). Fall back to resolveCoordOrigin
-                // (center by default) when the icon carries no origin, so full-canvas
-                // icons/backgrounds keep centered and we don't re-introduce the "整体
-                // 向右下偏移" (B7 anchored everything at top-left = origin 0).
-                // 锚点优先取源 icon 已烘焙的热点(originX/originY)——让动画末帧精确落在
-                // 作者在最终静态/合成图里编排的位置，消除"末帧≠静态"的跳变（参考模型
-                // libkrkr2：org = pos - M*(originX+ox, originY+oy)）。icon 无 origin 时
-                // 回退到 resolveCoordOrigin（默认中心），保证整图 logo/背景仍居中，也
-                // 不会重犯 B7 把所有精灵钉在左上角(=origin 0)导致的整体向右下偏移。
-                int left = centerX, top = centerY;
+                // Reference model (libkrkr2 updateLayersPhase3_VertexComputation /
+                // AetherKiri: `org = pos - M*(originX+ox, originY+oy)`, quad
+                // `org + M*[0..iw,0..ih]`): ONE world matrix M (= the accumulated
+                // flip×angle×scale, wm11..wm22) drives BOTH the quad affine and the
+                // anchored translation. Image anchor = source icon hotspot (originX,
+                // originY) + frame (ox,oy); it lands exactly on the node's world
+                // position (px,py), and rotation pivots about it naturally — no
+                // separate fold / center / pivot hacks. Icons WITHOUT a baked origin
+                // fall back to center (default) so full-canvas icons stay centered.
+                // 参考模型（libkrkr2 / AetherKiri：`org = pos - M*(originX+ox, oy)`、
+                // 四边形 `org + M*[0..iw,0..ih]`）：**单一世界矩阵** M（= buildLocalMatrix
+                // 累加的 flip×angle×scale，即 wm11..wm22）同时驱动四边形仿射与锚定平移。
+                // 图像锚点 = 源 icon 热点(originX,originY) + 帧(ox,oy)，正好落在节点世界
+                // 位置(px,py)；旋转天然绕该锚点，不再需要单独的折叠/居中/枢轴 hack。
+                // icon 无烘焙 origin 时回退中心（默认），保证整图 icon 居中。
+                float anchorX = interpOx, anchorY = interpOy;
                 float iconOrX = 0.0f, iconOrY = 0.0f;
                 bool hasIconOrigin = false;
                 if(auto *med = PSB::GetGlobalPSBMedia()) {
                     PSB::PSBMedia::CachedImageInfo gi;
-                    if(med->getImageInfo(storageStr + "/" + res + "/pixel.png", gi) &&
-                       (gi.originX != 0.0f || gi.originY != 0.0f)) {
+                    if(med->getImageInfo(storageStr + "/" + res + "/pixel.png", gi)) {
                         iconOrX = gi.originX;
                         iconOrY = gi.originY;
-                        hasIconOrigin = true;
+                        hasIconOrigin = (gi.originX != 0.0f || gi.originY != 0.0f);
+                        anchorX += iconOrX;
+                        anchorY += iconOrY;
                     }
                 }
-                if(hasIconOrigin) {                // icon baked hotspot (origin-anchored)
-                    left = centerX - static_cast<int>(iconOrX);
-                    top  = centerY - static_cast<int>(iconOrY);
-                } else if(coordOrigin != 1) {      // center convention (default) / 中心约定
-                    left = centerX - iw / 2;
-                    top  = centerY - ih / 2;
-                }
+                if(!hasIconOrigin && coordOrigin != 1) {
+                    // No baked origin: default anchor to the image CENTER so centered /
+                    // full-canvas icons align with the static composite (and we don't
+                    // regress the prior "整体向右下偏移" from anchoring everything at
+                    // top-left = origin 0).
+                    // 无烘焙 origin：锚点默认取图像**中心**，让整图/居中 icon 与静态合成
+                    // 对齐（也避免重犯此前"整体向右下偏移"——那时全部钉左上角=0）。
+                    anchorX += iw * 0.5f;
+                    anchorY += ih * 0.5f;
+                } // else top-left: anchor stays = ox,oy (reference for non-anchored icons)
                 // Display-box scale (layer larger than its texture) + per-frame
                 // scale; stretch the box and center it on the same anchor.
                 // 显示盒缩放(图层大于纹理)+帧内缩放；把盒拉伸并居中到同一锚点。
                 const float boxScX = (node.width > 0 && node.width > iw) ? static_cast<float>(node.width) / iw : 1.0f;
                 const float boxScY = (node.height > 0 && node.height > ih) ? static_cast<float>(node.height) / ih : 1.0f;
-                const float totalScX = scx * boxScX;
-                const float totalScY = scy * boxScY;
-                const int rW = std::max(1, static_cast<int>(iw * totalScX));
-                const int rH = std::max(1, static_cast<int>(ih * totalScY));
-                const int ax = left - (rW - iw) / 2;
-                const int ay = top - (rH - ih) / 2;
-                // Flip (content "fx"/"fy"): mirror about the box center via negative
-                // scale + origin shift. 翻转：沿盒中心取负缩放并回移原点。
-                const tjs_real efA = effFx ? -totalScX : totalScX;
-                const tjs_real efD = effFy ? -totalScY : totalScY;
-                const tjs_int efTx = effFx ? ax + rW : ax;
-                const tjs_int efTy = effFy ? ay + rH : ay;
-                // Round-3 angle: rotate about the sprite's ox/oy HOTSPOT (the M2
-                // leaf's stem attach point; ox=91) rather than the box center.
-                // 绕 ox/oy 热区（叶子柄附着点）旋转，而非盒子中心。
-                tjs_real mA = efA, mB = 0, mC = 0, mD = efD, mTx = static_cast<tjs_real>(efTx), mTy = static_cast<tjs_real>(efTy);
-                if(effAngle != 0.0f) {
-                    const double rad = effAngle * 2.0 * 3.14159265358979323846 / 360.0;
-                    const double c = std::cos(rad), s = std::sin(rad);
-                    const double pivotX = effFx ? (ax + rW - interpOx * totalScX)
-                                                : (ax + interpOx * totalScX);
-                    const double pivotY = effFy ? (ay + rH - interpOy * totalScY)
-                                                : (ay + interpOy * totalScY);
-                    mA = static_cast<tjs_real>(c * efA);
-                    mB = static_cast<tjs_real>(-s * efD);
-                    mC = static_cast<tjs_real>(s * efA);
-                    mD = static_cast<tjs_real>(c * efD);
-                    mTx = static_cast<tjs_real>(
-                        c * efTx - s * efTy + pivotX - (c * pivotX - s * pivotY));
-                    mTy = static_cast<tjs_real>(
-                        s * efTx + c * efTy + pivotY - (s * pivotX + c * pivotY));
-                }
+                // Single world matrix: x' = a*x + b*y + tx, y' = c*x + d*y + ty.
+                // Display-box scale (layer box > texture) folds into the diagonal.
+                // 单一世界矩阵：x'=a*x+b*y+tx, y'=c*x+d*y+ty；显示盒缩放卷进对角。
+                const double mA0 = wm11[i] * boxScX;
+                const double mB0 = wm12[i] * boxScX;
+                const double mC0 = wm21[i] * boxScY;
+                const double mD0 = wm22[i] * boxScY;
+                // Origin-anchored translation: place the anchor at the world position.
+                // 原点锚定平移：把锚点放到世界位置 (px,py)。
+                const tjs_real outputTx = static_cast<tjs_real>(_coordX + halfCw + px - (mA0 * anchorX + mB0 * anchorY));
+                const tjs_real outputTy = static_cast<tjs_real>(_coordY + halfCh + py - (mC0 * anchorX + mD0 * anchorY));
+                const tjs_real mA = static_cast<tjs_real>(mA0);
+                const tjs_real mB = static_cast<tjs_real>(mB0);
+                const tjs_real mC = static_cast<tjs_real>(mC0);
+                const tjs_real mD = static_cast<tjs_real>(mD0);
                 // Probe logs the FINAL quad position (px/py local + the center/top-left
                 // anchored left/top) so a real-device run can pin down glitches like the
                 // title ch1_芳乃 end-of-motion shift or where each m2logo glyph lands.
                 // 探针输出最终四边形位置（局部 px/py + 锚定后的 left/top），便于真机定位
                 // 标题 ch1_芳乃 播放末尾左移、或 m2logo 各字形落点等动画错位。
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} iconOrigin={} t={} pos=({:.1f},{:.1f}) leftTop=({},{}) box=({},{}) totalSc=({:.2f},{:.2f}) ang={:.1f} op={} bm={} src='{}'",
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} iconOrigin={} t={} pos=({:.1f},{:.1f}) anchor=({:.1f},{:.1f}) M=({:.3f},{:.3f},{:.3f},{:.3f}) tx=({:.1f},{:.1f}) box=({},{}) ang={:.1f} op={} bm={} src='{}'",
                     node.label, af->type, static_cast<tjs_int>(now), coordOrigin,
                     hasIconOrigin ? (std::to_string(static_cast<int>(iconOrX)) + "," + std::to_string(static_cast<int>(iconOrY))) : std::string("-"),
-                    static_cast<tjs_int>(af->time), px, py, left, top,
-                    iw, ih, totalScX, totalScY, effAngle, wop, af->blendMode, af->src);
+                    static_cast<tjs_int>(af->time), px, py, anchorX, anchorY,
+                    mA, mB, mC, mD, outputTx, outputTy,
+                    iw, ih, effAngle, wop, af->blendMode, af->src);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
@@ -1243,8 +1230,8 @@ namespace motion {
                     tTJSVariant(mB),                                      // 7 b
                     tTJSVariant(mC),                                      // 8 c
                     tTJSVariant(mD),                                      // 9 d (rot+scale, may flip)
-                    tTJSVariant(mTx),                                    // 10 tx
-                    tTJSVariant(mTy),                                    // 11 ty
+                    tTJSVariant(outputTx),                               // 10 tx
+                    tTJSVariant(outputTy),                               // 11 ty
                     tTJSVariant(blendOm),                                // 12 blend mode / 混合模式
                     tTJSVariant(opaClamp),                        // 13 opacity
                 };
