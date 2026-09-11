@@ -832,7 +832,21 @@ namespace motion {
                     for(const auto &f : frames) {
                         if(f.time > now) { next = &f; break; }
                     }
-                    if(next && next->visible && next->time > af->time) {
+                    // K2 semantics (PlayerUpdateLayerEval: crossfading = !invisible
+                    // && interpolate): ONLY an ACTIVE frame of type 3 (interpolate)
+                    // tweens toward the next keyframe. A type 2 (static) frame HOLDS
+                    // its value until the next keyframe — it does NOT fade. This is
+                    // what keeps yuzulogo's full-logo sheet invisible during the
+                    // letter-by-letter intro (t=0 frame is type2 opa0 → hold 0),
+                    // previously we interpolated it 0→255 and a faint "ghost" logo
+                    // smeared over the whole intro.
+                    // K2 语义（PlayerUpdateLayerEval: crossfading = !invisible &&
+                    // interpolate）：只有 active 帧为 type=3（interpolate）才会向
+                    // 下一关键帧插值；type=2（static）帧**保持当前值**直到下一关键帧，
+                    // 不做淡入淡出。这就是 yuzulogo 整张 logo 在逐字母阶段应保持
+                    // 不可见的关键（t=0 帧 type2 opa0 → 保持 0）；此前我们对它做
+                    // 0→255 插值，导致整段 intro 叠上一层"印痕"幻影。
+                    if(af->type == 3 && next && next->visible && next->time > af->time) {
                         const float t = static_cast<float>(now - af->time) /
                                         static_cast<float>(next->time - af->time);
                         interpOx = af->ox + (next->ox - af->ox) * t;
