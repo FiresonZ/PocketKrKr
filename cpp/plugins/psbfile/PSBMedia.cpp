@@ -1059,6 +1059,21 @@ namespace PSB {
                 node.label = labelVal ? labelVal->value : ("layer_" + std::to_string(i));
                 node.parentIndex = parentIndex;
                 node.type = static_cast<int>(GetPSBFloat((*layerDict)["type"], 0));
+                // Per-node transform inheritance mask / local-matrix operator order.
+                // libkrkr2 sub_6B3C78 reads "inheritMask" (default 0x1FC = inherit all)
+                // and "transformOrder" (default [0,1,2,3]). Without these we can't gate
+                // scale/angle/flip inheritance per node (e.g. m2logo letters must NOT
+                // inherit str_clip's clip-region scale).
+                // 节点的变换继承掩码 / 局部矩阵算子顺序。libkrkr2 sub_6B3C78 读取
+                // "inheritMask"（默认 0x1FC=全部继承）与 "transformOrder"（默认
+                // [0,1,2,3]）。缺它们就无法按节点门控 scale/angle/flip 继承（如 m2logo
+                // 字母不能继承 str_clip 的裁剪窗口缩放）。
+                node.inheritMask = static_cast<int>(GetPSBFloat((*layerDict)["inheritMask"], 0x1FC));
+                if(auto toList = std::dynamic_pointer_cast<PSBList>((*layerDict)["transformOrder"])) {
+                    for(int k = 0; k < 4 && k < static_cast<int>(toList->size()); k++) {
+                        node.transformOrder[k] = static_cast<int>(GetPSBFloat((*toList)[k], k));
+                    }
+                }
                 // Layer display size: the texture may be smaller than the layer
                 // (e.g. yuzulogo's 64x64 white_box stretched to fill the canvas).
                 // 图层显示尺寸：纹理可能小于图层（如 yuzulogo 的 64x64 white_box
@@ -1066,9 +1081,12 @@ namespace PSB {
                 node.width = static_cast<int>(GetPSBFloat((*layerDict)["width"], 0));
                 node.height = static_cast<int>(GetPSBFloat((*layerDict)["height"], 0));
                 CollectMotionNodeFrames(layerDict, node);
-                if(logger) logger->info("  node[{}] '{}' parent={} type={} box={}x{} frames={} firstsrc='{}'",
+                if(logger) logger->info("  node[{}] '{}' parent={} type={} box={}x{} inh=0x{:x} to={},{},{},{} frames={} firstsrc='{}'",
                     static_cast<int>(nodes.size()), node.label, parentIndex, node.type,
-                    node.width, node.height, static_cast<int>(node.frames.size()),
+                    node.width, node.height, node.inheritMask,
+                    node.transformOrder[0], node.transformOrder[1],
+                    node.transformOrder[2], node.transformOrder[3],
+                    static_cast<int>(node.frames.size()),
                     node.frames.empty() ? std::string("") : node.frames.front().src);
                 const int myIndex = static_cast<int>(nodes.size());
                 nodes.push_back(std::move(node));

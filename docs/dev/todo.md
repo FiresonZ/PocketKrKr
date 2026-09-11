@@ -166,6 +166,17 @@
   main/layout 祖先拿到 logo 真实缩放）。另 `str_clip` 节点 `type=7`、`box=0x0`，此前按
   width/height>0 判段永不触发的 str_clip 裁剪逻辑实际没生效——已在日志确认为死分支，未造成
   回归。待真机确认字母大小可读。
+- 进度：✅ **inheritMask + transformOrder 已解析并按位门控（2026-09-11，对齐 libkrkr2）**：
+  - `PSBMotionNode` 新增 `inheritMask`（默认 0x1FC=全部继承）、`transformOrder[4]`（默认
+    [0,1,2,3]=flip,angle,scale,s slant）；`PSBMedia.cpp` 节点构建处读取并打探针（`inh=0x..
+    to=..`），据此可在真机日志核对 m2logo 字母等各节点真实 inheritMask/order。
+  - `drawAnimatedTree` 把 flip(0x4/0x8)/angle(0x10)/scaleX(0x20)/scaleY(0x40) 的继承改为按
+    inheritMask 位门控：位置=1 累加父贡献（flip XOR、angle 相加、scale 相乘），=0 只用自身值。
+    这是"子节点刻意不继承祖先变换"的**通用机制**（不再是 str_clip 特判）；str_clip 不下传缩放
+    保留为兜底。默认 0x1FC 资产（yuzulogo）行为不变。
+  - **仍未对齐（后续）**：① 子节点位置未用父矩阵变换（现仍纯加法，参考是
+    `pos=parentM·localPos+parent.pos`）；② `transformOrder` 尚未代入仿射矩阵构建（当前资产
+    用默认序，影响小）；③ slant 倾斜未实现；④ `independentLayerInherit`（Player 级）未解析。
 - 进度：⚠️ **m2logo `str_clip` 文字裁剪（2026-09-11 实现，待真机）**：对 `str_clip` 容器节点
   （label 前缀 str_clip、有显示盒 width/height）在绘制其字母子树前，用其显示盒（映射到层坐标、
   含父级缩放）设 dest 层 `setClip`，子树画完/出现兄弟节点时恢复之前裁剪，drawAnimatedTree 结束

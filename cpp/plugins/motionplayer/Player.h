@@ -891,10 +891,23 @@ namespace motion {
                 // 沿父链 XOR 累加翻转（参考 Player_Rendering_Architecture：
                 // node.flipX ^= parent.flipX）。父容器的翻转要镜像整棵子树，同一轴
                 // 两次翻转相消——此前忽略它导致 yuzusoft 绿叶朝向相反（"叶子方向反了"）。
-                const bool effFx = af->flipX ^
-                    ((node.parentIndex >= 0) ? wfx[node.parentIndex] : false);
-                const bool effFy = af->flipY ^
-                    ((node.parentIndex >= 0) ? wfy[node.parentIndex] : false);
+                const int inh = node.inheritMask;
+                const bool pOn = (node.parentIndex >= 0);
+                // libkrkr2 gates each transform attribute's INHERITANCE per-node via
+                // `inheritMask` (bit 0x004 flipX, 0x008 flipY, 0x010 angle, 0x020 scaleX,
+                // 0x040 scaleY). Bit SET = accumulate the parent contribution (XOR flips,
+                // add angle, multiply scale); bit CLEAR = use the node's own value only.
+                // This is how a child can deliberately NOT inherit its ancestor's
+                // transform (e.g. m2logo letters excluding str_clip's clip-region scale).
+                // 参考 libkrkr2 用 `inheritMask` 逐节点门控各变换属性的**继承**（bit
+                // 0x004 flipX、0x008 flipY、0x010 angle、0x020 scaleX、0x040 scaleY）。
+                // 位置=1 则累加父贡献（flip XOR、angle 相加、scale 相乘）；=0 只用自己的值。
+                // 这正是子节点可刻意不继承祖先变换的机制（如 m2logo 字母排除 str_clip 的
+                // 裁剪窗口缩放）。
+                const bool effFx = (inh & 0x004) ? (af->flipX ^ (pOn ? wfx[node.parentIndex] : false))
+                                                 : af->flipX;
+                const bool effFy = (inh & 0x008) ? (af->flipY ^ (pOn ? wfy[node.parentIndex] : false))
+                                                 : af->flipY;
                 const float px = baseX + interpOx + interpCx;
                 const float py = baseY + interpOy + interpCy;
                 // Accumulate scale through the parent chain (B round 3 partial: a
@@ -917,18 +930,35 @@ namespace motion {
                 // 从 main/layout 祖先得到 logo 真正的缩放）。
                 const bool isStrClipNode =
                     node.label.compare(0, 8, "str_clip") == 0;
-                const float scx = isStrClipNode
-                    ? baseSx
-                    : baseSx * std::max(interpSx, 0.0f);
-                const float scy = isStrClipNode
-                    ? baseSy
-                    : baseSy * std::max(interpSy, 0.0f);
-                // Accumulate rotation through the parent chain (deg, additive).
-                // 沿父链累加旋转角（度，相加）。
-                const float effAngle = baseAngle + interpAngle;
+                // Scale inheritance gated by inheritMask bit 0x020 (X) / 0x040 (Y);
+                // when CLEAR, the node uses only its own scale (doesn't multiply parent).
+                // 缩放继承由 inheritMask bit 0x020(X)/0x040(Y) 门控；为 0 时只用自身缩放
+                //（不乘父）。
+                const float ownSx = std::max(interpSx, 0.0f);
+                const float ownSy = std::max(interpSy, 0.0f);
+                const float scx = (inh & 0x020) ? baseSx * ownSx : ownSx;
+                const float scy = (inh & 0x040) ? baseSy * ownSy : ownSy;
+                // Additionally, the M2 `str_clip` text container carries a CLIP-REGION
+                // scale (zx/zy, e.g. m2logo str_clip s=9,1) that must scale ONLY the
+                // reveal window, NOT the letter glyphs underneath — otherwise the letters
+                // inherit 9x and smear into an unreadable blob. If the letters' own
+                // inheritMask excludes scale this gate would cover it, but as a safety net
+                // we also stop a str_clip's scale from reaching its children.
+                // 另外，M2 的 str_clip 文本容器携带**裁剪窗口**缩放（zx/zy，如 m2logo
+                // str_clip s=9,1），只该缩放显现窗口，不应传给下面的字母字形——否则字母
+                // 继承 9× 糊成团。若字母自身 inheritMask 排除缩放，该门控即可覆盖，但这里
+                // 仍加一道保险：str_clip 自身的缩放不下传给子层。
+                const float scxChild = isStrClipNode ? baseSx : scx;
+                const float scyChild = isStrClipNode ? baseSy : scy;
+                // Accumulate rotation through the parent chain (deg, additive) — gated by
+                // inheritMask bit 0x010; CLEAR uses own angle only.
+                // 沿父链累加旋转角（度，相加）——由 inheritMask bit 0x010 门控；为 0 只用自己的角度。
+                const float effAngle = (inh & 0x010)
+                    ? baseAngle + interpAngle
+                    : interpAngle;
                 const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
-                wx[i] = px; wy[i] = py; wsx[i] = scx; wsy[i] = scy;
+                wx[i] = px; wy[i] = py; wsx[i] = scxChild; wsy[i] = scyChild;
                 wa[i] = effAngle;
                 wfx[i] = effFx; wfy[i] = effFy;
                 wo[i] = wop;

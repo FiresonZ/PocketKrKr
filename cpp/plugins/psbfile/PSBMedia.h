@@ -205,6 +205,22 @@ namespace PSB {
             int type = 0;                       // PSB layer "type" / 图层类型
             int width = 0;                      // PSB layer display width / 图层显示宽
             int height = 0;                     // PSB layer display height / 图层显示高
+            // Per-node transform inheritance mask (PSB "inheritMask"). Bits gate which
+            // of flip/angle/scale/slant a node inherits from its parent (default 0x1FC =
+            // inherit all). libkrkr2 reads it at node build (sub_6B3C78):
+            //   0x004 flipX, 0x008 flipY, 0x010 angle, 0x020 scaleX, 0x040 scaleY,
+            //   0x080 slantX, 0x100 slantY
+            // 节点的变换继承掩码（PSB "inheritMask"）。位门控该节点从父节点继承
+            // flip/angle/scale/slant 的哪些（默认 0x1FC=全部继承）。libkrkr2 在节点构建时
+            // 读取（sub_6B3C78）：0x004 flipX、0x008 flipY、0x010 angle、0x020 scaleX、
+            // 0x040 scaleY、0x080 slantX、0x100 slantY。
+            int inheritMask = 0x1FC;
+            // Per-node local-matrix operator order (PSB "transformOrder", default
+            // [0,1,2,3] = flip, angle, scale, slant). libkrkr2 sub_699940 iterates it to
+            // LEFT-multiply each transform onto the local 2x2 matrix.
+            // 节点局部矩阵的算子顺序（PSB "transformOrder"，默认 [0,1,2,3] =
+            // flip, angle, scale, slant）。libkrkr2 sub_699940 依序左乘到局部 2×2 矩阵。
+            int transformOrder[4] = {0, 1, 2, 3};
             std::vector<PSBMotionFrame> frames; // own timeline, sorted by time
         };
         void addMotionNodes(const std::string &archiveKey,
