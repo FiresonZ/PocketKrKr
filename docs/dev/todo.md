@@ -235,6 +235,11 @@
     PSBMedia 解析 content "ccc"；`drawAnimatedTree` 插值时用 `BezierEase`（二分解 x(t)=u 求 y(t)）
     重映射进度，应用到 ox/oy/cx/cy/opacity/scale/angle 全部插值属性；无 ccc 帧保持线性。待真机确认
     叶子摆动平滑、m2logo 字母滑入顺。
+  - ✅ **B10 M2 时间线单位是帧(tick)不是毫秒（2026-09-11，e34706e）**：真机反馈 m2logo"硬变/白块盖
+    CheeseWare/无折叠感"——根因=time/lastTime 是**帧**（yuzulogo 241tick≈4s@60fps、back_white
+    91tick≈1.5s），progress() 却把真实 ms 当 tick 推进 → 整条时间线 ~91ms 闪完、随后保持末帧
+    （全屏白块+M折好+字母滑完冻结）数秒。修复：delta(ms) 先按 60fps 换算 tick 再推进，折叠/reveal
+    中间态正常播放。待真机确认 m2logo 有完整折叠/显现过程。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
