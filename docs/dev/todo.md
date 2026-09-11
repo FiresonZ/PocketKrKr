@@ -151,6 +151,13 @@
   待真机确认 yuzusoft 绿叶朝向与 K2 一致。
 - **第二轮遗留（未实现）**：`clip` 裁切矩形只探针未应用、`str_clip`(src='clip') 文字裁剪、
   m2logo 文字组装(字母笔位)仍未完全对齐。见 todo 上方 m2logo 条。
+- 进度：✅ **主界面黑屏修复（2026-09-11，engine(21) 实证根因）**：title 是非循环
+  motion（loopTime=0），其 `main`/`bg`/角色在时间线末尾的空帧被"空帧即隐藏"逻辑
+  整棵藏掉 → 入场播完后 `nonBlack=0/25 avg=(0,0,0,255)` 全黑（15:53:47~15:54:04
+  黑 17s，直到进鉴赏模式）。参考语义：非循环 motion 播完应**保持末内容帧**。修复：
+  `drawAnimatedTree` 对 `loopTime==0` 且当前帧已越过末内容帧的节点改写为保持
+  `lastContentFrame`（不再用末尾空帧隐藏）。ste notch 待真机确认 title 静止 + yuzusoft
+  logo 播完保持完整 logo。
 - 参考提交/对照清单：见 [krkrz-compat.md](krkrz-compat.md)「krkrsdl3 emoteplayer 对照」。
 
 ### — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】

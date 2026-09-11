@@ -764,10 +764,14 @@ namespace motion {
                 // Last content frame time (the "end" of this node's timeline).
                 // 该节点时间线的末内容帧时间。
                 tjs_int lastContentTime = -1;
+                const PSB::PSBMedia::PSBMotionFrame *lastContentFrame = nullptr;
                 for(const auto &f : frames) {
                     if(f.visible && f.src.size() > 4 &&
                        f.src.compare(0, 4, "src/") == 0) {
-                        if(f.time > lastContentTime) lastContentTime = f.time;
+                        if(f.time > lastContentTime) {
+                            lastContentTime = f.time;
+                            lastContentFrame = &f;
+                        }
                     }
                 }
                 // Active frame = last frame with time <= now (per-frame evaluation).
@@ -778,24 +782,26 @@ namespace motion {
                 }
                 if(!af) { vis[i] = false; continue; }
                 if(!af->visible) {
-                    // No-content frame hides the node for its time range — INCLUDING
-                    // the final empty frames of the timeline. Logo scenes end by
-                    // hiding their layers (yuzulogo letters/kanji disappear at the
-                    // t=215f empty keyframe before the m2logo transition); holding
-                    // the last content frame instead left the complete static logo
-                    // visible in the background ("播放前背景有完整静止 yuzulogo").
-                    // Only container nodes (layout / submotion parents with no
-                    // content frame of their own) stay active so their children
-                    // keep driving visibility. Steady-state motions (normal/status)
-                    // simply have content frames at the end of their timeline.
-                    // 无内容帧在它所覆盖的时间段内隐藏节点——**包括时间线末尾的空帧**。
-                    // logo 场景以隐藏图层收尾（yuzulogo 字母/柚子汉字在 t=215f 的空
-                    // 关键帧处消失，再切 m2logo）；此前"保持最后一帧内容"反而让完整的
-                    // 静止 logo 一直留在背景里（"播放前背景有完整静止 yuzulogo"）。
-                    // 只有无自身内容帧的容器节点（layout/子运动父节点）保持活跃，
-                    // 由子层驱动可见性。稳态 motion（normal/status）时间线末尾
-                    // 本来就是内容帧，不受影响。
-                    if(lastContentTime < 0) {
+                    // A "no content" frame hides the node for its time range.
+                    // Critical caveat (title black screen): for a NON-looping motion
+                    // (loopTime == 0) we must HOLD the last content frame once the
+                    // timeline has passed it, instead of hiding via a trailing empty
+                    // frame. Without this, the title's `main`/`bg` empty frames at
+                    // the very end of the timeline hide the whole subtree and the
+                    // menu screen goes fully black after the entrance plays ("播放完
+                    // 黑"). Steady/title scenes are non-looping and stop advancing,
+                    // so `now` parks past the last content frame and we keep drawing
+                    // it forever.
+                    // 无内容帧在它所覆盖的时间段内隐藏节点。关键约束（主界面黑屏）：
+                    // 对**非循环** motion（loopTime==0），一旦时间线越过末内容帧就必须
+                    // **保持末内容帧**，而不是被末尾的空帧隐藏。否则 title 的 main/bg
+                    // 在时间线末尾的空帧会把整棵子树藏掉，入场播完后菜单整屏变黑
+                    // （"播放完黑"）。标题等稳态场景是非循环的、clock 不再推进，`now`
+                    // 停留在末内容帧之后，于是我们持续画它。
+                    if(_motionLoopTime <= 0 && lastContentFrame &&
+                       af->time >= lastContentTime) {
+                        af = lastContentFrame; // hold / 静止保持
+                    } else if(lastContentTime < 0) {
                         // Container node (layout / submotion parent) with no content
                         // frame of its own: it never hides its subtree (mirrors the
                         // reference where a type-3/motion container stays active and
