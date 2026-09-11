@@ -176,7 +176,19 @@ namespace motion {
         //（参考 PlayerFrameProgress：时间线结束时排队 onSync 事件；主界面靠脚本
         // 每轮重播入场，K2 里"角色持续切换"即由此而来）。
         bool progress(tjs_int delta) {
-            _tickCount += delta;
+            // M2 motion "time" / lastTime are in TICKS (frame-rate based), not ms:
+            // yuzulogo lastTime=241 ticks ≈ 4s at 60fps, m2logo back_white lastTime=91
+            // ≈ 1.5s. The caller passes real elapsed ms, so convert to ticks at the
+            // reference frame rate (60fps) BEFORE advancing the clock — otherwise the
+            // whole timeline collapses into ~91ms and then the engine holds the final
+            // frame for seconds (the "hard jump / white block covering CheeseWare").
+            // M2 的 time/lastTime 是**帧(tick)**不是毫秒：yuzulogo lastTime=241 tick≈4s(60fps)，
+            // m2logo back_white 91 tick≈1.5s。调用方传的是真实流逝毫秒，需先按参考帧率(60fps)
+            // 换算成 tick 再推进时钟——否则整条时间线在 ~91ms 内闪完，随后引擎保持末帧数秒
+            //（即"硬变/白块盖 CheeseWare"）。
+            constexpr tjs_int kMotionFrameRate = 60;
+            const tjs_int tickDelta = delta * kMotionFrameRate / 1000;
+            _tickCount += tickDelta;
             if(_tickCount > _lastTime) _lastTime = _tickCount;
             if(!_playing) return false;
             // Natural end of the motion: the last keyframe time across every
