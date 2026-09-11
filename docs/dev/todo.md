@@ -247,6 +247,24 @@
     自身位置 → 窗口右移约 114×scale，截掉前 5 个字母（"CheeseWare" 只显示 "ar" 之类，即"字母显示
     混乱"）。修复：窗口锚定在**文字容器（str_locate）的世界位置**（用 str_clip 世界矩阵 × 容器
     活跃帧局部坐标 + str_clip 世界位置复算），尺寸=字母局部范围×下传缩放。通用判据仍是 type==7。
+  - ✅ **B12 对齐 AetherKiri 动画实现（2026-09-12）**：用户反馈"M 折叠一直不对、不是横线平滑
+    弯折"，逐项与 AetherKiri（`/tmp/akiri` 全量 clone，libkrkr2 血统）对比动画实现：
+    ① **360° 最短路径角度插值**（AetherKiri interpolateSlots / libkrkr2 sub_699AE4）：
+       m2logo 折叠链 node6 286°→0、node9 270°→0，旧线性插值转 ~286°/270°（几乎一整圈），
+       参考只转 74°/90°——"M 乱转、不是平滑弯折"的根因。已按参考回绕。
+    ② **transformOrder case-3 slant**（libkrkr2 sub_699940 / applyLocalTransform）：
+       此前整段跳过，带斜切节点丢失斜切。已解析 content "sx"/"sy" + 实现 [1,sx;sy,1] 左乘，
+       inheritMask bit 0x080/0x100 门控累加。
+    ③ **可见性语义对齐**（updateLayers 0x6BB8F4）：type-0 帧**隐藏**节点（此前"保持末内容帧"
+       把 m2logo 折叠件从 t=0 一直显示 + backdrop 白块永不消失）；node type 2 结构组保持 active；
+       **子运动内容**（expandSubMotionNodes 展开，新 submotionContent 标记）跟随**父 motion 节点
+       活动**（参考子播放器），motion 播完（非循环）后保持末内容帧（主界面入场不黑，替代旧 hold）。
+       效果：m2logo 折叠件 t=200 才出现（已带旋转角）、backdrop 白块 1516ms 后消失、折叠角最短路径。
+  - ⏳ **遗留（AetherKiri 对比发现的后续）**：① 子运动 child-player 时间映射（motionDt/
+    motionDofst/motionTimeOffset 驱动子时间线，现为"父活动+保持末帧"近似，需 mtn 实证精确映射）；
+    ② 逐属性缓动曲线（ccc=透明度/颜色、acc=角度、zcc=缩放、scc=斜切、位置=线性，现 ccc 全属性）；
+    ③ AetherKiri 的 evaluateBezierCurve 是分段三次参数式（y[] 控制点），与我们 BezierEase 解 x(t)=u
+    不同。待用户再提供 m2logo/yuzulogo/title 的 .mtn 后逐项实证。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp

@@ -846,6 +846,14 @@ namespace PSB {
                         // M2 帧内旋转（content "angle"，单位度）。驱动 yuzusoft logo 叶子
                         // 的摆动/朝向。参考读取同一键（sub_692AB0 mask 0x10）到帧 angle。
                         f.angle = GetPSBFloat((*content)["angle"], 0.0f);
+                        // M2 skew (content "sx"/"sy"), transformOrder case-3 operator
+                        // [1,sx;sy,1] (libkrkr2 sub_699940). Aligns with AetherKiri
+                        // applyLocalTransform — we previously skipped case 3 entirely.
+                        // M2 斜切(content "sx"/"sy")，transformOrder case-3 算子
+                        // [1,sx;sy,1]（libkrkr2 sub_699940），对齐 AetherKiri
+                        // applyLocalTransform——此前我们整段跳过 case 3。
+                        f.slantX = GetPSBFloat((*content)["sx"], 0.0f);
+                        f.slantY = GetPSBFloat((*content)["sy"], 0.0f);
                         if(auto clipList =
                                std::dynamic_pointer_cast<PSBList>((*content)["clip"])) {
                             if(clipList->size() >= 4) {
@@ -1000,6 +1008,10 @@ namespace PSB {
                     // M2 per-frame rotation (content "angle", degrees), same as flat.
                     // M2 帧内旋转（content "angle"，单位度），同扁平路径。
                     f.angle = GetPSBFloat((*content)["angle"], 0.0f);
+                    // M2 skew (content "sx"/"sy"), same as flat path.
+                    // M2 斜切(content "sx"/"sy")，同扁平路径。
+                    f.slantX = GetPSBFloat((*content)["sx"], 0.0f);
+                    f.slantY = GetPSBFloat((*content)["sy"], 0.0f);
                     if(auto clipList =
                            std::dynamic_pointer_cast<PSBList>((*content)["clip"])) {
                         if(clipList->size() >= 4) {

@@ -173,6 +173,14 @@ namespace PSB {
             // 就是 angle 动画；缺它则叶子既不摆动、朝向也不对。单位：度（参考
             // applyLocalTransform 用 angle*2π/360）。
             float angle = 0;             // content "angle" degrees / 旋转角度（度）
+            // M2 skew (content "sx"/"sy"), the transformOrder case-3 operator
+            // (matrix [1,sx;sy,1]) — libkrkr2 sub_699940 / AetherKiri
+            // applyLocalTransform implement it; we skipped it, so any slanted
+            // node rendered without skew. Default 0 = identity.
+            // M2 斜切(content "sx"/"sy")，transformOrder 的 case-3 算子（矩阵
+            // [1,sx;sy,1]）——libkrkr2 sub_699940 / AetherKiri applyLocalTransform
+            // 都实现了它；此前我们跳过 case 3，带斜切的节点会渲染成无斜切。默认 0=恒等。
+            float slantX = 0, slantY = 0; // content "sx"/"sy" / 斜切
             float opacity = 255;     // 0..255 (m2 `op`) / 透明度
             // M2 blend mode (content "bm") and clipping rect (round 2). bm drives
             // the operate blend op; clip limits the node to a sub-rect (probed
@@ -238,6 +246,16 @@ namespace PSB {
             // 节点局部矩阵的算子顺序（PSB "transformOrder"，默认 [0,1,2,3] =
             // flip, angle, scale, slant）。libkrkr2 sub_699940 依序左乘到局部 2×2 矩阵。
             int transformOrder[4] = {0, 1, 2, 3};
+            // True when this node is the CONTENT of a "motion/obj/sub" sub-motion
+            // expanded into the parent tree (Player::expandSubMotionNodes). Reference
+            // (AetherKiri child player) drives such content by the PARENT motion
+            // node's activity, not the child's own type-0 end frame — so a child's
+            // trailing "invisible" frame must not hide it mid-fold.
+            // 为 true 表示本节点是 "motion/obj/sub" 子运动展开进父树的**内容**（
+            // Player::expandSubMotionNodes）。参考（AetherKiri 子播放器）以父 motion
+            // 节点的活动驱动这类内容，而非子节点自己的 type-0 末尾帧——子节点的末尾
+            // "隐藏"帧不应在折叠中途把它藏掉。
+            bool submotionContent = false;
             std::vector<PSBMotionFrame> frames; // own timeline, sorted by time
         };
         void addMotionNodes(const std::string &archiveKey,

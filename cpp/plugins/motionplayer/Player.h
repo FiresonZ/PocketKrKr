@@ -607,6 +607,12 @@ namespace motion {
                     for(auto &c : child) {
                         if(c.parentIndex == -1) c.parentIndex = selfIdx;
                         else c.parentIndex += offset;
+                        // Reference child-player: the expanded sub-motion's content
+                        // is driven by the PARENT motion node's activity, not the
+                        // child's own trailing type-0 frame.
+                        // 参考子播放器：展开的子运动内容由**父 motion 节点**的活动驱动，
+                        // 而非子节点自己的末尾 type-0 帧。
+                        c.submotionContent = true;
                     }
                     nodes.insert(nodes.end(),
                                  std::make_move_iterator(child.begin()),
@@ -741,9 +747,19 @@ namespace motion {
                 ? ResourceManager::getLastLoadedPath().AsStdString()
                 : _loadedStorage.AsStdString();
             const int n = static_cast<int>(_motionNodes.size());
+            // Motion timeline end (max keyframe time across every node). Used by the
+            // end-of-motion hold for submotion content (title entrance persists).
+            // 时间线结束（所有节点关键帧的最大时间）。用于 motion 播完时对子运动内容
+            // 的静止保持（主界面入场保持）。
+            tjs_int motionEnd = 0;
+            for(const auto &nd : _motionNodes)
+                for(const auto &f : nd.frames)
+                    if(f.time > motionEnd) motionEnd = f.time;
+            if(motionEnd <= 0) motionEnd = 100;
             std::vector<float> wx(n, 0.0f), wy(n, 0.0f);
             std::vector<float> wsx(n, 1.0f), wsy(n, 1.0f); // accumulated scale / 累加缩放
             std::vector<float> wa(n, 0.0f);          // accumulated angle (deg) / 累加角度
+            std::vector<float> wslx(n, 0.0f), wsly(n, 0.0f); // accumulated skew / 累加斜切
             std::vector<bool> wfx(n, false), wfy(n, false); // accumulated flip (XOR) / 累加翻转
             std::vector<int> wo(n, 255);
             std::vector<bool> vis(n, true);
@@ -762,31 +778,28 @@ namespace motion {
             const bool clipSupported = readClip(dest, prevClip);
             for(int i = 0; i < n; i++) {
                 const auto &node = _motionNodes[i];
-                // Reference semantics (PlayerFrameProgress + PlayerUpdateLayerEval):
-                // - A content frame marks the node visible; a "no content" frame
-                //   (src empty / type-0) marks it invisible only while later content
-                //   still exists in the timeline.
-                // - Once the timeline is exhausted (now >= last frame time), the
-                //   node HOLDS the last content frame (静止, motion finished) — it
-                //   does NOT hide. Only a declared loopTime (loop motion) rewinds.
-                // - Mid-timeline empty frames (e.g. a layer that appears at t=90)
-                //   are hidden before their first content frame.
-                // 参考语义（PlayerFrameProgress + PlayerUpdateLayerEval）：
-                // - 有内容帧使节点可见；"无内容"帧（src 空/type-0）仅在时间线后面还有
-                //   内容帧时代表不可见。
-                // - 时间线播完（now >= 末帧时间）后节点**保持最后一帧内容**（静止），
-                //   不隐藏；仅声明了 loopTime 的循环 motion 才回绕。
-                // - 时间线中间的空帧（如 t=90 才出现的层）在首个内容帧之前隐藏。
+                // Visibility semantics aligned to libkrkr2 / AetherKiri:
+                // - A type-0 (invisible) frame hides the node for its time range.
+                // - Node type 2 (structural transform group) stays ACTIVE even when
+                //   its own frame is type-0, so its transform still reaches children.
+                // - Sub-motion CONTENT nodes follow the PARENT motion node's activity
+                //   (reference child player); after a non-looping motion finishes
+                //   they HOLD their last content frame (title entrance persists).
+                // 可见性语义对齐 libkrkr2 / AetherKiri：
+                // - type-0（隐藏）帧在该时间段内隐藏节点。
+                // - 节点 type 2（结构变换组）即使自身帧为 type-0 也保持 active，变换
+                //   仍传给子层。
+                // - **子运动内容**节点跟随父 motion 节点的活动（参考子播放器）；
+                //   非循环 motion 播完后保持末内容帧（主界面入场不黑）。
                 const auto &frames = node.frames;
-                // Last content frame time (the "end" of this node's timeline).
-                // 该节点时间线的末内容帧时间。
-                tjs_int lastContentTime = -1;
+                // Last CONTENT (src) frame of this node's timeline — used to hold
+                // sub-motion content while the parent is active / motion finished.
+                // 节点时间线的末**内容**帧——用于父 active / motion 播完时对子运动内容保持。
                 const PSB::PSBMedia::PSBMotionFrame *lastContentFrame = nullptr;
                 for(const auto &f : frames) {
                     if(f.visible && f.src.size() > 4 &&
                        f.src.compare(0, 4, "src/") == 0) {
-                        if(f.time > lastContentTime) {
-                            lastContentTime = f.time;
+                        if(!lastContentFrame || f.time > lastContentFrame->time) {
                             lastContentFrame = &f;
                         }
                     }
@@ -797,35 +810,47 @@ namespace motion {
                 for(const auto &f : frames) {
                     if(f.time <= now) af = &f; else break;
                 }
-                if(!af) { vis[i] = false; continue; }
-                if(!af->visible) {
-                    // A "no content" frame hides the node for its time range.
-                    // Critical caveat (title black screen): for a NON-looping motion
-                    // (loopTime == 0) we must HOLD the last content frame once the
-                    // timeline has passed it, instead of hiding via a trailing empty
-                    // frame. Without this, the title's `main`/`bg` empty frames at
-                    // the very end of the timeline hide the whole subtree and the
-                    // menu screen goes fully black after the entrance plays ("播放完
-                    // 黑"). Steady/title scenes are non-looping and stop advancing,
-                    // so `now` parks past the last content frame and we keep drawing
-                    // it forever.
-                    // 无内容帧在它所覆盖的时间段内隐藏节点。关键约束（主界面黑屏）：
-                    // 对**非循环** motion（loopTime==0），一旦时间线越过末内容帧就必须
-                    // **保持末内容帧**，而不是被末尾的空帧隐藏。否则 title 的 main/bg
-                    // 在时间线末尾的空帧会把整棵子树藏掉，入场播完后菜单整屏变黑
-                    // （"播放完黑"）。标题等稳态场景是非循环的、clock 不再推进，`now`
-                    // 停留在末内容帧之后，于是我们持续画它。
-                    if(_motionLoopTime <= 0 && lastContentFrame &&
-                       af->time >= lastContentTime) {
-                        af = lastContentFrame; // hold / 静止保持
-                    } else if(lastContentTime < 0) {
-                        // Container node (layout / submotion parent) with no content
-                        // frame of its own: it never hides its subtree (mirrors the
-                        // reference where a type-3/motion container stays active and
-                        // the child motion drives visibility).
-                        // 无自身内容帧的容器节点（layout / 子运动父节点）：永远不隐藏
-                        // 子树（对应参考中 type-3/motion 容器持续 active，由子运动决定可见性）。
-                        vis[i] = true;
+                if(!af) {
+                    // No frame at or before `now`: hidden.
+                    // `now` 之前没有帧：隐藏。
+                    vis[i] = false;
+                    continue;
+                } else if(!af->visible) {
+                    // Reference semantics (libkrkr2 updateLayers 0x6BB8F4 /
+                    // AetherKiri): a type-0 (invisible) frame HIDES the node for its
+                    // time range — EXCEPT:
+                    //   * node type 2 (structural transform group): stays ACTIVE so
+                    //     its transform still reaches children;
+                    //   * sub-motion CONTENT nodes: driven by the PARENT motion
+                    //     node's activity (reference child player), so while the
+                    //     parent is active they hold their last visible frame —
+                    //     otherwise the m2logo fold pieces would vanish mid-fold
+                    //     (their own trailing type-0 frame is the submotion's
+                    //     timeline end, not a hide); after the motion ends
+                    //     (non-looping) they HOLD so the title entrance persists.
+                    // 参考语义（libkrkr2 updateLayers 0x6BB8F4 / AetherKiri）：
+                    // type-0（隐藏）帧在该时间段内**隐藏**节点——例外：
+                    //   * 节点 type 2（结构变换组）：保持 active，变换仍传给子层；
+                    //   * **子运动内容**节点：由父 motion 节点的活动驱动（参考子
+                    //     播放器），父 active 期间保持末可见帧——否则 m2logo 折叠件
+                    //     会在折叠中途消失（它们自己的末尾 type-0 帧是子运动时间线的
+                    //     结束，不是隐藏）；motion 播完（非循环）后保持，主界面入场不黑。
+                    const bool parentActive =
+                        (node.parentIndex < 0) || vis[node.parentIndex];
+                    const bool pastMotionEnd =
+                        (_motionLoopTime <= 0) && (now >= motionEnd);
+                    if(node.submotionContent) {
+                        if(parentActive && lastContentFrame) {
+                            af = lastContentFrame; // hold visible content / 保持可见内容
+                        } else if(pastMotionEnd && lastContentFrame) {
+                            af = lastContentFrame; // end-of-motion hold / 播完保持
+                        } else {
+                            vis[i] = false;
+                            continue;
+                        }
+                    } else if(node.type == 2) {
+                        // Structural group: keep active, draw nothing itself.
+                        // 结构组：保持 active，自身不绘制。
                     } else {
                         vis[i] = false;
                         continue;
@@ -851,6 +876,7 @@ namespace motion {
                 float interpCx = af->cx, interpCy = af->cy;
                 float interpOp = af->opacity;
                 float interpSx = af->scaleX, interpSy = af->scaleY;
+                float interpSlx = af->slantX, interpSly = af->slantY;
                 float interpAngle = af->angle;
                 if(af->visible) {
                     const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
@@ -892,10 +918,46 @@ namespace motion {
                         interpOp = af->opacity + (next->opacity - af->opacity) * t;
                         interpSx = af->scaleX + (next->scaleX - af->scaleX) * t;
                         interpSy = af->scaleY + (next->scaleY - af->scaleY) * t;
-                        interpAngle = af->angle + (next->angle - af->angle) * t;
+                        interpSlx = af->slantX + (next->slantX - af->slantX) * t;
+                        interpSly = af->slantY + (next->slantY - af->slantY) * t;
+                        // Angle interpolates along the 360° SHORTEST PATH
+                        // (AetherKiri interpolateSlots / libkrkr2 sub_699AE4 at
+                        // 0x699DEC): if the span exceeds 180°, wrap the target so
+                        // the piece sweeps the short way. Without this the m2logo
+                        // fold chain (node6 286°→0, node9 270°→0) spins ~286°/270°
+                        // (almost a full turn) while the reference folds only
+                        // 74°/90° — the "M 不是横线平滑弯折、乱转" symptom.
+                        // 角度沿 360°**最短路径**插值（AetherKiri interpolateSlots /
+                        // libkrkr2 sub_699AE4@0x699DEC）：跨度超过 180° 时回绕目标，
+                        // 让部件只扫过短弧。否则 m2logo 折叠链（node6 286°→0、
+                        // node9 270°→0）会转 ~286°/270°（几乎一整圈），而参考只折
+                        // 74°/90°——即"M 不是横线平滑弯折、像乱转"的现象。
+                        {
+                            float curA = af->angle;
+                            float nxtA = next->angle;
+                            if(curA >= nxtA) {
+                                if(curA - nxtA > 180.0f) nxtA += 360.0f;
+                            } else {
+                                if(nxtA - curA > 180.0f) nxtA -= 360.0f;
+                            }
+                            interpAngle = curA + (nxtA - curA) * t;
+                            if(interpAngle < 0.0f) interpAngle += 360.0f;
+                            else if(interpAngle >= 360.0f) interpAngle -= 360.0f;
+                        }
                     }
                 }
-                const bool parentOn = (node.parentIndex >= 0) ? vis[node.parentIndex] : true;
+                // Sub-motion content may keep rendering after the parent motion
+                // node's own timeline ends (type-0 frame) IF the whole motion has
+                // finished (non-looping) — the title entrance holds on screen this
+                // way (reference keeps the child player's last frame at motion end).
+                // 子运动内容可在父 motion 节点自身时间线结束（type-0 帧）后继续渲染，
+                // 前提是整个 motion 已播完（非循环）——主界面入场借此保持（参考在 motion
+                // 结束时保持子播放器的末帧）。
+                const bool parentOn = (node.parentIndex >= 0)
+                    ? (vis[node.parentIndex] ||
+                       (node.submotionContent && _motionLoopTime <= 0 &&
+                        now >= motionEnd))
+                    : true;
                 if(!parentOn) { vis[i] = false; continue; } // hidden parent hides subtree
                 const float baseX = (node.parentIndex >= 0) ? wx[node.parentIndex] : 0.0f;
                 const float baseY = (node.parentIndex >= 0) ? wy[node.parentIndex] : 0.0f;
@@ -1001,6 +1063,15 @@ namespace motion {
                 const float effAngle = (inh & 0x010)
                     ? baseAngle + interpAngle
                     : interpAngle;
+                // Accumulate skew through the parent chain (additive) — gated by
+                // inheritMask bit 0x080 (X) / 0x100 (Y) (AetherKiri updateLayers
+                // 0x6BB8F4: slantX += parent.slantX). We previously never read skew.
+                // 沿父链累加斜切（相加）——由 inheritMask bit 0x080(X)/0x100(Y) 门控
+                //（AetherKiri updateLayers 0x6BB8F4：slantX += parent.slantX）。此前从未读斜切。
+                const float baseSlx = (node.parentIndex >= 0) ? wslx[node.parentIndex] : 0.0f;
+                const float baseSly = (node.parentIndex >= 0) ? wsly[node.parentIndex] : 0.0f;
+                const float effSlx = (inh & 0x080) ? baseSlx + interpSlx : interpSlx;
+                const float effSly = (inh & 0x100) ? baseSly + interpSly : interpSly;
                 const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
                 wx[i] = px; wy[i] = py; wsx[i] = scxChild; wsy[i] = scyChild;
@@ -1009,9 +1080,11 @@ namespace motion {
                 // 存储本节点的**世界线性矩阵**（由累加 flip/angle/scale 构建），供下一轮
                 //（子节点）用它做位置变换（先序）。
                 buildLocalMatrix(effFx, effFy, effAngle, scxChild, scyChild,
+                                 effSlx, effSly,
                                  node.transformOrder,
                                  wm11[i], wm12[i], wm21[i], wm22[i]);
                 wa[i] = effAngle;
+                wslx[i] = effSlx; wsly[i] = effSly;
                 wfx[i] = effFx; wfy[i] = effFy;
                 wo[i] = wop;
                 vis[i] = (wop > 0);
@@ -2166,6 +2239,7 @@ namespace motion {
 }
 
 static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
+                                     double slx, double sly,
                                      const int (&order)[4],
                                      double &l11, double &l12, double &l21, double &l22) {
             l11 = 1.0; l12 = 0.0; l21 = 0.0; l22 = 1.0;
@@ -2189,7 +2263,19 @@ static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
                     case 2: // scale: left-multiply [[sx,0],[0,sy]]
                         l11 *= sx; l12 *= sx; l21 *= sy; l22 *= sy;
                         break;
-                    default: break; // 3 = slant (skipped; not used by observed assets)
+                    case 3: // slant: left-multiply [[1,slx],[sly,1]]
+                        // libkrkr2 sub_699940 / AetherKiri applyLocalTransform case 3
+                        // — previously skipped, so slanted nodes lost their skew.
+                        // libkrkr2 sub_699940 / AetherKiri applyLocalTransform 的
+                        // case 3——此前跳过，带斜切的节点丢失斜切。
+                        if(slx != 0.0 || sly != 0.0) {
+                            const double t11 = l11 + slx * l21;
+                            const double t12 = l12 + slx * l22;
+                            const double t21 = sly * l11 + l21;
+                            const double t22 = sly * l12 + l22;
+                            l11 = t11; l12 = t12; l21 = t21; l22 = t22;
+                        }
+                        break;
                 }
             }
         }
