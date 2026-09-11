@@ -919,10 +919,9 @@ namespace motion {
                 // 位置：节点的局部**坐标**(cx, cy) 经**父节点世界矩阵**变换后加到父世界坐标
                 //（libkrkr2：`pos = parentM·local + parentPos`）。这是缺口①对齐，让旋转/
                 // 缩放的父节点正确带动子节点。根节点及恒等父矩阵下退化为 px=cx。
-                // 注意（锚点）：content 的 "ox"/"oy" **不进位置**——它是纹理锚点/枢轴偏移，
-                // 在绘制时经 org = pos - M*(iconOrigin+ox, iconOriginY+oy) 生效（参考
-                // updateLayersPhase3_VertexComputation）。把 ox 加进位置等于**双计**，会让
-                // 整个精灵漂移（如 yuzusoft 叶子 ox=91 摆动时偏移/呈镜像）。
+                // 注意（锚点）：content 的 "ox"/"oy" **不进位置**——它是纹理的旋转**枢轴热区**
+                //（下面 Round-3 绕 (ax+ox·scale) 旋转，如 yuzusoft 叶子 ox=91）。把 ox
+                // 加进位置等于**双计**，会让整个精灵漂移（如叶子 ox=91 摆动时偏移/呈镜像）。
                 const float loX = interpCx;
                 const float loY = interpCy;
                 const float px = pOn
@@ -1113,58 +1112,68 @@ namespace motion {
                 const int iw = static_cast<int>(wVar.AsInteger());
                 const int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) continue;
-                // Origin-anchored draw (reference updateLayersPhase3_VertexComputation):
-                // org = pos - M*(iconOrigin+ox, iconOriginY+oy); the drawn quad is
-                // org + M*[0..iw,0..ih]. The world matrix wm[i] already accumulates
-                // flip/angle/scale (buildLocalMatrix over transformOrder+inheritMask),
-                // so ONE matrix drives both the child-position transform and this
-                // sprite's own affine — no display-box folding, no center anchoring,
-                // no separate pivot hack. The texture's anchor point
-                // (iconOrigin+ox, iconOriginY+oy) lands exactly on (px,py): this is
-                // what keeps full-canvas logos centered and per-glyph pivots (e.g.
-                // the yuzusoft leaf ox=91) in place while flipping/rotating.
-                // 原点锚定绘制（参考 updateLayersPhase3_VertexComputation）：
-                // org = pos - M*(iconOrigin+ox, iconOriginY+oy)；绘制四边形 =
-                // org + M*[0..iw,0..ih]。世界矩阵 wm[i] 已累加 flip/angle/scale
-                //（buildLocalMatrix 按 transformOrder+inheritMask），**同一矩阵**既
-                // 驱动子节点位置变换、也驱动精灵自身仿射——不再有显示盒折叠、居中锚定、
-                // 单独的枢轴 hack。纹理锚点 (iconOrigin+ox, ...) 恰好落在 (px,py)：
-                // 这正是全画布 logo 居中、以及各字形枢轴（如 yuzusoft 叶子 ox=91）
-                // 在翻转/旋转时保持不动的关键。
-                float iconOriginX = 0, iconOriginY = 0;
-                PSB::PSBMedia::CachedImageInfo imgInfo;
-                if(PSB::GetGlobalPSBMedia() &&
-                   PSB::GetGlobalPSBMedia()->getImageInfo(storageStr + "/" + res, imgInfo)) {
-                    iconOriginX = imgInfo.originX;
-                    iconOriginY = imgInfo.originY;
+                // Center (default) or top-left anchored draw, per the asset's
+                // coordinate-origin convention (resolveCoordOrigin: 0=center,
+                // 1=top-left). This matches the static composite path
+                // (cachePSBImages) and the real M2 data, whose `coord` is the box
+                // CENTER. (B7 briefly force-anchored the TOP-LEFT at pos →
+                // everything shifted down-right by half its box — the "整体向右下
+                // 偏移" you saw.) We KEEP B7's genuine fixes: ox/oy are NOT part
+                // of position (loX=interpCx above), and rotation pivots about the
+                // ox/oy hotspot (Round-3) instead of the box center.
+                // 按资产坐标原点约定做锚定（resolveCoordOrigin：0=中心默认、
+                // 1=左上角）。与静态合成路径(cachePSBImages)及真实 M2 数据一致——
+                // 其 `coord` 是盒子**中心**。（B7 曾把左上角钉在 pos，导致所有精灵
+                // 向右下移半盒，即"整体向右下偏移"。）**保留** B7 的两处真修：
+                // ox/oy 不进位置（上面的 loX=interpCx），旋转绕 ox/oy 热区
+                //（Round-3）而非盒子中心。
+                const int coordOrigin = resolveCoordOrigin();
+                int left = _coordX + halfCw + static_cast<int>(px);
+                int top  = _coordY + halfCh + static_cast<int>(py);
+                if(coordOrigin != 1) {          // center convention (default) / 中心约定
+                    left -= iw / 2;
+                    top  -= ih / 2;
                 }
-                const double totalOX = static_cast<double>(iconOriginX) + interpOx;
-                const double totalOY = static_cast<double>(iconOriginY) + interpOy;
-                const double m11 = wm11[i], m12 = wm12[i], m21 = wm21[i], m22 = wm22[i];
-                const double orgX = px - (m12 * totalOY + totalOX * m11);
-                const double orgY = py - (totalOY * m22 + totalOX * m21);
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} origin=({:.1f},{:.1f}) ox,oy=({:.1f},{:.1f}) pos=({:.2f},{:.2f}) org=({:.2f},{:.2f}) M=({:.3f},{:.3f},{:.3f},{:.3f}) op={} scale=({:.2f},{:.2f}) bm={} src='{}'",
-                    node.label, af->type, static_cast<tjs_int>(now),
-                    iconOriginX, iconOriginY, interpOx, interpOy,
-                    static_cast<double>(px), static_cast<double>(py), orgX, orgY,
-                    m11, m12, m21, m22, wop, interpSx, interpSy, af->blendMode, af->src);
-                // The affine passed to operateAffine is the SAME world matrix we
-                // accumulated above (wm11..wm22, buildLocalMatrix over the node's
-                // transformOrder + inheritMask-gated flip/angle/scale through the
-                // parent chain) with the origin-anchored translation from E3a.
-                // A node WITHOUT transform degenerates to a=1,b=0,c=0,d=1,
-                // tx=_coordX+halfCw+(px-ox), which places the texture top-left at
-                // (px-ox) — still origin-anchored, never center-anchored.
-                // 传给 operateAffine 的仿射就是上面累加的**世界矩阵**
-                //（wm11..wm22，沿父链按 transformOrder+inheritMask 门控的
-                // flip/angle/scale 构建）搭配 E3a 的原点锚定平移。无变换节点退化为
-                // a=1,b=0,c=0,d=1、tx=画面居中+(px-ox)——仍是原点锚定，绝不居中。
-                const tjs_real mA = static_cast<tjs_real>(wm11[i]);
-                const tjs_real mB = static_cast<tjs_real>(wm12[i]);
-                const tjs_real mC = static_cast<tjs_real>(wm21[i]);
-                const tjs_real mD = static_cast<tjs_real>(wm22[i]);
-                const tjs_real mTx = static_cast<tjs_real>(_coordX + halfCw + orgX);
-                const tjs_real mTy = static_cast<tjs_real>(_coordY + halfCh + orgY);
+                // Display-box scale (layer larger than its texture) + per-frame
+                // scale; stretch the box and center it on the same anchor.
+                // 显示盒缩放(图层大于纹理)+帧内缩放；把盒拉伸并居中到同一锚点。
+                const float boxScX = (node.width > 0 && node.width > iw) ? static_cast<float>(node.width) / iw : 1.0f;
+                const float boxScY = (node.height > 0 && node.height > ih) ? static_cast<float>(node.height) / ih : 1.0f;
+                const float totalScX = scx * boxScX;
+                const float totalScY = scy * boxScY;
+                const int rW = std::max(1, static_cast<int>(iw * totalScX));
+                const int rH = std::max(1, static_cast<int>(ih * totalScY));
+                const int ax = left - (rW - iw) / 2;
+                const int ay = top - (rH - ih) / 2;
+                // Flip (content "fx"/"fy"): mirror about the box center via negative
+                // scale + origin shift. 翻转：沿盒中心取负缩放并回移原点。
+                const tjs_real efA = effFx ? -totalScX : totalScX;
+                const tjs_real efD = effFy ? -totalScY : totalScY;
+                const tjs_int efTx = effFx ? ax + rW : ax;
+                const tjs_int efTy = effFy ? ay + rH : ay;
+                // Round-3 angle: rotate about the sprite's ox/oy HOTSPOT (the M2
+                // leaf's stem attach point; ox=91) rather than the box center.
+                // 绕 ox/oy 热区（叶子柄附着点）旋转，而非盒子中心。
+                tjs_real mA = efA, mB = 0, mC = 0, mD = efD, mTx = static_cast<tjs_real>(efTx), mTy = static_cast<tjs_real>(efTy);
+                if(effAngle != 0.0f) {
+                    const double rad = effAngle * 2.0 * 3.14159265358979323846 / 360.0;
+                    const double c = std::cos(rad), s = std::sin(rad);
+                    const double pivotX = effFx ? (ax + rW - interpOx * totalScX)
+                                                : (ax + interpOx * totalScX);
+                    const double pivotY = effFy ? (ay + rH - interpOy * totalScY)
+                                                : (ay + interpOy * totalScY);
+                    mA = static_cast<tjs_real>(c * efA);
+                    mB = static_cast<tjs_real>(-s * efD);
+                    mC = static_cast<tjs_real>(s * efA);
+                    mD = static_cast<tjs_real>(c * efD);
+                    mTx = static_cast<tjs_real>(
+                        c * efTx - s * efTy + pivotX - (c * pivotX - s * pivotY));
+                    mTy = static_cast<tjs_real>(
+                        s * efTx + c * efTy + pivotY - (s * pivotX + c * pivotY));
+                }
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} box=({},{}) totalSc=({:.2f},{:.2f}) ang={:.1f} op={} bm={} src='{}'",
+                    node.label, af->type, static_cast<tjs_int>(now), coordOrigin,
+                    iw, ih, totalScX, totalScY, effAngle, wop, af->blendMode, af->src);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
