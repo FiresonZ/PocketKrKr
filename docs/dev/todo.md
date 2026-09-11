@@ -247,13 +247,18 @@
 >    偏差小所以正常。对话字符在 `.tpf` 里 MISS → 走栅格化（同字体自洽）所以正常。
 >  - 另发现差异（与尺寸无关，未改）：`tTJSNI_BaseLayer::DrawText/DrawGlyph` 我们对 color
 >    多做了一次 `TVP_REVRGB`（krkrz 没有），仅影响颜色、用户实测颜色正常。
->- 待真机：用新增 `[TpfMap]`（映射的 .tpf 路径）与 `[TpfProbe]`（每 face/字符 hit-miss +
->  .tpf 内置 W/H/Origin/Inc + aofs）日志确认：① 选项 face 是否 HIT .tpf；② .tpf 内建字号是否
->  与请求 height 一致（排除映射错 .tpf）；③ 若确认命中且 Origin 与 aofsy 差 ~0.3×h → 修
->  `aofsy`（对 .tpf 字形改用其原始字体 ascent，例如按 .tpf 内建 Origin 推导，而非回退字体）。
->- 待做：① 与动画一起构建；② 依据新日志 `[TextProbe]`（destRect 高度 vs 行高；AscentOfs；prerender
->  是否命中 .tpf）与 `[FontProbe]` 度量，定位是绘制区域被裁、基线偏移还是未走位图字体；③ 若指向
->  .tpf 通道 → 按 §2d 实现。
+>  - **engine(14) 复判（2026-09-11）**：
+>    - 选项/名字文本 `[TextProbe]`：face='PreRenderFont(スキップ),ＭＳ ゴシック'
+>      `multi destRect=(0,0,792,53) xy=(2,9)`（'【 将臣 】'）与 `single destRect=(0,0,113,68)`
+>      `xy=(10,10)`（选择肢）——**绘制区/裁切矩形很窄(113) 且贴近左上(0,0)**。
+>      选项"偏小/偏左上/跳出框"定位到**绘制区域/坐标**，而非 ascent。
+>    - 曾试按 §2e 修 aofsy 全局覆盖为 .tft ascent（`a6232b1`）：选项 aofs 45→37 仍偏小靠左上，
+>      但**对话被回归**（`*システム/*ヘッダ` 也映射 .tft，命中和栅格化字形用同一非 Noto 基值 →
+>      有的字偏上有的字偏下）。因 .tft 命中(MSゴシック≈0.86h)与 Noto miss(≈1.16h) ascent 不同，
+>      单一 aofs 无法同时取悦两者 → **已整体回退（`ffc93c0`）**，对话恢复。
+>  - **新方向（选项框）**：不再动 ascent。去查**选择肢/名字层的绘制几何**：为何 destRect 只有
+>    ~113 宽且贴 (0,0) 角落——是脚本 DrawText 的 clip rect、还是选择肢层(LayerEx/选择层)尺寸/
+>    定位错误；对比同名层在 K2/Kirikiroid2 里的实际宽高与坐标。
 
 ### — §R. krkr2-tools 反编译参考资源清单（2026-09-11 盘点）【参考索引，非待办】
 > 位置：宿主机本地 `/tmp/krkr2-tools`（K2 完整移植源码 + libkrkr2.so 反编译重建，**不 commit 进仓库**；
