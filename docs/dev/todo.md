@@ -117,13 +117,22 @@
   后仍被 keep 到 4s，导致"播放前背景有完整静止 yuzulogo"（真实动画 3.58s 字母即消失、只剩白底）。
   节点树 `drawAnimatedTree` 与扁平 `drawAnimatedFlat` 同步修改；稳态 motion（normal/status）
   末尾本来就是内容帧，不受影响。
-- 进度：✅ **PSB 帧 `type` 解析（2026-09-11）**：此前只按"有无 content"判断帧可见性，从未读
-  PSB 帧的 `type` 字段。参考 libkrkr2 `sub_6926B4 parseFrame`：`type==0` 一律是**不可见帧**
-  （图层的隐藏初始态），即使带 content/src——yuzulogo 的 `white`/`logo` 层 t=0 帧带
-  `src='src/yuzu/yuzu_logo'` 但 type==0，被旧逻辑当可见帧画出，正是"播放前背景就有完整
-  静止 yuzulogo"的根因（用户澄清：不是播放完残留）。已改 `PSBMedia.cpp` 两处帧解析
-  （`CollectMotionTracksFromMotion` + `CollectMotionNodeFrames`）读 `type`，`type==0 → visible=false`；
-  `PSBMotionFrame` 增 `type` 字段，`Player.h` 帧 dump 日志加 `ty=` 便于真机核对。
+- 进度：✅ **PSB 帧 `type` 解析（2026-09-11）**：补充读 PSB 帧的 `type` 字段，`type==0` 视为不可见帧
+  （libkrkr2 `sub_6926B4 parseFrame` 语义），`PSBMotionFrame` 增 `type`，`Player.h` 日志加 `ty=`。
+  ⚠️ 但这**不是**"播放前完整静止 yuzulogo"的根因——真机日志(engine(12))证明 `white`/`logo` 层
+  t=0 帧是 `ty=2`（非 0）。
+- 进度：✅ **PSB 帧透明度字段 `op`→`opa`（2026-09-11，根因真解）**：用独立 PSB 解码器
+  （参考仓库 `/tmp/krkr2-tools`，临时分析，未入库）解出 `yuzulogo.mtn`，确凿根因：
+  - PSB M2 帧透明度字段名是 **`opa`**（0..255），我们一直读 **`op`**，`GetPSBFloat(f["op"],255)`
+    恒取不到 → 兜底 255 → 所有靠透明度淡入/隐藏的层被画成**完全不透明**。
+  - `white`/`logo` 层 t=0 帧 `content:{src:'src/yuzu/yuzu_logo', type:2, opa:0}` —— 开首应
+    透明度 0（透明、不可见），被我们画成实心。
+  - RL 解码确认：`yuzu_logo`(720x417) 是**浅青色实心完整 logo**（avgRGB≈124,214,245），叠加
+    白底 `white_box` 上清晰可见 → 正是用户"播放前背景就有完整静止 yuzulogo"。
+  - 修复：`PSBMedia.cpp` 两处帧解析（`CollectMotionTracksFromMotion`+`CollectMotionNodeFrames`）
+    改译 `opa`，缺失才回退 `op`。
+  - 附带修正此前误判（type0 根因 → 实为 opa：0）。此 bug 也解释了"主界面角色瞬间出现"
+    （角色淡入 `opa` 应从 0 插值）与 m2logo 播放错误（大量 `opa` 淡入）。
 - 进度：✅ **M2 文本子树左对齐（2026-09-11，engine(3) 实证）**：m2logo "cheeseware" 字母
   （str_clip/str_locate 子树）按文本笔位在 advance 锚点**左对齐**绘制，不再居中——居中会让
   较宽的 'w'（icon39 比 'e' 宽 30px）向左压到前一个字母，整行字错乱。`_nodeInStrSubtree`

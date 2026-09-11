@@ -811,7 +811,17 @@ namespace PSB {
                             f.cx = GetPSBFloat((*coord)[0], 0);
                             f.cy = GetPSBFloat((*coord)[1], 0);
                         }
-                        f.opacity = GetPSBFloat((*content)["op"], 255);
+                        // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the
+                        // wrong key always yielded the fallback 255, so any layer whose entrance is
+                        // driven by opacity (e.g. yuzulogo's `white`/`logo` t=0 frame has `opa:0`
+                        // → the complete cyan logo must stay transparent at first) was rendered
+                        // fully opaque. Read "opa" first, fall back to "op".
+                        // M2 帧透明度字段是 "opa"（0..255），不是 "op"。读错 key 会恒返回兜底 255，
+                        // 导致以透明度驱动入场/出场的层被画成完全不透明（如 yuzulogo 的 white/logo
+                        // 层 t=0 帧 `opa:0`，完整青色 logo 开首应保持透明）。优先读 "opa"，无则回退 "op"。
+                        f.opacity = GetPSBFloat((*content)["opa"], -1.0f);
+                        if(f.opacity < 0.0f)
+                            f.opacity = GetPSBFloat((*content)["op"], 255.0f);
                     } else {
                         // type==0 (invisible) or a frame without content only marks
                         // a time change: the layer is invisible during this range.
@@ -913,7 +923,17 @@ namespace PSB {
                         f.cx = GetPSBFloat((*coord)[0], 0);
                         f.cy = GetPSBFloat((*coord)[1], 0);
                     }
-                    f.opacity = GetPSBFloat((*content)["op"], 255);
+                    // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the
+                    // wrong key always yielded the fallback 255, so any layer whose entrance is
+                    // driven by opacity (e.g. yuzulogo's `white`/`logo` t=0 frame has `opa:0`
+                    // → the complete cyan logo must stay transparent at first) was rendered
+                    // fully opaque. Read "opa" first, fall back to "op".
+                    // M2 帧透明度字段是 "opa"（0..255），不是 "op"。读错 key 会恒返回兜底 255，
+                    // 导致以透明度驱动入场/出场的层被画成完全不透明（如 yuzulogo 的 white/logo
+                    // 层 t=0 帧 `opa:0`，完整青色 logo 开首应保持透明）。优先读 "opa"，无则回退 "op"。
+                    f.opacity = GetPSBFloat((*content)["opa"], -1.0f);
+                    if(f.opacity < 0.0f)
+                        f.opacity = GetPSBFloat((*content)["op"], 255.0f);
                 } else {
                     // type==0 (invisible) or a frame without content only marks
                     // a time change: the node is invisible during this range.
