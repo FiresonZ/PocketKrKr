@@ -892,27 +892,67 @@ namespace motion {
                 const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
                 if(logger) logger->info("drawAnimatedTree: '{}' at ({},{}) op={} src='{}'",
                     node.label, left, top, wop, af->src);
-                tTJSVariant opArgs[9] = {
-                    tTJSVariant(static_cast<tjs_int>(left)),
-                    tTJSVariant(static_cast<tjs_int>(top)),
-                    tTJSVariant(temp, temp),
-                    tTJSVariant(static_cast<tjs_int>(0)),
-                    tTJSVariant(static_cast<tjs_int>(0)),
-                    tTJSVariant(static_cast<tjs_int>(iw)),
-                    tTJSVariant(static_cast<tjs_int>(ih)),
-                    tTJSVariant(static_cast<tjs_int>(2)),  // omAlpha
-                    tTJSVariant(static_cast<tjs_int>(wop)),
+                // B 第一段（round 1）:用 operateAffine 而非 operateRect 绘制，
+                // 让图层按自身显示盒(width×height)拉伸。operateRect 只做原生尺寸
+                // blit，yuzulogo 的 64×64 white_box 永远铺不满全屏；operateAffine
+                // 接收 2×3 仿射矩阵(a,b,c,d,tx,ty)，把纹理缩放/平移到显示盒。
+                // 当节点显示盒未给出(=0)或等于纹理尺寸时 sx=sy=1、tx=left、ty=top，
+                // 与原生 operateRect 完全一致——天然回退，无回归风险。后续(round 3)
+                // 只需在此矩阵里累加父节点的旋转/缩放(a~d)即可。
+                // B round 1: draw via operateAffine (affine matrix a,b,c,d,tx,ty)
+                // instead of operateRect so a layer whose display box (width×height)
+                // is larger than its texture gets STRETCHED (yuzulogo's 64×64
+                // white_box fills the canvas). operateRect can only blit native
+                // size. When no box is given (0) or it equals the texture, the
+                // matrix is identity+NOP (sx=sy=1, tx=left, ty=top), identical to
+                // the old operateRect path — a safe fallback. Round 3 will feed the
+                // parent matrix into a~d here.
+                const int oW = node.width > 0 ? node.width : iw;
+                const int oH = node.height > 0 ? node.height : ih;
+                const float sx = oW > iw && iw > 0 ? static_cast<float>(oW) / iw : 1.0f;
+                const float sy = oH > ih && ih > 0 ? static_cast<float>(oH) / ih : 1.0f;
+                const int boxW = static_cast<int>(iw * sx);
+                const int boxH = static_cast<int>(ih * sy);
+                // 把显示盒居中到与原尺寸绘制相同的锚点，仿射原点即盒的左上角。
+                // Center the display box on the same anchor as the native draw; the
+                // affine origin becomes the box top-left.
+                const int ax = left - (boxW - iw) / 2;
+                const int ay = top - (boxH - ih) / 2;
+                tjs_int opaClamp = std::clamp(wop, 0, 255);
+                // 参数依 Layer.operateAffine(src, x, y, w, h, affine, a,b,c,d,
+                // tx,ty, mode, opa, ...)。dst 对象绑定到 dest（调用对象），src 是
+                // 临时层上的纹理。
+                // Note: argument order follows Layer.operateAffine(src, x, y, w, h,
+                // affine, a,b,c,d, tx,ty, mode, opa, ...); the destination is the
+                // object `dest` this method is called on, src is the temp texture.
+                tTJSVariant opArgs[14] = {
+                    tTJSVariant(temp, temp),                      // 0 src
+                    tTJSVariant(static_cast<tjs_int>(0)),         // 1 x
+                    tTJSVariant(static_cast<tjs_int>(0)),         // 2 y
+                    tTJSVariant(static_cast<tjs_int>(iw)),        // 3 src width
+                    tTJSVariant(static_cast<tjs_int>(ih)),        // 4 src height
+                    tTJSVariant(true),                            // 5 affine (matrix mode)
+                    tTJSVariant(static_cast<tjs_real>(sx)),       // 6 a (x scale)
+                    tTJSVariant(static_cast<tjs_real>(0)),        // 7 b
+                    tTJSVariant(static_cast<tjs_real>(0)),        // 8 c
+                    tTJSVariant(static_cast<tjs_real>(sy)),       // 9 d (y scale)
+                    tTJSVariant(static_cast<tjs_int>(ax)),        // 10 tx
+                    tTJSVariant(static_cast<tjs_int>(ay)),        // 11 ty
+                    tTJSVariant(static_cast<tjs_int>(2)),         // 12 omAlpha
+                    tTJSVariant(opaClamp),                        // 13 opacity
                 };
                 tTJSVariant *opArgv[] = { &opArgs[0], &opArgs[1], &opArgs[2],
                                           &opArgs[3], &opArgs[4], &opArgs[5],
-                                          &opArgs[6], &opArgs[7], &opArgs[8] };
+                                          &opArgs[6], &opArgs[7], &opArgs[8],
+                                          &opArgs[9], &opArgs[10], &opArgs[11],
+                                          &opArgs[12], &opArgs[13] };
                 try {
-                    dest->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, opArgv, dest);
+                    dest->FuncCall(0, TJS_W("operateAffine"), nullptr, nullptr, 14, opArgv, dest);
                     drawn++;
                 } catch(const std::exception &e) {
-                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateRect exception: {}", e.what());
+                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateAffine exception: {}", e.what());
                 } catch(...) {
-                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateRect unknown exception");
+                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateAffine unknown exception");
                 }
             }
             return drawn;
