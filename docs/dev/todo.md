@@ -214,6 +214,11 @@
   - 遗留风险：若个别图标 dict 无 originX/originY 且作者以"中心"语义编坐标，原点锚定会偏移
     半盒——待真机日志（`origin=`/`pos=`/`org=` 探针）核对；确认后按 asset 补 icon origin 或
     修正解析。
+  - ✅ **该风险已兑现→按"中心"默认修复（2026-09-11，13430f2）**：真机反馈"整体向右下偏移"=该
+    锚定退化。图标 dict 无 originX/originY（默认0）时 `org` 落到纹理左上角 → 所有精灵下移右移
+    半盒。修复：`drawAnimatedTree` 恢复 `resolveCoordOrigin()`（默认0=中心）锚定，左上角减半宽/半高，
+    与静态合成 `cachePSBImages`（坐标=盒中心）一致；**保留** B7 两处真修（ox/oy 不进位置、旋转绕
+    ox/oy 热区）。若个别 asset 确按左上角编码，用命令行 `-psb_coord_origin=topleft` 切回。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
