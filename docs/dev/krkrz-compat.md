@@ -20,6 +20,8 @@
 | krkrsdl3/krkrsdl3 | https://github.com/krkrsdl3/krkrsdl3 | **SDL3 重实现 + 开源 emoteplayer**：`plugins/emoteplayer/emoteplayerclass.{h,cpp}` 有 `D3DAdaptor/SeparateLayerAdaptor/captureCanvas/motionWorkLayer` 全量 C++ 实现（GitHub 上仅此一家，Kirikiroid2 系闭源）。captureCanvas 契约：`void captureCanvas(iTJSDispatch2* targetLayer)`= 单 object 目标层，与我们日志 `p0=object` 吻合。GPU 离屏 target + `memcpy→目标层像素缓冲+Update()`（详见下方对照） |
 | krkrsdl2/krkrsdl2 | https://github.com/krkrsdl2/krkrsdl2 | krkrsdl3 前身（SDL2 + Kirikiri2/Z 基，更成熟）；同家族 emoteplayer 参考，架构同 krkrsdl3 |
 | crate-1556/tjs2-decompiler | https://github.com/crate-1556/tjs2-decompiler | **TJS2（TJS2100）字节码反编译器（Python）**：把游戏编译字节码脚本还原为可读/可执行 TJS2，支持反汇编+文件信息。用于读取加密 `.tjs`（如 affinesourcemotion.tjs），不再只靠运行时诊断猜契约 |
+| AetherKiri/AetherKiri | https://github.com/AetherKiri/AetherKiri | **开源 M2/EMotionPlayer 权威参考（2026-09-11 用户提供）**：对 `libkrkr2.so` 的完整反向移植，自带全套 `cpp/plugins/motionplayer/`（Player.h/PlayerUpdateLayers.cpp/NodeTree.h/EmotePlayer.h）+ `cpp/plugins/psbfile/`。与本项目 motionplayer 逐项对照**全一致**：旋转矩阵 `[[c,-s],[s,c]]` 左乘（applyLocalTransform/sub_699940）、transformOrder 默认 [0,1,2,3]、inheritMask 位门控（+slant 0x080/0x100）、angle 相加(度)/scale 相乘/flip XOR、绕纹理原点枢轴 `orgX=posX-(m12*totalOY+totalOX*m11)`、str_clip type-7 裁剪（SetClip/ResetClip + 字形省略 scale）。自带 `logoChainTrace` 顶点校验可作对拍基准。比对这次最相关：修 yuzulogo 叶子 angle/枢轴 与 m2logo str_clip 裁剪 |
+| YuriSizuku/Kirikiroid2Yuri | https://github.com/YuriSizuku/Kirikiroid2Yuri | **zeas2/Kirikiroid2 的 fork（2026-09-11 用户提供，价值低）**：仅 Android UI 壳/插件小幅演进，**无 M2/PSB motionplayer 实现**，对本项目 M2 动画无参考价值；仅作维护版 fork 备查 |
 
 ## 移植总原则
 
