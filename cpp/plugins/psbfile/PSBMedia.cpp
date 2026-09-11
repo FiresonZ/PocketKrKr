@@ -975,9 +975,9 @@ namespace PSB {
                 node.width = static_cast<int>(GetPSBFloat((*layerDict)["width"], 0));
                 node.height = static_cast<int>(GetPSBFloat((*layerDict)["height"], 0));
                 CollectMotionNodeFrames(layerDict, node);
-                if(logger) logger->info("  node[{}] '{}' parent={} type={} frames={} firstsrc='{}'",
+                if(logger) logger->info("  node[{}] '{}' parent={} type={} box={}x{} frames={} firstsrc='{}'",
                     static_cast<int>(nodes.size()), node.label, parentIndex, node.type,
-                    static_cast<int>(node.frames.size()),
+                    node.width, node.height, static_cast<int>(node.frames.size()),
                     node.frames.empty() ? std::string("") : node.frames.front().src);
                 const int myIndex = static_cast<int>(nodes.size());
                 nodes.push_back(std::move(node));
