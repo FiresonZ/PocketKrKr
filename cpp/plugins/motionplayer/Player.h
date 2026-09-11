@@ -744,6 +744,14 @@ namespace motion {
             std::vector<bool> wfx(n, false), wfy(n, false); // accumulated flip (XOR) / 累加翻转
             std::vector<int> wo(n, 255);
             std::vector<bool> vis(n, true);
+            // Per-node accumulated WORLD linear 2x2 matrix (rotation×scale×flip), used to
+            // transform each child's LOCAL offset into world space (gap-1 alignment to
+            // libkrkr2: `pos = parentM·local + parentPos`). Roots and nodes under an
+            // identity parent keep px=ox+cx (no change: background & yuzu letters intact).
+            // 每个节点的累加**世界线性 2×2 矩阵**（旋转×缩放×翻转），用来把子节点的**局部
+            // 偏移**变换到世界坐标（缺口①，对齐 libkrkr2：`pos = parentM·local + parentPos`）。
+            // 根节点及恒等父矩阵下的节点保持 px=ox+cx 不变（背景与 yuzu 字母不受影响）。
+            std::vector<double> wm11(n, 1.0), wm12(n, 0.0), wm21(n, 0.0), wm22(n, 1.0);
             int drawn = 0;
             // Save previous clip state for str_clip containers.
             // 保存 str_clip 容器之前的裁剪状态，绘制后恢复。
@@ -908,8 +916,25 @@ namespace motion {
                                                  : af->flipX;
                 const bool effFy = (inh & 0x008) ? (af->flipY ^ (pOn ? wfy[node.parentIndex] : false))
                                                  : af->flipY;
-                const float px = baseX + interpOx + interpCx;
-                const float py = baseY + interpOy + interpCy;
+                // Position: the node's local offset (ox+cx, oy+cy) is transformed by the PARENT's
+                // world matrix and added to the parent's world pos, per libkrkr2
+                // `pos = parentM·local + parentPos`. This is gap-1 alignment so a
+                // rotated/scaled parent correctly carries its children. Roots and nodes
+                // under an identity parent reduce to px=ox+cx (no change to bg/letters).
+                // 位置：节点的局部偏移 (ox+cx, oy+cy) 用**父节点世界矩阵**变换后加到父世界
+                // 坐标（libkrkr2：`pos = parentM·local + parentPos`）。这是缺口①对齐，让
+                // 旋转/缩放的父节点正确带动子节点。根节点及恒等父矩阵下退化为 px=ox+cx
+                //（背景与字母不变）。
+                const float loX = interpOx + interpCx;
+                const float loY = interpOy + interpCy;
+                const float px = pOn
+                    ? static_cast<float>(wm11[node.parentIndex] * loX +
+                                         wm12[node.parentIndex] * loY) + baseX
+                    : loX;
+                const float py = pOn
+                    ? static_cast<float>(wm21[node.parentIndex] * loX +
+                                         wm22[node.parentIndex] * loY) + baseY
+                    : loY;
                 // Accumulate scale through the parent chain (B round 3 partial: a
                 // container's scale now propagates to its children multiplicatively).
                 // 沿父链累加缩放（B 第 3 轮的一部分：容器的缩放以乘法传给子层）。
@@ -959,6 +984,13 @@ namespace motion {
                 const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
                 wx[i] = px; wy[i] = py; wsx[i] = scxChild; wsy[i] = scyChild;
+                // Store this node's WORLD linear matrix (from accumulated flip/angle/scale)
+                // so its children can be position-transformed by it next (pre-order).
+                // 存储本节点的**世界线性矩阵**（由累加 flip/angle/scale 构建），供下一轮
+                //（子节点）用它做位置变换（先序）。
+                buildLocalMatrix(effFx, effFy, effAngle, scxChild, scyChild,
+                                 node.transformOrder,
+                                 wm11[i], wm12[i], wm21[i], wm22[i]);
                 wa[i] = effAngle;
                 wfx[i] = effFx; wfy[i] = effFy;
                 wo[i] = wop;
@@ -1946,6 +1978,43 @@ namespace motion {
         }
 
     private:
+        // Build the local 2x2 linear matrix from a node's accumulated flip/angle/scale,
+        // LEFT-multiplying each transform in `order` (default [0,1,2,3] = flip, angle,
+        // scale, slant). Faithful port of libkrkr2 sub_699940 / applyLocalTransform.
+        // Used to compute each node's WORLD matrix so a rotated/scaled parent transforms
+        // its children's positions (gap-1 alignment).
+        // 依 `order`（默认 [0,1,2,3]=flip,angle,scale,s slant）把 flip/angle/scale 左乘到
+        // 局部 2×2 线性矩阵。忠实移植 libkrkr2 sub_699940 / applyLocalTransform。用于算
+        // 每个节点的**世界矩阵**，使旋转/缩放的父节点能变换子节点位置（缺口①对齐）。
+        static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
+                                     const int (&order)[4],
+                                     double &l11, double &l12, double &l21, double &l22) {
+            l11 = 1.0; l12 = 0.0; l21 = 0.0; l22 = 1.0;
+            for(int k = 0; k < 4; k++) {
+                switch(order[k]) {
+                    case 0: // flip: negate row1 (X) / row2 (Y)
+                        if(fx) { l11 = -l11; l12 = -l12; }
+                        if(fy) { l21 = -l21; l22 = -l22; }
+                        break;
+                    case 1: // angle: left-multiply [[c,-s],[s,c]]
+                        if(ang != 0.0) {
+                            const double rad = ang * 2.0 * 3.14159265358979323846 / 360.0;
+                            const double c = std::cos(rad), s = std::sin(rad);
+                            const double t11 = c * l11 - s * l21;
+                            const double t12 = c * l12 - s * l22;
+                            const double t21 = s * l11 + c * l21;
+                            const double t22 = s * l12 + c * l22;
+                            l11 = t11; l12 = t12; l21 = t21; l22 = t22;
+                        }
+                        break;
+                    case 2: // scale: left-multiply [[sx,0],[0,sy]]
+                        l11 *= sx; l12 *= sx; l21 *= sy; l22 *= sy;
+                        break;
+                    default: break; // 3 = slant (skipped; not used by observed assets)
+                }
+            }
+        }
+
         // Restore a layer's clip rect to a previously saved state (used to undo a
         // str_clip crop once its letter subtree is done). The Layer's clip is a
         // native member, not an iTJSDispatch2 method, so we reach it through the

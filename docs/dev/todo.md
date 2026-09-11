@@ -174,9 +174,10 @@
     inheritMask 位门控：位置=1 累加父贡献（flip XOR、angle 相加、scale 相乘），=0 只用自身值。
     这是"子节点刻意不继承祖先变换"的**通用机制**（不再是 str_clip 特判）；str_clip 不下传缩放
     保留为兜底。默认 0x1FC 资产（yuzulogo）行为不变。
-  - **仍未对齐（后续）**：① 子节点位置未用父矩阵变换（现仍纯加法，参考是
-    `pos=parentM·localPos+parent.pos`）；② `transformOrder` 尚未代入仿射矩阵构建（当前资产
-    用默认序，影响小）；③ slant 倾斜未实现；④ `independentLayerInherit`（Player 级）未解析。
+  - **已对齐/待真机**：① ✅ **子节点位置改用父矩阵变换**（`pos=parentM·local+parentPos`，
+    根/恒等父矩阵退化为原加法，背景与 yuzu 字母不受影响；旋转/缩放父节点现在能正确带动子层）；
+    ② `transformOrder` 已解析、供局部矩阵与父矩阵构建用；③ slant 倾斜未实现；④
+    `independentLayerInherit`（Player 级）未解析。
 - 进度：⚠️ **m2logo `str_clip` 文字裁剪（2026-09-11 实现，待真机）**：对 `str_clip` 容器节点
   （label 前缀 str_clip、有显示盒 width/height）在绘制其字母子树前，用其显示盒（映射到层坐标、
   含父级缩放）设 dest 层 `setClip`，子树画完/出现兄弟节点时恢复之前裁剪，drawAnimatedTree 结束
