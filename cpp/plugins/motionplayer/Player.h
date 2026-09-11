@@ -827,6 +827,7 @@ namespace motion {
                 float interpCx = af->cx, interpCy = af->cy;
                 float interpOp = af->opacity;
                 float interpSx = af->scaleX, interpSy = af->scaleY;
+                float interpRatio = 1.0f; // 1=hold/native, else [0,1] interp / 插值比率(1=不插值)
                 if(af->visible) {
                     const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
                     for(const auto &f : frames) {
@@ -849,6 +850,7 @@ namespace motion {
                     if(af->type == 3 && next && next->visible && next->time > af->time) {
                         const float t = static_cast<float>(now - af->time) /
                                         static_cast<float>(next->time - af->time);
+                        interpRatio = t;
                         interpOx = af->ox + (next->ox - af->ox) * t;
                         interpOy = af->oy + (next->oy - af->oy) * t;
                         interpCx = af->cx + (next->cx - af->cx) * t;
@@ -916,8 +918,9 @@ namespace motion {
                     left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 }
                 const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
-                if(logger) logger->info("drawAnimatedTree: '{}' at ({},{}) op={} scale=({},{}) src='{}'",
-                    node.label, left, top, wop, interpSx, interpSy, af->src);
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} at ({},{}) op={} scale=({},{}) src='{}'",
+                    node.label, af->type, static_cast<tjs_int>(now), interpRatio,
+                    left, top, wop, interpSx, interpSy, af->src);
                 // B 第一段（round 1）:用 operateAffine 而非 operateRect 绘制，
                 // 让图层按自身显示盒(width×height)拉伸。operateRect 只做原生尺寸
                 // blit，yuzulogo 的 64×64 white_box 永远铺不满全屏；operateAffine
