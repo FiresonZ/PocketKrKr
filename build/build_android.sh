@@ -88,15 +88,32 @@ fi
 FLUTTER_APP_DIR="$PROJECT_ROOT/apps/flutter_app"
 
 # --- Locate vcpkg -----------------------------------------------------------
+# vcpkg is PINNED to a fixed commit (VCPKG_PINNED_COMMIT) instead of cloning the
+# rolling tip. On the ephemeral CI runner .devtools/vcpkg never persists, so a
+# fresh `git clone` each run grabs the latest vcpkg → its ABI-version drifts run
+# to run → the vcpkg binary cache becomes invalid and EVERY build recompiles all
+# deps from source (~40 min). Pinning the commit (then, in principle, caching
+# .devtools/vcpkg) keeps the ABI stable so the binary cache actually reuses.
+#
+# 固定 vcpkg 到指定 commit（VCPKG_PINNED_COMMIT），而不是 clone 滚动 tip。CI
+# runner 每次全新环境里 .devtools/vcpkg 不持久，逐次 clone 最新 vcpkg 会让 ABI
+# 版本漂移 → vcpkg 二进制缓存每次失效 → 每次全量重编所有依赖(~40 分钟)。
+# 钉住 commit（理想上再把 .devtools/vcpkg 纳入缓存）后 ABI 稳定，二进制缓存才
+# 能被真正复用。
+VCPKG_PINNED_COMMIT="98d7cb0cf1f4686a3e43aa5672b6230c1d56bce8"  # 2026-07-27（对齐上次 CI 用的基线）
 if [[ -d "$PROJECT_ROOT/.devtools/vcpkg/.git" ]]; then
     VCPKG_ROOT="$PROJECT_ROOT/.devtools/vcpkg"
+    # 目录已存在（本地/未来被缓存）也强制钉到目标 commit，防止版本漂移。
+    # Even when the clone already exists, re-pin to the target commit so the
+    # version cannot drift.
+    (cd "$VCPKG_ROOT" && git checkout --detach "$VCPKG_PINNED_COMMIT" 2>/dev/null) || true
 elif [[ -n "${VCPKG_ROOT:-}" && -f "$VCPKG_ROOT/.vcpkg-root" ]]; then
     : # Keep the environment VCPKG_ROOT if set
 else
-    echo "[INFO] vcpkg not found. Automatically setting up vcpkg in .devtools/vcpkg..."
+    echo "[INFO] vcpkg not found. Automatically setting up pinned vcpkg in .devtools/vcpkg..."
     mkdir -p "$PROJECT_ROOT/.devtools"
     git clone https://github.com/microsoft/vcpkg.git "$PROJECT_ROOT/.devtools/vcpkg"
-    (cd "$PROJECT_ROOT/.devtools/vcpkg" && ./bootstrap-vcpkg.sh -disableMetrics)
+    (cd "$PROJECT_ROOT/.devtools/vcpkg" && git checkout --detach "$VCPKG_PINNED_COMMIT" && ./bootstrap-vcpkg.sh -disableMetrics)
     VCPKG_ROOT="$PROJECT_ROOT/.devtools/vcpkg"
 fi
 

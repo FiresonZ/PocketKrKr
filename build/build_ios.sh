@@ -61,16 +61,23 @@ fi
 
 FLUTTER_APP_DIR="$PROJECT_ROOT/apps/flutter_app"
 
+# Pin vcpkg to a fixed commit (same baseline as build_android.sh) so the ABI
+# stays stable and the vcpkg binary cache stays reusable across CI runs.
+# 固定 vcpkg commit（与 build_android.sh 同一基线），保证 ABI 稳定、vcpkg 二进制
+# 缓存可跨 CI 复现，避免每次全量重编。
+VCPKG_PINNED_COMMIT="98d7cb0cf1f4686a3e43aa5672b6230c1d56bce8"  # 2026-07-27
 if [[ -d "$PROJECT_ROOT/.devtools/vcpkg/.git" ]]; then
     VCPKG_ROOT="$PROJECT_ROOT/.devtools/vcpkg"
+    # 目录已存在也强制钉到目标 commit，防止版本漂移。
+    (cd "$VCPKG_ROOT" && git checkout --detach "$VCPKG_PINNED_COMMIT" 2>/dev/null) || true
 elif [[ -n "${VCPKG_ROOT:-}" && -f "$VCPKG_ROOT/.vcpkg-root" ]]; then
     # Keep the environment VCPKG_ROOT if set
     :
 else
-    echo "[INFO] vcpkg not found. Automatically setting up vcpkg in .devtools/vcpkg..."
+    echo "[INFO] vcpkg not found. Automatically setting up pinned vcpkg in .devtools/vcpkg..."
     mkdir -p "$PROJECT_ROOT/.devtools"
     git clone https://github.com/microsoft/vcpkg.git "$PROJECT_ROOT/.devtools/vcpkg"
-    (cd "$PROJECT_ROOT/.devtools/vcpkg" && ./bootstrap-vcpkg.sh -disableMetrics)
+    (cd "$PROJECT_ROOT/.devtools/vcpkg" && git checkout --detach "$VCPKG_PINNED_COMMIT" && ./bootstrap-vcpkg.sh -disableMetrics)
     VCPKG_ROOT="$PROJECT_ROOT/.devtools/vcpkg"
 fi
 

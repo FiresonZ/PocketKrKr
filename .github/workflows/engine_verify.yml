@@ -67,10 +67,13 @@ jobs:
         run: |
           export VCPKG_BINARY_SOURCES="files,${HOME}/.cache/vcpkg,readwrite"
           export CCACHE_DIR="${HOME}/.cache/ccache"
-          # vcpkg 自举（与 build/*.sh 相同的路径约定）
+          # vcpkg 自举（与 build/*.sh 相同的路径约定）。固定到同一 commit，
+          # 避免每次全新 runner 拉最新 vcpkg 造成 ABI 漂移、vcpkg 缓存失效全量重编。
+          # Pin vcpkg to the same commit so the ABI stays stable and the binary
+          # cache is reusable (see build/build_android.sh VCPKG_PINNED_COMMIT).
           if [ ! -d ".devtools/vcpkg/.git" ]; then
             git clone https://github.com/microsoft/vcpkg.git .devtools/vcpkg
-            (cd .devtools/vcpkg && ./bootstrap-vcpkg.sh -disableMetrics)
+            (cd .devtools/vcpkg && git checkout --detach 98d7cb0cf1f4686a3e43aa5672b6230c1d56bce8 && ./bootstrap-vcpkg.sh -disableMetrics)
           fi
           export VCPKG_ROOT="$PWD/.devtools/vcpkg"
           cmake --preset "Linux Debug Config"
