@@ -235,11 +235,18 @@
     PSBMedia 解析 content "ccc"；`drawAnimatedTree` 插值时用 `BezierEase`（二分解 x(t)=u 求 y(t)）
     重映射进度，应用到 ox/oy/cx/cy/opacity/scale/angle 全部插值属性；无 ccc 帧保持线性。待真机确认
     叶子摆动平滑、m2logo 字母滑入顺。
-  - ✅ **B10 M2 时间线单位是帧(tick)不是毫秒（2026-09-11，e34706e）**：真机反馈 m2logo"硬变/白块盖
-    CheeseWare/无折叠感"——根因=time/lastTime 是**帧**（yuzulogo 241tick≈4s@60fps、back_white
-    91tick≈1.5s），progress() 却把真实 ms 当 tick 推进 → 整条时间线 ~91ms 闪完、随后保持末帧
-    （全屏白块+M折好+字母滑完冻结）数秒。修复：delta(ms) 先按 60fps 换算 tick 再推进，折叠/reveal
-    中间态正常播放。待真机确认 m2logo 有完整折叠/显现过程。
+  - ✅ **B10 M2 时间线单位是帧(tick)不是毫秒（2026-09-11，e34706e）→ ⚠️ 误诊已回退（2026-09-12，B11）**：
+    真机反馈 m2logo"硬变/白块盖 CheeseWare/无折叠感"，当时误以为 time/lastTime 是**帧**并加
+    `delta*60/1000` 换算。2026-09-12 读新引擎日志实证**误诊**：PSBMedia.cpp 解析处已把原始 60fps
+    帧数换算成毫秒（yuzulogo 241tick→4016ms≈4s、back_white 91tick→1516ms≈1.5s、叶子 yuzu_ha 摆动
+    t=1200..2516ms），progress(delta) 调用方传的就是真实毫秒——B10 的二次换算让**所有动画慢约
+    17 倍**（4016ms 时间线要 67s 真实时间），真机表现"动画全慢、只看到白底、跳过才看到完整 logo 拉伸
+    消失"。回退为 `_tickCount += delta`（毫秒直推）。待真机确认各动画速度/时序。
+  - ✅ **B11 str_clip 裁剪窗口锚定修正（2026-09-12）**：m2logo 字母（c..e，t=316 出现）的局部
+    cx+ox 相对 str_locate，而 str_locate 又相对 str_clip 偏移 cx=-114；旧代码把窗口锚在 str_clip
+    自身位置 → 窗口右移约 114×scale，截掉前 5 个字母（"CheeseWare" 只显示 "ar" 之类，即"字母显示
+    混乱"）。修复：窗口锚定在**文字容器（str_locate）的世界位置**（用 str_clip 世界矩阵 × 容器
+    活跃帧局部坐标 + str_clip 世界位置复算），尺寸=字母局部范围×下传缩放。通用判据仍是 type==7。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp

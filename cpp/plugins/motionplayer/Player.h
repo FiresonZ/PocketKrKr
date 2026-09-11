@@ -176,19 +176,19 @@ namespace motion {
         //（参考 PlayerFrameProgress：时间线结束时排队 onSync 事件；主界面靠脚本
         // 每轮重播入场，K2 里"角色持续切换"即由此而来）。
         bool progress(tjs_int delta) {
-            // M2 motion "time" / lastTime are in TICKS (frame-rate based), not ms:
-            // yuzulogo lastTime=241 ticks ≈ 4s at 60fps, m2logo back_white lastTime=91
-            // ≈ 1.5s. The caller passes real elapsed ms, so convert to ticks at the
-            // reference frame rate (60fps) BEFORE advancing the clock — otherwise the
-            // whole timeline collapses into ~91ms and then the engine holds the final
-            // frame for seconds (the "hard jump / white block covering CheeseWare").
-            // M2 的 time/lastTime 是**帧(tick)**不是毫秒：yuzulogo lastTime=241 tick≈4s(60fps)，
-            // m2logo back_white 91 tick≈1.5s。调用方传的是真实流逝毫秒，需先按参考帧率(60fps)
-            // 换算成 tick 再推进时钟——否则整条时间线在 ~91ms 内闪完，随后引擎保持末帧数秒
-            //（即"硬变/白块盖 CheeseWare"）。
-            constexpr tjs_int kMotionFrameRate = 60;
-            const tjs_int tickDelta = delta * kMotionFrameRate / 1000;
-            _tickCount += tickDelta;
+            // The PSB parser (PSBMedia.cpp ExtractFrameInfo) already converts the
+            // raw 60fps FRAME counts in the mtn file into MILLISECONDS once at
+            // parse time (yuzulogo last frame raw 241 ticks -> 4016 ms ≈ 4s,
+            // m2logo back_white raw 91 ticks -> 1516 ms ≈ 1.5s), and the caller
+            // feeds real elapsed ms. So advance the clock directly in ms — the
+            // earlier "tick at 60fps" double-conversion slowed every animation by
+            // ~17x (4016 ms timeline took 67s of real time).
+            // PSB 解析器（PSBMedia.cpp ExtractFrameInfo）在解析时已把 mtn 里原始的
+            // 60fps **帧数**统一换算成**毫秒**（yuzulogo 末帧原始 241 tick->4016 ms≈4s，
+            // m2logo back_white 原始 91 tick->1516 ms≈1.5s），调用方传入的也是真实流逝
+            // 毫秒。因此时钟直接用毫秒推进——此前"按 60fps 换算 tick"的二次换算让所有
+            // 动画慢了约 17 倍（4016ms 的时间线要 67s 真实时间才播完）。
+            _tickCount += delta;
             if(_tickCount > _lastTime) _lastTime = _tickCount;
             if(!_playing) return false;
             // Natural end of the motion: the last keyframe time across every
@@ -1030,19 +1030,35 @@ namespace motion {
                 // 一个 clip（=paintBox 与 viewport 求交），operate 前对子层 SetClip，
                 // 否则 ResetClip。缺它则 m2logo 的 "cheeseware" 字母互相重叠、永远
                 // 没有打字机擦除效果。
-                // The clip window is anchored at the str_clip's OWN accumulated position (it is
-                // a fixed type-7 text-clip window; node.width/height may be 0). Its size is
-                // derived from the letters it reveals: the horizontal extent of the
-                // descendants' active-frame pen positions (cx+ox) plus a per-letter width
-                // estimate. The letters slide through this fixed window via str_locate's
-                // cx animation (m2logo str_clip s=9 + str_locate cx -114->23), giving the
-                // left-to-right reveal.
-                // 裁剪窗口锚定在 str_clip **自身**的累加位置（它是固定的 type-7 文本裁剪窗，
-                // node.width/height 可能为 0）。窗口尺寸按它揭示的字母派生：各后代节点当前帧
-                // 笔位 (cx+ox) 的水平范围 + 每字母宽度估计。字母经 str_locate 的 cx 动画
-                //（m2logo str_clip s=9 + str_locate cx -114→23）滑过这个固定窗口，得到
-                // 从左到右的显现。
+                // The clip window is a fixed type-7 text-clip region (node.width/height
+                // may be 0). Its size is derived from the letters it reveals: the
+                // horizontal extent of the descendants' active-frame pen positions
+                // (cx+ox) plus a per-letter width estimate. The letters' local cx are
+                // relative to the str_locate container (which is offset from the
+                // str_clip itself, e.g. m2logo cx=-114), so the window is anchored at
+                // the TEXT's world position (computed below), not the str_clip's own.
+                // 裁剪窗口是固定的 type-7 文本裁剪区（node.width/height 可能为 0）。
+                // 尺寸按它揭示的字母派生：各后代节点当前帧笔位 (cx+ox) 的水平范围 +
+                // 每字母宽度估计。字母的局部 cx 相对 str_locate 容器（str_locate 又相对
+                // str_clip 有偏移，如 m2logo 的 cx=-114），因此窗口锚定在**文字**的世界
+                // 位置（见下），而非 str_clip 自身。
                 float winMin = 1e9f, winMax = -1e9f;
+                // The text-layout container (str_locate) is the direct child of the
+                // str_clip that carries the letter glyphs. The clip window must be
+                // anchored at the TEXT's world position, not the str_clip's own
+                // position: the letters' local cx+ox are relative to str_locate
+                // (which itself sits offset from str_clip, e.g. m2logo cx=-114), so
+                // anchoring at str_clip misplaced the window ~114px to the right and
+                // cut off the leading letters ("CheeseWare" showed as "sewa"-like
+                // garbage). The window covers the letters' world x-extent.
+                // 文本布局容器（str_locate）是 str_clip 的直接子节点、承载字母字形。
+                // 裁剪窗口必须锚定在**文字的世界位置**而非 str_clip 自身位置：字母的
+                // 局部 cx+ox 是相对 str_locate 的（str_locate 又相对 str_clip 有偏移，
+                // 如 m2logo 的 cx=-114），锚定在 str_clip 会让窗口右移约 114px、截掉
+                // 前面的字母（"CheeseWare" 显示成 "sewa" 之类的乱码）。窗口应覆盖字母的
+                // 世界 x 范围。
+                float txtWorldX = wx[i], txtWorldY = wy[i]; // str_clip world pos (fallback)
+                float txtScaleX = 1.0f; // world X scale applied to the letters / 字母的世界 X 缩放
                 // Canonical signal: PSB type 7 = M2 text-clip container (str_clip /
                 // str_locate family). Label and src are fallbacks; type==7 is the generic
                 // discriminator libkrkr2 uses, so this is not asset-specific naming.
@@ -1069,17 +1085,44 @@ namespace motion {
                         if(lx < winMin) winMin = lx;
                         const float rx = lx + 60.0f; // per-letter width estimate / 字母宽度估计
                         if(rx > winMax) winMax = rx;
+                        // Anchor the window at the letters' layout container (str_locate):
+                        // its world pos = str_clip's world matrix applied to the container's
+                        // own active-frame local pos + str_clip's world pos. The container
+                        // follows the str_clip in pre-order so its own wm/wx are not
+                        // computed yet — replicate the parent transform here. The world X
+                        // scale the letters get is the str_clip's own passed-down scale
+                        // (its clip-region 9x is excluded by the isStrClipNode gate).
+                        // 把窗口锚定在字母的布局容器（str_locate）：其世界位置 =
+                        // str_clip 的世界矩阵 × 容器自身活跃帧局部坐标 + str_clip 世界位置。
+                        // 容器先序排在 str_clip 之后、自身的 wm/wx 尚未计算——这里复算父变换。
+                        // 字母得到的世界 X 缩放即 str_clip 下传的缩放（其裁剪窗口 9x 已被
+                        // isStrClipNode 门控排除）。
+                        const int lparent = _motionNodes[j].parentIndex;
+                        if(lparent >= 0) {
+                            const auto &pframes = _motionNodes[lparent].frames;
+                            const PSB::PSBMedia::PSBMotionFrame *pf = nullptr;
+                            for(const auto &f : pframes) { if(f.time <= now) pf = &f; else break; }
+                            if(pf) {
+                                txtWorldX = static_cast<float>(wm11[i] * pf->cx +
+                                                               wm12[i] * pf->cy) + wx[i];
+                                txtWorldY = static_cast<float>(wm21[i] * pf->cx +
+                                                               wm22[i] * pf->cy) + wy[i];
+                                txtScaleX = static_cast<float>(wm11[i]);
+                            }
+                        }
                     }
                     isStrClipContainer = winMax > winMin;
                 }
                 float wcL = 0, wcT = 0, wcR = 0, wcB = 0;
                 if(isStrClipContainer) {
-                    // Window box in layer coords. Window top-left = str_clip's accumulated pos.
-                    // 窗口盒转到层坐标；窗口左上 = str_clip 累加位置。
-                    wcL = static_cast<float>(_coordX + halfCw) + wx[i];
-                    wcT = static_cast<float>(_coordY + halfCh) + wy[i];
-                    const float winW = (winMax - winMin);
-                    wcR = wcL + std::max(1.0f, winW);
+                    // Window box in layer coords: anchored at the TEXT's world position
+                    // (str_locate), size = the letters' local extent scaled to world.
+                    // 窗口盒转到层坐标：锚定在**文字**的世界位置（str_locate），尺寸 =
+                    // 字母局部范围换算到世界。
+                    wcL = static_cast<float>(_coordX + halfCw) + txtWorldX + winMin * txtScaleX;
+                    wcT = static_cast<float>(_coordY + halfCh) + txtWorldY - 30.0f;
+                    const float winW = std::max(1.0f, (winMax - winMin) * txtScaleX);
+                    wcR = wcL + winW;
                     wcB = wcT + 120.0f; // enough height for the glyph / 足够容纳字形
                 }
                 if(logger && isStrClipContainer)
