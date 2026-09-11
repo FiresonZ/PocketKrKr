@@ -918,8 +918,10 @@ namespace motion {
                     left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 }
                 const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} at ({},{}) op={} scale=({},{}) bm={} src='{}'",
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} anchor={} fl=({},{}) at ({},{}) op={} scale=({},{}) bm={} src='{}'",
                     node.label, af->type, static_cast<tjs_int>(now), interpRatio,
+                    (static_cast<size_t>(i) < _nodeInStrSubtree.size() && _nodeInStrSubtree[static_cast<size_t>(i)]) ? 1 : 0,
+                    af->flipX ? 1 : 0, af->flipY ? 1 : 0,
                     left, top, wop, interpSx, interpSy, af->blendMode, af->src);
                 // B 第一段（round 1）:用 operateAffine 而非 operateRect 绘制，
                 // 让图层按自身显示盒(width×height)拉伸。operateRect 只做原生尺寸
@@ -955,6 +957,15 @@ namespace motion {
                 // the affine origin becomes the box top-left.
                 const int ax = left - (rW - iw) / 2;
                 const int ay = top - (rH - ih) / 2;
+                // Round 2 flip (content "fx"/"fy"): mirror about the box center by
+                // negating the scale axis and shifting the origin so the box stays in
+                // place (src(iw)->ax, src(0)->ax+rW when flipped X).
+                // 第二轮翻转（content "fx"/"fy"）：沿盒中心镜象 = 缩放取负并向内回移
+                // 原点，让盒保持在原位置（翻转 X 时 src(iw)→ax、src(0)→ax+rW）。
+                const tjs_real efA = af->flipX ? -totalScX : totalScX;
+                const tjs_real efD = af->flipY ? -totalScY : totalScY;
+                const tjs_int efTx = af->flipX ? ax + rW : ax;
+                const tjs_int efTy = af->flipY ? ay + rH : ay;
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
@@ -985,12 +996,12 @@ namespace motion {
                     tTJSVariant(static_cast<tjs_int>(iw)),        // 3 src width
                     tTJSVariant(static_cast<tjs_int>(ih)),        // 4 src height
                     tTJSVariant(true),                            // 5 affine (matrix mode)
-                    tTJSVariant(static_cast<tjs_real>(totalScX)),  // 6 a (x scale)
+                    tTJSVariant(efA),                                      // 6 a (x scale, may flip)
                     tTJSVariant(static_cast<tjs_real>(0)),        // 7 b
                     tTJSVariant(static_cast<tjs_real>(0)),        // 8 c
-                    tTJSVariant(static_cast<tjs_real>(totalScY)), // 9 d (y scale)
-                    tTJSVariant(static_cast<tjs_int>(ax)),        // 10 tx
-                    tTJSVariant(static_cast<tjs_int>(ay)),        // 11 ty
+                    tTJSVariant(efD),                                      // 9 d (y scale, may flip)
+                    tTJSVariant(efTx),                                    // 10 tx
+                    tTJSVariant(efTy),                                    // 11 ty
                     tTJSVariant(blendOm),                                // 12 blend mode / 混合模式
                     tTJSVariant(opaClamp),                        // 13 opacity
                 };

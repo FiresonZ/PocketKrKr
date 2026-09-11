@@ -850,6 +850,12 @@ namespace PSB {
                                 f.clipB = static_cast<int>(GetPSBFloat((*clipList)[3], 0));
                             }
                         }
+                        // M2 flip: content "fx"/"fy" nonzero means mirror the sprite
+                        // (e.g. yuzulogo's leaf jitter piece). Same as the flat path.
+                        // M2 翻转：content "fx"/"fy" 非零表示镜像该精灵（如 yuzulogo
+                        // 叶片摆动件）。
+                        f.flipX = GetPSBFloat((*content)["fx"], 0.0f) != 0.0f;
+                        f.flipY = GetPSBFloat((*content)["fy"], 0.0f) != 0.0f;
                         // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the
                         // wrong key always yielded the fallback 255, so any layer whose entrance is
                         // driven by opacity (e.g. yuzulogo's `white`/`logo` t=0 frame has `opa:0`
@@ -995,6 +1001,10 @@ namespace PSB {
                             f.clipB = static_cast<int>(GetPSBFloat((*clipList)[3], 0));
                         }
                     }
+                    // M2 flip (content "fx"/"fy") same as flat path.
+                    // M2 翻转（content "fx"/"fy"）同扁平路径。
+                    f.flipX = GetPSBFloat((*content)["fx"], 0.0f) != 0.0f;
+                    f.flipY = GetPSBFloat((*content)["fy"], 0.0f) != 0.0f;
                     // M2 frame opacity is stored under "opa" (0..255), not "op". Reading the
                     // wrong key always yielded the fallback 255, so any layer whose entrance is
                     // driven by opacity (e.g. yuzulogo's `white`/`logo` t=0 frame has `opa:0`

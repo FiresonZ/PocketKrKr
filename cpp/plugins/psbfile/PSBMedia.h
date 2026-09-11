@@ -168,6 +168,12 @@ namespace PSB {
             int blendMode = 0;         // content "bm" / 混合模式
             bool hasClip = false;      // content "clip" present / 是否有裁切
             int clipL = 0, clipT = 0, clipR = 0, clipB = 0; // clip rect / 裁切矩形
+            // M2 flip flags from content "fx"/"fy" (libkrkr2 sub_692F6C, mask 0x4/0x8).
+            // A mirrored sprite (e.g. yuzulogo's leaf) uses these — without applying
+            // the flip the piece renders reversed vs K2.
+            // M2 翻转标志来自 content "fx"/"fy"（libkrkr2 sub_692F6C，mask 0x4/0x8）。
+            // 叶片等镜像精灵用它们；不应用则叶片朝向与原版相反。
+            bool flipX = false, flipY = false; // content flipX "fx" / flipY "fy" / 翻转
             bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };
         struct PSBMotionLayerTrack {
