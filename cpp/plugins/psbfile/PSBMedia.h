@@ -159,6 +159,14 @@ namespace PSB {
             // 也有 coord[2] 'z'）。logo 背景用 zx/zy 把小图放大（yuzulogo 的 64×64
             // white_box → 全屏）；不读这个字段，白底永远铺不满画布。默认 1=不缩放。
             float scaleX = 1, scaleY = 1; // content scale "zx"/"zy" / 缩放
+            // M2 per-frame rotation (content "angle", degrees). The yuzusoft logo's
+            // leaf "jitter"/wobble is an angle animation; without it the leaf neither
+            // swings nor faces the correct way. Units: degrees (reference
+            // applyLocalTransform uses angle*2π/360).
+            // M2 帧内旋转（content "angle"，单位度）。yuzusoft logo 的叶子"抖动/摆动"
+            // 就是 angle 动画；缺它则叶子既不摆动、朝向也不对。单位：度（参考
+            // applyLocalTransform 用 angle*2π/360）。
+            float angle = 0;             // content "angle" degrees / 旋转角度（度）
             float opacity = 255;     // 0..255 (m2 `op`) / 透明度
             // M2 blend mode (content "bm") and clipping rect (round 2). bm drives
             // the operate blend op; clip limits the node to a sub-rect (probed

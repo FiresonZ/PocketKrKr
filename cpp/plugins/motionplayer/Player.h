@@ -130,6 +130,7 @@ namespace motion {
             _allplaying = (all != 0);
             _playWasCalled = true;
             _stopCommandSent = false;
+            _strClipActive = false;
             _tickCount = 0;
             _lastTime = 0;
             auto newStorage = ResourceManager::getLastLoadedPath();
@@ -676,9 +677,9 @@ namespace motion {
                     // 每帧转储（time, src, ox/oy/cx/cy, opacity, visible），只在 motion
                     // 装载时打一次，据此拿到真实的 M2 时间线，按真实坐标实现动画而非猜测。
                     for(const auto &f : tr.frames) {
-                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} bm={} clip={} op={} vis={}",
+                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} a={} bm={} clip={} op={} vis={}",
                             f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
-                            f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
+                            f.angle, f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
                     }
                 }
                 l->info("loadMotionTracks: {} nodes for {}/{} motion={} (tree, "
@@ -690,9 +691,9 @@ namespace motion {
                         ni, nd.label, nd.parentIndex,
                         static_cast<int>(nd.frames.size()));
                     for(const auto &f : nd.frames) {
-                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} bm={} clip={} op={} vis={}",
+                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} a={} bm={} clip={} op={} vis={}",
                             ni, f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
-                            f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
+                            f.angle, f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
                     }
                 }
             }
@@ -739,10 +740,15 @@ namespace motion {
             const int n = static_cast<int>(_motionNodes.size());
             std::vector<float> wx(n, 0.0f), wy(n, 0.0f);
             std::vector<float> wsx(n, 1.0f), wsy(n, 1.0f); // accumulated scale / 累加缩放
+            std::vector<float> wa(n, 0.0f);          // accumulated angle (deg) / 累加角度
             std::vector<bool> wfx(n, false), wfy(n, false); // accumulated flip (XOR) / 累加翻转
             std::vector<int> wo(n, 255);
             std::vector<bool> vis(n, true);
             int drawn = 0;
+            // Save previous clip state for str_clip containers.
+            // 保存 str_clip 容器之前的裁剪状态，绘制后恢复。
+            ClipState prevClip;
+            const bool clipSupported = readClip(dest, prevClip);
             for(int i = 0; i < n; i++) {
                 const auto &node = _motionNodes[i];
                 // Reference semantics (PlayerFrameProgress + PlayerUpdateLayerEval):
@@ -834,6 +840,7 @@ namespace motion {
                 float interpCx = af->cx, interpCy = af->cy;
                 float interpOp = af->opacity;
                 float interpSx = af->scaleX, interpSy = af->scaleY;
+                float interpAngle = af->angle;
                 float interpRatio = 1.0f; // 1=hold/native, else [0,1] interp / 插值比率(1=不插值)
                 if(af->visible) {
                     const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
@@ -865,6 +872,7 @@ namespace motion {
                         interpOp = af->opacity + (next->opacity - af->opacity) * t;
                         interpSx = af->scaleX + (next->scaleX - af->scaleX) * t;
                         interpSy = af->scaleY + (next->scaleY - af->scaleY) * t;
+                        interpAngle = af->angle + (next->angle - af->angle) * t;
                     }
                 }
                 const bool parentOn = (node.parentIndex >= 0) ? vis[node.parentIndex] : true;
@@ -874,6 +882,7 @@ namespace motion {
                 const int baseOp = (node.parentIndex >= 0) ? wo[node.parentIndex] : 255;
                 const float baseSx = (node.parentIndex >= 0) ? wsx[node.parentIndex] : 1.0f;
                 const float baseSy = (node.parentIndex >= 0) ? wsy[node.parentIndex] : 1.0f;
+                const float baseAngle = (node.parentIndex >= 0) ? wa[node.parentIndex] : 0.0f;
                 // Accumulate flip as XOR through the parent chain (reference
                 // Player_Rendering_Architecture: node.flipX ^= parent.flipX). A
                 // parent container's flip must mirror the whole subtree, and two
@@ -893,16 +902,74 @@ namespace motion {
                 // 沿父链累加缩放（B 第 3 轮的一部分：容器的缩放以乘法传给子层）。
                 const float scx = baseSx * std::max(interpSx, 0.0f);
                 const float scy = baseSy * std::max(interpSy, 0.0f);
+                // Accumulate rotation through the parent chain (deg, additive).
+                // 沿父链累加旋转角（度，相加）。
+                const float effAngle = baseAngle + interpAngle;
                 const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
                 wx[i] = px; wy[i] = py; wsx[i] = scx; wsy[i] = scy;
+                wa[i] = effAngle;
                 wfx[i] = effFx; wfy[i] = effFy;
                 wo[i] = wop;
                 vis[i] = (wop > 0);
                 if(!vis[i]) continue;
+                // M2 text-layout (str_clip) container: clamp the dest layer's clip
+                // rect to this node's display box (size = PSB "clip" region) so its
+                // letter subtree is progressively revealed/cropped, then RESTORE the
+                // clip when a later sibling node asks us to reset. libkrkr2 does the
+                // same: each render item computes a clip (= paintBox clamped to the
+                // viewport) and calls renderLayer->SetClip(...) before operating the
+                // child, ResetClip() otherwise. Without this, m2logo's "cheeseware"
+                // letters overlap / never get the typewriter-erase crop.
+                // M2 文本排版(str_clip)容器：把目标层的裁剪矩形收紧到本节点显示盒
+                //（尺寸即 PSB 的 "clip" 区域），让它的字母子树逐字显现/裁切；当后续
+                // 兄弟节点请求 ResetClip 时再恢复。libkrkr2 做法相同：每个渲染项算出
+                // 一个 clip（=paintBox 与 viewport 求交），operate 前对子层 SetClip，
+                // 否则 ResetClip。缺它则 m2logo 的 "cheeseware" 字母互相重叠、永远
+                // 没有打字机擦除效果。
+                // The clip box maps this container's display box to layer coords with
+                // the same convention as the text letters (left-aligned pen anchor,
+                // scale applied to the box too).
+                // 裁剪盒用与文本字母相同的约定把容器显示盒映射到层坐标（笔位左对齐，
+                // 缩放同样作用于盒）。
+                const int wcL = _coordX + halfCw + static_cast<int>(wx[i]);
+                const int wcT = _coordY + halfCh + static_cast<int>(wy[i]);
+                const int wcR = wcL + std::max(1, static_cast<int>(node.width * std::max(scx, 0.0f)));
+                const int wcB = wcT + std::max(1, static_cast<int>(node.height * std::max(scy, 0.0f)));
+                const bool isStrClipContainer =
+                    clipSupported && node.width > 0 && node.height > 0 &&
+                    node.label.compare(0, 8, "str_clip") == 0;
+                if(logger && isStrClipContainer)
+                    logger->info("drawAnimatedTree strclip: '{}' set clip=({},{},{},{})",
+                        node.label, wcL, wcT, wcR, wcB);
                 // Only image lines draw; layout/motion containers only accumulate.
                 // 仅图像行绘制；layout/motion 容器只累加不绘制。
-                if(af->src.size() <= 4 || af->src.compare(0, 4, "src/") != 0) continue;
+                if(af->src.size() <= 4 || af->src.compare(0, 4, "src/") != 0) {
+                    // Container node: only accumulate transform. Apply/clear the
+                    // str_clip crop here so it wraps the letter subtree that renders
+                    // right after (pre-order: container first, then its children).
+                    // 容器节点只累加变换。在此应用/清除 str_clip 裁剪，使其包住紧随其
+                    // 后渲染的字母子树（先序：容器在前，之后是它的子节点）。
+                    if(isStrClipContainer) {
+                        writeClip(dest, ClipState{wcL, wcT, wcR - wcL, wcB - wcT});
+                        _strClipActive = true;
+                    } else if(_strClipActive) {
+                        // A sibling/other node after the str_clip subtree separates
+                        // the letters from the next chapter of the scene: restore the
+                        // previous full-layer clip so non-text nodes aren't cropped.
+                        // 文本子树之后出现的兄弟/其他节点把字母与下一段场景隔开：恢复
+                        // 此前的整层裁剪，避免非文本节点被裁掉。
+                        writeClip(dest, prevClip);
+                        _strClipActive = false;
+                    }
+                    continue;
+                }
+                // An image node: if a str_clip subtree previously set a clip, an
+                // unrelated image arriving without a new str_clip keeps the crop —
+                // harmless; we only reset when the container itself ends. Most
+                // importantly, never leave the layer clipped across frames.
+                // 图像节点：若此前 str_clip 子树设置了裁剪，无关图像没有新 str_clip
+                // 时保持裁剪——无害；只在容器结束时重置。关键是绝不跨帧残留裁剪。
                 const std::string res = MotionSrcToResource(af->src);
                 const ttstr path = TJS_W("psb://") +
                     ttstr((storageStr + "/" + res + "/pixel.png").c_str());
@@ -938,13 +1005,13 @@ namespace motion {
                     left = _coordX + halfCw + static_cast<int>(px) - iw / 2;
                 }
                 const int top = _coordY + halfCh + static_cast<int>(py) - ih / 2;
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} anchor={} fl=({},{}) eff=({},{}) parent{} at ({},{}) op={} scale=({},{}) bm={} src='{}'",
+                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} interp={:.2f} anchor={} fl=({},{}) eff=({},{}) parent{} at ({},{}) op={} scale=({},{}) ang={:.1f} bm={} src='{}'",
                     node.label, af->type, static_cast<tjs_int>(now), interpRatio,
                     (static_cast<size_t>(i) < _nodeInStrSubtree.size() && _nodeInStrSubtree[static_cast<size_t>(i)]) ? 1 : 0,
                     af->flipX ? 1 : 0, af->flipY ? 1 : 0,
                     effFx ? 1 : 0, effFy ? 1 : 0,
                     node.parentIndex,
-                    left, top, wop, interpSx, interpSy, af->blendMode, af->src);
+                    left, top, wop, interpSx, interpSy, effAngle, af->blendMode, af->src);
                 // m2logo 专属探针：把文本子树(cheeseware 字母)的笔位排布与翻转一起
                 // 打出来，用于确认字母是否按 advance 锚点左对齐、有无被父翻转镜像。
                 // m2logo probe: print the text-subtree letter pen layout together with
@@ -997,6 +1064,32 @@ namespace motion {
                 const tjs_real efD = effFy ? -totalScY : totalScY;
                 const tjs_int efTx = effFx ? ax + rW : ax;
                 const tjs_int efTy = effFy ? ay + rH : ay;
+                // Round 3 angle: rotate the sprite about its display-box center by the
+                // accumulated angle (content "angle", deg). Without this the yuzusoft
+                // leaf neither wobbles nor faces the correct way. Composition (reference
+                // applyLocalTransform): F = R(theta) * M0, T' = R*T0 + center - R*center.
+                // A zero angle keeps the exact matrix above (no regression).
+                // 第三轮 angle：绕显示盒中心按累加角度（content "angle"，度）旋转精灵。
+                // 缺它 yuzusoft 叶子既不摆动朝向也不对。合成（参考 applyLocalTransform）：
+                // F = R(θ) * M0，T' = R*T0 + center - R*center；零角度保持原矩阵（无回归）。
+                tjs_real mA = efA, mB = 0, mC = 0, mD = efD, mTx = static_cast<tjs_real>(efTx), mTy = static_cast<tjs_real>(efTy);
+                if(effAngle != 0.0f) {
+                    const double rad = effAngle * 2.0 * 3.14159265358979323846 / 360.0;
+                    const double c = std::cos(rad), s = std::sin(rad);
+                    const double cx = ax + rW / 2.0, cy = ay + rH / 2.0;
+                    // Linear part: R * diag(efA, efD)
+                    // 线性部分：R * diag(efA, efD)
+                    mA = static_cast<tjs_real>(c * efA);
+                    mB = static_cast<tjs_real>(-s * efD);
+                    mC = static_cast<tjs_real>(s * efA);
+                    mD = static_cast<tjs_real>(c * efD);
+                    // Translation: R*T0 + center - R*center
+                    // 平移：R*T0 + center - R*center
+                    mTx = static_cast<tjs_real>(
+                        c * efTx - s * efTy + cx - (c * cx - s * cy));
+                    mTy = static_cast<tjs_real>(
+                        s * efTx + c * efTy + cy - (s * cx + c * cy));
+                }
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
@@ -1027,12 +1120,12 @@ namespace motion {
                     tTJSVariant(static_cast<tjs_int>(iw)),        // 3 src width
                     tTJSVariant(static_cast<tjs_int>(ih)),        // 4 src height
                     tTJSVariant(true),                            // 5 affine (matrix mode)
-                    tTJSVariant(efA),                                      // 6 a (x scale, may flip)
-                    tTJSVariant(static_cast<tjs_real>(0)),        // 7 b
-                    tTJSVariant(static_cast<tjs_real>(0)),        // 8 c
-                    tTJSVariant(efD),                                      // 9 d (y scale, may flip)
-                    tTJSVariant(efTx),                                    // 10 tx
-                    tTJSVariant(efTy),                                    // 11 ty
+                    tTJSVariant(mA),                                      // 6 a (rot+scale, may flip)
+                    tTJSVariant(mB),                                      // 7 b
+                    tTJSVariant(mC),                                      // 8 c
+                    tTJSVariant(mD),                                      // 9 d (rot+scale, may flip)
+                    tTJSVariant(mTx),                                    // 10 tx
+                    tTJSVariant(mTy),                                    // 11 ty
                     tTJSVariant(blendOm),                                // 12 blend mode / 混合模式
                     tTJSVariant(opaClamp),                        // 13 opacity
                 };
@@ -1049,6 +1142,14 @@ namespace motion {
                 } catch(...) {
                     if(auto l = _logger()) l->warn("drawAnimatedTree: operateAffine unknown exception");
                 }
+            }
+            // Restore the layer clip we saved, so a str_clip crop that was the last
+            // active region cannot leak into the next frame/motion. Idempotent.
+            // 恢复此前保存的层裁剪，确保 str_clip 若为最后一个活跃区域也不会残留到
+            // 下一帧/motion。幂等。
+            if(_strClipActive) {
+                writeClip(dest, prevClip);
+                _strClipActive = false;
             }
             return drawn;
         }
@@ -1781,6 +1882,50 @@ namespace motion {
         }
 
     private:
+        // Restore a layer's clip rect to a previously saved state (used to undo a
+        // str_clip crop once its letter subtree is done). The Layer's clip is a
+        // native member, not an iTJSDispatch2 method, so we reach it through the
+        // script-side properties/method: read clipLeft/clipTop/clipWidth/clipHeight
+        // and write back via setClip(l,t,w,h). setClip with 0 args resets to the
+        // full layer.
+        // 把层的裁剪矩形恢复为之前保存的状态（str_clip 字母子树绘制完后撤除裁切）。
+        // Layer 的裁剪是原生成员，不在 iTJSDispatch2 接口上，故经脚本侧属性/方法访问：
+        // 读 clipLeft/clipTop/clipWidth/clipHeight，再用 setClip(l,t,w,h) 写回；
+        // setClip 无参调用则重置为整层。
+        struct ClipState { int l = 0, t = 0, w = 0, h = 0; };
+
+        static bool readClip(iTJSDispatch2 *layer, ClipState &out) {
+            if(!layer) return false;
+            tTJSVariant v;
+            if(TJS_FAILED(layer->PropGet(0, TJS_W("clipLeft"), nullptr, &v, layer)))
+                return false;
+            out.l = static_cast<int>(v.AsInteger());
+            if(TJS_FAILED(layer->PropGet(0, TJS_W("clipTop"), nullptr, &v, layer)))
+                return false;
+            out.t = static_cast<int>(v.AsInteger());
+            if(TJS_FAILED(layer->PropGet(0, TJS_W("clipWidth"), nullptr, &v, layer)))
+                return false;
+            out.w = static_cast<int>(v.AsInteger());
+            if(TJS_FAILED(layer->PropGet(0, TJS_W("clipHeight"), nullptr, &v, layer)))
+                return false;
+            out.h = static_cast<int>(v.AsInteger());
+            return true;
+        }
+
+        static void writeClip(iTJSDispatch2 *layer, const ClipState &c) {
+            if(!layer) return;
+            tTJSVariant args[4] = {
+                tTJSVariant(static_cast<tjs_int>(c.l)),
+                tTJSVariant(static_cast<tjs_int>(c.t)),
+                tTJSVariant(static_cast<tjs_int>(c.w)),
+                tTJSVariant(static_cast<tjs_int>(c.h)),
+            };
+            tTJSVariant *argv[4] = { &args[0], &args[1], &args[2], &args[3] };
+            try {
+                layer->FuncCall(0, TJS_W("setClip"), nullptr, nullptr, 4, argv, layer);
+            } catch(...) {}
+        }
+
         static bool tryLoadImage(iTJSDispatch2 *target, const ttstr &path) {
             if(!TVPIsExistentStorage(path)) return false;
             tTJSVariant arg(path);
@@ -1806,6 +1951,12 @@ namespace motion {
         bool _playWasCalled = false;
         bool _isTransition = false;
         bool _stopCommandSent = false;
+        // True while a str_clip text crop is active on the dest layer for the current
+        // frame; reset on play() and cleared once the subtree ends. Prevents a clip
+        // from leaking across motions/frames.
+        // 当前帧 dest 层是否处于 str_clip 文本裁切中；play() 重置，子树结束后清除。
+        // 防止裁切跨 motion/帧残留。
+        bool _strClipActive = false;
 
         tjs_int _loopTime = 0;
         bool _animating = false;

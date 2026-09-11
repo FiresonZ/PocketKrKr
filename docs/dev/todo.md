@@ -139,7 +139,8 @@
   预计算（祖先链含 str_* 容器）；普通图像节点（yuzu 字母等）保持居中。
 - 待真机：① 三游戏 logo + 标题入场时序/速度对照 K2；② m2logo 仍缺 `iconXX` 部分纹理
   （`Unsupported image format (header 19190519)` → 1x1 透明兜底）；③ yuzulogo 语音（脚本驱动）核对；
-  ④ m2logo `str_clip`（src='clip'）裁剪未实现——cheeseware 文字无裁剪/擦除效果；
+  ④ ✅ **m2logo `str_clip` 裁剪已实现（2026-09-11）**——见下方 str_clip 条目，待真机确认
+  cheeseware 文字逐字裁切/擦除效果；
   ⑤ 标题入场→steady 切换处"最后几像素瞬移"：日志确认人物滑入平滑，跳变在游戏切换稳态
   （entrance 终位 vs normal 稳态坐标差）或亚像素截断，需含稳态段的日志复核；
   ⑥ 若标题入场后（2000ms）背景变黑 → 说明游戏依赖 hold 而非切换稳态，届时对非 logo 场景
@@ -149,11 +150,18 @@
   （参考 Player_Rendering_Architecture `node.flipX ^= parent.flipX`），并用累加后翻转
   `effFx/effFy` 驱动仿射；draw 探针加 `eff=` + `parent#`，另加 `[M2Logo]` 字母笔位探针。
   待真机确认 yuzusoft 绿叶朝向与 K2 一致。
-- **第二轮遗留（未实现）**：`clip` 裁切矩形只探针未应用、`str_clip`(src='clip') 文字裁剪、
-  m2logo 文字组装(字母笔位)仍未完全对齐。见 todo 上方 m2logo 条。
-- 进度：✅ **yuzuusoft 绿叶"抖动/方向反"（2026-09-11）**：`yuzu_ha` 全程 fl=0/eff=0/
-  scale=1，证明它的摆动是 **angle（旋转）机制**而非翻转/缩放。当前 PSBMotionFrame 未解析
-  angle，仿射 b/c=0，故叶子既不摆也不朝向正确。**待做**：解析 content 帧 angle 并代入仿射。
+- 进度：✅ **绿叶 angle（旋转）已代入仿射（2026-09-11）**：yuzu_ha 全程 fl=0/eff=0/scale=1，
+  它的摆动/朝向是 **angle（content "angle"，度）**。已解析 PSB 帧 `angle` 字段、帧间插值、
+  沿父链累加，并绕显示盒中心旋转仿射（F=R·M0、T'=R·T0+center−R·center），macOS/Linux 兼容。
+  待真机确认绿叶摆动方向与 K2 一致。
+- 进度：⚠️ **m2logo `str_clip` 文字裁剪（2026-09-11 实现，待真机）**：对 `str_clip` 容器节点
+  （label 前缀 str_clip、有显示盒 width/height）在绘制其字母子树前，用其显示盒（映射到层坐标、
+  含父级缩放）设 dest 层 `setClip`，子树画完/出现兄弟节点时恢复之前裁剪，drawAnimatedTree 结束
+  兜底恢复。当前用 `strclip:` 探针（打在容器帧）确认裁剪盒取值；若盒不对（如 label 前缀不同/
+  width/height 非裁剪区），据探针改判据。字母笔位(擦除方向)若仍不对，结合 [M2Logo] 探针复核。
+- **第二轮遗留（已推进）**：`clip` 裁切矩形(content "clip" [l,t,r,b])仍只探针未应用（m2logo 该值
+  恒 0，非主因）；`str_clip`(src='clip') 文字裁剪已按容器显示盒实现（上方条目）；m2logo 字母笔位
+  左对齐已完成（上方 M2 文本子树条目）。
 - 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
   + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
   无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp

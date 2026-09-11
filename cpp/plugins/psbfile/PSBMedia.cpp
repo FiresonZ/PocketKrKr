@@ -840,6 +840,12 @@ namespace PSB {
                         // [l,t,r,b])。bm 映射到 operate 混合算子；clip 本轮先探针，
                         // 真机确认存在后再应用。
                         f.blendMode = static_cast<int>(GetPSBFloat((*content)["bm"], 0));
+                        // M2 per-frame rotation (content "angle", degrees). Drives the
+                        // yuzusoft logo leaf's wobble/orientation. Reference reads the
+                        // same key (sub_692AB0 mask 0x10) into the frame angle.
+                        // M2 帧内旋转（content "angle"，单位度）。驱动 yuzusoft logo 叶子
+                        // 的摆动/朝向。参考读取同一键（sub_692AB0 mask 0x10）到帧 angle。
+                        f.angle = GetPSBFloat((*content)["angle"], 0.0f);
                         if(auto clipList =
                                std::dynamic_pointer_cast<PSBList>((*content)["clip"])) {
                             if(clipList->size() >= 4) {
@@ -991,6 +997,9 @@ namespace PSB {
                     // Round 2 same as flat path: blend (bm) + clip probe.
                     // 第二轮同扁平路径：混合(bm)+裁切探针。
                     f.blendMode = static_cast<int>(GetPSBFloat((*content)["bm"], 0));
+                    // M2 per-frame rotation (content "angle", degrees), same as flat.
+                    // M2 帧内旋转（content "angle"，单位度），同扁平路径。
+                    f.angle = GetPSBFloat((*content)["angle"], 0.0f);
                     if(auto clipList =
                            std::dynamic_pointer_cast<PSBList>((*content)["clip"])) {
                         if(clipList->size() >= 4) {
