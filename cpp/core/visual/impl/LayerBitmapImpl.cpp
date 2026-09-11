@@ -789,22 +789,7 @@ void tTVPNativeBaseBitmap::ApplyFont() {
 
         // compute ascent offset
         GetCurrentRasterizer()->ApplyFont(this, true);
-        // 垂直排版偏移依据：若当前字体映射了预渲染 .tft，用其**原始字体**的
-        // ascent（从 .tft 字形度量推导），而不是移动端回退字体(Noto CJK,
-        // ≈1.16×字号)的 ascent。后者与 .tft 预烘焙(如 MS ゴシック ≈0.86×字号)
-        // 不符，会把字形整体下移并裁掉框底。desktop J/K 因安装了原字体、ascent
-        // 天然匹配；这里显式还原该值以对齐其行为。
-        // Vertical placement reference: when this font maps a prerendered .tft,
-        // use the ORIGIN font's ascent (derived from the .tft glyphs) rather than
-        // the mobile fallback font's (Noto CJK, ~1.16x height). The fallback value
-        // mismatches what .tft glyphs were baked for (e.g. MS Gothic ~0.86x height)
-        // and pushes every glyph down, clipping the box bottom. Desktop J/K matches
-        // it natively because the origin font is installed; we restore it explicitly.
-        tjs_int ascent;
-        if(PrerenderedFont)
-            ascent = PrerenderedFont->GetAscent();
-        else
-            ascent = GetCurrentRasterizer()->GetAscentHeight();
+        tjs_int ascent = GetCurrentRasterizer()->GetAscentHeight();
         RadianAngle = Font.Angle * (M_PI / 1800);
         double angle90 = RadianAngle + M_PI_2;
         AscentOfsX = static_cast<tjs_int>(-cos(angle90) * ascent);
