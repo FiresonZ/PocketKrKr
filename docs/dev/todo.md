@@ -154,6 +154,18 @@
   它的摆动/朝向是 **angle（content "angle"，度）**。已解析 PSB 帧 `angle` 字段、帧间插值、
   沿父链累加，并绕显示盒中心旋转仿射（F=R·M0、T'=R·T0+center−R·center），macOS/Linux 兼容。
   待真机确认绿叶摆动方向与 K2 一致。
+- 进度：✅ **绿叶"方向反"根因=旋转枢轴错（2026-09-11，读 engine(4) 日志）**：叶子 `ox=91,
+  oy=21`（纹理原点热区），参考（libkrkr2 sub_699940 + PlayerUpdateGeometry）以**原点**为旋转
+  枢轴（orgX=posX−(m12·OY+OX·m11)），而我们绕**显示盒中心**旋转→绕错点，±40° 摆动时显得
+  方向反/抖动。已把枢轴从盒中心改为原点热区 `(ox,oy)`（含翻转镜像），无旋转节点不受影响。
+  待真机确认叶子绕原点正确摆动。
+- 进度：✅ **m2logo "乱"根因= str_clip 缩放下传（2026-09-11，读 engine(4) 日志）**：m2logo
+  `str_clip` 容器 `s=9,1`（zx/zy 是**裁剪窗口**缩放），前面的累加器把 9× 原样乘进所有字母
+  → 字母继承 ~18× 糊成团，看不出 "CHEESEWARE"。libkrkr2 用 inheritMask 门控缩放继承
+  （bit 0x20/0x40），我们暂未解析，已针对 str_clip 容器**不向子层下传自身缩放**（子层仍从
+  main/layout 祖先拿到 logo 真实缩放）。另 `str_clip` 节点 `type=7`、`box=0x0`，此前按
+  width/height>0 判段永不触发的 str_clip 裁剪逻辑实际没生效——已在日志确认为死分支，未造成
+  回归。待真机确认字母大小可读。
 - 进度：⚠️ **m2logo `str_clip` 文字裁剪（2026-09-11 实现，待真机）**：对 `str_clip` 容器节点
   （label 前缀 str_clip、有显示盒 width/height）在绘制其字母子树前，用其显示盒（映射到层坐标、
   含父级缩放）设 dest 层 `setClip`，子树画完/出现兄弟节点时恢复之前裁剪，drawAnimatedTree 结束

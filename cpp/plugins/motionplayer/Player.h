@@ -900,8 +900,29 @@ namespace motion {
                 // Accumulate scale through the parent chain (B round 3 partial: a
                 // container's scale now propagates to its children multiplicatively).
                 // 沿父链累加缩放（B 第 3 轮的一部分：容器的缩放以乘法传给子层）。
-                const float scx = baseSx * std::max(interpSx, 0.0f);
-                const float scy = baseSy * std::max(interpSy, 0.0f);
+                //
+                // libkrkr2 gates scale/angle/flip inheritance per-node via `inheritMask`
+                // (bit 0x20 scaleX, 0x40 scaleY). We don't parse inheritMask yet, but the
+                // M2 `str_clip` text container carries a CLIP-REGION scale (zx/zy, e.g.
+                // m2logo "cheeseware" str_clip s=9,1) that must scale ONLY the reveal
+                // window, NOT the letter glyphs underneath — otherwise the letters inherit
+                // 9× and smear into an unreadable blob. So a str_clip container's own scale
+                // is dropped from what it passes to its children (children still get the
+                // logo's real scale from main/layout ancestors).
+                // libkrkr2 用 inheritMask 逐节点门控 scale/angle/flip 的继承（bit 0x20
+                // scaleX、0x40 scaleY）。我们暂未解析 inheritMask，但 M2 的 str_clip 文本
+                // 容器携带的是**裁剪区域**的缩放（zx/zy，如 m2logo "cheeseware" 的
+                // str_clip s=9,1），它只该缩放显现窗口，不能传给下面那些文字字形——否则
+                // 字母继承 9× 糊成一片。因此 str_clip 容器自身的缩放不下传给子层（子层仍
+                // 从 main/layout 祖先得到 logo 真正的缩放）。
+                const bool isStrClipNode =
+                    node.label.compare(0, 8, "str_clip") == 0;
+                const float scx = isStrClipNode
+                    ? baseSx
+                    : baseSx * std::max(interpSx, 0.0f);
+                const float scy = isStrClipNode
+                    ? baseSy
+                    : baseSy * std::max(interpSy, 0.0f);
                 // Accumulate rotation through the parent chain (deg, additive).
                 // 沿父链累加旋转角（度，相加）。
                 const float effAngle = baseAngle + interpAngle;
@@ -1064,31 +1085,44 @@ namespace motion {
                 const tjs_real efD = effFy ? -totalScY : totalScY;
                 const tjs_int efTx = effFx ? ax + rW : ax;
                 const tjs_int efTy = effFy ? ay + rH : ay;
-                // Round 3 angle: rotate the sprite about its display-box center by the
-                // accumulated angle (content "angle", deg). Without this the yuzusoft
-                // leaf neither wobbles nor faces the correct way. Composition (reference
-                // applyLocalTransform): F = R(theta) * M0, T' = R*T0 + center - R*center.
-                // A zero angle keeps the exact matrix above (no regression).
-                // 第三轮 angle：绕显示盒中心按累加角度（content "angle"，度）旋转精灵。
-                // 缺它 yuzusoft 叶子既不摆动朝向也不对。合成（参考 applyLocalTransform）：
-                // F = R(θ) * M0，T' = R*T0 + center - R*center；零角度保持原矩阵（无回归）。
+                // Round 3 angle: rotate the sprite about its ORIGIN hotspot by the
+                // accumulated angle (content "angle", deg). libkrkr2 (sub_699940/
+                // applyLocalTransform + PlayerUpdateGeometry vertex math) builds the
+                // 2x2 matrix M and computes orgX = posX - (m12*OY + OX*m11): the
+                // texture's origin point (OX,OY)=(ox,oy) is the rotation pivot; it is
+                // NOT the display-box center. Rotation about the box center pivoted the
+                // yuzusoft leaf (ox=91,oy=21) around the wrong point → it looked
+                // reversed and jittered as the angle swung ±40°. Non-rotated nodes keep
+                // the exact matrix above (no regression).
+                // 第三轮 angle：绕**原点热区**按累加角度（content "angle"，度）旋转精灵。
+                // libkrkr2（sub_699940/applyLocalTransform + PlayerUpdateGeometry 顶点
+                // 计算）构建 2×2 矩阵 M，并按 orgX = posX - (m12*OY + OX*m11) 计算：纹理
+                // 的原点 (OX,OY)=(ox,oy) 才是旋转枢轴，**不是**显示盒中心。绕显示盒中心
+                // 会让 yuzusoft 叶子（ox=91,oy=21）绕错点摆动——角度 ±40° 摆动时显得
+                // 方向反、抖动。无旋转节点保持原矩阵（无回归）。
                 tjs_real mA = efA, mB = 0, mC = 0, mD = efD, mTx = static_cast<tjs_real>(efTx), mTy = static_cast<tjs_real>(efTy);
                 if(effAngle != 0.0f) {
                     const double rad = effAngle * 2.0 * 3.14159265358979323846 / 360.0;
                     const double c = std::cos(rad), s = std::sin(rad);
-                    const double cx = ax + rW / 2.0, cy = ay + rH / 2.0;
+                    // Pivot = where the texture origin (ox,oy) lands inside the drawn
+                    // (already flipped) display box.
+                    // 枢轴 = 纹理原点 (ox,oy) 落在（已翻转）显示盒内的位置。
+                    const double pivotX = effFx ? (ax + rW - af->ox * totalScX)
+                                                : (ax + af->ox * totalScX);
+                    const double pivotY = effFy ? (ay + rH - af->oy * totalScY)
+                                                : (ay + af->oy * totalScY);
                     // Linear part: R * diag(efA, efD)
                     // 线性部分：R * diag(efA, efD)
                     mA = static_cast<tjs_real>(c * efA);
                     mB = static_cast<tjs_real>(-s * efD);
                     mC = static_cast<tjs_real>(s * efA);
                     mD = static_cast<tjs_real>(c * efD);
-                    // Translation: R*T0 + center - R*center
-                    // 平移：R*T0 + center - R*center
+                    // Translation: R*T0 + pivot - R*pivot
+                    // 平移：R*T0 + pivot - R*pivot
                     mTx = static_cast<tjs_real>(
-                        c * efTx - s * efTy + cx - (c * cx - s * cy));
+                        c * efTx - s * efTy + pivotX - (c * pivotX - s * pivotY));
                     mTy = static_cast<tjs_real>(
-                        s * efTx + c * efTy + cy - (s * cx + c * cy));
+                        s * efTx + c * efTy + pivotY - (s * pivotX + c * pivotY));
                 }
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
