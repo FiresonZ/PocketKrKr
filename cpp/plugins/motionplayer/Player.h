@@ -18,6 +18,7 @@
 #include "../core/base/ScriptMgnIntf.h"
 #include "../core/base/SysInitIntf.h"
 #include "../core/visual/WindowIntf.h"
+#include "../core/visual/LayerIntf.h"
 #include "../psbfile/PSBMedia.h"
 #include "SeparateLayerAdaptor.h"
 #include "ncbind.hpp"
@@ -932,6 +933,12 @@ namespace motion {
                 float interpSx = af->scaleX, interpSy = af->scaleY;
                 float interpSlx = af->slantX, interpSly = af->slantY;
                 float interpAngle = af->angle;
+                // Interpolated flat tint (M2 packedColors, corner 0). Defaults to the
+                // active frame's color; animates toward the next keyframe (the m2logo
+                // thin line goes red→black) under the interpolation block below.
+                // 插值后的纯色 tint（M2 packedColors 的角 0）。默认取活跃帧颜色；在下
+                // 方插值块内向下一关键帧渐变（m2logo 细线由红转黑）。
+                std::uint32_t interpTint = af->packedColors[0];
                 if(af->visible) {
                     const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
                     for(const auto &f : frames) {
@@ -1025,6 +1032,27 @@ namespace motion {
                             interpAngle = curA + (nxtA - curA) * tAngle;
                             if(interpAngle < 0.0f) interpAngle += 360.0f;
                             else if(interpAngle >= 360.0f) interpAngle -= 360.0f;
+                        }
+                        // Interpolate the flat tint color toward the next keyframe. The
+                        // color eases with the "ccc" curve (AetherKiri: color→ccc), e.g.
+                        // the m2logo thin line animates red→black over its keyframes.
+                        // 把纯色 tint 向下一关键帧插值。颜色用 "ccc" 曲线缓动（AetherKiri：
+                        // color→ccc），如 m2logo 细线在其关键帧间由红转黑。
+                        {
+                            float tc = af->hasEasing
+                                ? static_cast<float>(BezierEase(t, af->easeX1, af->easeY1,
+                                                                af->easeX2, af->easeY2))
+                                : t;
+                            auto lerpc = [](tjs_uint32 a, tjs_uint32 b, float r) {
+                                return static_cast<tjs_uint32>(a + (b - a) * r);
+                            };
+                            const std::uint32_t a0 = af->packedColors[0];
+                            const std::uint32_t n0 = next->packedColors[0];
+                            interpTint =
+                                (lerpc((a0 >> 24) & 0xffu, (n0 >> 24) & 0xffu, tc) << 24) |
+                                (lerpc((a0 >> 16) & 0xffu, (n0 >> 16) & 0xffu, tc) << 16) |
+                                (lerpc((a0 >> 8) & 0xffu, (n0 >> 8) & 0xffu, tc) << 8) |
+                                (lerpc((a0 >> 0) & 0xffu, (n0 >> 0) & 0xffu, tc) << 0);
                         }
                     }
                 }
@@ -1426,6 +1454,16 @@ namespace motion {
                     mA, mB, mC, mD, outputTx, outputTy,
                     iw, ih, effAngle, wop, af->blendMode, af->src);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
+                // Apply the M2 flat vertex-color tint to the glyph texture before
+                // drawing (identity when white). This is what colors the m2logo C/W
+                // red, the thin line red→black, and the black cross vertical line —
+                // operateAffine has no color channel, so tint the source pixels here.
+                // 绘制前把 M2 纯色顶点色平涂到字形纹理（白色为恒等跳过）。正是它给
+                // m2logo 的 C/W 上红、细线红转黑、黑色十字竖线上色的——operateAffine
+                // 没有颜色通道，因此在此乘源像素。
+                if(interpTint != 0xFFFFFFFFu) {
+                    applyFlatTint(temp, interpTint);
+                }
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
                 // (om ints from drawable.h: alpha=2,add=3,sub=4,mul=5,addalpha=12).
@@ -2034,6 +2072,59 @@ namespace motion {
                 return _tempLayer;
             } catch(...) {
                 return nullptr;
+            }
+        }
+
+        // Apply a FLAT per-sprite color tint (M2 packedColors) to the just-loaded
+        // glyph texture. The 2D Layer.operateAffine has no color channel, so for a
+        // non-white tint we multiply the source pixels in premultiplied-ARGB directly:
+        //   out_rgb = src_rgb * tint_rgb / 255,  alpha unchanged.
+        // A white/opaque tint (0xFFFFFFFF) is the identity and is SKIPPED, keeping the
+        // per-pixel work limited to the colored sprites (m2logo C/W red, the red thin
+        // line that later fades to black, and the black cross vertical line).
+        // 对刚加载的字形纹理应用 M2 packedColors 的**纯色平涂**。2D 的 Layer.operateAffine
+        // 没有颜色通道，因此对非白 tint 直接预乘 ARGB 逐像素相乘：
+        //   out_rgb = src_rgb * tint_rgb / 255，alpha 不变。
+        // 纯白(0xFFFFFFFF)是恒等、直接跳过，把逐像素开销限制在着色精灵上（m2logo 的
+        // C/W 红、后转黑的红色细线、黑色十字竖线）。
+        static bool applyFlatTint(iTJSDispatch2 *temp, std::uint32_t tint) {
+            if(tint == 0xFFFFFFFFu) return true; // identity / 恒等
+            try {
+                tTJSNI_Layer *ni = nullptr;
+                if(TJS_FAILED(temp->NativeInstanceSupport(
+                       TJS_NIS_GETINSTANCE, tTJSNC_Layer::ClassID,
+                       (iTJSNativeInstance **)&ni)) || !ni)
+                    return false;
+                const tjs_int w = ni->GetWidth(), h = ni->GetHeight();
+                if(w <= 0 || h <= 0) return false;
+                // tint is packed 0xAARRGGBB / tint 以 0xAARRGGBB 打包
+                const tjs_uint32 tintR = (tint >> 16) & 0xffu;
+                const tjs_uint32 tintG = (tint >> 8) & 0xffu;
+                const tjs_uint32 tintB = (tint >> 0) & 0xffu;
+                unsigned char *buf = (unsigned char *)ni->GetMainImagePixelBufferForWrite();
+                const tjs_int pitch = ni->GetMainImagePixelBufferPitch();
+                if(!buf || pitch < w * 4) return false;
+                for(tjs_int y = 0; y < h; ++y) {
+                    tjs_uint32 *row = (tjs_uint32 *)(buf + (tjs_int)y * pitch);
+                    for(tjs_int x = 0; x < w; ++x) {
+                        const tjs_uint32 px = row[x];
+                        const tjs_uint32 a = (px >> 24) & 0xffu;
+                        if(a == 0) continue; // keep transparent / 保持透明
+                        const tjs_uint32 r = (px >> 16) & 0xffu;
+                        const tjs_uint32 g = (px >> 8) & 0xffu;
+                        const tjs_uint32 b = (px >> 0) & 0xffu;
+                        // premultiplied-ARGB multiply by the (opaque) tint / 预乘 ARGB 乘上不透明 tint
+                        const tjs_uint32 nr = r * tintR / 255u;
+                        const tjs_uint32 ng = g * tintG / 255u;
+                        const tjs_uint32 nb = b * tintB / 255u;
+                        row[x] = (nb & 0xffu) | ((ng & 0xffu) << 8) |
+                                 ((nr & 0xffu) << 16) | (a << 24);
+                    }
+                }
+                ni->Update(tTVPRect(0, 0, w, h)); // notify the layer its pixels changed / 通知层像素已变
+                return true;
+            } catch(...) {
+                return false;
             }
         }
 
