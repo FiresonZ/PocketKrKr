@@ -62,12 +62,12 @@ Fetching the latest iOS build…
     "\"": "&quot;"
   }[character]));
 
-  const formatDate = (value) => new Intl.DateTimeFormat("zh-CN", {
+  const formatDate = (value) => new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium"
   }).format(new Date(value));
 
   const renderError = (build, message) => {
-    document.getElementById(build.id).innerHTML = `<p>暂时无法获取最新 ${build.platform} 构建：${escapeHtml(message)}。请前往 <a href="https://github.com/${repository}/releases">Releases</a> 页面下载。</p>`;
+    document.getElementById(build.id).innerHTML = `<p>Unable to fetch the latest ${build.platform} build: ${escapeHtml(message)}. Download it from the <a href="https://github.com/${repository}/releases">Releases</a> page.</p>`;
   };
 
   const renderBuild = (build, releases) => {
@@ -77,23 +77,23 @@ Fetching the latest iOS build…
       .find((item) => item.assets.some((asset) => asset.name === build.assetName));
 
     if (!release) {
-      renderError(build, "尚未找到可下载的构建");
+      renderError(build, "No downloadable build was found");
       return;
     }
 
     const asset = release.assets.find((item) => item.name === build.assetName);
     const version = release.tag_name.slice(build.tagPrefix.length);
-    const size = asset.size ? `（${(asset.size / 1024 / 1024).toFixed(1)} MB）` : "";
+    const size = asset.size ? `(${(asset.size / 1024 / 1024).toFixed(1)} MB)` : "";
     document.getElementById(build.id).innerHTML = `
       <ul>
-        <li><strong>最新版本</strong>：<a href="${release.html_url}">${build.releaseLabel} v${escapeHtml(version)}</a>（${formatDate(release.published_at || release.created_at)}）</li>
-        <li><strong>直接下载</strong>：<a href="${asset.browser_download_url}">${escapeHtml(asset.name)}</a> ${size}</li>
+        <li><strong>Latest version</strong>: <a href="${release.html_url}">${build.releaseLabel} v${escapeHtml(version)}</a> (${formatDate(release.published_at || release.created_at)})</li>
+        <li><strong>Direct download</strong>: <a href="${asset.browser_download_url}">${escapeHtml(asset.name)}</a> ${size}</li>
       </ul>`;
   };
 
   fetch(releasesUrl, { headers: { Accept: "application/vnd.github+json" } })
     .then((response) => {
-      if (!response.ok) throw new Error(`GitHub API 返回 ${response.status}`);
+      if (!response.ok) throw new Error(`GitHub API returned ${response.status}`);
       return response.json();
     })
     .then((releases) => builds.forEach((build) => renderBuild(build, releases)))

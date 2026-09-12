@@ -14,13 +14,13 @@ The Live2D SDK is not managed through vcpkg, and related commercial SDK files ar
 ```text
 cpp/plugins/cubism/
 ├── Core/
-│   ├── include/Live2DCubismCore.h        已随仓库保留
+│   ├── include/Live2DCubismCore.h        Header retained in the repository
 │   └── lib/
 │       ├── ios/Release-iphoneos/libLive2DCubismCore.a
 │       └── macos/
 │           ├── arm64/libLive2DCubismCore.a
 │           └── x86_64/libLive2DCubismCore.a
-└── Framework/                            SDK Framework 源码
+└── Framework/                            Cubism SDK Framework source
 ```
 
 - `Framework/` should contain the Cubism Framework C++ source code; the current CMake configuration uses its OpenGL ES 2 renderer.

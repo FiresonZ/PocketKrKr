@@ -2,22 +2,22 @@
 
 ## Languages and Tools
 
-| 项目 | 选择 |
+| Area | Choice |
 |---|---|
-| 引擎 | C++17 |
-| Flutter 壳 | Dart / Flutter |
-| 构建 | CMake、Ninja、vcpkg |
-| 日志 | spdlog、fmt |
-| 可选加速 | ccache、Highway |
+| Engine | C++17 |
+| Flutter shell | Dart / Flutter |
+| Build | CMake, Ninja, vcpkg |
+| Logging | spdlog, fmt |
+| Optional acceleration | ccache, Highway |
 
 ## Platforms
 
-| 平台 | 最低目标 | 图形后端 | 产物 |
+| Platform | Minimum target | Graphics backend | Artifacts |
 |---|---|---|---|
-| iOS | iOS/iPadOS 15、arm64 | ANGLE Metal | 静态库和未签名应用包 |
-| Android | API 24、arm64-v8a | ANGLE Vulkan | 自包含 `libengine_api.so` 和 APK |
-| macOS | Apple 开发目标 | ANGLE Metal | `libengine_api.dylib` 和应用 |
-| Linux | CI 宿主验证 | Vulkan | 引擎验证构建，不提供应用 |
+| iOS | iOS/iPadOS 15, arm64 | ANGLE Metal | Static library and unsigned application package |
+| Android | API 24, arm64-v8a | ANGLE Vulkan | Self-contained `libengine_api.so` and APK |
+| macOS | Apple deployment target | ANGLE Metal | `libengine_api.dylib` and application |
+| Linux | CI host verification | Vulkan | Engine verification build, no application |
 
 ## Main Dependencies
 

@@ -35,7 +35,7 @@ pip install mkdocs-material==9.7.1 mkdocs-static-i18n==1.3.1
 
 - Android NDK (r25+ recommended), set the environment variable:
   ```bash
-  export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/<版本>"   # Windows: set ANDROID_NDK_HOME=...
+  export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/<version>"   # Windows: set ANDROID_NDK_HOME=...
   ```
   > `build_android.sh` automatically locates the NDK from `ANDROID_NDK_HOME` / `ANDROID_NDK_ROOT` / `$ANDROID_HOME/ndk/*` (newest version).
 
@@ -50,13 +50,13 @@ pip install mkdocs-material==9.7.1 mkdocs-static-i18n==1.3.1
 ## Quick Start
 
 ```bash
-# 一键构建 iOS（默认 debug，需 macOS）
+# Build iOS in one step (debug by default; requires macOS)
 ./build.sh ios debug
 
-# 或 release
+# Or release
 ./build.sh ios release
 
-# Android APK（Windows / macOS / Linux 均可）
+# Android APK (Windows, macOS, or Linux)
 ./build.sh android debug
 
 # macOS
@@ -126,12 +126,12 @@ pip install mkdocs-material==9.7.1 mkdocs-static-i18n==1.3.1
 ## Common Operations
 
 ```bash
-# 清理某平台产物
+# Clean artifacts for a platform
 ./build.sh --clean ios
 ./build.sh --clean android
 ./build.sh --clean macos
 
-# 并行数
+# Parallel job count
 JOBS=16 ./build.sh ios release
 ```
 
@@ -160,9 +160,9 @@ JOBS=16 ./build.sh ios release
   - In-app version display: Settings → Version, with the subtitle displaying the version number (injected via `--dart-define=APP_VERSION`).
 - **Manual release (recommended)**:
   1. Actions → the corresponding packaging workflow → Run workflow;
-  2. Set `build_type=release`, fill in **`发布版本号`** (`X.Y.Z`), and check **`发布 Release`**;
+  2. Set `build_type=release`, fill in **`Release version`** (`X.Y.Z`), and check **`Publish Release`**;
   3. After completion, automatically create tag `ios-vX.Y.Z` / `android-vX.Y.Z` → create the corresponding GitHub Release → attach artifacts.
-- **Note**: For testing without publishing, do not check 「发布 Release」 (artifacts are still retained for 14 days); rerunning with an existing tag will not create a duplicate Release, but will add/overwrite artifacts; even if published, `debug` is a debug package, so use `release` for formal releases.
+- **Note**: For testing without publishing, do not check **Publish Release** (artifacts are still retained for 14 days); rerunning with an existing tag will not create a duplicate Release, but will add or overwrite artifacts; even if published, `debug` is a debug package, so use `release` for formal releases.
 
 ### Android Stable Signing (Optional for Upgrade Consistency)
 
@@ -174,7 +174,7 @@ Android overwrite installation requires the **same signature**; by default, rele
   ```bash
   keytool -genkeypair -v -keystore release.jks -alias release -keyalg RSA \
     -keysize 2048 -validity 10000 -storepass <pw> -keypass <pw> -dname "CN=PocketKrKr"
-  base64 -w0 release.jks        # 全部输出即为 ANDROID_KEYSTORE_BASE64
+  base64 -w0 release.jks        # The complete output is ANDROID_KEYSTORE_BASE64
   ```
 - **No such issue on iOS**: The iOS artifact is an unsigned IPA, sideload-signed by the user with **their own Apple ID**; as long as the bundle ID (`org.pocketkrkr.app`) remains unchanged and the same Apple ID is used for re-signing each time, it can be upgraded in place without CI signing keys.
 - **Local builds**: These variables are not required for installation; for consistent signing, export the four environment variables above and run `./build.sh android release`.

@@ -6,11 +6,11 @@
 ┌───────────────────────── apps/flutter_app (Dart/Flutter) ─────────────────────────┐
 │  pages (home/game/settings/…)  ·  widgets/engine_surface.dart  ·  engine/bridge   │
 └──────────────┬───────────────────────────────────────┬────────────────────────────┘
-               │ Dart FFI (DynamicLibrary)             │ MethodChannel（兜底）
+               │ Dart FFI (DynamicLibrary)             │ MethodChannel (fallback)
 ┌──────────────▼───────────────────┐   ┌───────────────▼─────────────────────────────┐
 │ bridge/flutter_engine_bridge     │   │ iOS: FlutterEngineBridgePlugin.swift        │
-│  lib/src/ffi/engine_ffi.dart     │   │  - EngineHostTexture (RGBA 上传, 兼容)       │
-│  lib/src/ffi/engine_bindings.dart│   │  - EngineIOSurfaceTexture (零拷贝)           │
+│  lib/src/ffi/engine_ffi.dart     │   │  - EngineHostTexture (RGBA upload, compat.)  │
+│  lib/src/ffi/engine_bindings.dart│   │  - EngineIOSurfaceTexture (zero-copy)       │
 └──────────────┬───────────────────┘   └───────────────┬─────────────────────────────┘
                │ C ABI                                │ IOSurfaceID
 ┌──────────────▼───────────────────────────────────────▼─────────────────────────────┐
@@ -18,15 +18,16 @@
 │  engine_create / engine_tick / engine_open_game / engine_set_render_target_iosurface│
 │  engine_read_frame_rgba / engine_send_input / engine_get_memory_stats …             │
 └──────────────┬──────────────────────────────────────────────────────────────────────┘
-               │ 链接 krkr2core + krkr2plugin
+               │ Links krkr2core + krkr2plugin
 ┌──────────────▼──────────────────────────────────────────────────────────────────────┐
-│ cpp/core  (C++17 引擎)                                                               │
-│  tjs2(脚本VM)  base(存储/归档/事件)  environ(平台/主循环)  visual(渲染/字体)          │
-│  sound(音频)  movie(ffmpeg)  plugin(插件框架)  utils(线程/定时器)  extension          │
+│ cpp/core  (C++17 engine)                                                             │
+│  tjs2(script VM)  base(storage/archive/events)  environ(platform/main loop)          │
+│  visual(rendering/fonts)  sound(audio)  movie(ffmpeg)  plugin(plugin framework)      │
+│  utils(threads/timers)  extension                                                   │
 └──────────────┬──────────────────────────────────────────────────────────────────────┘
-               │ ANGLE EGL/GLES2 离屏渲染 → IOSurface（零拷贝）
+               │ ANGLE EGL/GLES2 offscreen rendering → IOSurface (zero-copy)
                ▼
-          Flutter Texture 显示
+          Flutter Texture display
 ```
 
 ## Rendering Data Flow (iOS/macOS)
@@ -61,30 +62,24 @@
 
 ## Platform Implementation Locations
 
-| 能力                        | 实现                                             |
+| Capability | Implementation |
 | ------------------------- | ---------------------------------------------- |
-| iOS 平台层（路径/弹窗/内存/退出…）     | `cpp/core/environ/apple/ios/platform.mm`       |
-| macOS 平台层                 | `cpp/core/environ/apple/macos/platform.mm`     |
-| SDL/系统细节                  | `cpp/core/environ/sdl/tvpsdl.cpp`              |
-| UI 桩（Flutter 接管 UI 后的空实现） | `cpp/core/environ/stubs/ui_stubs.cpp`          |
-| 系统控制（事件分发/内存治理）           | `cpp/core/environ/win32/SystemControl.cpp`（共享） |
-| 线程/定时器/剪贴板等               | `cpp/core/utils/win32/*`（共享）                   |
-| 音频设备实现                    | `cpp/core/sound/win32/*`（共享）                   |
+| iOS platform layer (paths/dialogs/memory/exit) | `cpp/core/environ/apple/ios/platform.mm` |
+| macOS platform layer | `cpp/core/environ/apple/macos/platform.mm` |
+| SDL/system details | `cpp/core/environ/sdl/tvpsdl.cpp` |
+| UI stubs (Flutter owns the UI) | `cpp/core/environ/stubs/ui_stubs.cpp` |
+| System control (events/memory management) | `cpp/core/environ/win32/SystemControl.cpp` (shared) |
+| Threads/timers/clipboard | `cpp/core/utils/win32/*` (shared) |
+| Audio device implementation | `cpp/core/sound/win32/*` (shared) |
 
-## Current GPU Compositing Pipeline (整理记录，勿大改)
+## Current GPU Compositing Pipeline
 
-> 本段为「现状整理 + 检查」记录。GPU 管线是方向性大改造，**暂不深入改动**，
-> 待真机基准后再定方案（见 [perf-optimization.md](perf-optimization.md)）。
+> This section records the current state and review points. GPU compositing is a directional redesign and should remain unchanged until physical-device benchmarks are available; see [perf-optimization.md](perf-optimization.md).
 
-- **当前管线**：图层合成主要由 CPU 完成——`cpp/core/visual/` 的图层树在软件层用
-  `tvpgl.cpp` / `simd/` 的混合函数把多层合成到中间缓冲；随后通过 ANGLE（EGL/GLES2）
-  作为**最终绘制**（离屏到 IOSurface，零拷贝给 Flutter）。
+- **Current pipeline**: Layer compositing is performed mainly by the CPU. The layer tree in `cpp/core/visual/` uses blending functions from `tvpgl.cpp` / `simd/` to composite layers into an intermediate buffer, then ANGLE (EGL/GLES2) performs the **final draw** offscreen into IOSurface for zero-copy delivery to Flutter.
 
-- **因此**：混合计算（alpha/PS 混合等）目前主要吃 CPU/NEON，GPU 只负责"画上去"。
+- **Implication**: Blending work (alpha, PS blending, and related operations) primarily consumes CPU/NEON resources; the GPU currently only displays the result.
 
-- **"全 GPU 合成"方向**：把图层混合搬进 GL shader，减少 CPU 像素搬运——收益不确定，
-  需真机（帧率/功耗/发热）基准验证。
+- **"Full GPU compositing" direction**: Move layer blending into GL shaders to reduce CPU pixel transfers. The benefit is uncertain and requires physical-device benchmarks covering frame rate, power use, and heat.
 
-- **检查要点**：改渲染相关代码前先确认走的是哪个路径——
-  `iosurface_attached`（零拷贝）还是 `engine_read_frame_rgba`（回读）；
-  以及 SIMD 是否启用（见 conventions.md 第 9 节，已知公式缺陷会影响合成结果）。
+- **Review points**: Before changing rendering code, confirm whether the path is `iosurface_attached` (zero-copy) or `engine_read_frame_rgba` (readback), and whether SIMD is enabled. See section 9 of [conventions.md](conventions.md); known formula defects can affect compositing results.

@@ -18,26 +18,26 @@ This directory provides PocketKrKr architecture, build, source code, and compati
 ## Project Boundaries
 
 ```text
-apps/flutter_app/                  Flutter 壳和用户界面
-bridge/engine_api/                 C ABI、生命周期和帧接口
-bridge/flutter_engine_bridge/      Dart FFI、MethodChannel、原生纹理桥接
-cpp/core/                          TJS2、存储、渲染、音频、视频和生命周期
-cpp/plugins/                       PSB、PSD、motionplayer、LayerEx 等插件
-build.sh、build/                   平台构建入口
-vcpkg.json、vcpkg/                 依赖、端口和 triplet
-docs/                              用户文档和开发文档
+apps/flutter_app/                  Flutter shell, pages, and user interface
+bridge/engine_api/                 C ABI, lifecycle, and frame interface
+bridge/flutter_engine_bridge/      Dart FFI, MethodChannel, and native texture bridge
+cpp/core/                          TJS2, storage, rendering, audio, video, and lifecycle
+cpp/plugins/                       PSB, PSD, motionplayer, LayerEx, and other plugins
+build.sh、build/                   Platform build entry points
+vcpkg.json、vcpkg/                 Dependencies, ports, and triplets
+docs/                              User and development documentation
 ```
 
 ## Platform Forms
 
-| 平台 | 引擎产物 | 图形路径 |
+| Platform | Engine artifact | Graphics path |
 |---|---|---|
-| iOS | 静态库，链接进 Runner | ANGLE Metal、IOSurface，保留 RGBA 回读兜底 |
-| Android | 自包含 `libengine_api.so` | ANGLE Vulkan、SurfaceTexture，保留 RGBA 回读兜底 |
-| macOS | `libengine_api.dylib` | ANGLE Metal、IOSurface |
-| Linux | 宿主验证构建 | CI 验证，不提供应用包 |
+| iOS | Static library linked into Runner | ANGLE Metal, IOSurface, with RGBA readback fallback |
+| Android | Self-contained `libengine_api.so` | ANGLE Vulkan, SurfaceTexture, with RGBA readback fallback |
+| macOS | `libengine_api.dylib` | ANGLE Metal, IOSurface |
+| Linux | Host verification build | CI verification, no application package |
 
-Android 的插件源码通过目标源传播进引擎共享库，使用普通链接即可；不要使用 `--whole-archive`。
+Android plugin sources are propagated into the engine shared library through target sources, so normal linking is sufficient; do not use `--whole-archive`.
 
 ## References
 

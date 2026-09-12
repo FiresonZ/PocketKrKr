@@ -4,16 +4,16 @@ Paths are relative to the repository root. Module compilation boundaries are def
 
 ## Build and Configuration
 
-| 路径 | 作用 |
+| Path | Purpose |
 |---|---|
-| `CMakeLists.txt` | 根构建编排、工具链和模块入口 |
-| `CMakePresets.json` | iOS、Android、macOS、Linux 预设 |
-| `build.sh` | 平台构建统一入口 |
-| `build/build_ios.sh` | iOS 静态库、依赖合并和 Flutter 构建 |
-| `build/build_android.sh` | Android `.so`、JNI 和 APK 构建 |
-| `vcpkg.json` | 依赖清单 |
-| `vcpkg-configuration.json` | registry 和 overlay 配置 |
-| `vcpkg/triplets/` | 平台 ABI 与编译选项 |
+| `CMakeLists.txt` | Root build orchestration, toolchain, and module entry points |
+| `CMakePresets.json` | iOS, Android, macOS, and Linux presets |
+| `build.sh` | Unified platform build entry point |
+| `build/build_ios.sh` | iOS static library, dependency merging, and Flutter build |
+| `build/build_android.sh` | Android `.so`, JNI, and APK build |
+| `vcpkg.json` | Dependency manifest |
+| `vcpkg-configuration.json` | Registry and overlay configuration |
+| `vcpkg/triplets/` | Platform ABI and compiler options |
 
 ## C ABI and Flutter
 
