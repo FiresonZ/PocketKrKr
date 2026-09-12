@@ -1972,6 +1972,33 @@ namespace motion {
                 const int iw = static_cast<int>(wVar.AsInteger());
                 const int ih = static_cast<int>(hVar.AsInteger());
                 if(iw <= 0 || ih <= 0) continue;
+                // Load probe (P-load): for the m2logo line icons the authored
+                // texture is a 3x16 paletted bar (icon32 dark / icon18 gray), yet
+                // the engine often ends up with a 1x1 texture (invisible vertical
+                // line). Log the resolved path, the actually-loaded size, and the
+                // cached image metadata so one run shows whether the width/height
+                // meta is wrong or the Open/convert path fails for these sprites.
+                // 加载探针(P-load)：m2logo 线框 icon 的原创纹理是 3x16 调色条
+                //（icon32 深色/icon18 浅灰），但引擎常得到 1x1（竖线不可见）。
+                // 打印解析路径、实际加载尺寸与缓存的图像元数据，一次看清是元数据
+                // 宽高错了还是 Open/convert 对这些精灵失败。
+                if(logger &&
+                   (af->src == "src/logo/icon17" ||
+                    af->src == "src/logo/icon18" ||
+                    af->src == "src/logo/icon32" ||
+                    af->src == "src/logo/icon26" ||
+                    node.label == "line" || node.label == "line2")) {
+                    PSB::PSBMedia::CachedImageInfo gi;
+                    const bool hasGi = PSB::GetGlobalPSBMedia() &&
+                        PSB::GetGlobalPSBMedia()->getImageInfo(
+                            storageStr + "/" + res + "/pixel.png", gi);
+                    logger->info(
+                        "loadProbe: node='{}' src='{}' res='{}' loaded={}x{} "
+                        "hasMeta={} meta={}x{} compress={} type='{}' palBytes={}",
+                        node.label, af->src, res, iw, ih, hasGi ? 1 : 0,
+                        hasGi ? gi.width : 0, hasGi ? gi.height : 0,
+                        static_cast<int>(gi.compress), gi.type, gi.palette.size());
+                }
                 // Draw an M2 content sprite with the REFERENCE single-world-matrix + origin
                 // anchor model (`org = pos - M*(originX+ox, originY+oy)`, quad
                 // `org + M*[0..iw,0..ih]`). A sprite's position px,py is its world
