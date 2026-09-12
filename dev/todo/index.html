@@ -681,6 +681,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#p1-2c-motion-m2-logo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — §2c. motion 动画播放（M2 时间轴，logo/标题真正动起来）【当前在做】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#k2-motion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#p1p2-krmovie-present" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -740,6 +762,39 @@
     <span class="md-ellipsis">
       
         — §4. SIMD 11 个 PS 混合回退标量（保正确）【低优先】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-2d-z-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — §2d. 真缺"功能实现"的 Z 插件/API 清单【新增，待排队】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-2e-yuzusoft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — §2e. Yuzusoft 选项框文字偏小/偏左上/只显示上部【当前在做，等日志】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#r-krkr2-tools-2026-09-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        — §R. krkr2-tools 反编译参考资源清单（2026-09-11 盘点）【参考索引，非待办】
       
     </span>
   </a>
@@ -1385,6 +1440,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#p1-2c-motion-m2-logo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — §2c. motion 动画播放（M2 时间轴，logo/标题真正动起来）【当前在做】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#k2-motion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#p1p2-krmovie-present" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1444,6 +1521,39 @@
     <span class="md-ellipsis">
       
         — §4. SIMD 11 个 PS 混合回退标量（保正确）【低优先】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-2d-z-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — §2d. 真缺"功能实现"的 Z 插件/API 清单【新增，待排队】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-2e-yuzusoft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — §2e. Yuzusoft 选项框文字偏小/偏左上/只显示上部【当前在做，等日志】
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#r-krkr2-tools-2026-09-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        — §R. krkr2-tools 反编译参考资源清单（2026-09-11 盘点）【参考索引，非待办】
       
     </span>
   </a>
@@ -1635,6 +1745,217 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
 <li>影响：M2-Emote 型作品（如 limelight-lemonade-jam 那类）派 motion 时无真正向量骨骼动画。</li>
 <li>优先级：<strong>排在 §2（krkrz 黑屏）之后</strong>；与 §2a/§6 独立，无前置依赖。无稳定环境复现，属"有空再做"补齐。</li>
 </ul>
+<h3 id="p1-2c-motion-m2-logo">P1 — §2c. motion 动画播放（M2 时间轴，logo/标题真正动起来）【当前在做】<a class="headerlink" href="#p1-2c-motion-m2-logo" title="Permanent link">&para;</a></h3>
+<ul>
+<li>现象（K2 对照）：K2 里首屏 logo、首页标题是<strong>连续播放的动画</strong>；我们目前<strong>静态合成</strong>——把动画所有
+  帧的图层一次性画出来（<code>yuzu_logo</code> 两帧 y 差 17px 叠出重影 + 中心黑线；<code>title_bg</code> 的 <code>char_move</code>
+  运动角色钉在某一帧）。能出画面但"不还原游戏表现"。</li>
+<li>目标：按时间推进播放 motion 帧（<code>progress()</code> 推时钟 → draw 时只画当前时刻该出现的帧/节点，
+  带位置/透明度取值），对齐 krkrsdl3 <code>emoteengine</code>（<code>plugins/emoteplayer/{emotefile,emoterunner}.{cpp,h}</code>）。</li>
+<li>现状基础：<code>psbfile/PSBMedia</code> 已能解析对象树/图层坐标/motion 字典/<code>ExtractFrameInfo</code>（帧级 time/abort）。</li>
+<li>方案（MVP→完整）：① 帧步进：每 motion 关键帧按 time 取当前帧，只画当前帧引用的图层（先不做节点插值）；
+  ② 补透明度/位置插值；③ 完整移植 krkrsdl3 emoteengine（网格/节点/物理/时间轴）为远期。</li>
+<li>进度：✅ 首屏动起来的主因已修：PSB 归档是<strong>懒加载</strong>的，<code>loadMotionTracks</code> 在首帧归档未解析时查
+  得 0 条并把空结果永久锁存（<code>_motionTracksLoaded=true</code>），此后只走静态 <code>drawPSBImages</code>、<code>drawAnimated</code>
+  永不触发。已新增 <code>PSBMedia::ensureArchiveLoaded()</code>（幂等），在 <code>Player::draw</code> 里先强制解析归档再
+  <code>cachePSBImages</code>/<code>loadMotionTracks</code>（engine(6) 实证 <code>Stored 13 tracks for LOGO/yuzulogo</code> 但读时却是 0）。</li>
+<li>进度：✅ <strong>时间单位换算（2026-09-11，engine(11) 实证根因）</strong>：PSB <code>frameList[].time</code> 是 <strong>60fps 帧数</strong>
+  （yuzulogo 尾帧 t=241=4s、m2logo back_white t=91=1.5s、title t=120=2s），而 <code>progress(delta)</code> 由脚本以
+  <strong>毫秒</strong>推进时钟 → 4 秒的 logo 时间线约 240ms 就播完，所有角色/字母瞬间同时出现（用户："人物没有依次
+  出现、时间太短；logo 动画特别乱"）。已改为在 <code>PSBMedia.cpp</code> 解析处统一 <code>time ×1000/60</code> 转毫秒
+  （扁平轨道 <code>CollectMotionTracksFromMotion</code> + 节点树 <code>CollectMotionNodeFrames</code> + <code>loopTime</code> 同换算），
+  下游 <code>progress</code>/<code>drawAnimatedTree</code>/<code>drawAnimatedFlat</code> 全用毫秒比较。</li>
+<li>进度：✅ <strong>容器帧插值（2026-09-11）</strong>：插值条件从"仅 <code>src/</code> 图像帧"放宽为"任意有内容帧"
+  （含 <code>src='layout'</code>/子运动容器帧），logo 字母/柚子汉字的滑入（cx 48→-24→0）与 m2logo 部件淡入
+  平滑过渡，不再在关键帧间跳变。</li>
+<li>进度：✅ <strong>空帧即隐藏（2026-09-11，engine(3) 实证）</strong>：去掉"时间线播完→保持末内容帧"回退，
+  空帧在覆盖时段内隐藏该层（含时间线末尾空帧）。此前 yuzulogo 字母/柚子汉字/software 在 t=215f
+  后仍被 keep 到 4s，导致"播放前背景有完整静止 yuzulogo"（真实动画 3.58s 字母即消失、只剩白底）。
+  节点树 <code>drawAnimatedTree</code> 与扁平 <code>drawAnimatedFlat</code> 同步修改；稳态 motion（normal/status）
+  末尾本来就是内容帧，不受影响。</li>
+<li>进度：✅ <strong>PSB 帧 <code>type</code> 解析（2026-09-11）</strong>：补充读 PSB 帧的 <code>type</code> 字段，<code>type==0</code> 视为不可见帧
+  （libkrkr2 <code>sub_6926B4 parseFrame</code> 语义），<code>PSBMotionFrame</code> 增 <code>type</code>，<code>Player.h</code> 日志加 <code>ty=</code>。
+  ⚠️ 但这<strong>不是</strong>"播放前完整静止 yuzulogo"的根因——真机日志(engine(12))证明 <code>white</code>/<code>logo</code> 层
+  t=0 帧是 <code>ty=2</code>（非 0）。</li>
+<li>进度：✅ <strong>PSB 帧透明度字段 <code>op</code>→<code>opa</code>（2026-09-11，根因真解）</strong>：用独立 PSB 解码器
+  （参考仓库 <code>/tmp/krkr2-tools</code>，临时分析，未入库）解出 <code>yuzulogo.mtn</code>，确凿根因：</li>
+<li>PSB M2 帧透明度字段名是 <strong><code>opa</code></strong>（0..255），我们一直读 <strong><code>op</code></strong>，<code>GetPSBFloat(f["op"],255)</code>
+    恒取不到 → 兜底 255 → 所有靠透明度淡入/隐藏的层被画成<strong>完全不透明</strong>。</li>
+<li><code>white</code>/<code>logo</code> 层 t=0 帧 <code>content:{src:'src/yuzu/yuzu_logo', type:2, opa:0}</code> —— 开首应
+    透明度 0（透明、不可见），被我们画成实心。</li>
+<li>RL 解码确认：<code>yuzu_logo</code>(720x417) 是<strong>浅青色实心完整 logo</strong>（avgRGB≈124,214,245），叠加
+    白底 <code>white_box</code> 上清晰可见 → 正是用户"播放前背景就有完整静止 yuzulogo"。</li>
+<li>修复：<code>PSBMedia.cpp</code> 两处帧解析（<code>CollectMotionTracksFromMotion</code>+<code>CollectMotionNodeFrames</code>）
+    改译 <code>opa</code>，缺失才回退 <code>op</code>。</li>
+<li>附带修正此前误判（type0 根因 → 实为 opa：0）。此 bug 也解释了"主界面角色瞬间出现"
+    （角色淡入 <code>opa</code> 应从 0 插值）与 m2logo 播放错误（大量 <code>opa</code> 淡入）。</li>
+<li>进度：✅ <strong>M2 文本子树左对齐（2026-09-11，engine(3) 实证）</strong>：m2logo "cheeseware" 字母
+  （str_clip/str_locate 子树）按文本笔位在 advance 锚点<strong>左对齐</strong>绘制，不再居中——居中会让
+  较宽的 'w'（icon39 比 'e' 宽 30px）向左压到前一个字母，整行字错乱。<code>_nodeInStrSubtree</code>
+  预计算（祖先链含 str_* 容器）；普通图像节点（yuzu 字母等）保持居中。</li>
+<li>待真机：① 三游戏 logo + 标题入场时序/速度对照 K2；② m2logo 仍缺 <code>iconXX</code> 部分纹理
+  （<code>Unsupported image format (header 19190519)</code> → 1x1 透明兜底）；③ yuzulogo 语音（脚本驱动）核对；
+  ④ ✅ <strong>m2logo <code>str_clip</code> 裁剪已实现（2026-09-11）</strong>——见下方 str_clip 条目，待真机确认
+  cheeseware 文字逐字裁切/擦除效果；
+  ⑤ 标题入场→steady 切换处"最后几像素瞬移"：日志确认人物滑入平滑，跳变在游戏切换稳态
+  （entrance 终位 vs normal 稳态坐标差）或亚像素截断，需含稳态段的日志复核；
+  ⑥ 若标题入场后（2000ms）背景变黑 → 说明游戏依赖 hold 而非切换稳态，届时对非 logo 场景
+  恢复"末尾保持"。</li>
+<li>进度：⚠️ <strong>翻转沿父链 XOR 累加（2026-09-11）</strong>：绿叶"方向反了"根因=只对叶子自身 <code>fx/fy</code>
+  做单层盒中心镜像、父容器翻转未继承。已改为沿 parent 链 <code>wfx ^= parent.wfx</code> XOR 累加
+  （参考 Player_Rendering_Architecture <code>node.flipX ^= parent.flipX</code>），并用累加后翻转
+  <code>effFx/effFy</code> 驱动仿射；draw 探针加 <code>eff=</code> + <code>parent#</code>，另加 <code>[M2Logo]</code> 字母笔位探针。
+  待真机确认 yuzusoft 绿叶朝向与 K2 一致。</li>
+<li>进度：✅ <strong>绿叶 angle（旋转）已代入仿射（2026-09-11）</strong>：yuzu_ha 全程 fl=0/eff=0/scale=1，
+  它的摆动/朝向是 <strong>angle（content "angle"，度）</strong>。已解析 PSB 帧 <code>angle</code> 字段、帧间插值、
+  沿父链累加，并绕显示盒中心旋转仿射（F=R·M0、T'=R·T0+center−R·center），macOS/Linux 兼容。
+  待真机确认绿叶摆动方向与 K2 一致。</li>
+<li>进度：✅ <strong>绿叶"方向反"根因=旋转枢轴错（2026-09-11，读 engine(4) 日志）</strong>：叶子 <code>ox=91,
+  oy=21</code>（纹理原点热区），参考（libkrkr2 sub_699940 + PlayerUpdateGeometry）以<strong>原点</strong>为旋转
+  枢轴（orgX=posX−(m12·OY+OX·m11)），而我们绕<strong>显示盒中心</strong>旋转→绕错点，±40° 摆动时显得
+  方向反/抖动。已把枢轴从盒中心改为原点热区 <code>(ox,oy)</code>（含翻转镜像），无旋转节点不受影响。</li>
+<li>进度：✅ <strong>绿叶摆向反→ 取反旋转（engine(5) 复验，ad75268）</strong>：叶子能摆了、背景正常、m2logo
+  可读，但叶子 "应向左却向右"（左右镜像）。矩阵与参考一致 ⇒ 是 K2 用 Y-up、我们 Y-down 的
+  手性差，同一正角视觉摆向相反。已在 buildLocalMatrix 与 operateAffine 旋转处<strong>取反角度</strong>
+  （R(-θ)），对所有旋转节点统一修正（非叶子特判）。待真机确认叶子摆向正确。</li>
+<li>进度：✅ <strong>m2logo "乱"根因= str_clip 缩放下传（2026-09-11，读 engine(4) 日志）</strong>：m2logo
+  <code>str_clip</code> 容器 <code>s=9,1</code>（zx/zy 是<strong>裁剪窗口</strong>缩放），前面的累加器把 9× 原样乘进所有字母
+  → 字母继承 ~18× 糊成团，看不出 "CHEESEWARE"。libkrkr2 用 inheritMask 门控缩放继承
+  （bit 0x20/0x40），我们暂未解析，已针对 str_clip 容器<strong>不向子层下传自身缩放</strong>（子层仍从
+  main/layout 祖先拿到 logo 真实缩放）。另 <code>str_clip</code> 节点 <code>type=7</code>、<code>box=0x0</code>，此前按
+  width/height&gt;0 判段永不触发的 str_clip 裁剪逻辑实际没生效——已在日志确认为死分支，未造成
+  回归。待真机确认字母大小可读。</li>
+<li>进度：⚠️ <strong>m2logo "M 字/十字缺失" 根因（engine(22) 确认）：静态图层被动画跳过</strong>。m2logo
+  动画=只有 <code>back_white</code> 这一条 motion（play 了 2 次），它应显示 M 字(icon25/27/28 碎片)+
+  十字+ CHEESEWARE。但 M 碎片是<strong>静态图层位置</strong>（在 <code>_psbImages</code>/getLayerPositions 里），
+  <code>drawPSBImages</code> 只要有 motion 轨道就只走 <code>drawAnimated</code>（motion 节点），<strong>从不合成静态
+  _psbImages</strong> → M 碎片全程没画。修法：动画时把静态 _psbImages 里属于当前 motion 的 M 碎片
+  一并合成（需匹配当前 motion 的底布白/黑，避免另一底色像素点叠上去）；z 序要在动画底布之后、
+  CHEESEWARE 之下。这是 m2logo 显示的真正根因，之前字级/裁剪方向上的工作是错的层面。</li>
+<li>进度：✅ <strong>叶子"摆向反"（engine(5) 复验）已被推翻</strong>：叶子可摆、背景正常，但"应向左却向
+  右"。矩阵与参考逐位一致、数据 flip=0 → 是<strong>渲染坐标手性</strong>的左右镜像，<strong>不是角度符号</strong>
+  （取反角度后仍向右，<code>6d70869</code> 已撤销）。真正成因待定：可能需对该叶子做水平镜像(flipX)或
+  坐标 x 镜像，需对照 K2 参考帧才能定论。</li>
+<li>进度：✅ <strong>inheritMask + transformOrder 已解析并按位门控（2026-09-11，对齐 libkrkr2）</strong>：</li>
+<li><code>PSBMotionNode</code> 新增 <code>inheritMask</code>（默认 0x1FC=全部继承）、<code>transformOrder[4]</code>（默认
+    [0,1,2,3]=flip,angle,scale,s slant）；<code>PSBMedia.cpp</code> 节点构建处读取并打探针（<code>inh=0x..
+    to=..</code>），据此可在真机日志核对 m2logo 字母等各节点真实 inheritMask/order。</li>
+<li><code>drawAnimatedTree</code> 把 flip(0x4/0x8)/angle(0x10)/scaleX(0x20)/scaleY(0x40) 的继承改为按
+    inheritMask 位门控：位置=1 累加父贡献（flip XOR、angle 相加、scale 相乘），=0 只用自身值。
+    这是"子节点刻意不继承祖先变换"的<strong>通用机制</strong>（不再是 str_clip 特判）；str_clip 不下传缩放
+    保留为兜底。默认 0x1FC 资产（yuzulogo）行为不变。</li>
+<li><strong>已对齐/待真机</strong>：① ✅ <strong>子节点位置改用父矩阵变换</strong>（<code>pos=parentM·local+parentPos</code>，
+    根/恒等父矩阵退化为原加法，背景与 yuzu 字母不受影响；旋转/缩放父节点现在能正确带动子层）；
+    ② <code>transformOrder</code> 已解析、供局部矩阵与父矩阵构建用；③ slant 倾斜未实现；④
+    <code>independentLayerInherit</code>（Player 级）未解析。</li>
+<li>进度：⚠️ <strong>m2logo <code>str_clip</code> 文字裁剪（2026-09-11 实现，待真机）</strong>：对 <code>str_clip</code> 容器节点
+  （label 前缀 str_clip、有显示盒 width/height）在绘制其字母子树前，用其显示盒（映射到层坐标、
+  含父级缩放）设 dest 层 <code>setClip</code>，子树画完/出现兄弟节点时恢复之前裁剪，drawAnimatedTree 结束
+  兜底恢复。当前用 <code>strclip:</code> 探针（打在容器帧）确认裁剪盒取值；若盒不对（如 label 前缀不同/
+  width/height 非裁剪区），据探针改判据。字母笔位(擦除方向)若仍不对，结合 [M2Logo] 探针复核。</li>
+<li>第二輪遗留（已推进）：<code>clip</code> 裁切矩形(content "clip" [l,t,r,b])仍只探针未应用（m2logo 该值
+  恒 0，非主因）；<code>str_clip</code>(src='clip') 文字裁剪已按容器显示盒实现（上方条目）；m2logo 字母笔位
+  左对齐已完成（上方 M2 文本子树条目）。</li>
+<li>进度：✅ <strong>原点锚定统一模型（2026-09-11，B7，对齐 AetherKiri 全链路比对）</strong>：与 AetherKiri
+  （libkrkr2 逆向移植）完整比对后，把 <code>drawAnimatedTree</code> 的锚点语义整块改成参考模型：</li>
+<li>位置只累加 coord(cx,cy)；content ox/oy <strong>不进位置</strong>（此前 ox+cx 双计，yuzusoft 叶子
+    ox=91 因此整体漂移/镜像，是叶子"摆向反"的真正结构根因，推翻之前手性镜像猜测）。</li>
+<li>绘制统一为 <code>org = pos - M*(iconOrigin+ox, iconOriginY+oy)</code>、四边形 <code>org+M*[0..iw,0..ih]</code>，
+    仿射直接用已累加世界矩阵 <code>wm11..wm22</code>（flip/angle/scale 经 transformOrder+inheritMask）；
+    废除显示盒折叠/居中锚定/独立枢轴 hack，并<strong>删除 str 笔位左对齐特判</strong>（参考无 pen 系统，
+    字母就是普通节点，各自动画自己的 coord）。</li>
+<li>新解析 <strong>icon originX/originY</strong>（ImageMetadata→MotionType icon dict→CachedImageInfo→
+    getImageInfo）：全画布居中 logo（如 yuzu_logo）与各字形枢轴由此正确；icon 无该字段时
+    默认 0（与参考一致）。</li>
+<li>遗留风险：若个别图标 dict 无 originX/originY 且作者以"中心"语义编坐标，原点锚定会偏移
+    半盒——待真机日志（<code>origin=</code>/<code>pos=</code>/<code>org=</code> 探针）核对；确认后按 asset 补 icon origin 或
+    修正解析。</li>
+<li>✅ <strong>该风险已兑现→按"中心"默认修复（2026-09-11，13430f2）</strong>：真机反馈"整体向右下偏移"=该
+    锚定退化。图标 dict 无 originX/originY（默认0）时 <code>org</code> 落到纹理左上角 → 所有精灵下移右移
+    半盒。修复：<code>drawAnimatedTree</code> 恢复 <code>resolveCoordOrigin()</code>（默认0=中心）锚定，左上角减半宽/半高，
+    与静态合成 <code>cachePSBImages</code>（坐标=盒中心）一致；<strong>保留</strong> B7 两处真修（ox/oy 不进位置、旋转绕
+    ox/oy 热区）。若个别 asset 确按左上角编码，用命令行 <code>-psb_coord_origin=topleft</code> 切回。</li>
+<li>✅ <strong>B8 单一世界矩阵+原点锚定（2026-09-11，7dcefa7）+源文件实证</strong>：用户提供 title/m2logo/yuzulogo
+    三个 .mtn + title.pimg，用自写 PSB 解析器（.uploads/psb_dump.py、motion_dump.py）读取真实数据后
+    <strong>证实根因 = icon origin 非中心</strong>：<code>ch1_芳乃</code> originX=529（宽973，中心应为486，偏右43px），其余
+    字符/bg/logo 均为 w/2。此前"中心锚定"把 ch1 画到偏右43px，末尾被按真实 origin 烘焙的
+    <code>title_charall</code> 盖住时"向左挪43px"（正是"只有 ch1 挪"）。B8 按 icon origin 锚定（<code>org=pos-M·
+    (origin+ox,oy)</code>）即修。<strong>坐标系确认是画布中心</strong>（logo coord -705、head -954，负值在左）。</li>
+<li>✅ 叶子枢轴实证：<code>yuzu_ha</code> icon origin=(w/2,h/2)=(93,28)=中心、帧 ox=91/oy=21 → 参考枢轴=
+    origin+ox=(184,49)；旧代码用 top-left+ox=(91,21) 致摆动绕错点（叶子小问题），B8 已按参考修正。</li>
+<li>⏳ <strong>遗留：M2 用 <code>ccc</code> 贝塞尔缓动，我们仍线性插值</strong>（叶子 22.9→−39.5 跳变、m2logo 字母滑入
+    时序由此而来）。已确证这些 .mtn 帧都带 <code>ccc={c,x,y}</code> 贝塞尔控制，是"未完全对齐参考"的最后一环，
+    待实现 keyframe 贝塞尔插值后再放回平滑。</li>
+<li>✅ <strong>B9 已实现 ccc 三次贝塞尔缓动（2026-09-11，216a3d6）</strong>：源文件证实 ccc 是"出发帧→下一帧"
+    的三次贝塞尔（(0,0)→(1,1)，控制点 (x[1],y[1]),(x[2],y[2])）。<code>PSBMotionFrame</code> 增 easing 字段 +
+    PSBMedia 解析 content "ccc"；<code>drawAnimatedTree</code> 插值时用 <code>BezierEase</code>（二分解 x(t)=u 求 y(t)）
+    重映射进度，应用到 ox/oy/cx/cy/opacity/scale/angle 全部插值属性；无 ccc 帧保持线性。待真机确认
+    叶子摆动平滑、m2logo 字母滑入顺。</li>
+<li>✅ <strong>B10 M2 时间线单位是帧(tick)不是毫秒（2026-09-11，e34706e）→ ⚠️ 误诊已回退（2026-09-12，B11）</strong>：
+    真机反馈 m2logo"硬变/白块盖 CheeseWare/无折叠感"，当时误以为 time/lastTime 是<strong>帧</strong>并加
+    <code>delta*60/1000</code> 换算。2026-09-12 读新引擎日志实证<strong>误诊</strong>：PSBMedia.cpp 解析处已把原始 60fps
+    帧数换算成毫秒（yuzulogo 241tick→4016ms≈4s、back_white 91tick→1516ms≈1.5s、叶子 yuzu_ha 摆动
+    t=1200..2516ms），progress(delta) 调用方传的就是真实毫秒——B10 的二次换算让<strong>所有动画慢约
+    17 倍</strong>（4016ms 时间线要 67s 真实时间），真机表现"动画全慢、只看到白底、跳过才看到完整 logo 拉伸
+    消失"。回退为 <code>_tickCount += delta</code>（毫秒直推）。待真机确认各动画速度/时序。</li>
+<li>✅ <strong>B11 str_clip 裁剪窗口锚定修正（2026-09-12）</strong>：m2logo 字母（c..e，t=316 出现）的局部
+    cx+ox 相对 str_locate，而 str_locate 又相对 str_clip 偏移 cx=-114；旧代码把窗口锚在 str_clip
+    自身位置 → 窗口右移约 114×scale，截掉前 5 个字母（"CheeseWare" 只显示 "ar" 之类，即"字母显示
+    混乱"）。修复：窗口锚定在<strong>文字容器（str_locate）的世界位置</strong>（用 str_clip 世界矩阵 × 容器
+    活跃帧局部坐标 + str_clip 世界位置复算），尺寸=字母局部范围×下传缩放。通用判据仍是 type==7。</li>
+<li>✅ <strong>B12 对齐 AetherKiri 动画实现（2026-09-12）</strong>：用户反馈"M 折叠一直不对、不是横线平滑
+    弯折"，逐项与 AetherKiri（<code>/tmp/akiri</code> 全量 clone，libkrkr2 血统）对比动画实现：
+    ① <strong>360° 最短路径角度插值</strong>（AetherKiri interpolateSlots / libkrkr2 sub_699AE4）：
+       m2logo 折叠链 node6 286°→0、node9 270°→0，旧线性插值转 ~286°/270°（几乎一整圈），
+       参考只转 74°/90°——"M 乱转、不是平滑弯折"的根因。已按参考回绕。
+    ② <strong>transformOrder case-3 slant</strong>（libkrkr2 sub_699940 / applyLocalTransform）：
+       此前整段跳过，带斜切节点丢失斜切。已解析 content "sx"/"sy" + 实现 [1,sx;sy,1] 左乘，
+       inheritMask bit 0x080/0x100 门控累加。
+    ③ <strong>可见性语义对齐</strong>（updateLayers 0x6BB8F4）：type-0 帧<strong>隐藏</strong>节点（此前"保持末内容帧"
+       把 m2logo 折叠件从 t=0 一直显示 + backdrop 白块永不消失）；node type 2 结构组保持 active；
+       <strong>子运动内容</strong>（expandSubMotionNodes 展开，新 submotionContent 标记）跟随<strong>父 motion 节点
+       活动</strong>（参考子播放器），motion 播完（非循环）后保持末内容帧（主界面入场不黑，替代旧 hold）。
+       效果：m2logo 折叠件 t=200 才出现（已带旋转角）、backdrop 白块 1516ms 后消失、折叠角最短路径。</li>
+<li>✅ <strong>B13 修复 B12 可见性回归（2026-09-12）</strong>：真机反馈"m2logo 中间十字看不见 + 主界面看不到
+    人物依次出场"。日志实证两处：
+    ① 子运动内容保持缺"已越过末可见帧"条件：标题的 title_charall/logo/head 从 <strong>now=0</strong> 就
+       保持末帧（t=1983/t=1250）整屏盖住，入场动画完全被遮（tick=0 画 3 图）。修复：保持条件
+       加 <code>af-&gt;time &gt;= lastVisibleFrame-&gt;time</code>——末帧之前（首内容帧之前）保持隐藏。
+    ② B12 参考语义把 m2logo 折叠件/icon48("2") 在 t=716 全部隐藏（链节点 type-0 帧），
+       只剩 icon42 十字 + 字母。修复：节点内容结束后（<code>af-&gt;time &gt;= lastVisibleFrame-&gt;time</code>
+       且 <code>af-&gt;time &lt; motionEnd</code>）<strong>保持末可见状态</strong>，让成型 M/2 持续到末尾淡出/压缩；
+       子运动内容在<strong>父内容段结束</strong>（新预计算 nodeContentEnd）后保持。backdrop 白块
+       （t=1516 == motionEnd）仍正确隐藏。效果：m2logo 完整 M+十字+2 保持、白块仍消失；
+       标题人物 ch1..ch4 依 t=333/500/666/833 依次升起。</li>
+<li>⏳ <strong>遗留（AetherKiri 对比发现的后续）</strong>：① 子运动 child-player 时间映射（motionDt/
+    motionDofst/motionTimeOffset 驱动子时间线，现为"父活动+保持末帧"近似，需 mtn 实证精确映射）；
+    ② 逐属性缓动曲线（ccc=透明度/颜色、acc=角度、zcc=缩放、scc=斜切、位置=线性，现 ccc 全属性）；
+    ③ AetherKiri 的 evaluateBezierCurve 是分段三次参数式（y[] 控制点），与我们 BezierEase 解 x(t)=u
+    不同。待用户再提供 m2logo/yuzulogo/title 的 .mtn 后逐项实证。</li>
+<li>进度：✅ <strong>鉴赏模式返回（2026-09-11）</strong>：安卓系统返回键本就被 <code>PopScope(canPop:false)</code></li>
+<li><code>EngineSurface._onKeyEvent</code> 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
+  无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
+  （<code>EngineSurface.sendBack()</code>），走游戏正常退出逻辑。</li>
+<li>进度：✅ <strong>主界面黑屏修复（2026-09-11，engine(21) 实证根因）</strong>：title 是非循环
+  motion（loopTime=0），其 <code>main</code>/<code>bg</code>/角色在时间线末尾的空帧被"空帧即隐藏"逻辑
+  整棵藏掉 → 入场播完后 <code>nonBlack=0/25 avg=(0,0,0,255)</code> 全黑（15:53:47~15:54:04
+  黑 17s，直到进鉴赏模式）。参考语义：非循环 motion 播完应<strong>保持末内容帧</strong>。修复：
+  <code>drawAnimatedTree</code> 对 <code>loopTime==0</code> 且当前帧已越过末内容帧的节点改写为保持
+  <code>lastContentFrame</code>（不再用末尾空帧隐藏）。ste notch 待真机确认 title 静止 + yuzusoft
+  logo 播完保持完整 logo。</li>
+<li>参考提交/对照清单：见 <a href="../krkrz-compat/">krkrz-compat.md</a>「krkrsdl3 emoteplayer 对照」。</li>
+</ul>
+<h3 id="k2-motion">— 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】<a class="headerlink" href="#k2-motion" title="Permanent link">&para;</a></h3>
+<ul>
+<li>现象：同款游戏文字 K2 略大一点点；选项框文字在框的左上（K2 里框内正常）。首次上报于 engine(5)，
+  早于 motion 改动；且选项界面无 motion 活动（engine(30) 实证 drawPSBImages/drawOnto 未出现）→
+  与 motionplayer 无关，是引擎<strong>文本渲染/字形度量或全局文本缩放</strong>问题。</li>
+<li>已排除：<code>realLayer geo left=0 top=0 w=1920 h=1080</code>（合成目标层无原点偏移，engine(30)）；
+  letterbox 缩放链路结构正确（ui_stubs.cpp FlutterWindowLayer 等比 letterbox + SetWindowSize 不动虚拟屏）。</li>
+<li>krkrz 源码无 <code>hdresomode</code>/全局字号常量 → 字号为每游戏脚本自定（虚拟屏+Font），模拟器不统一。</li>
+<li>待做：拿 K2 与我们<strong>同画面对照截图</strong>（最好带像素标尺）量字号倍率，区分"全局缩放/度量系数"（可能连带
+  修好选项框偏移）vs"字体度量"（改文本渲染 <code>textrender</code>/字形）。</li>
+</ul>
 <h3 id="p1p2-krmovie-present">P1/P2 — krmovie Present 未实现（视频帧→场景合成）<a class="headerlink" href="#p1p2-krmovie-present" title="Permanent link">&para;</a></h3>
 <ul>
 <li>现状：ffmpeg 解码链路完整（<code>cpp/core/movie/ffmpeg/</code>），但 <code>VideoPresentOverlay::PresentPicture</code> 及 overlay
@@ -1692,6 +2013,94 @@ Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 <code>typeof Motion.D3
 <li>放回前提：用 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp">harness_ps.cpp</a> 实证位级一致的算法 = u8 混合核心+u32 打包 alpha；
   改写 Highway <strong>u32 lane</strong> 后放回。功能已由标量保证；非 PS 混合已对齐标量。</li>
 </ul>
+<h3 id="p1-2d-z-api">P1 — §2d. 真缺"功能实现"的 Z 插件/API 清单【新增，待排队】<a class="headerlink" href="#p1-2d-z-api" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>与挂名(ZCompatStub)区分：这些是<strong>调用会崩/演出缺损的真正功能缺口</strong>（对照 krkrz / Kirikiroid2）。
+现状核实于 2026-09-10（grep 核心无实现）：
+- <strong>Layer alpha 特效三方法</strong>（P1，Kirikiroid2_patch 19 款游戏高频）：<code>Layer.AlphaColorBlend</code> /
+  <code>TranslucentColorBlend</code> / <code>LuminanceForAlpha</code> —— 核心 Layer 无实现，调用报 <code>Member does not exist</code>。
+  方向：仿 layerExAlpha 实现（KrKr2 layerEx）并内建到 LayerIntf.cpp 的 Layer 类 / extrans 挂名处补真体。
+- <strong>Layer.AddMosaic</strong>（P1，Patch 库 46 次最高频单项）：<code>extrans.cpp</code> 仅 <code>NCB_MODULE_NAME</code> 挂名 stub，
+  <strong>无方法体</strong>。方向：Mosaic 马赛克绘制实现。
+- <strong>PrerenderFont(...) → .tpf 位图字体通道</strong>（P0 关联：选项框字偏小/偏左上/裁切，见下文独立条目）：
+  <code>PreRenderFont</code> 前缀未接入 <code>.tpf/.tpr</code> 预渲染位图字形；<code>PrerenderedFont</code> 类能解析 .tpf 结构但未被
+  <code>GetBeingFont</code>/字体通道启用。KrKr/Kirikiroid2 的该通道正是选项文字上屏正解（K2 正常而我们错位）。
+- <strong>krmovie Present</strong>（P0，视频 OP/过场）：ffmpeg 已解码，但"帧→场景叠加显示"仍是 stub——
+  引擎能力非插件，独立条目见 §P1/P2。
+- <strong>Squirrel 插件</strong>（P1）：<code>zcompat g_z_squirrel</code> 纯挂名，无 VM/类；部分 Z 游戏存档/系统脚本依赖。
+- 优先级：Alpha 三方法 + AddMosaic（高频、方法缺失、好落地）＞ .tpf 字体通道（连动选项框字）
+  ＞ Squirrel ＞ krmovie（引擎改动）。</p>
+</blockquote>
+<h3 id="p1-2e-yuzusoft">P1 — §2e. Yuzusoft 选项框文字偏小/偏左上/只显示上部【当前在做，等日志】<a class="headerlink" href="#p1-2e-yuzusoft" title="Permanent link">&para;</a></h3>
+<blockquote>
+<ul>
+<li>现象（engine(7)，用户实测）：选项框文字比 Kirikiroid2 <strong>小、位置偏到框左上、只显示上半约 2/3</strong>，
+ 颜色样式正常；对话/消息框文字正常。</li>
+<li>已明确矛盾：对话(<code>*ヘッダ</code>/<code>*システム</code>)与选项框(<code>PrerenderFont(スキップ),ＭＳ ゴシック</code>)**
+ 最终都被 <code>GetBeingFont</code> fallback 成同一个 <code>Noto Sans CJK JP</code>**（日志 <code>being='Noto Sans CJK JP'</code>），
+ 系统仅注册 <code>NotoSansCJK-Regular.ttc</code> 一个 CJK 字体 → 字体名解析造不出对话/选项的差异，
+ 根因更可能在绘制区域/基线/裁剪或 <code>.tpf</code> 预渲染位图字体通道。</li>
+<li>已做：① 剥离 <code>PrerenderFont(...)</code> 前缀 + 等宽/全角优先回退（<code>8ec234c</code>）；② 绘制入口探针
+ <code>[TextProbe]</code>（destRect/x/y/face/height/AscentOfs/prerender 是否非 0，<code>26ba8de</code>）；③ 动画修复同批
+ 待真机（<code>1aca7bf</code>）。</li>
+<li><strong>扫描结论（2026-09-11，对照 krkrz / Kirikiroid2 / KrKr2-Next 全字库管线）</strong>：</li>
+<li>我们的 being 字体管线（FontSystem→FreeType→.tpf 解析/Find/Retrieve→TVPGetCharacter→
+   InternalDrawText）与 krkrz/K2 <strong>逐字节同构</strong>，非管线逻辑差异；我们相对上游仅加探针/
+   前缀剥离/等宽回退/restart 复位。</li>
+<li>探针实证（engine(11) 前后）：选项文本 <code>prerender=0xb4…</code> <strong>非空</strong>——<code>.tpf</code> 已映射并在走
+   预渲染字形；对话 <code>*システム</code> 同样非空但<strong>正常</strong>。</li>
+<li><strong>机制定位（高置信）</strong>：<code>.tpf</code> 字形按<strong>原始字体</strong>（MS ゴシック，ascent≈0.86×h）预烘焙，
+   定位 <code>data-&gt;OriginY = -pitem-&gt;OriginY + aofsy</code>，而 <code>aofsy</code> 取自<strong>回退字体</strong> ascent
+   （Noto CJK≈1.16×h，实测 height=39→aofsy=45）。基线被压低约 0.3×h →
+   字形下移、框底被裁 → 选项文字"偏左上 + 只见上半"。K2 用 DroidSansFallback（ascent≈0.9）
+   偏差小所以正常。对话字符在 <code>.tpf</code> 里 MISS → 走栅格化（同字体自洽）所以正常。</li>
+<li>另发现差异（与尺寸无关，未改）：<code>tTJSNI_BaseLayer::DrawText/DrawGlyph</code> 我们对 color
+   多做了一次 <code>TVP_REVRGB</code>（krkrz 没有），仅影响颜色、用户实测颜色正常。</li>
+<li><strong>engine(14) 复判（2026-09-11）</strong>：</li>
+<li>选项/名字文本 <code>[TextProbe]</code>：face='PreRenderFont(スキップ),ＭＳ ゴシック'
+     <code>multi destRect=(0,0,792,53) xy=(2,9)</code>（'【 将臣 】'）与 <code>single destRect=(0,0,113,68)</code>
+     <code>xy=(10,10)</code>（选择肢）——<strong>绘制区/裁切矩形很窄(113) 且贴近左上(0,0)</strong>。
+     选项"偏小/偏左上/跳出框"定位到<strong>绘制区域/坐标</strong>，而非 ascent。</li>
+<li>曾试按 §2e 修 aofsy 全局覆盖为 .tft ascent（<code>a6232b1</code>）：选项 aofs 45→37 仍偏小靠左上，
+     但<strong>对话被回归</strong>（<code>*システム/*ヘッダ</code> 也映射 .tft，命中和栅格化字形用同一非 Noto 基值 →
+     有的字偏上有的字偏下）。因 .tft 命中(MSゴシック≈0.86h)与 Noto miss(≈1.16h) ascent 不同，
+     单一 aofs 无法同时取悦两者 → <strong>已整体回退（<code>ffc93c0</code>）</strong>，对话恢复。</li>
+<li><strong>新方向（选项框）</strong>：不再动 ascent。去查<strong>选择肢/名字层的绘制几何</strong>：为何 destRect 只有
+   ~113 宽且贴 (0,0) 角落——是脚本 DrawText 的 clip rect、还是选择肢层(LayerEx/选择层)尺寸/
+   定位错误；对比同名层在 K2/Kirikiroid2 里的实际宽高与坐标。</li>
+</ul>
+</blockquote>
+<h3 id="r-krkr2-tools-2026-09-11">— §R. krkr2-tools 反编译参考资源清单（2026-09-11 盘点）【参考索引，非待办】<a class="headerlink" href="#r-krkr2-tools-2026-09-11" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>位置：宿主机本地 <code>/tmp/krkr2-tools</code>（K2 完整移植源码 + libkrkr2.so 反编译重建，<strong>不 commit 进仓库</strong>；
+若环境清理需重新获取：<code>git clone</code> 对应工程 + IDA 反编译产物重建）。配套参考：
+<code>/tmp/krkrz</code>（Z 引擎）、<code>/tmp/Kirikiroid2</code>（K2 移植）、<code>/tmp/krkrz_dev</code>（Z 工具/插件）。
+- <strong><code>analysis/</code>（24 份 libkrkr2.so 反编译分析，全 motion/渲染）</strong>：Player_Draw_Full_RenderPath.md、
+  PlayerUpdateLayers / player_updateLayers_accum.md、Player_Rendering_Architecture_libkrkr2so.md、
+  EmotePlayer_Internal_Implementation.md（contains 支持圆/矩形/凸四边形、setVariable 9 类分发、
+  progress 物理步进）、NodeTree_Construction.md、PSB_RL_Decompression_libkrkr2so.md、
+  GPU_RenderPath_libkrkr2so.md、Window_DrawDevice_Scaling_libkrkr2so.md 等。
+- <strong><code>cpp/plugins/motionplayer/</code>（44 文件，反编译重建的完整 motionplayer/emoteplayer）</strong>：
+  PlayerCore / PlayerRender / PlayerRenderItems / PlayerRenderTargets / PlayerDrawDispatch /
+  PlayerUpdateLayers / PlayerUpdateGeometry / PlayerUpdateChildMotion / PlayerUpdateAnchor /
+  PlayerUpdateParticles / PlayerTimeline / PlayerFrameProgress / PlayerMotionLoad / PlayerResource /
+  PlayerLayerQuery / PlayerVariable / NodeTree / MotionNode / D3DAdaptor / D3DEmoteModule /
+  SeparateLayerAdaptor / SourceCache / ResourceManager / RuntimeSupport / EmotePlayer / main.cpp。
+  注意：其中的 EmotePlayer.cpp 本身也多为 stub（STUB_WARN），真实现靠 analysis 文档 + D3DEmoteModule.h。
+- <strong><code>cpp/core/movie/ffmpeg/KRMoviePlayer.cpp</code></strong>：<code>VideoPresentOverlay::PresentPicture</code> 真实实现
+  （pts 同步 + 按 pts 跳帧 + YUV 上屏）——krmovie Present（P0）的目标参考；K2 用 cocos2d sprite
+  上屏，移植时换成我们自己的纹理路径。
+- <strong><code>tools/</code></strong>：tjsdump（TJS 字节码反汇编）、ksdec（KAG 脚本反编译）、mtndump（motion 转储）、
+  motionsim（motion 模拟器 + 轨迹对比，可验证 Player 与真实引擎逐帧一致）、xp3 / xp3pack。
+- <strong>目标映射（"空函数能不能用它实现"结论）</strong>：
+  - ✅ 能直接照做：<strong>krmovie Present</strong>（P0，当前 stub）；<strong>motionplayer 完整管线补齐</strong>
+    （粒子 / mesh 透视 / anchor / 物理等，当前 Player.h 为简化版）；<strong>EmotePlayer</strong>（按 analysis 文档）。
+  - ✅ 工具可复用：tjsdump / ksdec / mtndump / motionsim / xp3。
+  - ❌ 参考里也没有、需自研：<strong>AddMosaic</strong>（layerExMosaic）、<strong>TranslucentColorBlend / LuminanceForAlpha</strong>
+    （layerExColor）、<strong>squirrel</strong>、<strong>multiimage</strong>（todo 已注明"源码不可得"）、<strong>kagexopt</strong>、<strong>kztouch</strong>、
+    <strong>drawdeviceD3DZ</strong>（D3D 桌面概念）。
+  - ✅ 已有内建能力、挂名正确勿动：wuvorbis / wuopus / wuflac / extrans。</p>
+</blockquote>
 <h3 id="5-kagex-kag-kagexopt">— §5. KAGEX / KAG 差异兼容（kagexopt 相关）<a class="headerlink" href="#5-kagex-kag-kagexopt" title="Permanent link">&para;</a></h3>
 <ul>
 <li>调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（需求待明确）。</li>
