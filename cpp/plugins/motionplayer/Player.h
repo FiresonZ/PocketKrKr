@@ -145,6 +145,8 @@ namespace motion {
             _motionTracks.clear();
             _motionNodes.clear();
             _captureActive = false;
+            _lastFramePosX.clear();
+            _lastFramePosY.clear();
             cleanupTempLayer();
             buildButtonBounds(_loadedStorage);
 
@@ -596,25 +598,36 @@ namespace motion {
                         continue;
                     }
                     if(logger) logger->info(
-                        "expandSubMotionNodes: '{}' -> {}/{} appended {} nodes",
-                        f.src, obj, sub, static_cast<int>(child.size()));
-                    expanded.insert(f.src);
-                    f.src.clear();
-                    // Append the sub-subtree rooted under this referencing node,
-                    // remapping internal parent edges by the insertion offset.
-                    // 把子子树以本引用节点为父追加，按插入偏移重映射内部父子边。
-                    const int selfIdx = static_cast<int>(i);
-                    const int offset = static_cast<int>(nodes.size());
-                    for(auto &c : child) {
-                        if(c.parentIndex == -1) c.parentIndex = selfIdx;
-                        else c.parentIndex += offset;
-                        // Reference child-player: the expanded sub-motion's content
-                        // is driven by the PARENT motion node's activity, not the
-                        // child's own trailing type-0 frame.
-                        // 参考子播放器：展开的子运动内容由**父 motion 节点**的活动驱动，
-                        // 而非子节点自己的末尾 type-0 帧。
-                        c.submotionContent = true;
-                    }
+                    "expandSubMotionNodes: '{}' -> {}/{} appended {} nodes",
+                    f.src, obj, sub, static_cast<int>(child.size()));
+                expanded.insert(f.src);
+                const int refLaunchTime = f.time; // when the ref frame fires the sub-motion / 参考帧发起子运动的时刻
+                const int subLoop = media->getMotionLoopTime(storageStr, obj, sub);
+                const std::string subRef = f.src;
+                f.src.clear();
+                // Append the sub-subtree rooted under this referencing node,
+                // remapping internal parent edges by the insertion offset.
+                // 把子子树以本引用节点为父追加，按插入偏移重映射内部父子边。
+                const int selfIdx = static_cast<int>(i);
+                const int offset = static_cast<int>(nodes.size());
+                for(auto &c : child) {
+                    if(c.parentIndex == -1) c.parentIndex = selfIdx;
+                    else c.parentIndex += offset;
+                    // Reference child-player: the expanded sub-motion's content
+                    // is driven by the PARENT motion node's activity, not the
+                    // child's own trailing type-0 frame.
+                    // 参考子播放器：展开的子运动内容由**父 motion 节点**的活动驱动，
+                    // 而非子节点自己的末尾 type-0 帧。
+                    c.submotionContent = true;
+                    // Sub-motion child-clock: content nodes carry their own real
+                    // clock (launch time + loop) instead of the parent's global
+                    // tick, mirroring AetherKiri's child player time sync.
+                    // 子运动子时钟：内容节点携带自己的真实时钟（发起时刻+循环），
+                    // 而不是父的全局 tick，对应 AetherKiri 子播放器的时间同步。
+                    c.subRefSrc = subRef;
+                    c.subLaunchTime = refLaunchTime;
+                    c.subLoopTime = subLoop;
+                }
                     nodes.insert(nodes.end(),
                                  std::make_move_iterator(child.begin()),
                                  std::make_move_iterator(child.end()));
@@ -722,6 +735,139 @@ namespace motion {
             return drawAnimatedFlat(dest, tempParent, logger);
         }
 
+        // ---------------------------------------------------------------------------
+        // E-mote / spline / parameter helpers (ported from AetherKiri)
+        // ---------------------------------------------------------------------------
+        // ---------------------------------------------------------------------------
+        // E-mote / 样条 / 参数工具（自 AetherKiri 移植）
+        // ---------------------------------------------------------------------------
+
+        // Bicubic Bernstein patch evaluation (reference AetherKiri
+        // evaluateMotionBezierPatch / libkrkr2 sub_6990A0). `mesh` = 32 floats laid
+        // out as 4 rows × 4 control points × (x,y); u,v ∈ [0,1].
+        // 双三次 Bernstein 面片求值（参考 AetherKiri evaluateMotionBezierPatch /
+        // libkrkr2 sub_6990A0）。`mesh` = 32 float，按 4 行 × 4 控制点 ×(x,y) 排布；
+        // u,v ∈ [0,1]。
+        static void evaluateMotionBezierPatch(const float *mesh, float u, float v,
+                                              float &outX, float &outY) {
+            if(!mesh) { outX = u; outY = v; return; }
+            const float su = 1.0f - u;
+            const float sv = 1.0f - v;
+            const float bu[4] = {
+                su * su * su,
+                3.0f * su * su * u,
+                3.0f * su * u * u,
+                u * u * u,
+            };
+            const float bv[4] = {
+                sv * sv * sv,
+                3.0f * sv * sv * v,
+                3.0f * sv * v * v,
+                v * v * v,
+            };
+            float rowX[4], rowY[4];
+            for(int row = 0; row < 4; ++row) {
+                const float *p = mesh + row * 8;
+                rowX[row] = p[0] * bu[0] + p[2] * bu[1] + p[4] * bu[2] + p[6] * bu[3];
+                rowY[row] = p[1] * bu[0] + p[3] * bu[1] + p[5] * bu[2] + p[7] * bu[3];
+            }
+            outX = rowX[0] * bv[0] + rowX[1] * bv[1] + rowX[2] * bv[2] + rowX[3] * bv[3];
+            outY = rowY[0] * bv[0] + rowY[1] * bv[1] + rowY[2] * bv[2] + rowY[3] * bv[3];
+        }
+
+        // Control-point rotation spline (reference AetherKiri sub_698454 /
+        // evaluateControlPointCurve): samples the cp curve at `inputT` and returns
+        // the point (outXY[0], outXY[1]) which callers use directly as (cosA, sinA).
+        // 控制点旋转样条（参考 AetherKiri sub_698454 / evaluateControlPointCurve）：
+        // 在 inputT 处采样 cp 曲线，返回点 (outXY[0], outXY[1])，调用方直接用作
+        // (cosA, sinA)。
+        static void evaluateCpCurve(double outXY[2],
+                                    const PSB::PSBMedia::PSBMotionCpCurve &cp,
+                                    double inputT) {
+            outXY[0] = 1.0; outXY[1] = 0.0;
+            if(cp.t.size() < 2 || cp.x.size() < 4 || cp.y.size() < 4) return;
+            int segIdx = 0, mainIdx = 0;
+            for(size_t i = 1; i < cp.t.size(); ++i) {
+                mainIdx += 3;
+                if(cp.t[i] >= inputT) { segIdx = static_cast<int>(i) - 1; break; }
+                segIdx = static_cast<int>(i) - 1;
+            }
+            if(segIdx < 0 || segIdx >= static_cast<int>(cp.s.size())) return;
+            const double tStart = cp.t[segIdx];
+            const double tEnd = (segIdx + 1 < static_cast<int>(cp.t.size()))
+                ? cp.t[segIdx + 1] : tStart;
+            const double localT = (tEnd != tStart) ? (inputT - tStart) / (tEnd - tStart) : 0.0;
+            double param = localT;
+            const auto &seg = cp.s[segIdx];
+            if(!seg.x.empty() && seg.x.size() == seg.y.size()) {
+                const double sx0 = seg.x[0];
+                if(sx0 >= localT) {
+                    param = seg.y[0];
+                } else if(seg.x.back() <= localT) {
+                    param = seg.y.back();
+                } else {
+                    int subIdx = 0;
+                    for(size_t i = 1; i < seg.x.size(); ++i) {
+                        if(seg.x[i] >= localT) { subIdx = static_cast<int>(i) - 1; break; }
+                        subIdx = static_cast<int>(i) - 1;
+                    }
+                    if(subIdx >= 0 && subIdx + 1 < static_cast<int>(seg.x.size()) &&
+                       subIdx + 1 < static_cast<int>(seg.y.size())) {
+                        const double x0 = seg.x[subIdx], x1 = seg.x[subIdx + 1];
+                        const double y0 = seg.y[subIdx], y1 = seg.y[subIdx + 1];
+                        const double dx = x1 - x0;
+                        if(dx != 0.0) {
+                            const double u = (localT - x0) / dx;
+                            const double p0 = (subIdx < static_cast<int>(seg.p.size())) ? seg.p[subIdx] : 0.0;
+                            const double p1 = (subIdx + 1 < static_cast<int>(seg.p.size())) ? seg.p[subIdx + 1] : 0.0;
+                            param = dx * dx * ((u * u * u - u) * p1 +
+                                               ((1 - u) * (1 - u) * (1 - u) - (1 - u)) * p0) / 6.0
+                                  + u * y1 + (1 - u) * y0;
+                        }
+                    }
+                }
+            }
+            if(mainIdx >= 3 && mainIdx < static_cast<int>(cp.x.size()) &&
+               mainIdx < static_cast<int>(cp.y.size())) {
+                const double px0 = cp.x[mainIdx - 3], py0 = cp.y[mainIdx - 3];
+                const double px1 = cp.x[mainIdx - 2], py1 = cp.y[mainIdx - 2];
+                const double px2 = cp.x[mainIdx - 1], py2 = cp.y[mainIdx - 1];
+                const double px3 = cp.x[mainIdx],   py3 = cp.y[mainIdx];
+                const double u = 1.0 - param;
+                outXY[0] = u * u * u * px0 + 3 * u * u * param * px1 +
+                           3 * u * param * param * px2 + param * param * param * px3;
+                outXY[1] = u * u * u * py0 + 3 * u * u * param * py1 +
+                           3 * u * param * param * py2 + param * param * param * py3;
+            }
+        }
+
+        // Parameterized clip time (reference detail::parameterizedClipTime): maps a
+        // UI selector variable `value` in [rangeBegin, rangeEnd] onto the motion
+        // timeline axis ([0, timelineEnd]) instead of the global clock.
+        // 参数化 clip 时间（参考 detail::parameterizedClipTime）：把 UI 选择器变量
+        // value（范围 [rangeBegin, rangeEnd]）映射到 motion 时间轴（[0, timelineEnd]），
+        // 而非全局时钟。
+        static double parameterizedClipTime(
+            const PSB::PSBMedia::PSBMotionParameter &parameter,
+            double value) {
+            const double range = parameter.rangeEnd - parameter.rangeBegin;
+            if(std::abs(range) <= 0.0000001) return 0.0;
+            const double minimum = std::min(parameter.rangeBegin, parameter.rangeEnd);
+            const double maximum = std::max(parameter.rangeBegin, parameter.rangeEnd);
+            double normalized = (std::clamp(value, minimum, maximum) - parameter.rangeBegin) / range;
+            if(parameter.discretization) {
+                const double rangeMagnitude = std::abs(range);
+                const double integerSteps = std::round(rangeMagnitude);
+                const double selectorSteps =
+                    (integerSteps >= 1.0 && std::abs(rangeMagnitude - integerSteps) <= 0.0000001)
+                        ? integerSteps : parameter.division;
+                if(selectorSteps > 0.0)
+                    normalized = std::round(normalized * selectorSteps) / selectorSteps;
+            }
+            normalized = std::clamp(normalized, 0.0, 1.0);
+            return normalized * parameter.division;
+        }
+
         // Generic M2 node-tree path: for each node in pre-order (parent before child),
         // evaluate its active frame's LOCAL pos (ox+cx, oy+cy) and opacity, then
         // accumulate top-down:
@@ -784,14 +930,14 @@ namespace motion {
             std::vector<float> wslx(n, 0.0f), wsly(n, 0.0f); // accumulated skew / 累加斜切
             std::vector<bool> wfx(n, false), wfy(n, false); // accumulated flip (XOR) / 累加翻转
             std::vector<int> wo(n, 255);
-            // Accumulated nearest non-white packedColors tint down the parent chain
-            // (M2 text/group colors can live on a str_clip / comp container and tint
-            // its descendants — e.g. the CheeseWare "C"/"W" red and the cross black are
-            // not necessarily on each leaf frame). White = inherit nothing.
-            // 沿父链累计最近的"非白"packedColors 平涂（M2 的文本/组颜色可落在
-            // str_clip / comp 容器上给整棵子树着色——如 CheeseWare 的 C/W 红与十字黑并不
-            // 一定在叶子帧上）。白=不继承。
-            std::vector<std::uint32_t> wtint(n, 0xFFFFFFFFu);
+            // Accumulated nearest non-white packedColors tint (4 corners) down the
+            // parent chain (M2 text/group colors can live on a str_clip/comp container
+            // and tint its descendants). White corners = inherit nothing.
+            // 沿父链累计最近的"非白"packedColors 平涂（四角；M2 文本/组颜色可落在
+            // str_clip/comp 容器上给整棵子树着色）。白=不继承。
+            std::vector<std::array<std::uint32_t, 4>> wtint(
+                n, std::array<std::uint32_t, 4>{
+                    0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu});
             std::vector<bool> vis(n, true);
             // Per-node accumulated WORLD linear 2x2 matrix (rotation×scale×flip), used to
             // transform each child's LOCAL offset into world space (gap-1 alignment to
@@ -802,10 +948,80 @@ namespace motion {
             // 根节点及恒等父矩阵下的节点保持 px=ox+cx 不变（背景与 yuzu 字母不受影响）。
             std::vector<double> wm11(n, 1.0), wm12(n, 0.0), wm21(n, 0.0), wm22(n, 1.0);
             int drawn = 0;
+            // ---- ② Mesh/E-mote / ③ stencil / ④ child-clock / ⑤ param support state ----
+            // ② Mesh/E-mote：per-node active frame pointer + source icon dims (the mesh
+            // parent's clipW/clipH/originX/originY normalize each child into [0,1]^2
+            // before evaluating the patch, mirroring AetherKiri updateLayers). Resolved
+            // lazily via getImageInfo and cached for the frame.
+            // ② Mesh/E-mote：每节点当前生效帧指针 + 源 icon 尺寸（mesh 父的
+            // clipW/clipH/originX/originY 把每个子节点归一化到 [0,1]² 再求值面片，
+            // 对齐 AetherKiri updateLayers）。通过 getImageInfo 惰性解析、帧内缓存。
+            std::vector<const PSB::PSBMedia::PSBMotionFrame *> nodeActiveFrame(n, nullptr);
+            std::vector<float> imgW(n, 0.0f), imgH(n, 0.0f);
+            std::vector<float> imgOrX(n, 0.0f), imgOrY(n, 0.0f);
+            std::vector<std::string> imgKey(n); // icon key the cached dims belong to
+            std::unordered_map<std::string, std::array<float, 4>> iconMetaCache;
+            bool anyMesh = false, anyStencil = false, anyParam = false, anyCp = false,
+                 anySubClock = false, anyGround = false, anyMotionDt = false;
+            // ③ stencil composite (type-12) bookkeeping: subtle set handled per node.
+            // ③ stencil 合成（type-12）登记：具体集归属在节点循环里处理。
+            std::vector<int> stencilGroupOf(n, -1);   // nearest stencil ancestor / 最近 stencil 祖先
+            std::vector<bool> stencilMaskOf(n, false); // node referenced as a mask / 被引用为蒙版
+            bool drewGroup = false, drewMask = false;
+            // ⑤ parameterized clip TIME for parameterize-indexed nodes: mirror the
+            // reference by reading the selector variable from the Player's own
+            // _variables table (setVariable/getVariable are already TJS-bound).
+            // ⑤ 参数化 clip 时间：参考模型从 Player 自身的 _variables 表读选择器变量
+            //（setVariable/getVariable 已由 TJS 绑定）。
+            std::vector<double> nodeTimeOverride(n, -1.0); // <0 = use global clock
+            std::vector<PSB::PSBMedia::PSBMotionParameter> motionParams;
+            if(auto *media = PSB::GetGlobalPSBMedia()) {
+                motionParams = media->getMotionParameters(
+                    storageStr, _chara.AsStdString(), _motion.AsStdString());
+            }
+            if(!motionParams.empty()) anyParam = true;
+            // Pre-pass for stencil: mark each node's nearest stencil-composite ancestor
+            // and which nodes are referenced masks (label-match, like NodeTree).
+            // 预扫描 stencil：标记每个节点的最近 stencil 合成祖先，以及被引用为蒙版的
+            // 节点（按标签匹配，同 NodeTree）。
+            {
+                int activeStencil = -1;
+                for(int i = 0; i < n; i++) {
+                    const auto &nd = _motionNodes[i];
+                    if(nd.hasStencil) {
+                        anyStencil = true;
+                        activeStencil = i;
+                    }
+                    stencilGroupOf[i] = activeStencil;
+                    for(const int mIdx : nd.stencilMaskNodeIndices) {
+                        if(mIdx >= 0 && mIdx < n) stencilMaskOf[mIdx] = true;
+                    }
+                }
+            }
             // Save previous clip state for str_clip containers.
             // 保存 str_clip 容器之前的裁剪状态，绘制后恢复。
             ClipState prevClip;
             const bool clipSupported = readClip(dest, prevClip);
+            // ③ stencil composite provisioning: when any type-12 composite with
+            // authored masks exists, prepare + clear the two canvas-sized scratch
+            // layers once per pass (content → group, masks → mask).
+            // ③ stencil 合成供给：确有带蒙版的 type-12 合成组时，每轮预备并清空
+            // 两块画布大小的离屏层（内容→组层、蒙版→蒙版层）。
+            bool stencilActive = false;
+            if(anyStencil) {
+                for(int gi = 0; gi < n && !stencilActive; gi++) {
+                    if(_motionNodes[gi].hasStencil &&
+                       !_motionNodes[gi].stencilMaskNodeIndices.empty())
+                        stencilActive = true;
+                }
+                if(stencilActive) {
+                    iTJSDispatch2 *gl = getOrCreateStencilLayer(dest, false, cw, ch);
+                    iTJSDispatch2 *ml = getOrCreateStencilLayer(dest, true, cw, ch);
+                    if(gl && ml) { clear(gl, 0); clear(ml, 0); }
+                    if(logger) logger->info(
+                        "drawAnimatedTree stencil: composite active, scratch layers ready");
+                }
+            }
             for(int i = 0; i < n; i++) {
                 const auto &node = _motionNodes[i];
                 // Visibility semantics aligned to libkrkr2 / AetherKiri:
@@ -835,18 +1051,64 @@ namespace motion {
                         }
                     }
                 }
-                // Active frame = last frame with time <= now (per-frame evaluation).
-                // 活跃帧 = time <= now 的最后一帧（逐帧求值）。
-                const PSB::PSBMedia::PSBMotionFrame *af = nullptr;
-                for(const auto &f : frames) {
-                    if(f.time <= now) af = &f; else break;
+                // Effective evaluation time for this node:
+                //   (a) parameterize-indexed node → parameterized clip TIME (⑤);
+                //   (b) expanded sub-motion CONTENT → its own child clock (④):
+                //       runs from its launch time, loops by its own loopTime, and
+                //       hides before launch (AetherKiri child-player time sync);
+                //   (c) otherwise the global clock.
+                // 本节点生效求值时间：
+                //   (a) 带 parameterize 索引的节点 → 参数化 clip 时间（⑤）；
+                //   (b) 展开的子运动内容 → 自身子时钟（④）：自发起时刻起播，按自身
+                //       loopTime 循环，发起前隐藏（AetherKiri 子播放器时间同步）；
+                //   (c) 否则全局时钟。
+                tjs_int effNow = now;
+                if(node.parameterizeIndex >= 0 && anyParam) {
+                    if(node.parameterizeIndex < static_cast<int>(motionParams.size())) {
+                        const auto &parameter = motionParams[node.parameterizeIndex];
+                        double rawValue = 0.0;
+                        const auto vit = _variables.find(parameter.id);
+                        if(vit != _variables.end()) {
+                            const tTJSVariant &mv = vit->second;
+                            if(mv.Type() == tvtInteger) rawValue = static_cast<double>(mv.AsInteger());
+                            else if(mv.Type() == tvtReal) rawValue = mv.AsReal();
+                        }
+                        if(parameter.division > 0.0) {
+                            // parameterizedClipTime returns frames on the [0, division]
+                            // axis; convert frames→ms (60fps) for the workspace clock.
+                            // parameterizedClipTime 返回以 [0, division] 为轴的帧数；
+                            // 换算 帧→ms（60fps）给本工作区时钟。
+                            effNow = static_cast<tjs_int>(
+                                parameterizedClipTime(parameter, rawValue) * 1000.0 / 60.0);
+                            nodeTimeOverride[i] = effNow;
+                        }
+                        if(logger)
+                            logger->info("drawAnimatedTree param: '{}' param[{}]='{}' value={:.3f} nodeTime={}",
+                                         node.label, node.parameterizeIndex, parameter.id,
+                                         rawValue, static_cast<tjs_int>(effNow));
+                    }
+                } else if(node.submotionContent && !node.subRefSrc.empty()) {
+                    // (b) child clock: submotion starts at its launch keyframe and
+                    // loops with its own loopTime (a “real” sub-player clock instead
+                    // of sampling the parent's global tick).
+                    // (b) 子时钟：子运动自发起关键帧起播，用自身 loopTime 循环
+                    //（"真"子播放器时钟，而非采样父的全局 tick）。
+                    int subT = now - node.subLaunchTime;
+                    if(subT < 0) { vis[i] = false; continue; } // pre-launch hidden / 未发起
+                    if(node.subLoopTime > 0) subT %= node.subLoopTime;
+                    effNow = subT;
+                    anySubClock = true;
                 }
-                if(!af) {
-                    // No frame at or before `now`: hidden.
-                    // `now` 之前没有帧：隐藏。
-                    vis[i] = false;
-                    continue;
-                } else if(!af->visible) {
+                // Active frame = last frame with time <= effNow (per-frame evaluation).
+                // 活跃帧 = time <= effNow 的最后一帧（逐帧求值）。
+                const PSB::PSBMedia::PSBMotionFrame *afBase = nullptr;
+                for(const auto &f : frames) {
+                    if(f.time <= effNow) afBase = &f; else break;
+                }
+                if(!afBase) { vis[i] = false; continue; }
+                nodeActiveFrame[i] = afBase; // for mesh parents / 供 mesh 父节点使用
+                const PSB::PSBMedia::PSBMotionFrame *af = afBase;
+                if(!af->visible) {
                     // Reference semantics (libkrkr2 updateLayers 0x6BB8F4 /
                     // AetherKiri): a type-0 (invisible) frame HIDES the node for its
                     // time range — EXCEPT:
@@ -866,14 +1128,21 @@ namespace motion {
                     //     播放器），父 active 期间保持末可见帧——否则 m2logo 折叠件
                     //     会在折叠中途消失（它们自己的末尾 type-0 帧是子运动时间线的
                     //     结束，不是隐藏）；motion 播完（非循环）后保持，主界面入场不黑。
-                    const bool parentActive =
-                        (node.parentIndex < 0) || vis[node.parentIndex];
-                    const bool parentEnded =
-                        (node.parentIndex >= 0) &&
-                        (nodeContentEnd[node.parentIndex] >= 0) &&
-                        (now >= nodeContentEnd[node.parentIndex]);
-                    const bool pastMotionEnd =
-                        (_motionLoopTime <= 0) && (now >= motionEnd);
+                    // parentEnded/pastMotionEnd compare against PARENT-timeline times, so a
+                // sub-motion CONTENT node with its own child clock must use the
+                // GLOBAL clock here (the two timelines diverge once the sub loops).
+                // parentEnded/pastMotionEnd 对比的是**父时间线**时刻，因此带子时钟的
+                // 子运动内容节点在这里必须用**全局时钟**（子运动一循环，两条时间线就分叉）。
+                const tjs_int holdNow =
+                    (node.submotionContent && !node.subRefSrc.empty()) ? now : effNow;
+                const bool parentActive =
+                    (node.parentIndex < 0) || vis[node.parentIndex];
+                const bool parentEnded =
+                    (node.parentIndex >= 0) &&
+                    (nodeContentEnd[node.parentIndex] >= 0) &&
+                    (holdNow >= nodeContentEnd[node.parentIndex]);
+                const bool pastMotionEnd =
+                    (_motionLoopTime <= 0) && (holdNow >= motionEnd);
                     if(node.submotionContent) {
                         // Parent active: the sub-motion content is live; hold its last
                         // content once its OWN content ended (e.g. m2logo fold pieces
@@ -942,16 +1211,16 @@ namespace motion {
                 float interpSx = af->scaleX, interpSy = af->scaleY;
                 float interpSlx = af->slantX, interpSly = af->slantY;
                 float interpAngle = af->angle;
-                // Interpolated flat tint (M2 packedColors, corner 0). Defaults to the
+                // Interpolated 4-corner tint (M2 packedColors). Defaults to the
                 // active frame's color; animates toward the next keyframe (the m2logo
                 // thin line goes red→black) under the interpolation block below.
-                // 插值后的纯色 tint（M2 packedColors 的角 0）。默认取活跃帧颜色；在下
+                // 插值后的四角 tint（M2 packedColors）。默认取活跃帧四角；在下
                 // 方插值块内向下一关键帧渐变（m2logo 细线由红转黑）。
-                std::uint32_t interpTint = af->packedColors[0];
+                std::array<std::uint32_t, 4> interpPacked = af->packedColors;
                 if(af->visible) {
                     const PSB::PSBMedia::PSBMotionFrame *next = nullptr;
                     for(const auto &f : frames) {
-                        if(f.time > now) { next = &f; break; }
+                        if(f.time > effNow) { next = &f; break; }
                     }
                     // K2 semantics (PlayerUpdateLayerEval: crossfading = !invisible
                     // && interpolate): ONLY an ACTIVE frame of type 3 (interpolate)
@@ -974,7 +1243,7 @@ namespace motion {
                         // reference instead of subjecting velocity through big keyframes.
                         // 帧内线性进度；若**出发帧**带 M2 三次贝塞尔缓动(ccc)，用贝塞尔重映射，
                         // 让叶子摆动/字母滑入像参考一样平滑减速，而不是在大关键帧间生硬直连。
-                        float t = static_cast<float>(now - af->time) /
+                        float t = static_cast<float>(effNow - af->time) /
                                   static_cast<float>(next->time - af->time);
                         if(t < 0.0f) t = 0.0f; else if(t > 1.0f) t = 1.0f;
                         // Per-property easing aligned to the reference (AetherKiri
@@ -1013,6 +1282,31 @@ namespace motion {
                         interpOy = af->oy + (next->oy - af->oy) * t;
                         interpCx = af->cx + (next->cx - af->cx) * t;
                         interpCy = af->cy + (next->cy - af->cy) * t;
+                        // ⑤ cp rotation spline: when the DEPARTURE frame carries a
+                        // control-point curve (content "cp"), the position path is
+                        // ROTATED by the sampled (cosA,sinA) at the eased t instead of
+                        // a straight lerp (reference interpolatePosition69A4D4 /
+                        // sub_698454). Applied to the node's coord (position) — cp only
+                        // fires when the data authors it, otherwise pure lerp.
+                        // ⑤ cp 旋转样条：出发帧带控制点曲线（content "cp"）时，位置路径
+                        // 按采样点 (cosA,sinA) 在缓动 t 处**旋转**而非直线插值（参考
+                        // interpolatePosition69A4D4 / sub_698454）。作用在节点坐标
+                        //（位置）上——数据没有 cp 时退化为纯线性插值。
+                        if(!af->cp.empty()) {
+                            double rot[2] = {1.0, 0.0};
+                            evaluateCpCurve(rot, af->cp, static_cast<double>(tAngle));
+                            const double cosA = rot[0], sinA = rot[1];
+                            const double dCx = static_cast<double>(next->cx - af->cx);
+                            const double dCy = static_cast<double>(next->cy - af->cy);
+                            interpCx = static_cast<float>(
+                                af->cx + dCx * cosA - dCy * sinA);
+                            interpCy = static_cast<float>(
+                                af->cy + dCx * sinA + dCy * cosA);
+                            anyCp = true;
+                            if(logger)
+                                logger->info("drawAnimatedTree cp: '{}' t={:.3f} rot=({:.4f},{:.4f}) pos=({:.1f},{:.1f})",
+                                             node.label, t, cosA, sinA, interpCx, interpCy);
+                        }
                         interpOp = af->opacity + (next->opacity - af->opacity) * tOpa;
                         interpSx = af->scaleX + (next->scaleX - af->scaleX) * tScale;
                         interpSy = af->scaleY + (next->scaleY - af->scaleY) * tScale;
@@ -1071,13 +1365,16 @@ namespace motion {
                             auto lerpc = [](tjs_uint32 a, tjs_uint32 b, float r) {
                                 return static_cast<tjs_uint32>(a + (b - a) * r);
                             };
-                            const std::uint32_t a0 = af->packedColors[0];
-                            const std::uint32_t n0 = next->packedColors[0];
-                            interpTint =
-                                (lerpc((a0 >> 24) & 0xffu, (n0 >> 24) & 0xffu, tc) << 24) |
-                                (lerpc((a0 >> 16) & 0xffu, (n0 >> 16) & 0xffu, tc) << 16) |
-                                (lerpc((a0 >> 8) & 0xffu, (n0 >> 8) & 0xffu, tc) << 8) |
-                                (lerpc((a0 >> 0) & 0xffu, (n0 >> 0) & 0xffu, tc) << 0);
+                            // interpolate all 4 corners, not just corner 0 / 四角全部插值
+                            for(int ci = 0; ci < 4; ++ci) {
+                                const std::uint32_t a0 = af->packedColors[ci];
+                                const std::uint32_t n0 = next->packedColors[ci];
+                                interpPacked[ci] =
+                                    (lerpc((a0 >> 24) & 0xffu, (n0 >> 24) & 0xffu, tc) << 24) |
+                                    (lerpc((a0 >> 16) & 0xffu, (n0 >> 16) & 0xffu, tc) << 16) |
+                                    (lerpc((a0 >> 8) & 0xffu, (n0 >> 8) & 0xffu, tc) << 8) |
+                                    (lerpc((a0 >> 0) & 0xffu, (n0 >> 0) & 0xffu, tc) << 0);
+                            }
                         }
                     }
                 }
@@ -1090,7 +1387,7 @@ namespace motion {
                     ? (vis[node.parentIndex] ||
                        (node.submotionContent &&
                         nodeContentEnd[node.parentIndex] >= 0 &&
-                        now >= nodeContentEnd[node.parentIndex]))
+                        effNow >= nodeContentEnd[node.parentIndex]))
                     : true;
                 if(!parentOn) { vis[i] = false; continue; } // hidden parent hides subtree
                 const float baseX = (node.parentIndex >= 0) ? wx[node.parentIndex] : 0.0f;
@@ -1143,14 +1440,178 @@ namespace motion {
                 // 加进位置等于**双计**，会让整个精灵漂移（如叶子 ox=91 摆动时偏移/呈镜像）。
                 const float loX = interpCx;
                 const float loY = interpCy;
-                const float px = pOn
-                    ? static_cast<float>(wm11[node.parentIndex] * loX +
-                                         wm12[node.parentIndex] * loY) + baseX
+                // ② E-mote mesh position deformation. Ported from AetherKiri
+                // updateLayers sub_69AE74 (0x6BB714): when the PARENT is a mesh
+                // (meshType==1) and its meshSyncChildMask bit 1 is set, each child's
+                // LOCAL position is normalized into the parent's source-icon box
+                // (u,v ∈ [0,1]), evaluated on the parent's bicubic patch, then mapped
+                // back to local space — BEFORE the parent world-matrix transform below.
+                // Angle (gradient) and scale (jacobian) deformation follow the same
+                // gate/flags, then fold into the accumulated angle/scale.
+                // ② E-mote 网格位置变形。移植自 AetherKiri updateLayers sub_69AE74
+                // (0x6BB714)：父节点是网格（meshType==1）且 meshSyncChildMask 位 1
+                // 置位时，把每个子节点的**局部位置**归一化到父的源 icon 盒（u,v ∈
+                // [0,1]）、在父的双三次面片上求值、再映回局部空间——发生在下方的父
+                // 世界矩阵变换**之前**。角度（梯度）与缩放（Jacobian）变形走同一
+                // 门控/标志，随后折进累加角度/缩放。
+                float defCx = loX, defCy = loY;
+                float meshAngleDelta = 0.0f, meshScaleFactor = 1.0f;
+                if(pOn) {
+                    const auto &pnode = _motionNodes[node.parentIndex];
+                    const PSB::PSBMedia::PSBMotionFrame *paf = nodeActiveFrame[node.parentIndex];
+                    const bool hasSrc = (af->src.size() > 4 && af->src.compare(0, 4, "src/") == 0);
+                    if(paf && hasSrc && pnode.meshType == 1 &&
+                       (pnode.meshSyncChildMask & 0x1) &&
+                       paf->meshControlPoints.size() >= 32) {
+                        // Parent icon dims normalize the child into [0,1]^2
+                        // (reference: normX=(posX+originX)/clipW). Lazily resolved
+                        // (getImageInfo) and frame-cached.
+                        // 用父 icon 尺寸把子节点归一化到 [0,1]²（参考：
+                        // normX=(posX+originX)/clipW）。getImageInfo 惰性解析并帧内缓存。
+                        float pw = imgW[node.parentIndex], ph = imgH[node.parentIndex];
+                        float porX = imgOrX[node.parentIndex], porY = imgOrY[node.parentIndex];
+                        if(pw <= 0.0f || ph <= 0.0f) {
+                            std::string psrc = paf->src;
+                            if(psrc.size() > 4 && psrc.compare(0, 4, "src/") == 0) {
+                                const std::string pres = MotionSrcToResource(psrc);
+                                const std::string pkey = storageStr + "/" + pres + "/pixel.png";
+                                // Re-resolve when the parent's icon changed (cache is
+                                // keyed by parent index + its icon key).
+                                // 父 icon 变化时重新解析（缓存按父索引+其 icon 键）。
+                                if(imgKey[node.parentIndex] != pkey) {
+                                    auto cit = iconMetaCache.find(pkey);
+                                    if(cit == iconMetaCache.end() && PSB::GetGlobalPSBMedia()) {
+                                        PSB::PSBMedia::CachedImageInfo gi;
+                                        if(PSB::GetGlobalPSBMedia()->getImageInfo(pkey, gi)) {
+                                            cit = iconMetaCache.emplace(
+                                                pkey, std::array<float, 4>{
+                                                    static_cast<float>(gi.width), static_cast<float>(gi.height),
+                                                    gi.originX, gi.originY}).first;
+                                        }
+                                    }
+                                    if(cit != iconMetaCache.end()) {
+                                        pw = (*cit)[0]; ph = (*cit)[1];
+                                        porX = (*cit)[2]; porY = (*cit)[3];
+                                        imgW[node.parentIndex] = pw; imgH[node.parentIndex] = ph;
+                                        imgOrX[node.parentIndex] = porX; imgOrY[node.parentIndex] = porY;
+                                        imgKey[node.parentIndex] = pkey;
+                                    }
+                                }
+                            }
+                            if(pw <= 0.0f) pw = pnode.width > 0 ? static_cast<float>(pnode.width) : 1.0f;
+                            if(ph <= 0.0f) ph = pnode.height > 0 ? static_cast<float>(pnode.height) : 1.0f;
+                        }
+                        const float u = (loX + porX) / pw;
+                        const float v = (loY + porY) / ph;
+                        float ex = u, ey = v;
+                        evaluateMotionBezierPatch(paf->meshControlPoints.data(), u, v, ex, ey);
+                        defCx = ex * pw - porX;
+                        defCy = ey * ph - porY;
+                        anyMesh = true;
+                        // Angle deformation from the mesh gradient (meshSyncChildMask
+                        // bit 2, inheritMask bit 0x010) — 4-eps sampling, averaged.
+                        // 由网格梯度变形角度（meshSyncChildMask 位 2、inheritMask 位
+                        // 0x010）——4 个 eps 邻域采样后取平均。
+                        if((pnode.meshSyncChildMask & 0x2) && (inh & 0x010)) {
+                            const float eps = 0.0001f;
+                            const float *mp = paf->meshControlPoints.data();
+                            float x1, y1, x2, y2, x3, y3, x4, y4;
+                            evaluateMotionBezierPatch(mp, u - eps, v, x1, y1);
+                            evaluateMotionBezierPatch(mp, u + eps, v, x2, y2);
+                            evaluateMotionBezierPatch(mp, u, v - eps, x3, y3);
+                            evaluateMotionBezierPatch(mp, u, v + eps, x4, y4);
+                            const double a1 = std::atan2(static_cast<double>(y3 - y4),
+                                                         static_cast<double>(x4 - x3));
+                            const double a2 = std::atan2(static_cast<double>(x2 - x1),
+                                                         static_cast<double>(y2 - y1));
+                            meshAngleDelta = static_cast<float>((a1 + a2) * 0.5 * 360.0 / 6.28318531);
+                        }
+                        // Scale deformation from the mesh jacobian (meshSyncChildMask
+                        // bit 4, inheritMask bits 0x020/0x040).
+                        // 由网格 Jacobian 变形缩放（meshSyncChildMask 位 4、inheritMask
+                        // 位 0x020/0x040）。
+                        if((pnode.meshSyncChildMask & 0x4) && (inh & 0x060)) {
+                            const float eps = 0.0001f;
+                            const float *mp = paf->meshControlPoints.data();
+                            float x1, y1, x2, y2, x3, y3, x4, y4;
+                            evaluateMotionBezierPatch(mp, u - eps, v, x1, y1);
+                            evaluateMotionBezierPatch(mp, u + eps, v, x2, y2);
+                            evaluateMotionBezierPatch(mp, u, v - eps, x3, y3);
+                            evaluateMotionBezierPatch(mp, u, v + eps, x4, y4);
+                            const double dx1 = static_cast<double>(x2 - x1);
+                            const double dy1 = static_cast<double>(y2 - y1);
+                            const double dx2 = static_cast<double>(x3 - x4);
+                            const double dy2 = static_cast<double>(y3 - y4);
+                            const double area1 = std::fabs(dx1 * (y4 - y1) - dy1 * (x4 - x1)) * 0.5;
+                            const double area2 = std::fabs(dx1 * (y3 - y1) - dy1 * (x3 - x1)) * 0.5;
+                            meshScaleFactor = static_cast<float>(
+                                std::sqrt(area1 + area2 + area2 + area1) / 0.0002);
+                        }
+                        if(logger)
+                            logger->info("drawAnimatedTree mesh: child='{}' parent='{}' u={:.3f} v={:.3f} local=({:.1f},{:.1f})->({:.1f},{:.1f}) angleDelta={:.2f} scaleFactor={:.3f} flags=0x{:x}",
+                                         node.label, pnode.label, u, v, loX, loY, defCx, defCy,
+                                         meshAngleDelta, meshScaleFactor, pnode.meshSyncChildMask);
+                    }
+                }
+                float px = pOn
+                    ? static_cast<float>(wm11[node.parentIndex] * defCx +
+                                         wm12[node.parentIndex] * defCy) + baseX
                     : loX;
-                const float py = pOn
-                    ? static_cast<float>(wm21[node.parentIndex] * loX +
-                                         wm22[node.parentIndex] * loY) + baseY
+                float py = pOn
+                    ? static_cast<float>(wm21[node.parentIndex] * defCx +
+                                         wm22[node.parentIndex] * defCy) + baseY
                     : loY;
+                // ⑤ groundCorrection TJS callback (reference sub_6BAA10): when the
+                // node carries PSB "groundCorrection", invoke onGroundCorrection on
+                // the destination layer with [parentPos] and [childPos] arrays. If
+                // the callback returns an array the child position is replaced.
+                // ⑤ groundCorrection TJS 回调（参考 sub_6BAA10）：节点带 PSB
+                // "groundCorrection" 时，在目标层上调用 onGroundCorrection，传入
+                // [父位置] 与 [子位置] 数组；回调返回数组则替换子位置。
+                if(node.groundCorrection) {
+                    anyGround = true;
+                    try {
+                        tTJSVariant hasFn;
+                        if(TJS_SUCCEEDED(dest->PropGet(0, TJS_W("onGroundCorrection"),
+                                                       nullptr, &hasFn, dest)) &&
+                           hasFn.Type() == tvtObject) {
+                            iTJSDispatch2 *parentArr = TJSCreateArrayObject();
+                            iTJSDispatch2 *childArr = TJSCreateArrayObject();
+                            if(parentArr && childArr) {
+                                const tTJSVariant p0(static_cast<tjs_real>(node.parentIndex >= 0 ? wx[node.parentIndex] : 0.0f));
+                                const tTJSVariant p1(static_cast<tjs_real>(node.parentIndex >= 0 ? wy[node.parentIndex] : 0.0f));
+                                const tTJSVariant c0(static_cast<tjs_real>(px));
+                                const tTJSVariant c1(static_cast<tjs_real>(py));
+                                parentArr->PropSet(TJS_MEMBERENSURE, TJS_W("0"), nullptr, const_cast<tTJSVariant *>(&p0), parentArr);
+                                parentArr->PropSet(TJS_MEMBERENSURE, TJS_W("1"), nullptr, const_cast<tTJSVariant *>(&p1), parentArr);
+                                childArr->PropSet(TJS_MEMBERENSURE, TJS_W("0"), nullptr, const_cast<tTJSVariant *>(&c0), childArr);
+                                childArr->PropSet(TJS_MEMBERENSURE, TJS_W("1"), nullptr, const_cast<tTJSVariant *>(&c1), childArr);
+                                tTJSVariant args[2] = { tTJSVariant(parentArr, parentArr),
+                                                        tTJSVariant(childArr, childArr) };
+                                tTJSVariant *argv[] = { &args[0], &args[1] };
+                                tTJSVariant result;
+                                dest->FuncCall(0, TJS_W("onGroundCorrection"), nullptr, &result, 2, argv, dest);
+                                iTJSDispatch2 *resObj = result.AsObjectNoAddRef();
+                                if(resObj) {
+                                    tTJSVariant rx, ry;
+                                    if(TJS_SUCCEEDED(resObj->PropGet(0, TJS_W("0"), nullptr, &rx, resObj)))
+                                        if(rx.Type() == tvtInteger || rx.Type() == tvtReal)
+                                            px = static_cast<float>(rx.AsReal());
+                                    if(TJS_SUCCEEDED(resObj->PropGet(0, TJS_W("1"), nullptr, &ry, resObj)))
+                                        if(ry.Type() == tvtInteger || ry.Type() == tvtReal)
+                                            py = static_cast<float>(ry.AsReal());
+                                }
+                                if(logger)
+                                    logger->info("drawAnimatedTree groundCorrection: '{}' -> ({:.1f},{:.1f})",
+                                                 node.label, px, py);
+                                parentArr->Release();
+                                childArr->Release();
+                            }
+                        }
+                    } catch(...) {
+                        if(logger) logger->warn("drawAnimatedTree groundCorrection: exception in '{}'", node.label);
+                    }
+                }
                 // Accumulate scale through the parent chain (B round 3 partial: a
                 // container's scale now propagates to its children multiplicatively).
                 // 沿父链累加缩放（B 第 3 轮的一部分：容器的缩放以乘法传给子层）。
@@ -1177,8 +1638,19 @@ namespace motion {
                 //（不乘父）。
                 const float ownSx = std::max(interpSx, 0.0f);
                 const float ownSy = std::max(interpSy, 0.0f);
-                const float scx = (inh & 0x020) ? baseSx * ownSx : ownSx;
-                const float scy = (inh & 0x040) ? baseSy * ownSy : ownSy;
+                // ② E-mote jacobian scale deformation folds into the OWN scale before
+                // inheritance (the reference multiplies the accumulated scale, which for
+                // us is own×parent — equivalent). Gate: mesh angle bit 2 uses inheritMask
+                // 0x10, scale bit 4 uses 0x020/0x040; only apply when that bit is set.
+                // ② E-mote Jacobian 缩放变形折进**自身**缩放后再继承（参考乘到累加缩放，
+                // 等价于 自身×父）。门控：mesh 角度位 2 用 inheritMask 0x10、缩放位 4 用
+                // 0x020/0x040；仅在该位置位时生效。
+                const float ownSxM = (meshScaleFactor != 1.0f && (inh & 0x020))
+                    ? ownSx * meshScaleFactor : ownSx;
+                const float ownSyM = (meshScaleFactor != 1.0f && (inh & 0x040))
+                    ? ownSy * meshScaleFactor : ownSy;
+                const float scx = (inh & 0x020) ? baseSx * ownSxM : ownSxM;
+                const float scy = (inh & 0x040) ? baseSy * ownSyM : ownSyM;
                 // Additionally, the M2 `str_clip` text container carries a CLIP-REGION
                 // scale (zx/zy, e.g. m2logo str_clip s=9,1) that must scale ONLY the
                 // reveal window, NOT the letter glyphs underneath — otherwise the letters
@@ -1194,9 +1666,69 @@ namespace motion {
                 // Accumulate rotation through the parent chain (deg, additive) — gated by
                 // inheritMask bit 0x010; CLEAR uses own angle only.
                 // 沿父链累加旋转角（度，相加）——由 inheritMask bit 0x010 门控；为 0 只用自己的角度。
+                //
+                // ④ motionDt 5 模式 (reference sub_6BE534, mn.activeSlot().motionDt):
+                //   mode 1 = direct dofst (replaces keyframe angle contribution);
+                //   mode 2 = dofst + atan2(prevPos - currentPos) (direction of motion);
+                //   mode 4 = dofst + atan2 toward node `motionDtgt`.
+                //   (mode 3 is the dual-slot crossfade path — the workspace has no
+                //   crossfade slots, so it degrades to mode 2's per-frame delta.)
+                // ④ motionDt 5 模式（参考 sub_6BE534，mn.activeSlot().motionDt）：
+                //   模式 1=直接 dofst（取代关键帧角贡献）、模式 2=dofst+atan2(上一位置-
+                //   当前位置)（运动朝向）、模式 4=dofst+朝节点 motionDtgt 的 atan2。
+                //   （模式 3 是双槽交叉淡入路径——本工作区无交叉淡入槽，退化为模式 2 的
+                //   逐帧位移差。）
+                float motionDtExtra = 0.0f;
+                if(af->motionDt != 0) {
+                    float mdtBase = af->motionDofst;
+                    if(af->motionDt == 2) {
+                        // delta = current own pos - PREVIOUS own pos (per-frame delta,
+                        // reference deltaPosX/Y). Reuse the LAST FRAME state if we have
+                        // one (persistent, not cleared per draw) else the keyframe delta.
+                        // 位移差 = 当前自身位置 - 上一帧自身位置（参考 deltaPosX/Y）。
+                        // 有上一帧状态用上一帧（跨绘制保留），否则用关键帧间差。
+                        const float prevCx = _lastFramePosX.count(node.label) ? _lastFramePosX[node.label] : af->cx;
+                        const float prevCy = _lastFramePosY.count(node.label) ? _lastFramePosY[node.label] : af->cy;
+                        const float dx = interpCx - prevCx;
+                        const float dy = interpCy - prevCy;
+                        mdtBase += static_cast<float>(std::atan2(static_cast<double>(dy),
+                                                                 static_cast<double>(dx)) * 360.0 / 6.28318531);
+                    } else if(af->motionDt == 4 && !af->motionDtgt.empty()) {
+                        // aim at another NODE's world position (reference sub_6BE7B4).
+                        // 瞄准另一节点的世界位置（参考 sub_6BE7B4）。
+                        for(int ti = 0; ti < n; ti++) {
+                            if(_motionNodes[ti].label == af->motionDtgt) {
+                                const float dx = wx[ti] - px;
+                                const float dy = wy[ti] - py;
+                                mdtBase += static_cast<float>(std::atan2(static_cast<double>(dy),
+                                                                         static_cast<double>(dx)) * 360.0 / 6.28318531);
+                                break;
+                            }
+                        }
+                    }
+                    motionDtExtra = mdtBase;
+                    anyMotionDt = true;
+                    // Persist this node's own pos for the NEXT frame's mode-2 delta.
+                    // 保存本节点自身位置，供下一帧模式 2 的位移差使用。
+                    _lastFramePosX[node.label] = interpCx;
+                    _lastFramePosY[node.label] = interpCy;
+                    if(logger)
+                        logger->info("drawAnimatedTree motionDt: '{}' mode={} dofst={:.2f} extra={:.2f}",
+                                     node.label, af->motionDt, af->motionDofst, motionDtExtra);
+                }
                 const float effAngle = (inh & 0x010)
-                    ? baseAngle + interpAngle
-                    : interpAngle;
+                    ? baseAngle + interpAngle + meshAngleDelta
+                    : interpAngle + meshAngleDelta;
+                // ④ motionDt mode 1 REPLACES the keyframe angle with dofst (still added
+                // to the parent chain); modes 2/4 ADD the aiming angle. Mode 1's value
+                // carries the authored dofst itself (reference case 1: computedAngle =
+                // dofst + accumulated.angle — our accumulated angle is base+interp).
+                // ④ motionDt 模式 1 **取代**关键帧角为 dofst（仍叠加父链）；模式 2/4
+                // **叠加**瞄准角。模式 1 的值即作者写的 dofst 本身（参考 case 1：
+                // computedAngle = dofst + accumulated.angle——我们的累加角即 base+interp）。
+                const float finalAngle = (af->motionDt == 1)
+                    ? baseAngle + af->motionDofst + meshAngleDelta
+                    : (af->motionDt != 0 ? effAngle + motionDtExtra : effAngle);
                 // Accumulate skew through the parent chain (additive) — gated by
                 // inheritMask bit 0x080 (X) / 0x100 (Y) (AetherKiri updateLayers
                 // 0x6BB8F4: slantX += parent.slantX). We previously never read skew.
@@ -1214,21 +1746,29 @@ namespace motion {
                 // no tint. Stored so descendants inherit the container color too.
                 // 生效 tint：节点自身非白的帧色，否则沿父链取最近的非白容器色（文本/组
                 // 着色）。白=不着色。存起来供子节点继续继承该容器色。
-                const std::uint32_t effTint =
-                    (interpTint != 0xFFFFFFFFu)
-                        ? interpTint
-                        : ((node.parentIndex >= 0) ? wtint[node.parentIndex]
-                                                   : 0xFFFFFFFFu);
-                wtint[i] = effTint;
+                // Effective 4-corner tint: the node's own non-white frame corners, else the
+                // parent chain's nearest non-white container corners (text/group tint).
+                // White corners = no tint. Stored so descendants inherit them too.
+                // 生效四角 tint：节点自身非白的帧四角，否则沿父链取最近的非白容器四角
+                //（文本/组着色）。白=不着色。存起来供子节点继续继承。
+                const bool ownColored = (interpPacked[0] != 0xFFFFFFFFu);
+                std::array<std::uint32_t, 4> effPacked =
+                    ownColored ? interpPacked
+                               : ((node.parentIndex >= 0)
+                                      ? wtint[node.parentIndex]
+                                      : std::array<std::uint32_t, 4>{
+                                            0xFFFFFFFFu, 0xFFFFFFFFu,
+                                            0xFFFFFFFFu, 0xFFFFFFFFu});
+                wtint[i] = effPacked;
                 // Store this node's WORLD linear matrix (from accumulated flip/angle/scale)
                 // so its children can be position-transformed by it next (pre-order).
                 // 存储本节点的**世界线性矩阵**（由累加 flip/angle/scale 构建），供下一轮
                 //（子节点）用它做位置变换（先序）。
-                buildLocalMatrix(effFx, effFy, effAngle, scxChild, scyChild,
+                buildLocalMatrix(effFx, effFy, finalAngle, scxChild, scyChild,
                                  effSlx, effSly,
                                  node.transformOrder,
                                  wm11[i], wm12[i], wm21[i], wm22[i]);
-                wa[i] = effAngle;
+                wa[i] = finalAngle;
                 wslx[i] = effSlx; wsly[i] = effSly;
                 wfx[i] = effFx; wfy[i] = effFy;
                 wo[i] = wop;
@@ -1356,6 +1896,30 @@ namespace motion {
                     logger->info("drawAnimatedTree strclip: '{}' clip=({},{},{},{}) win=[{},{}]",
                         node.label, static_cast<int>(wcL), static_cast<int>(wcT),
                         static_cast<int>(wcR), static_cast<int>(wcB), winMin, winMax);
+                // ⑤ 父 viewport 裁剪（通用）：非 type-7 容器若本帧自带 clip 矩形
+                //（frame clip），把该矩形按其世界盒换算成层坐标，作为其后代的裁剪窗。
+                // 与 str_clip 的"字母范围"启发式不同，这里直接用作者给出的矩形。
+                // ⑤ Parent viewport clip (generic): a NON-type-7 container whose active
+                // frame carries its own clip rect maps that rect into layer space via
+                // its world box and clips its descendants — unlike str_clip's letter
+                // heuristic, this uses the authored rect directly.
+                bool isViewportClip = false;
+                if(!isStrClipContainer && af->hasClip && !isStrClipNode) {
+                    const float anX = node.width > 0 ? static_cast<float>(node.width) * 0.5f : 0.0f;
+                    const float anY = node.height > 0 ? static_cast<float>(node.height) * 0.5f : 0.0f;
+                    const float left = static_cast<float>(_coordX + halfCw) + px
+                        - static_cast<float>(wm11[i] * anX + wm12[i] * anY);
+                    const float top = static_cast<float>(_coordY + halfCh) + py
+                        - static_cast<float>(wm21[i] * anX + wm22[i] * anY);
+                    wcL = left + af->clipL * scxChild;
+                    wcT = top + af->clipT * scyChild;
+                    wcR = left + af->clipR * scxChild;
+                    wcB = top + af->clipB * scyChild;
+                    isViewportClip = (wcR > wcL && wcB > wcT);
+                    if(logger)
+                        logger->info("drawAnimatedTree viewportClip: '{}' clip=({:.0f},{:.0f},{:.0f},{:.0f})",
+                                     node.label, wcL, wcT, wcR, wcB);
+                }
                 // Only image lines draw; layout/motion containers only accumulate.
                 // 仅图像行绘制；layout/motion 容器只累加不绘制。
                 // --- str_clip clip lifecycle (runs for containers AND images) ---
@@ -1370,7 +1934,7 @@ namespace motion {
                     }
                     if(!under) { writeClip(dest, prevClip); _strClipActiveParent = -1; }
                 }
-                if(isStrClipContainer) {
+                if(isStrClipContainer || isViewportClip) {
                     writeClip(dest, ClipState{static_cast<int>(wcL), static_cast<int>(wcT),
                                               static_cast<int>(wcR - wcL), static_cast<int>(wcB - wcT)});
                     _strClipActiveParent = i;
@@ -1488,25 +2052,23 @@ namespace motion {
                     hasIconOrigin ? (std::to_string(static_cast<int>(iconOrX)) + "," + std::to_string(static_cast<int>(iconOrY))) : std::string("-"),
                     static_cast<tjs_int>(af->time), px, py, anchorX, anchorY,
                     mA, mB, mC, mD, outputTx, outputTy,
-                    iw, ih, effAngle, wop, af->blendMode, af->src);
+                    iw, ih, finalAngle, wop, af->blendMode, af->src);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
-                // Apply the M2 flat vertex-color tint to the glyph texture before
-                // drawing (identity when white). This is what colors the m2logo C/W
-                // red, the thin line red→black, and the black cross vertical line —
-                // operateAffine has no color channel, so tint the source pixels here.
-                // 绘制前把 M2 纯色顶点色平涂到字形纹理（白色为恒等跳过）。正是它给
-                // m2logo 的 C/W 上红、细线红转黑、黑色十字竖线上色的——operateAffine
-                // 没有颜色通道，因此在此乘源像素。
-                if(effTint != 0xFFFFFFFFu) {
-                    const bool tintApplied = applyFlatTint(temp, effTint);
-                    // Diagnostic: log any non-white tint so a real-device run pinpoints
-                    // whether the M2 color parsed (non-white here) and whether the
-                    // premultiplied write reached the sampled texture (applied).
-                    // 诊断：非白 tint 一律记录，真机运行据此定位 M2 颜色是否解析成功
-                    //（此处非白）以及预乘写入是否作用到被采样纹理（applied）。
+                // Apply the M2 PER-CORNER vertex-color tint to the glyph texture before
+                // drawing (identity when all corners white). This is what colors the
+                // m2logo C/W red, the thin line red→black, and the black cross — plus
+                // 4-corner gradients when authored — operateAffine has no color channel,
+                // so tint the source pixels here.
+                // 绘制前把 M2 **四角**顶点色平涂到字形纹理（四角全白为恒等跳过）。给
+                // m2logo 的 C/W 上红、细线红转黑、黑色十字，以及作者创作的四角渐变上
+                // 色——operateAffine 没有颜色通道，因此在此乘源像素。
+                if(effPacked[0] != 0xFFFFFFFFu || effPacked[1] != 0xFFFFFFFFu ||
+                   effPacked[2] != 0xFFFFFFFFu || effPacked[3] != 0xFFFFFFFFu) {
+                    const bool tintApplied = applyCornerTint(temp, effPacked);
                     if(logger)
-                        logger->info("drawAnimatedTree tint: '{}' color={:08x} applied={}",
-                                     node.label, effTint, tintApplied ? 1 : 0);
+                        logger->info("drawAnimatedTree tint: '{}' c0={:08x} c1={:08x} c2={:08x} c3={:08x} applied={}",
+                                     node.label, effPacked[0], effPacked[1],
+                                     effPacked[2], effPacked[3], tintApplied ? 1 : 0);
                 } else {
                     // Always log the RAW frame color for the m2logo pieces that should
                     // be colored (C/W letters icon35/icon39, cross vertical icon32, and
@@ -1522,7 +2084,7 @@ namespace motion {
                         af->src.compare(0, 15, "src/logo/icon2") == 0 ||
                         af->src == "src/logo/icon32")) {
                         logger->info("drawAnimatedTree rawColor: '{}' own={:08x} eff={:08x}",
-                                     node.label, af->packedColors[0], effTint);
+                                     node.label, af->packedColors[0], effPacked[0]);
                     }
                 }
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
@@ -1568,13 +2130,32 @@ namespace motion {
                                           &opArgs[6], &opArgs[7], &opArgs[8],
                                           &opArgs[9], &opArgs[10], &opArgs[11],
                                           &opArgs[12], &opArgs[13] };
-                try {
-                    dest->FuncCall(0, TJS_W("operateAffine"), nullptr, nullptr, 14, opArgv, dest);
-                    drawn++;
-                } catch(const std::exception &e) {
-                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateAffine exception: {}", e.what());
-                } catch(...) {
-                    if(auto l = _logger()) l->warn("drawAnimatedTree: operateAffine unknown exception");
+                // ③ stencil divert: nodes inside a type-12 composite draw into the
+                // offscreen GROUP layer; referenced mask nodes draw into the MASK
+                // layer (even when authored outside the group subtree — masks are
+                // dedicated sprites); both fold together at the end of the pass.
+                // ③ stencil 分流：type-12 合成组内的节点画进离屏**组层**；被引用的
+                // 蒙版节点画进**蒙版层**（即使作者把蒙版放在组子树外——蒙版是专用
+                // 精灵）；两者在本轮末尾合成。
+                iTJSDispatch2 *drawTarget = dest;
+                if(anyStencil && (stencilMaskOf[i] || stencilGroupOf[i] >= 0)) {
+                    if(stencilMaskOf[i]) {
+                        drawTarget = getOrCreateStencilLayer(dest, true, cw, ch);
+                        if(drawTarget) drewMask = true;
+                    } else {
+                        drawTarget = getOrCreateStencilLayer(dest, false, cw, ch);
+                        if(drawTarget) drewGroup = true;
+                    }
+                }
+                if(drawTarget) {
+                    try {
+                        drawTarget->FuncCall(0, TJS_W("operateAffine"), nullptr, nullptr, 14, opArgv, drawTarget);
+                        drawn++;
+                    } catch(const std::exception &e) {
+                        if(auto l = _logger()) l->warn("drawAnimatedTree: operateAffine exception: {}", e.what());
+                    } catch(...) {
+                        if(auto l = _logger()) l->warn("drawAnimatedTree: operateAffine unknown exception");
+                    }
                 }
             }
             // Restore the layer clip we saved, so a str_clip crop that was the last
@@ -1584,6 +2165,67 @@ namespace motion {
             if(_strClipActiveParent >= 0) {
                 writeClip(dest, prevClip);
                 _strClipActiveParent = -1;
+            }
+            // ③ stencil composite fold: alpha-multiply the mask into the group and
+            // blit the masked group onto the destination as one normal-alpha pass.
+            // Only the first active composite type-12 group is folded this pass (the
+            // scratch layers are single-buffered); a probe notes every composite.
+            // ③ stencil 合成收尾：把蒙版 alpha 乘进组层，再把蒙版后的组层以普通 alpha
+            // 一道合成到目标。本轮只折叠第一个活跃的 type-12 合成组（离屏层为单缓冲）；
+            // 探针会打印每个合成组。
+            if(stencilActive && drewGroup) {
+                iTJSDispatch2 *gl = getOrCreateStencilLayer(dest, false, cw, ch);
+                iTJSDispatch2 *ml = getOrCreateStencilLayer(dest, true, cw, ch);
+                int compositeCount = 0;
+                for(int gi = 0; gi < n; gi++) {
+                    const auto &gnd = _motionNodes[gi];
+                    if(!gnd.hasStencil || gnd.stencilMaskNodeIndices.empty()) continue;
+                    compositeCount++;
+                    if(compositeCount > 1) {
+                        if(logger) logger->warn(
+                            "drawAnimatedTree stencil: multiple composites ({}), only first folded", compositeCount);
+                        continue;
+                    }
+                    const bool applied = applyStencilComposite(gl, ml, gnd.stencilType);
+                    if(applied) {
+                        // Blit the masked group at canvas origin (identity rect).
+                        // 把蒙版后的组层按画布原点合成（恒等矩形）。
+                        tTJSVariant srArgs[9] = {
+                            tTJSVariant(static_cast<tjs_int>(0)),
+                            tTJSVariant(static_cast<tjs_int>(0)),
+                            tTJSVariant(gl, gl),
+                            tTJSVariant(static_cast<tjs_int>(0)),
+                            tTJSVariant(static_cast<tjs_int>(0)),
+                            tTJSVariant(static_cast<tjs_int>(cw)),
+                            tTJSVariant(static_cast<tjs_int>(ch)),
+                            tTJSVariant(static_cast<tjs_int>(2)), // omAlpha / 正常 alpha
+                            tTJSVariant(static_cast<tjs_int>(255)),
+                        };
+                        tTJSVariant *srArgv[] = { &srArgs[0], &srArgs[1], &srArgs[2],
+                                                  &srArgs[3], &srArgs[4], &srArgs[5],
+                                                  &srArgs[6], &srArgs[7], &srArgs[8] };
+                        try {
+                            dest->FuncCall(0, TJS_W("operateRect"), nullptr, nullptr, 9, srArgv, dest);
+                            drawn++;
+                        } catch(...) {
+                            if(auto l = _logger()) l->warn("drawAnimatedTree stencil: composite blit exception");
+                        }
+                        if(logger)
+                            logger->info("drawAnimatedTree stencil: '{}' stencilType={} group={} mask={} applied={}",
+                                         gnd.label, gnd.stencilType, drewGroup ? 1 : 0, drewMask ? 1 : 0, applied ? 1 : 0);
+                    }
+                    if(gl) clear(gl, 0);
+                    if(ml) clear(ml, 0);
+                }
+            }
+            // Feature-hit probe (logs once per frame aggregated) — lets a device run
+            // show which of ②③④⑤ actually fired in the data at a glance.
+            // 功能命中探针（每帧聚合打印一次）——真机日志一眼看出 ②③④⑤ 哪些真被数据触发。
+            if(logger) {
+                if(anyMesh || anyStencil || anyParam || anyCp || anySubClock || anyGround || anyMotionDt)
+                    logger->info("drawAnimatedTree features: mesh={} stencil={} param={} cp={} subClock={} ground={} motionDt={}",
+                                 anyMesh ? 1 : 0, anyStencil ? 1 : 0, anyParam ? 1 : 0, anyCp ? 1 : 0,
+                                 anySubClock ? 1 : 0, anyGround ? 1 : 0, anyMotionDt ? 1 : 0);
             }
             return drawn;
         }
@@ -2136,20 +2778,132 @@ namespace motion {
             }
         }
 
-        // Apply a FLAT per-sprite color tint (M2 packedColors) to the just-loaded
-        // glyph texture. The 2D Layer.operateAffine has no color channel, so for a
-        // non-white tint we multiply the source pixels in premultiplied-ARGB directly:
-        //   out_rgb = src_rgb * tint_rgb / 255,  alpha unchanged.
-        // A white/opaque tint (0xFFFFFFFF) is the identity and is SKIPPED, keeping the
-        // per-pixel work limited to the colored sprites (m2logo C/W red, the red thin
-        // line that later fades to black, and the black cross vertical line).
-        // 对刚加载的字形纹理应用 M2 packedColors 的**纯色平涂**。2D 的 Layer.operateAffine
-        // 没有颜色通道，因此对非白 tint 直接预乘 ARGB 逐像素相乘：
-        //   out_rgb = src_rgb * tint_rgb / 255，alpha 不变。
-        // 纯白(0xFFFFFFFF)是恒等、直接跳过，把逐像素开销限制在着色精灵上（m2logo 的
-        // C/W 红、后转黑的红色细线、黑色十字竖线）。
-        static bool applyFlatTint(iTJSDispatch2 *temp, std::uint32_t tint) {
-            if(tint == 0xFFFFFFFFu) return true; // identity / 恒等
+        // ③ stencil offscreen layer provisioning: a type-12 composite buffers its
+        // content (group) and its mask (mask) into two canvas-sized scratch layers
+        // which are alpha-multiplied at the end of drawAnimatedTree. Both are inert
+        // (invisible, same parent chain as the shared temp layer) and reused across
+        // frames until cleanupTempLayer().
+        // ③ stencil 离屏层供给：type-12 合成组把内容（group）与蒙版（mask）分别缓冲到
+        // 两块画布大小的临时层，在 drawAnimatedTree 末尾做 alpha 相乘合成。两层保持不可见
+        //（与共享 temp 层同父链），跨帧复用直到 cleanupTempLayer()。
+        iTJSDispatch2 *getOrCreateStencilLayer(iTJSDispatch2 *realLayer, bool isMask,
+                                          float canvasW, float canvasH) {
+            iTJSDispatch2 *&slot = isMask ? _stencilMaskLayer : _stencilGroupLayer;
+            if(slot) return slot;
+            if(!realLayer) return nullptr;
+            try {
+                tTJSVariant windowVar, parentVar;
+                if(!resolveWindowAndParent(realLayer, windowVar, parentVar)) {
+                    return nullptr;
+                }
+                iTJSDispatch2 *newLayer = createChildLayer(windowVar, parentVar);
+                if(!newLayer) return nullptr;
+                tTJSVariant falseVar(false);
+                newLayer->PropSet(TJS_MEMBERENSURE, TJS_W("visible"), nullptr, &falseVar, newLayer);
+                // Size the scratch to the canvas so group/mask draws land at raw
+                // canvas coords (K2 Layer supports width/height resize; ignored if
+                // the runtime rejects it — the composite probe will tell).
+                // 把离屏层设成画布大小，让组/蒙版绘制落在原始画布坐标（K2 Layer 支持
+                // width/height 调整；若运行时拒绝则忽略——合成探针会反映）。
+                if(canvasW > 0.0f || canvasH > 0.0f) {
+                    tTJSVariant wVarV(static_cast<tjs_real>(canvasW));
+                    tTJSVariant hVarV(static_cast<tjs_real>(canvasH));
+                    if(canvasW > 0.0f)
+                        newLayer->PropSet(TJS_MEMBERENSURE, TJS_W("width"), nullptr, &wVarV, newLayer);
+                    if(canvasH > 0.0f)
+                        newLayer->PropSet(TJS_MEMBERENSURE, TJS_W("height"), nullptr, &hVarV, newLayer);
+                }
+                slot = newLayer;
+                return slot;
+            } catch(...) {
+                return nullptr;
+            }
+        }
+
+        // ③ Alpha-multiply the mask layer into the group layer (in place), then blit
+        // the group to `dest`. stencilType 1 = normal (groupA * maskA), 2 = reverse
+        // (groupA * (255-maskA)). The mask's RGB is ignored — the stencil composites
+        // alpha topology only (K2 item+264 semantics).
+        // ③ 把蒙版层 alpha 乘进组层（就地），再把组层合成到 dest。stencilType 1=正常
+        //（组A×蒙版A）、2=反向（组A×(255-蒙版A)）。只消费蒙版 alpha（RGB 忽略），
+        // 对应 K2 item+264 语义。
+        bool applyStencilComposite(iTJSDispatch2 *groupLayer, iTJSDispatch2 *maskLayer,
+                                   int stencilType) {
+            if(!groupLayer || !maskLayer) return false;
+            bool recoveredRgbAlpha = false;
+            try {
+                tTJSNI_Layer *groupNI = nullptr, *maskNI = nullptr;
+                if(TJS_FAILED(groupLayer->NativeInstanceSupport(
+                       TJS_NIS_GETINSTANCE, tTJSNC_Layer::ClassID,
+                       (iTJSNativeInstance **)&groupNI)) || !groupNI) return false;
+                if(TJS_FAILED(maskLayer->NativeInstanceSupport(
+                       TJS_NIS_GETINSTANCE, tTJSNC_Layer::ClassID,
+                       (iTJSNativeInstance **)&maskNI)) || !maskNI) return false;
+                const tjs_int w = groupNI->GetWidth(), h = groupNI->GetHeight();
+                if(w <= 0 || h <= 0) return false;
+                const bool reverse = (stencilType & 0x2) != 0;
+                unsigned char *gbuf = (unsigned char *)groupNI->GetMainImagePixelBufferForWrite();
+                unsigned char *mbuf = (unsigned char *)maskNI->GetMainImagePixelBufferForWrite();
+                const tjs_int gpitch = groupNI->GetMainImagePixelBufferPitch();
+                const tjs_int mpitch = maskNI->GetMainImagePixelBufferPitch();
+                if(!gbuf || !mbuf || gpitch < w * 4 || mpitch < w * 4) return false;
+                for(tjs_int y = 0; y < h; ++y) {
+                    unsigned char *mrow = mbuf + (tjs_int)y * mpitch;
+                    unsigned char *grow = gbuf + (tjs_int)y * gpitch;
+                    for(tjs_int x = 0; x < w; ++x) {
+                        const size_t off = static_cast<size_t>(x) * 4u;
+                        unsigned char maskA = mrow[off + 3];
+                        // K2 stencil masks may carry their alpha as RGB rotation
+                        // (RGB-only textures): recover alpha = max(R,G,B) when the
+                        // alpha channel is empty but the color isn't (reference
+                        // recoverRgbEncodedDifferenceAlphaMask).
+                        // K2 stencil 蒙版可能把 alpha 存在 RGB（纯 RGB 纹理）：
+                        // alpha 通道为空但 RGB 非空时，取 alpha = max(R,G,B)（参考
+                        // recoverRgbEncodedDifferenceAlphaMask）。
+                        if(maskA == 0 &&
+                           (mrow[off] != 0 || mrow[off + 1] != 0 || mrow[off + 2] != 0)) {
+                            const int m = std::max(static_cast<int>(mrow[off]),
+                                                   std::max(static_cast<int>(mrow[off + 1]),
+                                                            static_cast<int>(mrow[off + 2])));
+                            maskA = static_cast<unsigned char>(m);
+                            recoveredRgbAlpha = true;
+                        }
+                        const unsigned char prevA = grow[off + 3];
+                        if(prevA == 0) continue;
+                        const unsigned char newA = reverse
+                            ? static_cast<unsigned char>((static_cast<int>(prevA) * (255 - maskA)) / 255)
+                            : static_cast<unsigned char>((static_cast<int>(prevA) * maskA) / 255);
+                        grow[off + 3] = newA;
+                    }
+                }
+                groupNI->Update(tTVPRect(0, 0, w, h));
+                auto logger = _logger();
+                if(logger && recoveredRgbAlpha)
+                    logger->info("applyStencilComposite: RGB-rotation alpha recovered in mask");
+                return true;
+            } catch(...) {
+                return false;
+            }
+        }
+
+        // Apply an M2 PER-CORNER packedColors tint (bilinear across the 4 corners,
+        // ported from AetherKiri applyPackedCornerTintLike_0x6A7518) to the just-loaded
+        // glyph texture before Layer.operateAffine (which has no color channel):
+        //   out.rgb = lerp4corner(tint) * src.rgb / 255,  out.a = lerp4corner(tint.a)*src.a/255.
+        // All-opaque-white corners are the identity and are SKIPPED, keeping the pixel
+        // work limited to the colored sprites (C/W red, thin red→black line, black cross).
+        // 对刚加载的字形纹理应用 M2 **四角** packedColors 平涂（按 AetherKiri
+        // applyPackedCornerTintLike 移植的四角双线性）：out.rgb = 四角插值tint × src.rgb/255，
+        // out.a = 四角插值tint.a × src.a/255。四角全不透明白＝恒等、直接跳过，逐像素开销
+        // 只落在着色精灵上（C/W 红、红转黑细线、黑色十字）。
+        static bool applyCornerTint(
+            iTJSDispatch2 *temp,
+            const std::array<std::uint32_t, 4> &tints) {
+            bool neutral = true;
+            for(const auto t : tints) {
+                if(t != 0xFFFFFFFFu) { neutral = false; break; }
+            }
+            if(neutral) return true; // identity / 恒等
             try {
                 tTJSNI_Layer *ni = nullptr;
                 if(TJS_FAILED(temp->NativeInstanceSupport(
@@ -2158,28 +2912,67 @@ namespace motion {
                     return false;
                 const tjs_int w = ni->GetWidth(), h = ni->GetHeight();
                 if(w <= 0 || h <= 0) return false;
-                // tint is packed 0xAARRGGBB / tint 以 0xAARRGGBB 打包
-                const tjs_uint32 tintR = (tint >> 16) & 0xffu;
-                const tjs_uint32 tintG = (tint >> 8) & 0xffu;
-                const tjs_uint32 tintB = (tint >> 0) & 0xffu;
+                // corner order: [0]=topLeft [1]=topRight [2]=bottomRight [3]=bottomLeft
+                // 角序：[0]=左上 [1]=右上 [2]=右下 [3]=左下
+                auto unpack = [](std::uint32_t v, int out[4]) {
+                    out[0] = static_cast<int>((v >> 16) & 0xffu); // R
+                    out[1] = static_cast<int>((v >> 8) & 0xffu);  // G
+                    out[2] = static_cast<int>((v >> 0) & 0xffu);  // B
+                    out[3] = static_cast<int>((v >> 24) & 0xffu); // A
+                };
+                int tl[4], tr[4], br[4], bl[4];
+                unpack(tints[0], tl); unpack(tints[1], tr);
+                unpack(tints[2], br); unpack(tints[3], bl);
+                // corners frequently animate as one uniform value; lerp(x,x)=x so the
+                // uniform fast path is bit-equivalent to the general bilinear loop.
+                // 四角常为同一值动画；均匀色下 lerp(x,x)≡x，快速路径与通用双线性逐位等价。
+                const bool uniform =
+                    tl[0] == tr[0] && tl[0] == br[0] && tl[0] == bl[0] &&
+                    tl[1] == tr[1] && tl[1] == br[1] && tl[1] == bl[1] &&
+                    tl[2] == tr[2] && tl[2] == br[2] && tl[2] == bl[2] &&
+                    tl[3] == tr[3] && tl[3] == br[3] && tl[3] == bl[3];
+                const int spanX = std::max(w - 1, 1);
+                const int spanY = std::max(h - 1, 1);
+                auto lerpCh = [](int a, int b, int pos, int span) -> int {
+                    return a + (pos * (b - a)) / span;
+                };
                 unsigned char *buf = (unsigned char *)ni->GetMainImagePixelBufferForWrite();
                 const tjs_int pitch = ni->GetMainImagePixelBufferPitch();
                 if(!buf || pitch < w * 4) return false;
                 for(tjs_int y = 0; y < h; ++y) {
                     tjs_uint32 *row = (tjs_uint32 *)(buf + (tjs_int)y * pitch);
+                    // left column lerps topLeft↔bottomLeft, right column topRight↔bottomRight
+                    // 左列 左上↔左下，右列 右上↔右下
+                    const int rowLR = lerpCh(tl[0], bl[0], y, spanY);
+                    const int rowLG = lerpCh(tl[1], bl[1], y, spanY);
+                    const int rowLB = lerpCh(tl[2], bl[2], y, spanY);
+                    const int rowLA = lerpCh(tl[3], bl[3], y, spanY);
+                    const int rowRR = lerpCh(tr[0], br[0], y, spanY);
+                    const int rowRG = lerpCh(tr[1], br[1], y, spanY);
+                    const int rowRB = lerpCh(tr[2], br[2], y, spanY);
+                    const int rowRA = lerpCh(tr[3], br[3], y, spanY);
                     for(tjs_int x = 0; x < w; ++x) {
                         const tjs_uint32 px = row[x];
-                        const tjs_uint32 a = (px >> 24) & 0xffu;
-                        if(a == 0) continue; // keep transparent / 保持透明
-                        const tjs_uint32 r = (px >> 16) & 0xffu;
-                        const tjs_uint32 g = (px >> 8) & 0xffu;
-                        const tjs_uint32 b = (px >> 0) & 0xffu;
-                        // premultiplied-ARGB multiply by the (opaque) tint / 预乘 ARGB 乘上不透明 tint
-                        const tjs_uint32 nr = r * tintR / 255u;
-                        const tjs_uint32 ng = g * tintG / 255u;
-                        const tjs_uint32 nb = b * tintB / 255u;
+                        const tjs_uint32 srcA = (px >> 24) & 0xffu;
+                        if(srcA == 0) continue; // keep transparent / 保持透明
+                        const int tintR = uniform
+                            ? rowLR : lerpCh(rowLR, rowRR, x, spanX);
+                        const int tintG = uniform
+                            ? rowLG : lerpCh(rowLG, rowRG, x, spanX);
+                        const int tintB = uniform
+                            ? rowLB : lerpCh(rowLB, rowRB, x, spanX);
+                        const int tintA = uniform
+                            ? rowLA : lerpCh(rowLA, rowRA, x, spanX);
+                        const tjs_uint32 srcR = (px >> 16) & 0xffu;
+                        const tjs_uint32 srcG = (px >> 8) & 0xffu;
+                        const tjs_uint32 srcB = (px >> 0) & 0xffu;
+                        // premultiplied-ARGB multiply by the tint / 预乘 ARGB 乘上 tint
+                        const tjs_uint32 nr = std::min(255, tintR * static_cast<int>(srcR) / 255);
+                        const tjs_uint32 ng = std::min(255, tintG * static_cast<int>(srcG) / 255);
+                        const tjs_uint32 nb = std::min(255, tintB * static_cast<int>(srcB) / 255);
+                        const tjs_uint32 na = std::min(255, tintA * static_cast<int>(srcA) / 255);
                         row[x] = (nb & 0xffu) | ((ng & 0xffu) << 8) |
-                                 ((nr & 0xffu) << 16) | (a << 24);
+                                 ((nr & 0xffu) << 16) | (na << 24);
                     }
                 }
                 ni->Update(tTVPRect(0, 0, w, h)); // notify the layer its pixels changed / 通知层像素已变
@@ -2196,6 +2989,17 @@ namespace motion {
                 } catch(...) {}
                 _tempLayer->Release();
                 _tempLayer = nullptr;
+            }
+            // ③ stencil offscreen layers follow the same lifecycle.
+            // ③ stencil 离屏层走同一生命周期。
+            for(iTJSDispatch2 **pp : { &_stencilGroupLayer, &_stencilMaskLayer }) {
+                if(*pp) {
+                    try {
+                        (*pp)->FuncCall(0, TJS_W("invalidate"), nullptr, nullptr, 0, nullptr, *pp);
+                    } catch(...) {}
+                    (*pp)->Release();
+                    *pp = nullptr;
+                }
             }
         }
 
@@ -2640,6 +3444,20 @@ static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
         std::unordered_map<std::string, ButtonBounds> _buttonBounds;
 
         std::unordered_map<std::string, tTJSVariant> _variables;
+
+        // ④ motionDt mode-2 delta pos: previous pose of each node label (persists
+        // across drawAnimatedTree calls so the atan2(delta) uses real frame motion).
+        // ④ motionDt 模式 2 的位移差：每个节点标签的上一姿态（跨 drawAnimatedTree
+        // 调用保留，让 atan2(位移差) 用真实帧间运动）。
+        std::unordered_map<std::string, float> _lastFramePosX;
+        std::unordered_map<std::string, float> _lastFramePosY;
+        // ③ stencil: offscreen group/mask temp layers (created only when a stencil
+        // composite is actually present). Reused across frames; invalidated in
+        // cleanupTempLayer().
+        // ③ stencil：离屏组/蒙版临时层（仅在确有 stencil 合成时创建）。跨帧复用，
+        // cleanupTempLayer() 里失效。
+        iTJSDispatch2 *_stencilGroupLayer = nullptr;
+        iTJSDispatch2 *_stencilMaskLayer = nullptr;
     };
 
 } // namespace motion

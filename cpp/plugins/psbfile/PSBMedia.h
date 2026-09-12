@@ -28,6 +28,40 @@ namespace PSB {
     void SetPSBMediaCacheBudget(size_t maxEntries, size_t maxBytes);
     PSBMedia *GetGlobalPSBMedia();
 
+    // Control-point rotation spline (PSB content "cp"). The reference engine
+    // (AetherKiri sub_698454 / libkrkr2 sub_698454) evaluates the curve at the
+    // eased t and uses the sampled point (cosA, sinA) to ROTATE the position
+    // path between keyframes. Layout mirrors the PSB keys:
+    //   cp.x / cp.y      主三次贝塞尔控制点（3N+1 个）
+    //   cp.t             时间节
+    //   cp.s[].x/y/p     每节 cubic-spline 细分参数
+    // Main cubic-bezier control points; t = time knots; s = per-segment splines.
+    struct PSBMotionCpSeg {
+        std::vector<double> x;  // breakpoints / 分段点
+        std::vector<double> y;  // values / 取值
+        std::vector<double> p;  // spline parameters / 样条参数
+    };
+    struct PSBMotionCpCurve {
+        std::vector<double> x;  // main bezier X control points / 主贝塞尔 X 控制点
+        std::vector<double> y;  // main bezier Y control points / 主贝塞尔 Y 控制点
+        std::vector<double> t;  // time knots / 时间节
+        std::vector<PSBMotionCpSeg> s; // per-segment spline data / 每节样条
+        bool empty() const { return t.empty() || x.size() < 4 || y.size() < 4; }
+    };
+    // Motion-local parameter table entry (PSB motion "parameter" list /
+    // "parameterize" dict). UI motions use selectors such as `select=2` /
+    // `page=1` to pick a parameterized clip TIME instead of the global clock.
+    // M2 motion 级参数表条目（PSB motion 的 "parameter" 列表 / "parameterize"
+    // 字典）。UI 动画用 `select=2` / `page=1` 之类的选择器取**参数化 clip 时间**，
+    // 而非全局时钟。
+    struct PSBMotionParameter {
+        std::string id;            // variable name the script sets / 脚本写入的变量名
+        bool discretization = false; // discrete selector steps / 离散选择步进
+        double rangeBegin = 0.0;   // variable range begin / 变量范围起点
+        double rangeEnd = 0.0;     // variable range end / 变量范围终点
+        double division = 0.0;     // timeline subdivision (fallback) / 时间线细分（兜底）
+    };
+
     class PSBMedia : public iTVPStorageMedia {
     public:
         PSBMedia();
@@ -239,6 +273,33 @@ namespace PSB {
             //（operateAffine 没有颜色通道）。
             std::array<std::uint32_t, 4> packedColors{
                 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu};
+            // E-mote mesh: content["mesh"]["bp"] (or "b") → 16 control points (32
+            // floats) of a bicubic Bernstein patch. Empty when this frame doesn't
+            // deform. Children are deformed by the nearest ancestor mesh.
+            // E-mote 面片：content["mesh"]["bp"]（或 "b"）→ 双三次 Bernstein 面片的
+            // 16 个控制点（32 个 float）。空＝本帧不变形。子节点由最近的祖先面片变形。
+            std::vector<float> meshControlPoints;
+            // Control-point rotation spline (content "cp"): samples (cosA, sinA)
+            // that ROTATE the node's position path toward the next keyframe
+            // (reference sub_698454 / interpolatePosition69A4D4). Empty = linear.
+            // M2 控制点旋转样条（content "cp"）：采样 (cosA, sinA) 旋转本节点向下一
+            // 关键帧的位置路径（参考 sub_698454 / interpolatePosition69A4D4）。
+            PSBMotionCpCurve cp;
+            // M2 motion sub-object (content["motion"]["dt"]) — motionDt 5 模式
+            // (reference sub_6BE534, mn.activeSlot().motionDt):
+            //   0 = keep keyframe angle, 1 = direct dofst, 2 = atan2(current
+            //   - prev position), 3 = crossfade finite-difference atan2,
+            //   4 = atan2 toward node `motionDtgt`.
+            // dofst = angle offset ADDED to the computed angle; dtgt = target
+            // node label for mode 4.
+            // M2 运动子对象（content["motion"]["dt"]）——motionDt 5 模式（参考
+            // sub_6BE534，mn.activeSlot().motionDt）：
+            //   0=关键帧角度、1=直接 dofst、2=atan2(当前-上一位置)、3=交叉淡入
+            //   有限差分 atan2、4=朝节点 motionDtgt 的 atan2。
+            // dofst=加到计算角上的偏移；dtgt=模式 4 的目标节点标签。
+            int motionDt = 0;
+            float motionDofst = 0.0f;
+            std::string motionDtgt;
             bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };
         struct PSBMotionLayerTrack {
@@ -278,6 +339,14 @@ namespace PSB {
             // 节点局部矩阵的算子顺序（PSB "transformOrder"，默认 [0,1,2,3] =
             // flip, angle, scale, slant）。libkrkr2 sub_699940 依序左乘到局部 2×2 矩阵。
             int transformOrder[4] = {0, 1, 2, 3};
+            // E-mote mesh deformation gates (PSB "meshSyncChildMask"): bit 1 = deform
+            // child position, bit 2 = deform child angle (gradient), bit 4 = deform
+            // child scale (jacobian). "meshType" selects how a node feeds its children.
+            // E-mote 网格变形门控（PSB "meshSyncChildMask"）：位 1=变形子位置、位 2=变形
+            // 子角度（梯度）、位 4=变形子缩放（Jacobian）。"meshType" 决定节点如何作
+            // 用给子层。
+            int meshSyncChildMask = 0;
+            int meshType = 0;
             // True when this node is the CONTENT of a "motion/obj/sub" sub-motion
             // expanded into the parent tree (Player::expandSubMotionNodes). Reference
             // (AetherKiri child player) drives such content by the PARENT motion
@@ -288,6 +357,47 @@ namespace PSB {
             // 节点的活动驱动这类内容，而非子节点自己的 type-0 末尾帧——子节点的末尾
             // "隐藏"帧不应在折叠中途把它藏掉。
             bool submotionContent = false;
+            // Sub-motion child-clock info, filled by Player::expandSubMotionNodes:
+            //   subRefSrc      — the "motion/<obj>/<sub>" src this node was expanded
+            //                    from (the reference cleared f.src on the ref node).
+            //   subLaunchTime  — the parent ref node's keyframe time when the
+            //                    submotion started (ms; before it, content hides).
+            //   subLoopTime    — the submotion's own loopTime (ms; >0 loops its
+            //                    timeline, 0 = play once then hold the last frame).
+            // 子运动**子时钟**信息，由 Player::expandSubMotionNodes 填充：
+            //   subRefSrc      — 本节点展开自哪个 "motion/<obj>/<sub>"（参考节点上
+            //                    的 f.src 已被清掉）。
+            //   subLaunchTime  — 父参考节点发起子运动的关键帧时刻(ms；之前内容隐藏)。
+            //   subLoopTime    — 子运动自身的 loopTime(ms；>0 循环其时间线，
+            //                     0 = 播一遍后保持末帧)。
+            std::string subRefSrc;
+            int subLaunchTime = 0;
+            int subLoopTime = 0;
+            // Stencil composite (PSB "stencilType" / "stencilCompositeMaskLayerList",
+            // type==12 nodes). stencilType bits (reference node+52): 1=normal alpha
+            // crop, 2=reverse crop, 4=composite with authored mask layers listed in
+            // stencilMaskLabels (resolved to node indices by the parser).
+            // stencil 合成（PSB "stencilType" / "stencilCompositeMaskLayerList"，
+            // type==12 节点）。stencilType 位（参考 node+52）：1=正常 alpha 裁剪、
+            // 2=反向裁剪、4=用 stencilMaskLabels 列出的作者蒙版层合成（解析为索引）。
+            int stencilType = 0;
+            bool hasStencil = false;
+            std::vector<std::string> stencilMaskLabels;
+            std::vector<int> stencilMaskNodeIndices;
+            // PSB "groundCorrection": when set, the node invokes a TJS
+            // onGroundCorrection(parentPos, childPos) callback (reference sub_6BAA10).
+            // PSB "groundCorrection"：置位时节点调用 TJS onGroundCorrection 回调。
+            bool groundCorrection = false;
+            // PSB "parameterize": index into the motion-level parameter table so a
+            // UI selector picks the parameterized clip TIME instead of the global
+            // clock (reference PlayerUpdateLayers phase-2, node+776). -1=unparameterized.
+            // PSB "parameterize"：motion 级参数表索引，让 UI 选择器取参数化 clip 时间
+            // 而非全局时钟（参考 PlayerUpdateLayers phase-2，node+776）。-1=未参数化。
+            int parameterizeIndex = -1;
+            // E-mote mesh subdivision count (PSB "meshDivision", reference node+2008).
+            // Kept so the probe can observe what the data authors.
+            // E-mote 面片细分计数（PSB "meshDivision"，参考 node+2008）。为探针保留。
+            int meshDivision = 0;
             std::vector<PSBMotionFrame> frames; // own timeline, sorted by time
         };
         void addMotionNodes(const std::string &archiveKey,
@@ -297,6 +407,19 @@ namespace PSB {
         std::vector<PSBMotionNode> getMotionNodes(const std::string &archiveKey,
                                                   const std::string &sceneName,
                                                   const std::string &motionName) const;
+        // Motion-level parameter table (PSB "parameter"/"parameterize"). UI motions
+        // drive parameterized nodes via selectors; the Player evaluates the parameter
+        // value into a clip TIME with parameterizedClipTime semantics.
+        // motion 级参数表（PSB "parameter"/"parameterize"）。UI 动画用选择器驱动
+        // 参数化节点；Player 按 parameterizedClipTime 语义把参数值换算成 clip 时间。
+        void setMotionParameters(const std::string &archiveKey,
+                                 const std::string &sceneName,
+                                 const std::string &motionName,
+                                 std::vector<PSBMotionParameter> parameters);
+        std::vector<PSBMotionParameter> getMotionParameters(
+            const std::string &archiveKey,
+            const std::string &sceneName,
+            const std::string &motionName) const;
         // M2 motion-level loop metadata. loopTime > 0 means the timeline loops
         // (e.g. the yuzulogo/m2logo intros keep playing until the script advances),
         // mirroring Player_initNonEmoteMotion's read of PSB "loopTime".
@@ -357,5 +480,6 @@ namespace PSB {
         std::unordered_map<std::string, std::vector<PSBMotionLayerTrack>> _motionTracks;
         std::unordered_map<std::string, std::vector<PSBMotionNode>> _motionNodes;
         std::unordered_map<std::string, tjs_int> _motionLoopTimes;
+        std::unordered_map<std::string, std::vector<PSBMotionParameter>> _motionParameters;
     };
 } // namespace PSB

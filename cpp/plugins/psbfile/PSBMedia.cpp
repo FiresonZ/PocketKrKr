@@ -1145,6 +1145,71 @@ namespace PSB {
                             }
                         }
                     }
+                    // E-mote mesh: content["mesh"]["bp"] (or "b") → 16 control points
+                    // (32 floats) for a bicubic Bernstein patch that deforms children.
+                    // E-mote 面片：content["mesh"]["bp"]（或 "b"）→ 16 个控制点（32 float）
+                    // 的双三次 Bernstein 面片，用于变形子节点。
+                    if(auto meshObj =
+                           std::dynamic_pointer_cast<PSBDictionary>((*content)["mesh"])) {
+                        std::shared_ptr<PSBList> bp =
+                            std::dynamic_pointer_cast<PSBList>((*meshObj)["bp"]);
+                        if(!bp) bp = std::dynamic_pointer_cast<PSBList>((*meshObj)["b"]);
+                        if(bp && bp->size() == 32) {
+                            f.meshControlPoints.reserve(32);
+                            for(int mi = 0; mi < 32; mi++) {
+                                f.meshControlPoints.push_back(
+                                    GetPSBFloat((*bp)[mi], 0.0f));
+                            }
+                        }
+                    }
+                    // M2 control-point rotation spline (content "cp"): x/y 主贝塞尔
+                    // 控制点、t 时间节、s[].x/y/p 每节样条（参考 AetherKiri sub_698454）。
+                    // M2 控制点旋转样条（content "cp"）——见 PSBMotionCpCurve。
+                    if(auto cpDict = std::dynamic_pointer_cast<PSBDictionary>((*content)["cp"])) {
+                        auto cpxList = std::dynamic_pointer_cast<PSBList>((*cpDict)["x"]);
+                        auto cpyList = std::dynamic_pointer_cast<PSBList>((*cpDict)["y"]);
+                        auto cptList = std::dynamic_pointer_cast<PSBList>((*cpDict)["t"]);
+                        auto cpsList = std::dynamic_pointer_cast<PSBList>((*cpDict)["s"]);
+                        if(cpxList && cpyList && cptList) {
+                            for(size_t ci = 0; ci < cpxList->size(); ++ci)
+                                f.cp.x.push_back(static_cast<double>(GetPSBFloat((*cpxList)[ci], 0)));
+                            for(size_t ci = 0; ci < cpyList->size(); ++ci)
+                                f.cp.y.push_back(static_cast<double>(GetPSBFloat((*cpyList)[ci], 0)));
+                            for(size_t ci = 0; ci < cptList->size(); ++ci)
+                                f.cp.t.push_back(static_cast<double>(GetPSBFloat((*cptList)[ci], 0)));
+                            if(cpsList) {
+                                for(size_t ci = 0; ci < cpsList->size(); ++ci) {
+                                    PSB::PSBMotionCpSeg seg;
+                                    if(auto segDict = std::dynamic_pointer_cast<PSBDictionary>((*cpsList)[ci])) {
+                                        auto sx = std::dynamic_pointer_cast<PSBList>((*segDict)["x"]);
+                                        auto sy = std::dynamic_pointer_cast<PSBList>((*segDict)["y"]);
+                                        auto sp = std::dynamic_pointer_cast<PSBList>((*segDict)["p"]);
+                                        if(sx) for(size_t si = 0; si < sx->size(); ++si)
+                                            seg.x.push_back(static_cast<double>(GetPSBFloat((*sx)[si], 0)));
+                                        if(sy) for(size_t si = 0; si < sy->size(); ++si)
+                                            seg.y.push_back(static_cast<double>(GetPSBFloat((*sy)[si], 0)));
+                                        if(sp) for(size_t si = 0; si < sp->size(); ++si)
+                                            seg.p.push_back(static_cast<double>(GetPSBFloat((*sp)[si], 0)));
+                                    }
+                                    f.cp.s.push_back(std::move(seg));
+                                }
+                            }
+                        }
+                    }
+                    // M2 motion sub-object (content["motion"]["mask"][x]): 选择子运动
+                    // 节点角度计算模式 motionDt（0x2→dt、0x8→dofst、0x10→dtgt）。
+                    // M2 运动子对象（content["motion"]）：mask 位 0x2→dt（角度模式）、
+                    // 0x8→dofst（角度偏移）、0x10→dtgt（模式 4 目标节点名）。
+                    if(auto md = std::dynamic_pointer_cast<PSBDictionary>((*content)["motion"])) {
+                        const int mm = static_cast<int>(GetPSBFloat((*md)["mask"], 0));
+                        if(mm & 0x2)
+                            f.motionDt = static_cast<int>(GetPSBFloat((*md)["dt"], 0));
+                        if(mm & 0x8)
+                            f.motionDofst = GetPSBFloat((*md)["dofst"], 0.0f);
+                        if(mm & 0x10)
+                            if(auto dtgt = std::dynamic_pointer_cast<PSBString>((*md)["dtgt"]))
+                                f.motionDtgt = dtgt->value;
+                    }
                 } else {
                     // type==0 (invisible) or a frame without content only marks
                     // a time change: the node is invisible during this range.
@@ -1200,6 +1265,39 @@ namespace PSB {
                 // 需拉伸铺满画布）。
                 node.width = static_cast<int>(GetPSBFloat((*layerDict)["width"], 0));
                 node.height = static_cast<int>(GetPSBFloat((*layerDict)["height"], 0));
+                // E-mote mesh gates. NOTE: the PSB key for the mesh TYPE is
+                // "meshTransform" (reference NodeTree sub_6B3C78) — "meshType" is a
+                // DIFFERENT per-meshCombinator key, so reading the wrong key here
+                // would silently keep all mesh deformation off.
+                // E-mote 网格门控。注意：PSB 的网格**类型**键是 "meshTransform"（参考
+                // NodeTree sub_6B3C78），"meshType" 是另一个 meshCombinator 内的键——
+                // 读错键会让所有网格变形静默失效。
+                node.meshType = static_cast<int>(GetPSBFloat((*layerDict)["meshTransform"], 0));
+                node.meshSyncChildMask = static_cast<int>(GetPSBFloat((*layerDict)["meshSyncChildMask"], 0));
+                node.meshDivision = static_cast<int>(GetPSBFloat((*layerDict)["meshDivision"], 0));
+                // stencil composite (type==12): stencilType + authored mask layer
+                // labels (stencilCompositeMaskLayerList). Mask labels resolve to node
+                // indices AFTER the full tree is built (CollectMotionNodeTreesFromMotion).
+                // stencil 合成（type==12）：stencilType + 作者蒙版层名表。
+                // 蒙版名在全树构建（CollectMotionNodeTreesFromMotion）后解析为节点索引。
+                node.hasStencil = (node.type == 12);
+                node.stencilType = static_cast<int>(GetPSBFloat((*layerDict)["stencilType"], 0));
+                if(auto maskList =
+                       std::dynamic_pointer_cast<PSBList>((*layerDict)["stencilCompositeMaskLayerList"])) {
+                    for(auto &item : *maskList) {
+                        if(auto label = std::dynamic_pointer_cast<PSBString>(item)) {
+                            if(!label->value.empty())
+                                node.stencilMaskLabels.push_back(label->value);
+                        }
+                    }
+                }
+                // groundCorrection → TJS onGroundCorrection callback (sub_6BAA10).
+                // groundCorrection → TJS onGroundCorrection 回调（sub_6BAA10）。
+                node.groundCorrection =
+                    GetPSBFloat((*layerDict)["groundCorrection"], 0.0f) != 0.0f;
+                // parameterize → motion-level parameter table index (phase-2 clip time).
+                // parameterize → motion 级参数表索引（phase-2 clip 时间）。
+                node.parameterizeIndex = static_cast<int>(GetPSBFloat((*layerDict)["parameterize"], -1));
                 CollectMotionNodeFrames(layerDict, node);
                 if(logger) logger->info("  node[{}] '{}' parent={} type={} box={}x{} inh=0x{:x} to={},{},{},{} frames={} firstsrc='{}'",
                     static_cast<int>(nodes.size()), node.label, parentIndex, node.type,
@@ -1234,17 +1332,85 @@ namespace PSB {
                 for(const auto &[motionName, motionVal] : *motionDict) {
                     auto targetMotion = std::dynamic_pointer_cast<PSBDictionary>(motionVal);
                     if(!targetMotion) continue;
+                    // Motion-level parameter table ("parameter" list / "parameterize"
+                    // dict-or-index) — drives parameterized clip TIME for UI selectors.
+                    // motion 级参数表（"parameter" 列表 / "parameterize" 字典或索引），
+                    // 驱动 UI 选择器的参数化 clip 时间。
+                    std::vector<PSBMedia::PSBMotionParameter> parameters;
+                    if(auto paramList = std::dynamic_pointer_cast<PSBList>((*targetMotion)["parameter"])) {
+                        for(auto &paramItem : *paramList) {
+                            auto pd = std::dynamic_pointer_cast<PSBDictionary>(paramItem);
+                            if(!pd) continue;
+                            PSBMedia::PSBMotionParameter info;
+                            if(auto id = std::dynamic_pointer_cast<PSBString>((*pd)["id"]))
+                                info.id = id->value;
+                            else if(auto label = std::dynamic_pointer_cast<PSBString>((*pd)["label"]))
+                                info.id = label->value;
+                            info.discretization = GetPSBFloat((*pd)["discretization"], 0) != 0.0f;
+                            info.rangeBegin = static_cast<double>(GetPSBFloat((*pd)["rangeBegin"], 0));
+                            info.rangeEnd = static_cast<double>(GetPSBFloat((*pd)["rangeEnd"], 0));
+                            const double range = info.rangeEnd - info.rangeBegin;
+                            info.division = static_cast<double>(GetPSBFloat((*pd)["division"],
+                                static_cast<float>(range > 0.0 ? range : 1.0)));
+                            if(!info.id.empty())
+                                parameters.push_back(std::move(info));
+                        }
+                    }
+                    if(auto pz = std::dynamic_pointer_cast<PSBDictionary>((*targetMotion)["parameterize"])) {
+                        if(parameters.empty()) {
+                            PSBMedia::PSBMotionParameter info;
+                            if(auto id = std::dynamic_pointer_cast<PSBString>((*pz)["id"]))
+                                info.id = id->value;
+                            info.discretization = GetPSBFloat((*pz)["discretization"], 0) != 0.0f;
+                            info.rangeBegin = static_cast<double>(GetPSBFloat((*pz)["rangeBegin"], 0));
+                            info.rangeEnd = static_cast<double>(GetPSBFloat((*pz)["rangeEnd"], 0));
+                            const double range = info.rangeEnd - info.rangeBegin;
+                            info.division = static_cast<double>(GetPSBFloat((*pz)["division"],
+                                static_cast<float>(range > 0.0 ? range : 1.0)));
+                            if(!info.id.empty()) parameters.push_back(std::move(info));
+                        }
+                    }
                     auto layerList = std::dynamic_pointer_cast<PSBList>((*targetMotion)["layer"]);
-                    if(!layerList) continue;
+                    if(!layerList) {
+                        if(!parameters.empty())
+                            media.setMotionParameters(archiveKey, sceneName, motionName,
+                                                      std::move(parameters));
+                        continue;
+                    }
                     std::vector<PSBMedia::PSBMotionNode> nodes;
                     CollectMotionNodesFromLayerList(layerList, -1, nodes, logger);
+                    // Resolve authored stencil MASK LAYER LABELS into node indices now
+                    // that the whole tree exists (mask labels match any node, not just
+                    // direct children, per reference NodeTree buildMotionNodes + probe).
+                    // 全树构建完成后把作者 stencil 蒙版**层名**解析为节点索引（蒙版名可
+                    // 匹配任意节点，不限于直接子层，参考 NodeTree）。
                     if(!nodes.empty()) {
+                        std::unordered_map<std::string, int> nodeIndexByLabel;
+                        for(size_t ki = 0; ki < nodes.size(); ++ki)
+                            if(!nodes[ki].label.empty())
+                                nodeIndexByLabel[nodes[ki].label] = static_cast<int>(ki);
+                        for(auto &nd : nodes) {
+                            if(!nd.hasStencil || nd.stencilMaskLabels.empty()) continue;
+                            for(const auto &mLabel : nd.stencilMaskLabels) {
+                                auto found = nodeIndexByLabel.find(mLabel);
+                                if(found != nodeIndexByLabel.end())
+                                    nd.stencilMaskNodeIndices.push_back(found->second);
+                                else if(logger)
+                                    logger->warn("stencil mask label '{}' not found for '{}'",
+                                                 mLabel, nd.label);
+                            }
+                        }
                         const size_t storedNodeCount = nodes.size();
                         media.addMotionNodes(archiveKey, sceneName, motionName,
                                              std::move(nodes));
-                        if(logger) logger->info("Stored {} nodes for {}/{}",
-                            storedNodeCount, sceneName, motionName);
+                        if(logger)
+                            logger->info("Stored {} nodes for {}/{} (params={})",
+                                storedNodeCount, sceneName, motionName,
+                                static_cast<int>(parameters.size()));
                     }
+                    if(!parameters.empty())
+                        media.setMotionParameters(archiveKey, sceneName, motionName,
+                                                  std::move(parameters));
                 }
             }
         }
@@ -1976,6 +2142,26 @@ namespace PSB {
         std::lock_guard<std::mutex> lock(_mutex);
         _motionNodes[archiveKey + "|" + sceneName + "|" + motionName] =
             std::move(nodes);
+    }
+
+    void PSBMedia::setMotionParameters(const std::string &archiveKey,
+                                       const std::string &sceneName,
+                                       const std::string &motionName,
+                                       std::vector<PSBMotionParameter> parameters) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _motionParameters[archiveKey + "|" + sceneName + "|" + motionName] =
+            std::move(parameters);
+    }
+
+    std::vector<PSBMedia::PSBMotionParameter>
+    PSBMedia::getMotionParameters(const std::string &archiveKey,
+                                  const std::string &sceneName,
+                                  const std::string &motionName) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        auto it = _motionParameters.find(archiveKey + "|" + sceneName + "|" + motionName);
+        if(it != _motionParameters.end())
+            return it->second;
+        return {};
     }
 
     std::vector<PSBMedia::PSBMotionNode>
