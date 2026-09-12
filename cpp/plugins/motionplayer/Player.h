@@ -1507,6 +1507,23 @@ namespace motion {
                     if(logger)
                         logger->info("drawAnimatedTree tint: '{}' color={:08x} applied={}",
                                      node.label, effTint, tintApplied ? 1 : 0);
+                } else {
+                    // Always log the RAW frame color for the m2logo pieces that should
+                    // be colored (C/W letters icon35/icon39, cross vertical icon32, and
+                    // any icon2x/icon4x stroke) so we can tell whether their PSB frame
+                    // actually carries a color that our parser is missing, vs. the color
+                    // genuinely being white (then the red/black must come from the
+                    // texture or a merged-text color).
+                    // 总是打印 m2logo 该着色的部件（C/W 字母 icon35/39、十字竖线 icon32、
+                    // 及各种 icon2x/icon4x 笔画）的**原始帧色**，以判断其 PSB 帧是否真的带
+                    // 颜色而我们解析漏了，还是本来就是白（那样红/黑来自纹理或合字颜色）。
+                    if(logger &&
+                       (af->src.compare(0, 15, "src/logo/icon3") == 0 ||
+                        af->src.compare(0, 15, "src/logo/icon2") == 0 ||
+                        af->src == "src/logo/icon32")) {
+                        logger->info("drawAnimatedTree rawColor: '{}' own={:08x} eff={:08x}",
+                                     node.label, af->packedColors[0], effTint);
+                    }
                 }
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
