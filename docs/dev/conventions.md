@@ -7,6 +7,30 @@
 - Live2D SDK 是可选依赖。SDK 不存在时应保持自动禁用，不能把缺少 SDK 当作核心构建错误。
 - `*.md` 属于正常版本控制文件；构建输出和平台产物按现有忽略规则处理。
 
+## Live2D Cubism SDK（可选）
+
+Live2D SDK 不通过 vcpkg 管理，相关商业 SDK 文件也不会提交到仓库。需要启用 Live2D 时，从官方 SDK 包中将以下内容放入 `cpp/plugins/cubism/`：
+
+```text
+cpp/plugins/cubism/
+├── Core/
+│   ├── include/Live2DCubismCore.h        已随仓库保留
+│   └── lib/
+│       ├── ios/Release-iphoneos/libLive2DCubismCore.a
+│       └── macos/
+│           ├── arm64/libLive2DCubismCore.a
+│           └── x86_64/libLive2DCubismCore.a
+└── Framework/                            SDK Framework 源码
+```
+
+- `Framework/` 应包含 Cubism Framework 的 C++ 源码，OpenGL ES 2 渲染器由当前 CMake 配置使用。
+- iOS 使用 `Core/lib/ios/Release-iphoneos/` 下的静态库；macOS 根据架构使用对应目录下的静态库。
+- 配置时若同时检测到 `Framework/*.cpp` 和目标平台的 `libLive2DCubismCore.a`，CMake 会编译 `krkrlive2d.cpp` 并定义 `KRKR2_LIVE2D`。
+- 缺少任一部分时，CMake 会保留空的 `CubismFramework` 接口并禁用 Live2D 插件；其他平台的核心构建仍可继续。
+- `Core/lib/` 和 `Framework/` 已加入 `.gitignore`，重新获取 SDK 后无需修改忽略规则。
+
+检查方式：确认上述目录和静态库存在后，重新配置目标平台；配置输出不再出现 `Live2D Cubism SDK not found`，并在构建目标中看到 `krkrlive2d.cpp`。
+
 ## 构建与链接
 
 - Apple 使用 ANGLE 的 Metal feature；Android 和 Linux 使用 Vulkan feature，不要跨平台混用。

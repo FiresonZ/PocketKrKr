@@ -9,7 +9,7 @@
 3. [源码地图](source-map.md)：按目录定位模块职责。
 4. [关键引用](key-references.md)：查找主要文件和 C ABI 符号。
 5. [构建](build.md)：查看平台工具链、产物和 CI。
-6. [约定](conventions.md)：修改平台、生命周期、链接和 SIMD 代码前必读。
+6. [约定](conventions.md)：修改平台、生命周期、链接、Live2D 和 SIMD 代码前必读。
 7. [兼容性](compatibility.md)：执行游戏兼容性回归。
 8. [渲染诊断](rendering-diagnosis.md)：排查黑屏、停帧和显示链路问题。
 9. [优化路线](optimization-roadmap.md)：查看性能、稳定性和代码结构优化方案。
