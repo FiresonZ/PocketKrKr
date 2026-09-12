@@ -191,7 +191,23 @@ namespace PSB {
                     break;
                 }
                 if(src == &rawSrc) {
-                    return nullptr;
+                    // The "RL" tag on this resource produced no decodable
+                    // run-length stream — e.g. an UNCOMPRESSED palette image
+                    // (m2logo icon32/icon18: 3x16 raw CI8 index bytes) whose
+                    // compress metadata resolved to RL. Do NOT bail to a 1x1
+                    // default (invisible vertical cross bar); fall back to the
+                    // raw bytes and let format inference decode them below
+                    // (CI8/CI4/L8/...).
+                    // 该资源标 RL 但解不出合法 RLE 流——比如**未压缩**调色图
+                    //（m2logo icon32/icon18：3x16 原始 CI8 索引字节）其 compress
+                    // 元数据却解析成了 RL。不能直接放弃成 1x1（竖线不可见），
+                    // 回退拿原始字节，交给下方格式推断去解码（CI8/CI4/L8/…）。
+                    decodedAlign = 0;
+                    if(LOGGER) LOGGER->warn(
+                        "convertImage: key='{}' RL decode failed for {}x{} raw={}B; "
+                        "falling back to raw palette decoding",
+                        info.debugKey, info.width, info.height,
+                        rawSrc.size());
                 }
             }
 
