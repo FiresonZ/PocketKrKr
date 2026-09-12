@@ -1336,12 +1336,12 @@ namespace PSB {
                     // dict-or-index) — drives parameterized clip TIME for UI selectors.
                     // motion 级参数表（"parameter" 列表 / "parameterize" 字典或索引），
                     // 驱动 UI 选择器的参数化 clip 时间。
-                    std::vector<PSBMedia::PSBMotionParameter> parameters;
+                    std::vector<PSBMotionParameter> parameters;
                     if(auto paramList = std::dynamic_pointer_cast<PSBList>((*targetMotion)["parameter"])) {
                         for(auto &paramItem : *paramList) {
                             auto pd = std::dynamic_pointer_cast<PSBDictionary>(paramItem);
                             if(!pd) continue;
-                            PSBMedia::PSBMotionParameter info;
+                            PSBMotionParameter info;
                             if(auto id = std::dynamic_pointer_cast<PSBString>((*pd)["id"]))
                                 info.id = id->value;
                             else if(auto label = std::dynamic_pointer_cast<PSBString>((*pd)["label"]))
@@ -1358,7 +1358,7 @@ namespace PSB {
                     }
                     if(auto pz = std::dynamic_pointer_cast<PSBDictionary>((*targetMotion)["parameterize"])) {
                         if(parameters.empty()) {
-                            PSBMedia::PSBMotionParameter info;
+                            PSBMotionParameter info;
                             if(auto id = std::dynamic_pointer_cast<PSBString>((*pz)["id"]))
                                 info.id = id->value;
                             info.discretization = GetPSBFloat((*pz)["discretization"], 0) != 0.0f;
@@ -2153,7 +2153,7 @@ namespace PSB {
             std::move(parameters);
     }
 
-    std::vector<PSBMedia::PSBMotionParameter>
+    std::vector<PSBMotionParameter>
     PSBMedia::getMotionParameters(const std::string &archiveKey,
                                   const std::string &sceneName,
                                   const std::string &motionName) const {

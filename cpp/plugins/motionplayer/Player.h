@@ -9,6 +9,7 @@
 #include <set>
 #include <unordered_map>
 #include <algorithm>
+#include <cmath>
 #include <spdlog/spdlog.h>
 #include "ResourceManager.h"
 #include "tjs.h"
@@ -782,7 +783,7 @@ namespace motion {
         // 在 inputT 处采样 cp 曲线，返回点 (outXY[0], outXY[1])，调用方直接用作
         // (cosA, sinA)。
         static void evaluateCpCurve(double outXY[2],
-                                    const PSB::PSBMedia::PSBMotionCpCurve &cp,
+                                    const PSB::PSBMotionCpCurve &cp,
                                     double inputT) {
             outXY[0] = 1.0; outXY[1] = 0.0;
             if(cp.t.size() < 2 || cp.x.size() < 4 || cp.y.size() < 4) return;
@@ -848,7 +849,7 @@ namespace motion {
         // value（范围 [rangeBegin, rangeEnd]）映射到 motion 时间轴（[0, timelineEnd]），
         // 而非全局时钟。
         static double parameterizedClipTime(
-            const PSB::PSBMedia::PSBMotionParameter &parameter,
+            const PSB::PSBMotionParameter &parameter,
             double value) {
             const double range = parameter.rangeEnd - parameter.rangeBegin;
             if(std::abs(range) <= 0.0000001) return 0.0;
@@ -974,7 +975,7 @@ namespace motion {
             // ⑤ 参数化 clip 时间：参考模型从 Player 自身的 _variables 表读选择器变量
             //（setVariable/getVariable 已由 TJS 绑定）。
             std::vector<double> nodeTimeOverride(n, -1.0); // <0 = use global clock
-            std::vector<PSB::PSBMedia::PSBMotionParameter> motionParams;
+            std::vector<PSB::PSBMotionParameter> motionParams;
             if(auto *media = PSB::GetGlobalPSBMedia()) {
                 motionParams = media->getMotionParameters(
                     storageStr, _chara.AsStdString(), _motion.AsStdString());
@@ -1490,8 +1491,10 @@ namespace motion {
                                         }
                                     }
                                     if(cit != iconMetaCache.end()) {
-                                        pw = (*cit)[0]; ph = (*cit)[1];
-                                        porX = (*cit)[2]; porY = (*cit)[3];
+                                        // map value is array<float,4> → access via ->second.
+                                        // map 的值是 array<float,4>，需经 ->second 取角标。
+                                        pw = cit->second[0]; ph = cit->second[1];
+                                        porX = cit->second[2]; porY = cit->second[3];
                                         imgW[node.parentIndex] = pw; imgH[node.parentIndex] = ph;
                                         imgOrX[node.parentIndex] = porX; imgOrY[node.parentIndex] = porY;
                                         imgKey[node.parentIndex] = pkey;
