@@ -1017,7 +1017,17 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final bool surfaceActive = _phase == _EnginePhase.running;
 
-    return Scaffold(
+    // Block the Android system back gesture so it does NOT finish the app.
+    // The back button is still forwarded to the engine (as VK_ESCAPE) by
+    // EngineSurface._onKeyEvent, matching Kirikiroid2 where back = the game's
+    // Cancel/Return key instead of quitting. Exit stays available via the
+    // floating menu's "Exit Game".
+    // 拦截 Android 系统返回手势，避免直接退出 App。返回键仍由 EngineSurface 转发给引擎
+    // （映射为 VK_ESCAPE），与 Kirikiroid2 一致：返回键是游戏的取消/回车键而非退出。
+    // 退出仍可通过悬浮菜单的 "Exit Game" 完成。
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         fit: StackFit.expand,
@@ -1078,6 +1088,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
           // Debug panel
           if (_showDebug) _buildDebugPanel(),
         ],
+      ),
       ),
     );
   }
@@ -1339,6 +1350,15 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
+                _overlayItem(
+                  icon: Icons.arrow_back,
+                  label: 'Back',
+                  onTap: () async {
+                    setState(() => _showOverlay = false);
+                    await _surfaceKey.currentState?.sendBack();
+                  },
+                ),
+                const Divider(color: Colors.white24, height: 1),
                 _overlayItem(
                   icon: Icons.bug_report,
                   label: _showDebug ? 'Hide Debug' : 'Show Debug',

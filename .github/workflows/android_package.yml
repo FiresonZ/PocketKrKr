@@ -164,17 +164,18 @@ jobs:
 
       - name: Restore vcpkg binary cache
         # vcpkg 二进制缓存：首次全量编译后，后续运行秒级还原依赖
-        # 缓存 key 版本段 arm64fix3：arm64fix2 那轮全量重编把 boost-locale 等 cmake 端口在
-        # 缺 CMAKE_SYSTEM_PROCESSOR 的情况下编成了 armv7（版本串带 "(32bit)"）并写进缓存。
-        # 修好在 triplet 显式加 CMAKE_SYSTEM_PROCESSOR=aarch64 后，必须再 bump 前缀
-        # 使旧缓存不被 restore-keys 命中，强制用修正后的 triplet 全量重编一次。
+        # key 版本段说明：固定 vcpkg commit + 正确的 triplet 后，key 只由
+        # vcpkg.json/ports/triplets 内容 hash 驱动，无需再加手动递增后缀（历史
+        # fix2/fix3 是为强制重编时 bump 的，已随 vcpkg 固定与缓存清理并入基础 key）。
+        # 注：vcpkg 版本现在由 build/build_android.sh 里 VCPKG_PINNED_COMMIT 钉死，
+        # 确保每次构建 ABI 一致，二进制缓存才能被真正复用。
         uses: actions/cache/restore@v4
         id: vcpkg
         with:
           path: ~/.cache/vcpkg
-          key: vcpkg-${{ runner.os }}-arm64fix3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg/ports/**', 'vcpkg/triplets/**') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg/ports/**', 'vcpkg/triplets/**') }}
           restore-keys: |
-            vcpkg-${{ runner.os }}-arm64fix3-
+            vcpkg-${{ runner.os }}-
 
       - name: Prepare release keystore (if secret)
         # 若配置了 ANDROID_KEYSTORE_BASE64 等 Secrets，则解出稳定 keystore 并在 release
@@ -224,7 +225,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/.cache/vcpkg
-          key: vcpkg-${{ runner.os }}-arm64fix3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg/ports/**', 'vcpkg/triplets/**') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg/ports/**', 'vcpkg/triplets/**') }}
 
       - name: Package APK
         run: |

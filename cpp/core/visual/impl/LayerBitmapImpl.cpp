@@ -14,6 +14,8 @@
 #include <memory>
 #include <stdlib.h>
 #include <math.h>
+#include <set>
+#include <string>
 
 #include "LayerBitmapIntf.h"
 #include "LayerBitmapImpl.h"
@@ -132,6 +134,17 @@ static std::vector<tTVPPrerenderedFontMap> TVPPrerenderedFontMapVector;
 void TVPMapPrerenderedFont(const tTVPFont &font, const ttstr &storage) {
     // map specified font to specified prerendered font
     ttstr fn = TVPSearchPlacedPath(storage);
+
+    // [tpf mapping probe] Which .tpf file does the game map for which face?
+    // Yuzusoft option boxes map e.g. "font/スキップ.tpf"; a case/path mismatch
+    // on Android could map a WRONG-size .tpf (→ option text smaller/offset).
+    // 记录游戏把哪个 .tpf 映射到哪个 face（选项框常映射如 "font/スキップ.tpf"；
+    // Android 上大小写/路径差异可能映射到错误字号的 .tpf → 选项文字偏小/偏移）。
+    if(auto tl = spdlog::get("core")) {
+        tl->info("[TpfMap] face='{}' h={} storage='{}' -> '{}'",
+                 font.Face.AsNarrowStdString(), font.Height,
+                 storage.AsNarrowStdString(), fn.AsNarrowStdString());
+    }
 
     // search or retrieve specified storage
     tTVPPrerenderedFont *object;
@@ -285,6 +298,45 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
     const tTVPPrerenderedCharacterItem *pitem = nullptr;
     if(pfont)
         pitem = pfont->Find(font.Character);
+
+    // [PrerenderedFont probe] Was the .tpf glyph actually hit, and what are its
+    // baked metrics vs the requested size / the fallback rasterizer ascent?
+    // The .tpf glyphs were pre-baked for the ORIGIN font (e.g. MS Gothic,
+    // ascent ~0.86x height); placement uses aofsy = FALLBACK font ascent
+    // (Noto CJK ~1.16x height). A big mismatch pushes the baseline down and
+    // clips the box bottom (option box "top-left + top half only"). Logging
+    // hit/miss + metrics per face/char confirms whether a face is using .tpf
+    // glyphs and how far off the vertical offset is.
+    // [预渲染字体探针] .tpf 字形是否真的命中，其内置度量与请求字号/回退栅格化器
+    // ascent 的差异。.tpf 字形是按**原始字体**（如 MS ゴシック，ascent≈0.86×字号）
+    // 预烘焙的；定位用的 aofsy 却是**回退字体**的 ascent（Noto CJK≈1.16×字号）。
+    // 差异过大时基线被压下去、框底被裁（选项框"偏左上+只见上半"）。按 face/字符
+    // 打印命中与否与度量，确认哪些 face 在走 .tpf 及垂直偏移差多少。
+    {
+        static std::set<std::string> sProbedPrerenderKeys;
+        std::string pkey = font.Font.Face.AsNarrowStdString() + "|" +
+                           std::to_string(font.Font.Height) + "|" +
+                           std::to_string(font.Character) + "|" +
+                           (pitem ? "hit" : "miss");
+        if(sProbedPrerenderKeys.insert(pkey).second) {
+            if(auto tl = spdlog::get("core")) {
+                if(pitem) {
+                    tl->info(
+                        "[TpfProbe] HIT face='{}' h={} char=U+{:04X} tpf "
+                        "WxH={}x{} Origin=({},{}) Inc=({},{}) aofs=({},{})",
+                        font.Font.Face.AsNarrowStdString(), font.Font.Height,
+                        static_cast<unsigned>(font.Character), pitem->Width,
+                        pitem->Height, pitem->OriginX, pitem->OriginY,
+                        pitem->IncX, pitem->IncY, aofsx, aofsy);
+                } else if(pfont) {
+                    tl->info(
+                        "[TpfProbe] MISS face='{}' h={} char=U+{:04X} aofs=({},{})",
+                        font.Font.Face.AsNarrowStdString(), font.Font.Height,
+                        static_cast<unsigned>(font.Character), aofsx, aofsy);
+                }
+            }
+        }
+    }
 
     if(pitem) {
         // prerendered font
@@ -1159,6 +1211,27 @@ void tTVPNativeBaseBitmap::DrawTextSingle(
 
     ApplyFont();
 
+    // [text probe] single-char draw, mirror of the multi-char probe above (deduped).
+    // [文字探针] 单字符绘制，与上文多字符探针对应（去重）。
+    {
+        static std::set<std::string> sProbedSingleFaces;
+        std::string fkey = Font.Face.AsNarrowStdString() + "|" +
+                           std::to_string(Font.Height);
+        if(sProbedSingleFaces.insert(fkey).second) {
+            if(auto tl = spdlog::get("core")) {
+                std::string ttext = text.AsNarrowStdString();
+                if (ttext.size() > 16) ttext = ttext.substr(0, 16);
+                tl->info("[TextProbe] single destRect=({},{},{},{}) xy=({},{}) face='{}' "
+                         "height={} ascentOfs=({},{}) prerender={} text='{}'",
+                         destrect.left, destrect.top, destrect.right, destrect.bottom,
+                         x, y, Font.Face.AsNarrowStdString(), Font.Height,
+                         AscentOfsX, AscentOfsY,
+                         PrerenderedFont ? static_cast<void *>(PrerenderedFont) : nullptr,
+                         ttext);
+            }
+        }
+    }
+
     const tjs_char *p = text.c_str();
     tTVPDrawTextData dtdata;
     dtdata.rect = destrect;
@@ -1329,6 +1402,30 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
     Independ();
 
     ApplyFont();
+
+    // [text probe] Option/menu text sizing & placement diagnostics (deduped per
+    // face so it does not spam for every character). See FreeTypeFontRasterizer
+    // FontProbe for glyph metrics.
+    // [文字探针] 选项/菜单文字的尺寸与定位诊断（按 face 去重，避免逐字符刷屏）。
+    // 字形度量见 FreeTypeFontRasterizer 的 FontProbe。
+    {
+        static std::set<std::string> sProbedFaces;
+        std::string fkey = Font.Face.AsNarrowStdString() + "|" +
+                           std::to_string(Font.Height);
+        if(sProbedFaces.insert(fkey).second) {
+            if(auto tl = spdlog::get("core")) {
+                std::string ttext = text.AsNarrowStdString();
+                if (ttext.size() > 24) ttext = ttext.substr(0, 24);
+                tl->info("[TextProbe] multi destRect=({},{},{},{}) xy=({},{}) face='{}' "
+                         "height={} ascentOfs=({},{}) prerender={} text='{}'",
+                         destrect.left, destrect.top, destrect.right, destrect.bottom,
+                         x, y, Font.Face.AsNarrowStdString(), Font.Height,
+                         AscentOfsX, AscentOfsY,
+                         PrerenderedFont ? static_cast<void *>(PrerenderedFont) : nullptr,
+                         ttext);
+            }
+        }
+    }
 
     const tjs_char *p = text.c_str();
     tTVPDrawTextData dtdata;

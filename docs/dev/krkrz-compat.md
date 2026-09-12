@@ -17,6 +17,33 @@
 | krkrz/krkrz_dev | https://github.com/krkrz/krkrz_dev | Z 工具 + win32 插件（menu、fftgraph、theora…） |
 | zeas2/Kirikiroid2 | https://github.com/zeas2/Kirikiroid2 | **安卓端完整移植（最强参考）**：`src/core/visual/ogl`（RenderManager_ogl=GL drawdevice）、`src/core/movie/krmovie.cpp`+`ffmpeg/`、`src/core/visual/win32/DrawDevice.h`/`BasicDrawDevice.*`/`PassThroughDrawDevice.*`、`src/plugins/InternalPlugins.cpp` |
 | krkrz/Krkr2Compat | https://github.com/krkrz/Krkr2Compat | `k2compat/k2compat.tjs`：krkr2→Z 兼容层，纯 TJS 脚本 |
+| krkrsdl3/krkrsdl3 | https://github.com/krkrsdl3/krkrsdl3 | **SDL3 重实现 + 开源 emoteplayer**：`plugins/emoteplayer/emoteplayerclass.{h,cpp}` 有 `D3DAdaptor/SeparateLayerAdaptor/captureCanvas/motionWorkLayer` 全量 C++ 实现（GitHub 上仅此一家，Kirikiroid2 系闭源）。captureCanvas 契约：`void captureCanvas(iTJSDispatch2* targetLayer)`= 单 object 目标层，与我们日志 `p0=object` 吻合。GPU 离屏 target + `memcpy→目标层像素缓冲+Update()`（详见下方对照） |
+| krkrsdl2/krkrsdl2 | https://github.com/krkrsdl2/krkrsdl2 | krkrsdl3 前身（SDL2 + Kirikiri2/Z 基，更成熟）；同家族 emoteplayer 参考，架构同 krkrsdl3 |
+| crate-1556/tjs2-decompiler | https://github.com/crate-1556/tjs2-decompiler | **TJS2（TJS2100）字节码反编译器（Python）**：把游戏编译字节码脚本还原为可读/可执行 TJS2，支持反汇编+文件信息。用于读取加密 `.tjs`（如 affinesourcemotion.tjs），不再只靠运行时诊断猜契约 |
+| AetherKiri/AetherKiri | https://github.com/AetherKiri/AetherKiri | **开源 M2/EMotionPlayer 权威参考（2026-09-11 用户提供）**：对 `libkrkr2.so` 的完整反向移植，自带全套 `cpp/plugins/motionplayer/`（Player.h/PlayerUpdateLayers.cpp/NodeTree.h/EmotePlayer.h）+ `cpp/plugins/psbfile/`。与本项目 motionplayer 逐项对照**全一致**：旋转矩阵 `[[c,-s],[s,c]]` 左乘（applyLocalTransform/sub_699940）、transformOrder 默认 [0,1,2,3]、inheritMask 位门控（+slant 0x080/0x100）、angle 相加(度)/scale 相乘/flip XOR、绕纹理原点枢轴 `orgX=posX-(m12*totalOY+totalOX*m11)`、str_clip type-7 裁剪（SetClip/ResetClip + 字形省略 scale）。自带 `logoChainTrace` 顶点校验可作对拍基准。比对这次最相关：修 yuzulogo 叶子 angle/枢轴 与 m2logo str_clip 裁剪 |
+| YuriSizuku/Kirikiroid2Yuri | https://github.com/YuriSizuku/Kirikiroid2Yuri | **zeas2/Kirikiroid2 的 fork（2026-09-11 用户提供，价值低）**：仅 Android UI 壳/插件小幅演进，**无 M2/PSB motionplayer 实现**，对本项目 M2 动画无参考价值；仅作维护版 fork 备查 |
+
+### AetherKiri 对本项目其余缺口的价值（2026-09-11，本地下 `/tmp/akiri` 全量 clone）
+
+> AetherKiri 几乎是完整 KiriKiri 引擎（AE/Kirikiroid2 血统 + 完整 ffmpeg 视频），不止 motionplayer。
+> 下面按我们对齐清单里的缺口逐条列"它有啥、在哪"，后续需要时按路径取源码即可（勿直接 commit 进仓库）。
+
+| 缺口（krkrz-compat 清单） | AetherKiri 位置 | 说明 |
+|---|---|---|
+| **krmovie 视频回放（P0，缺 Present/合成到 Layer）** | `cpp/core/movie/ffmpeg/`：`KRMoviePlayer.cpp/.h`、`VideoPlayer.cpp`、`DemuxFFmpeg.cpp`、`VideoReferenceClock`、`Timer.cpp`、`Thread/MessageQueue`；配套 `cpp/core/visual/VideoOvlIntf.cpp/.h` | **整套 ffmpeg 播放器**，含时钟/线程/消息队列与播放调度——可直接对照/移植 KRMoviePlayer+VideoPlayer 补我们缺的 Present + 帧→Layer 合成 |
+| multiimage（我们 P2 疑闭源） | `cpp/plugins/multiimage.cpp` | **有真实现**，可解除"无源码"顾虑 |
+| packinone（我们 C 级跳过/疑闭源） | `cpp/plugins/packinone.cpp` | 有真实现 |
+| extNagano（我们 C 级跳过） | `cpp/plugins/extNagano.cpp` | 有真实现 |
+| kagparserex / extkagparser | `cpp/plugins/kagparserex/`、`cpp/plugins/extkagparser/` | KAGParserEx 体系真实现 |
+| layerExAlpha（AlphaColorBlend 等，P1 缺） | `cpp/plugins/layerExBTOA.cpp` + `layerExBase.hpp` | AlphaColorBlend/TranslucentColorBlend 等 |
+| Layer.AddMosaic / layerEx 特效（P1 缺） | `cpp/plugins/layerExImage.cpp`、`layerExLongExposure.cpp`、`layerExAreaAverage.cpp`、`layerExPerspective.cpp`、`layerExRaster.cpp`、`layerExSaveCompat.cpp`、`layerex_draw/` | Mosaic 等特效方法真实现 |
+| layerExMovie（视频层 vs） | `cpp/plugins/layerExMovie.cpp` | 有 |
+| captureCanvas GPU 捕获 | `cpp/plugins/GlesCaptureUtils.h` | GL 像素捕获，贴 motionplayer captureCanvas/D3DAdaptor |
+| 其它 z 插件 / 系统 | `cpp/plugins/kirikiroid2.cpp`、`krkrgles.cpp`、`drawDeviceD2DCompat.cpp`、`saveStruct.cpp`、`sqliteXp3Vfs.cpp`、`windowEx.cpp`、`addFont.cpp`、`getSample.cpp`、`csvParser`、`dirlist`、`fftgraph`、`json`、`qrcode`、`tomlPlugin`、`wutcwf` | 多数我们已内建；个别可对照 |
+| 渲染核心对拍（同源） | `cpp/core/visual/`：`RenderManager.cpp`、`LayerBitmapIntf.cpp`、`LayerManager.cpp`、`BitmapLayerTreeOwner.cpp`，含 `impl/`、`ogl/`、`gl/` 后端变体；`LoadBPG/JXR/PVRv3/AMV`、`SaveTLG6` | 我们与它同源（都源自 AE/Kirikiroid2），主要交叉核对某段 DrawBuffer/合成实现 |
+| 音频 | `cpp/core/sound/`：`FFWaveDecoder`、MIDI、PhaseVocoder | 次要 |
+
+> ⚠️ 优先级建议：开局 logo（yuzusoft/m2logo）不影响游玩体验。若 logo 动画长期修不好，**换方向优先做 krmovie（P0，影响视频 OP/通关回放）与 zcompat 插件真实现**，把 krmovie 回放先从 AetherKiri 整套搬到我们 core。
 
 ## 移植总原则
 
@@ -141,6 +168,23 @@
     motion/chara/tickCount/speed/outline/zpos. Missing members throw a fatal
     "Member ... does not exist" and freeze the scene (verified: loopTime then
     outline). On white screen, check the log for the missing member and add it.
+
+### krkrsdl3 emoteplayer 对照（2026-09-10，重读 `plugins/emoteplayer/emoteplayerclass.{h,cpp}`）
+
+> 这是 GitHub 上唯一开源的 Yuzusoft M2 emoteplayer 全实现（Kirikiroid2 系闭源），
+> 行为契约与千恋万花场景强相关。逐项对照我们 motionplayer：
+
+| 主题 | krkrsdl3 emoteplayer | 我们 motionplayer | 结论/参考价值 |
+|---|---|---|---|
+| `D3DAdaptor` 形态 | `D3DAdaptor(winRef,w,h,orgX,orgY)` 持 GPU 离屏 `_target`+`_maskTarget`+`_clearColor` | 可 new 空壳类（`Create_NC_D3DAdaptor`）+ 正字 `captureCanvas`/`unloadUnusedTextures`/`canvasCaptureEnabled` | 方向一致；krkrsdl3 是真 GPU target，我们无 D3D target |
+| `captureCanvas` 契约 | `void captureCanvas(iTJSDispatch2* targetLayer)`——**单 object 目标层**；实现=把离屏渲染帧 `memcpy` 进 targetLayer 像素缓冲 + `Update()` | 我们的诊断日志实测 `p0=object`，现用 `operateRect` 把 PSB 图逐张写进 `p0` | **契约验证**：`p0` 就是游戏传入的目标 Layer，理解正确；krkrsdl3 用整帧 memcpy 更贴近 D3D 语义，我们 operateRect 逐图等效但其实现更省 |
+| `SeparateLayerAdaptor` | 包一个真实 `Layer`（`tTJSNI_Layer*`，挂 `kag.poolLayer` 下，type=alpha, hitType=province）+ GPU target；`motionWorkLayer` 全局 = 它 | 我们也注册 `SeparateLayerAdaptor` 类，但它非真实 Layer（另走了 displayLayer 方案） | **关键差异**：krkrsdl3 的 motionWorkLayer 是真实子 Layer，**由游戏脚本自己控 absolute 序** → 印证"不加自有层，让游戏管层级"是正确方向 |
+| `Player::draw(objthis)` 目标类型 | 三种：SeparateLayerAdaptor / D3DAdaptor / 原始 Layer，分别走不同 target+ 回读 | 只处理通用 layer，经 `resolveRealLayer` 路由 | krkrsdl3 对 D3DAdaptor 只画离屏、随后由 captureCanvas 拷入目标层 → 支持我们 capture-only |
+| 渲染模型 | 真 M2 引擎（emoteengine 网格动画 + GL/渲染后端 `iTVPRenderBackend`） | 静态 PSB 图层合成（cache 图像 + operateRect） | krkrsdl3 是完整动画引擎，我们是近似；追求动画保真再移植，非短期补丁 |
+| 输出路径 | 画进游戏传入层（motionWorkLayer/captureCanvas targetLayer），不动层序 | 之前 displayLayer overlay（会盖菜单）+ 现 captureCanvas `p0` | **采纳**：删 overlay，只走 captureCanvas `p0`，即对齐 krkrsdl3/原版 |
+
+**一句话**：krkrsdl3 证实「captureCanvas(p0=目标Layer) + motion 只进游戏自己管的真实层、由脚本控 z-order」才是原版行为；我们的 capture-only 方向对，overlay 是多余且会干扰游戏后续渲染的层。
+
 - 实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。
 
 ### 核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）

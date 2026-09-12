@@ -80,6 +80,23 @@ public:
     tjs_int GetHeight() { return Height; }
     void SetHeight(int height);
 
+    // --- Font probe diagnostics ---
+    // Touch-font metrics read directly from the active FreeType size, so the
+    // probe can tell whether glyph scaling (y_ppem) matches the requested
+    // Height and whether the baseline/ascent derived values are sane. A text
+    // that looks half-sized or shifted out of its box maps to one of these.
+    // --- 字体探针诊断 ---
+    // 从当前 FreeType size 直接读取触屏字体度量，探针可分辨字形缩放(y_ppem)
+    // 是否与请求的 Height 一致、以及 baseline/ascender 推导值是否合理。
+    // 文字偏小或偏移出框的现象会对应到其中一项异常。
+    [[nodiscard]] tjs_int GetPixelHeight() const {
+        if(!FTFace || !FTFace->size) return 0;
+        return FTFace->size->metrics.y_ppem;
+    }
+    [[nodiscard]] tjs_int GetAscender() const { return FTFace ? FTFace->ascender : 0; }
+    [[nodiscard]] tjs_int GetDescender() const { return FTFace ? FTFace->descender : 0; }
+    [[nodiscard]] tjs_int GetUnitsPerEM() const { return FTFace ? FTFace->units_per_EM : 0; }
+
     void SetOption(tjs_uint32 opt) { Options |= opt; }
     void ClearOption(tjs_uint32 opt) { Options &= ~opt; }
     [[nodiscard]] bool GetOption(tjs_uint32 opt) const {

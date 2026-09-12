@@ -733,6 +733,45 @@ class EngineSurfaceState extends State<EngineSurface> {
     }
   }
 
+  /// Send a synthesized "back"/Esc key down to the engine, matching what the
+  /// Android system back button forwards through _onKeyEvent (escape + goBack →
+  /// both a normal keyDown and an EngineInputEventType.back event). Used by the
+  /// floating menu's "Back" item so the user can leave sub-menus (e.g. the
+  /// gallery/appreciation screen) without relying on the physical back key.
+  /// 发送一次合成的"返回"/Esc 键到引擎，与 _onKeyEvent 里安卓系统返回键的转发一致
+  /// （escape + goBack → 一个普通 keyDown + 一个 EngineInputEventType.back 事件）。
+  /// 供折叠菜单的"返回"项调用：让用户离开子菜单（如鉴赏/画廊界面）时不依赖实体返回键。
+  Future<void> sendBack() async {
+    if (!widget.active) {
+      return;
+    }
+    final int keyCode = LogicalKeyboardKey.escape.keyId & 0xFFFFFFFF;
+    final int nowMicros = DateTime.now().microsecondsSinceEpoch;
+    await _sendInputEvent(
+      EngineInputEventData(
+        type: EngineInputEventType.keyDown,
+        timestampMicros: nowMicros,
+        keyCode: keyCode,
+      ),
+    );
+    await _sendInputEvent(
+      EngineInputEventData(
+        type: EngineInputEventType.back,
+        timestampMicros: nowMicros,
+        keyCode: keyCode,
+      ),
+    );
+    // Send an explicit keyUp so a held virtual-escape isn't left down.
+    // 显式补一个 keyUp，避免虚拟 Esc 被误认为一直按住。
+    await _sendInputEvent(
+      EngineInputEventData(
+        type: EngineInputEventType.keyUp,
+        timestampMicros: nowMicros,
+        keyCode: keyCode,
+      ),
+    );
+  }
+
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (!widget.active) {
       return KeyEventResult.ignored;

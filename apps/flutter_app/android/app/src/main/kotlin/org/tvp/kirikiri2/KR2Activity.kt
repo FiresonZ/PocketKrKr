@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.provider.Settings
 import android.util.Log
 import android.widget.EditText
@@ -20,6 +21,48 @@ open class KR2Activity : FlutterActivity() {
         super.onCreate(savedInstanceState)
         instance = this
         appContext = applicationContext
+        // 视觉小说要求全屏：隐藏顶部状态栏与底部导航栏（沉浸模式），
+        // 释放顶部小按钮触摸区域。A VN should be fullscreen: hide the status bar
+        // and the navigation bar (immersive mode) to free the touch area under the
+        // top bar so small top buttons are reachable.
+        hideSystemBars()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Lock the immersive mode: re-hide the bars whenever the window regains
+        // focus (the sticker gesture could otherwise leave them transiently shown).
+        // 锁定沉浸模式：窗口重新获得焦点时再次隐藏系统栏，防止手势上滑后临时显示。
+        if (hasFocus) {
+            hideSystemBars()
+        }
+    }
+
+    private fun hideSystemBars() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+: use WindowInsetsController with swipe-to-reveal behavior.
+            // Android 11+：用 WindowInsetsController，滑动边缘可临时显示再自动隐藏。
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.let { c ->
+                c.hide(
+                    android.view.WindowInsets.Type.statusBars() or
+                        android.view.WindowInsets.Type.navigationBars()
+                )
+                c.systemBarsBehavior =
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            // Android < 11: legacy FLAG-based sticky immersive.
+            // Android < 11：旧版基于 FLAG 的 sticky immersive。
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                )
+        }
     }
 
     override fun onDestroy() {

@@ -13,6 +13,7 @@
 #include "MsgIntf.h"
 #include "FontSystem.h"
 #include <complex>
+#include <spdlog/spdlog.h>
 
 extern void TVPUninitializeFreeFont();
 extern FontSystem *TVPFontSystem;
@@ -90,6 +91,7 @@ void FreeTypeFontRasterizer::ApplyFont(class tTVPNativeBaseBitmap *bmp,
 void FreeTypeFontRasterizer::ApplyFont(const tTVPFont &font) {
     CurrentFont = font;
     ttstr stdname = TVPFontSystem->GetBeingFont(font.Face);
+
     // TVP_FACE_OPTIONS_NO_ANTIALIASING
     // TVP_FACE_OPTIONS_NO_HINTING
     // TVP_FACE_OPTIONS_FORCE_AUTO_HINTING
@@ -112,6 +114,31 @@ void FreeTypeFontRasterizer::ApplyFont(const tTVPFont &font) {
         recreate = true;
     }
     Face->SetHeight(font.Height < 0 ? -font.Height : font.Height);
+
+    // [Font probe] Log the requested face/height against what FreeType actually
+    // used for this face+size. If the rendered text looks half-sized or shifted
+    // out of its box:
+    //   - height vs y_ppem mismatch -> heightPixels != heightRequested
+    //     (glyph scaling bug, e.g. a global scale factor halving the size)
+    //   - ascent/baseline odd       -> ascent vs rawAsc/rawDesc/unitsPerEM
+    //     disagrees, misplacing text vertically inside its box.
+    // Placed after SetHeight() so the metrics reflect the NEW face/size.
+    // [字体探针] 打印请求的字面名/字号与 FreeType 在此字面+字号上实际使用的值。
+    // 若渲染文字偏小或偏移出框：
+    //   - height 与 y_ppem 不一致 -> heightPixels != heightRequested
+    //     （字形缩放被某全局系数缩小一倍）
+    //   - ascent/baseline 异常   -> ascent 与原始 rawAsc/rawDesc/unitsPerEM
+    //     推导不一致，导致文字在其框内垂直错位。
+    // 置于 SetHeight() 之后，度量反映的是新的字面+字号。
+    if(auto logger = spdlog::get("core")) {
+        logger->info(
+            "[FontProbe] apply face='{}' being='{}' heightReq={} heightPix={} "
+            "ascent={} rawAsc={} rawDesc={} unitsEM={} angle={}",
+            font.Face.AsNarrowStdString(), stdname.AsNarrowStdString(),
+            font.Height, Face->GetPixelHeight(), Face->GetAscent(),
+            Face->GetAscender(), Face->GetDescender(), Face->GetUnitsPerEM(),
+            font.Angle);
+    }
     if(recreate == false) {
         if(font.Flags & TVP_TF_ITALIC) {
             Face->SetOption(TVP_TF_ITALIC);
@@ -194,7 +221,25 @@ FreeTypeFontRasterizer::GetBitmap(const tTVPFontAndCharacterData &font,
         data = Face->GetGlyphFromCharcode(Face->GetFirstChar());
     }
     if(data == nullptr) {
-        TVPThrowExceptionMessage(TVPFontRasterizeError);
+        // No glyph could be rasterized on ANY face (neither the requested font
+        // nor the fallback face yields even the default / first-char glyph —
+        // e.g. a Latin-only BGM-title font that lost its charmap, or a face that
+        // became invalid mid scene-transition). GDIFontRasterizer never throws
+        // here; it returns an empty tTVPCharacterData so drawText keeps painting
+        // a blank glyph instead of abortal the whole scene frame. Throwing here
+        // surfaced as a soft "卡死"/hang when a scene's BGM-title (prerender
+        // drawText) hit such a character: the exception interrupted start.ks's
+        // play/BGM flow mid-transition, so the game stopped advancing while the
+        // engine kept ticking. Return a zeroed glyph (all Metrics/Pitch/BlackBox
+        // are {} -initialized to 0) to stay on the non-interrupting path.
+        // 所有字面（请求字体 + 回退字面）都拿不到任何字形——连默认/首字符也没有
+        //（如纯拉丁 BGM 标题字体丢失 charmap，或换场景时字面失效）。GDIFontRasterizer
+        // 在这里从不抛异常，而是返回空白 tTVPCharacterData，让 drawText 画一个空白
+        // 字形而不是中断整帧。此处抛异常表现为软"卡死"：场景切换中 prerender 的
+        // drawText 命到此类字符时异常打断 start.ks 的 play/BGM 流程，引擎还在 tick
+        // 但游戏不再推进。返回全 0 的空字形（Metrics/Pitch/BlackBox 均 {} 初始化为 0）
+        // 以留在不中断的路径上。
+        return new tTVPCharacterData();
     }
 
     int cx = data->Metrics.CellIncX;

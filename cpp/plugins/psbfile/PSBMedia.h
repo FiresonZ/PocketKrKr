@@ -5,6 +5,7 @@
 
 #include <list>
 #include <mutex>
+#include <array>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -26,6 +27,40 @@ namespace PSB {
     bool GetPSBMediaCacheStats(PSBMediaCacheStats &outStats);
     void SetPSBMediaCacheBudget(size_t maxEntries, size_t maxBytes);
     PSBMedia *GetGlobalPSBMedia();
+
+    // Control-point rotation spline (PSB content "cp"). The reference engine
+    // (AetherKiri sub_698454 / libkrkr2 sub_698454) evaluates the curve at the
+    // eased t and uses the sampled point (cosA, sinA) to ROTATE the position
+    // path between keyframes. Layout mirrors the PSB keys:
+    //   cp.x / cp.y      主三次贝塞尔控制点（3N+1 个）
+    //   cp.t             时间节
+    //   cp.s[].x/y/p     每节 cubic-spline 细分参数
+    // Main cubic-bezier control points; t = time knots; s = per-segment splines.
+    struct PSBMotionCpSeg {
+        std::vector<double> x;  // breakpoints / 分段点
+        std::vector<double> y;  // values / 取值
+        std::vector<double> p;  // spline parameters / 样条参数
+    };
+    struct PSBMotionCpCurve {
+        std::vector<double> x;  // main bezier X control points / 主贝塞尔 X 控制点
+        std::vector<double> y;  // main bezier Y control points / 主贝塞尔 Y 控制点
+        std::vector<double> t;  // time knots / 时间节
+        std::vector<PSBMotionCpSeg> s; // per-segment spline data / 每节样条
+        bool empty() const { return t.empty() || x.size() < 4 || y.size() < 4; }
+    };
+    // Motion-local parameter table entry (PSB motion "parameter" list /
+    // "parameterize" dict). UI motions use selectors such as `select=2` /
+    // `page=1` to pick a parameterized clip TIME instead of the global clock.
+    // M2 motion 级参数表条目（PSB motion 的 "parameter" 列表 / "parameterize"
+    // 字典）。UI 动画用 `select=2` / `page=1` 之类的选择器取**参数化 clip 时间**，
+    // 而非全局时钟。
+    struct PSBMotionParameter {
+        std::string id;            // variable name the script sets / 脚本写入的变量名
+        bool discretization = false; // discrete selector steps / 离散选择步进
+        double rangeBegin = 0.0;   // variable range begin / 变量范围起点
+        double rangeEnd = 0.0;     // variable range end / 变量范围终点
+        double division = 0.0;     // timeline subdivision (fallback) / 时间线细分（兜底）
+    };
 
     class PSBMedia : public iTVPStorageMedia {
     public:
@@ -71,6 +106,12 @@ namespace PSB {
             int height = 0;
             int left = 0;
             int top = 0;
+            // Icon hotspot (anchor/rotation pivot of the source bitmap; from the
+            // icon's originX/originY). Draw anchor: org = pos - M*(originX+ox, ...).
+            // 图标热点（源位图锚点/旋转枢轴；来自 icon 的 originX/originY）。
+            // 绘制锚点：org = pos - M*(originX+ox, ...)。
+            float originX = 0;
+            float originY = 0;
             int opacity = 255;
             bool visible = true;
             int layerType = 0;
@@ -124,6 +165,294 @@ namespace PSB {
                              std::vector<ButtonBoundInfo> bounds);
         std::vector<ButtonBoundInfo> getButtonBounds(const std::string &prefix) const;
 
+        // ---- M2 motion timeline (frame animation) ----
+        // One keyframe of a motion layer: becomes active at `time` ms. M2 PSB
+        // layers carry a frameList whose frames have `time` + `content{src,ox,oy,
+        // coord,op}`; an M2 player advances a clock and shows the latest frame
+        // with time <= clock. This is what makes kirkiroid2's title/logo animate
+        // instead of our current static full-frame composite.
+        // M2 motion 时间轴：motion 图层上的一个关键帧，于 `time` 毫秒时刻生效。M2 的 PSB
+        // 图层带 frameList，帧含 time + content{src,ox,oy,coord,op}；播放器推进时钟并显示
+        // time <= 时钟的最新一帧。这是 K2 里标题/logo 能动的数据基础。
+        struct PSBMotionFrame {
+            int time = 0;            // ms, when this frame takes effect / 生效时刻(ms)
+            // PSB frame "type": 0=invisible, 2=static, 3=interpolate. The
+            // reference (libkrkr2 sub_6926B4 parseFrame) treats type==0 as an
+            // INVISIBLE frame regardless of content — a layer's hidden initial
+            // state (e.g. yuzulogo's white/logo layers at t=0 carry a src but
+            // type==0, so the complete static logo must NOT appear before the
+            // intro animation starts). Previously we only checked "has content",
+            // which drew that static logo too early.
+            // PSB 帧 "type"：0=不可见, 2=静态, 3=插值。参考实现（libkrkr2
+            // sub_6926B4 parseFrame）把 type==0 一律视为**不可见帧**——图层的
+            // 隐藏初始态（如 yuzulogo 的 white/logo 层 t=0 帧带 src 但 type==0，
+            // 完整静止 logo 不该在片头动画开始前出现）。此前只按"有无 content"
+            // 判断可见性，导致该静态 logo 过早出现。
+            int type = 2;            // PSB frame type / 帧类型
+            std::string src;         // content.src ("src/..." image path)
+            float ox = 0, oy = 0;    // content origin offset / 原点偏移
+            float cx = 0, cy = 0;    // content coord / 坐标
+            // M2 per-frame scale from content keys "zx"/"zy" (libkrkr2 sub_692AB0
+            // mask 0x60; also coord[2] 'z'). Logo backdrops magnify a tiny source
+            // image (yuzulogo's 64x64 white_box → fullscreen) via zx/zy — without
+            // this the white bg can never cover the canvas. Default 1 = no scale.
+            // M2 帧内缩放来自 content 的 "zx"/"zy"（libkrkr2 sub_692AB0 mask 0x60；
+            // 也有 coord[2] 'z'）。logo 背景用 zx/zy 把小图放大（yuzulogo 的 64×64
+            // white_box → 全屏）；不读这个字段，白底永远铺不满画布。默认 1=不缩放。
+            float scaleX = 1, scaleY = 1; // content scale "zx"/"zy" / 缩放
+            // M2 per-frame rotation (content "angle", degrees). The yuzusoft logo's
+            // leaf "jitter"/wobble is an angle animation; without it the leaf neither
+            // swings nor faces the correct way. Units: degrees (reference
+            // applyLocalTransform uses angle*2π/360).
+            // M2 帧内旋转（content "angle"，单位度）。yuzusoft logo 的叶子"抖动/摆动"
+            // 就是 angle 动画；缺它则叶子既不摆动、朝向也不对。单位：度（参考
+            // applyLocalTransform 用 angle*2π/360）。
+            float angle = 0;             // content "angle" degrees / 旋转角度（度）
+            // M2 skew (content "sx"/"sy"), the transformOrder case-3 operator
+            // (matrix [1,sx;sy,1]) — libkrkr2 sub_699940 / AetherKiri
+            // applyLocalTransform implement it; we skipped it, so any slanted
+            // node rendered without skew. Default 0 = identity.
+            // M2 斜切(content "sx"/"sy")，transformOrder 的 case-3 算子（矩阵
+            // [1,sx;sy,1]）——libkrkr2 sub_699940 / AetherKiri applyLocalTransform
+            // 都实现了它；此前我们跳过 case 3，带斜切的节点会渲染成无斜切。默认 0=恒等。
+            float slantX = 0, slantY = 0; // content "sx"/"sy" / 斜切
+            float opacity = 255;     // 0..255 (m2 `op`) / 透明度
+            // M2 blend mode (content "bm") and clipping rect (round 2). bm drives
+            // the operate blend op; clip limits the node to a sub-rect (probed
+            // this round — applied once data confirmed present).
+            // M2 混合模式(content "bm")与裁切矩形(第二轮)。bm 决定 operate 的混合
+            // 算子；clip 把节点限制在子矩形内（本轮先探针，确认存在后再应用）。
+            int blendMode = 0;         // content "bm" / 混合模式
+            bool hasClip = false;      // content "clip" present / 是否有裁切
+            int clipL = 0, clipT = 0, clipR = 0, clipB = 0; // clip rect / 裁切矩形
+            // M2 flip flags from content "fx"/"fy" (libkrkr2 sub_692F6C, mask 0x4/0x8).
+            // A mirrored sprite (e.g. yuzulogo's leaf) uses these — without applying
+            // the flip the piece renders reversed vs K2.
+            // M2 翻转标志来自 content "fx"/"fy"（libkrkr2 sub_692F6C，mask 0x4/0x8）。
+            // 叶片等镜像精灵用它们；不应用则叶片朝向与原版相反。
+            bool flipX = false, flipY = false; // content flipX "fx" / flipY "fy" / 翻转
+            // M2 cubic-bezier easing for THIS frame's interpolation toward the NEXT
+            // keyframe (content "ccc": a bezier from (0,0) to (1,1); control points
+            // are (x[1],y[1]) and (x[2],y[2]), endpoints (0,0)/(1,1)). Absent => linear.
+            // This is the "last alignment gap": without it the leaf swings violently
+            // through large angle keyframes and the m2logo letters slide/jump harshly.
+            // M2 三次贝塞尔缓动：用于本帧**向下一帧**的插值（content "ccc"，是 (0,0)→(1,1)
+            // 的贝塞尔；控制点为 (x[1],y[1])、(x[2],y[2])，端点是 (0,0)/(1,1)）。无 ccc 则线性。
+            // 这是"未对齐参考的最后一环"：缺它叶子在大角度关键帧间甩得太猛、m2logo 字母
+            // 滑入生硬。
+            bool hasEasing = false;
+            float easeX1 = 0, easeY1 = 0, easeX2 = 0, easeY2 = 0; // ccc 贝塞尔控制点
+            // M2 per-property cubic-bezier easing. The reference engine (libkrkr2 /
+            // AetherKiri) eases EACH attribute with ITS OWN curve instead of reusing
+            // one "ccc" for everything:  acc→angle(0x1000), zcc→scale(0x2000),
+            // scc→slant(0x4000), occ→opacity(0x8000). "ccc"(easeX*/easeY*) stays the
+            // COLOR + opacity-fallback curve. Previously we applied "ccc" to every
+            // interpolated attribute (incl. angle), which mis-times the m2logo M-fold
+            // rotation and the position/scale tweens relative to the reference.
+            // M2 逐属性三次贝塞尔缓动。参考引擎（libkrkr2 / AetherKiri）**每个属性**用
+            // 各自曲线，而非把一个 "ccc" 复用于所有属性：acc→角度(0x1000)、zcc→缩放
+            // (0x2000)、scc→斜切(0x4000)、occ→透明度(0x8000)。"ccc"(easeX*/easeY*) 仍是
+            // **颜色 + 透明度兜底**曲线。此前我们把 "ccc" 套在全部插值属性上（含角度），
+            // 导致 m2logo 的 M 折叠角与位置/缩放补间相对参考时序/形状错误。
+            bool hasAngleEasing = false; // acc / 角度
+            float acX1 = 0, acY1 = 0, acX2 = 0, acY2 = 0;
+            bool hasScaleEasing = false; // zcc / 缩放
+            float zcX1 = 0, zcY1 = 0, zcX2 = 0, zcY2 = 0;
+            bool hasOpacityEasing = false; // occ / 透明度
+            float ocX1 = 0, ocY1 = 0, ocX2 = 0, ocY2 = 0;
+            bool hasSlantEasing = false; // scc / 斜切
+            float sccX1 = 0, sccY1 = 0, sccX2 = 0, sccY2 = 0;
+            // M2 per-sprite vertex color tint (content "color", 4 packed ARGB DWORDs,
+            // one per corner; a scalar color is broadcast). Mostly opaque white —
+            // only colored sprites (C/W red, the thin red→black line, the black cross)
+            // carry non-white values. Applied as a flat premultiplied-ARGB multiply in
+            // Player::applyFlatTint (operateAffine has no color channel).
+            // M2 精灵顶点色平涂（content "color"，4 个打包 ARGB DWORD，四角各一；标量
+            // 颜色广播到四个角）。大多为不透明白——只有着色精灵（C/W 红、红转黑细线、
+            // 黑色十字）带非白值。在 Player::applyFlatTint 里作为预乘 ARGB 平涂相乘
+            //（operateAffine 没有颜色通道）。
+            std::array<std::uint32_t, 4> packedColors{
+                0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu};
+            // E-mote mesh: content["mesh"]["bp"] (or "b") → 16 control points (32
+            // floats) of a bicubic Bernstein patch. Empty when this frame doesn't
+            // deform. Children are deformed by the nearest ancestor mesh.
+            // E-mote 面片：content["mesh"]["bp"]（或 "b"）→ 双三次 Bernstein 面片的
+            // 16 个控制点（32 个 float）。空＝本帧不变形。子节点由最近的祖先面片变形。
+            std::vector<float> meshControlPoints;
+            // Control-point rotation spline (content "cp"): samples (cosA, sinA)
+            // that ROTATE the node's position path toward the next keyframe
+            // (reference sub_698454 / interpolatePosition69A4D4). Empty = linear.
+            // M2 控制点旋转样条（content "cp"）：采样 (cosA, sinA) 旋转本节点向下一
+            // 关键帧的位置路径（参考 sub_698454 / interpolatePosition69A4D4）。
+            PSBMotionCpCurve cp;
+            // M2 motion sub-object (content["motion"]["dt"]) — motionDt 5 模式
+            // (reference sub_6BE534, mn.activeSlot().motionDt):
+            //   0 = keep keyframe angle, 1 = direct dofst, 2 = atan2(current
+            //   - prev position), 3 = crossfade finite-difference atan2,
+            //   4 = atan2 toward node `motionDtgt`.
+            // dofst = angle offset ADDED to the computed angle; dtgt = target
+            // node label for mode 4.
+            // M2 运动子对象（content["motion"]["dt"]）——motionDt 5 模式（参考
+            // sub_6BE534，mn.activeSlot().motionDt）：
+            //   0=关键帧角度、1=直接 dofst、2=atan2(当前-上一位置)、3=交叉淡入
+            //   有限差分 atan2、4=朝节点 motionDtgt 的 atan2。
+            // dofst=加到计算角上的偏移；dtgt=模式 4 的目标节点标签。
+            int motionDt = 0;
+            float motionDofst = 0.0f;
+            std::string motionDtgt;
+            bool visible = true;     // !(type==0) && has content / 本帧是否可见
+        };
+        struct PSBMotionLayerTrack {
+            std::string label;                        // layer label / 图层名
+            int width = 0;                            // PSB layer display width / 图层显示宽
+            int height = 0;                           // PSB layer display height / 图层显示高
+            std::vector<PSBMotionFrame> frames;       // sorted by time / 按时间排序
+        };
+        // A motion-layer NODE in the motion's layer tree. Unlike the flat track
+        // list, nodes keep the parent→child relationship (PSB "children" key),
+        // which is what lets a `layout` container's position/opacity propagate
+        // down to its child layers (generic M2 semantics — see libkrkr2.so's
+        // Player_buildNodeTree). `frames` holds this node's own key-frame timeline.
+        // M2 motion 的图层**节点**。与扁平轨道不同，节点保留 parent→child 父子关系
+        //（PSB 的 "children" 键），这正是 `layout` 容器的位移/透明度能传给子层的
+        // 通用基础（参考 libkrkr2.so 的 Player_buildNodeTree）。`frames` 是该节点
+        // 自身的帧时间线。
+        struct PSBMotionNode {
+            std::string label;                  // node label / 节点名
+            int parentIndex = -1;               // parent node index (-1 = root-level)
+            int type = 0;                       // PSB layer "type" / 图层类型
+            int width = 0;                      // PSB layer display width / 图层显示宽
+            int height = 0;                     // PSB layer display height / 图层显示高
+            // Per-node transform inheritance mask (PSB "inheritMask"). Bits gate which
+            // of flip/angle/scale/slant a node inherits from its parent (default 0x1FC =
+            // inherit all). libkrkr2 reads it at node build (sub_6B3C78):
+            //   0x004 flipX, 0x008 flipY, 0x010 angle, 0x020 scaleX, 0x040 scaleY,
+            //   0x080 slantX, 0x100 slantY
+            // 节点的变换继承掩码（PSB "inheritMask"）。位门控该节点从父节点继承
+            // flip/angle/scale/slant 的哪些（默认 0x1FC=全部继承）。libkrkr2 在节点构建时
+            // 读取（sub_6B3C78）：0x004 flipX、0x008 flipY、0x010 angle、0x020 scaleX、
+            // 0x040 scaleY、0x080 slantX、0x100 slantY。
+            int inheritMask = 0x1FC;
+            // Per-node local-matrix operator order (PSB "transformOrder", default
+            // [0,1,2,3] = flip, angle, scale, slant). libkrkr2 sub_699940 iterates it to
+            // LEFT-multiply each transform onto the local 2x2 matrix.
+            // 节点局部矩阵的算子顺序（PSB "transformOrder"，默认 [0,1,2,3] =
+            // flip, angle, scale, slant）。libkrkr2 sub_699940 依序左乘到局部 2×2 矩阵。
+            int transformOrder[4] = {0, 1, 2, 3};
+            // E-mote mesh deformation gates (PSB "meshSyncChildMask"): bit 1 = deform
+            // child position, bit 2 = deform child angle (gradient), bit 4 = deform
+            // child scale (jacobian). "meshType" selects how a node feeds its children.
+            // E-mote 网格变形门控（PSB "meshSyncChildMask"）：位 1=变形子位置、位 2=变形
+            // 子角度（梯度）、位 4=变形子缩放（Jacobian）。"meshType" 决定节点如何作
+            // 用给子层。
+            int meshSyncChildMask = 0;
+            int meshType = 0;
+            // True when this node is the CONTENT of a "motion/obj/sub" sub-motion
+            // expanded into the parent tree (Player::expandSubMotionNodes). Reference
+            // (AetherKiri child player) drives such content by the PARENT motion
+            // node's activity, not the child's own type-0 end frame — so a child's
+            // trailing "invisible" frame must not hide it mid-fold.
+            // 为 true 表示本节点是 "motion/obj/sub" 子运动展开进父树的**内容**（
+            // Player::expandSubMotionNodes）。参考（AetherKiri 子播放器）以父 motion
+            // 节点的活动驱动这类内容，而非子节点自己的 type-0 末尾帧——子节点的末尾
+            // "隐藏"帧不应在折叠中途把它藏掉。
+            bool submotionContent = false;
+            // Sub-motion child-clock info, filled by Player::expandSubMotionNodes:
+            //   subRefSrc      — the "motion/<obj>/<sub>" src this node was expanded
+            //                    from (the reference cleared f.src on the ref node).
+            //   subLaunchTime  — the parent ref node's keyframe time when the
+            //                    submotion started (ms; before it, content hides).
+            //   subLoopTime    — the submotion's own loopTime (ms; >0 loops its
+            //                    timeline, 0 = play once then hold the last frame).
+            // 子运动**子时钟**信息，由 Player::expandSubMotionNodes 填充：
+            //   subRefSrc      — 本节点展开自哪个 "motion/<obj>/<sub>"（参考节点上
+            //                    的 f.src 已被清掉）。
+            //   subLaunchTime  — 父参考节点发起子运动的关键帧时刻(ms；之前内容隐藏)。
+            //   subLoopTime    — 子运动自身的 loopTime(ms；>0 循环其时间线，
+            //                     0 = 播一遍后保持末帧)。
+            std::string subRefSrc;
+            int subLaunchTime = 0;
+            int subLoopTime = 0;
+            // Stencil composite (PSB "stencilType" / "stencilCompositeMaskLayerList",
+            // type==12 nodes). stencilType bits (reference node+52): 1=normal alpha
+            // crop, 2=reverse crop, 4=composite with authored mask layers listed in
+            // stencilMaskLabels (resolved to node indices by the parser).
+            // stencil 合成（PSB "stencilType" / "stencilCompositeMaskLayerList"，
+            // type==12 节点）。stencilType 位（参考 node+52）：1=正常 alpha 裁剪、
+            // 2=反向裁剪、4=用 stencilMaskLabels 列出的作者蒙版层合成（解析为索引）。
+            int stencilType = 0;
+            bool hasStencil = false;
+            std::vector<std::string> stencilMaskLabels;
+            std::vector<int> stencilMaskNodeIndices;
+            // PSB "groundCorrection": when set, the node invokes a TJS
+            // onGroundCorrection(parentPos, childPos) callback (reference sub_6BAA10).
+            // PSB "groundCorrection"：置位时节点调用 TJS onGroundCorrection 回调。
+            bool groundCorrection = false;
+            // PSB "parameterize": index into the motion-level parameter table so a
+            // UI selector picks the parameterized clip TIME instead of the global
+            // clock (reference PlayerUpdateLayers phase-2, node+776). -1=unparameterized.
+            // PSB "parameterize"：motion 级参数表索引，让 UI 选择器取参数化 clip 时间
+            // 而非全局时钟（参考 PlayerUpdateLayers phase-2，node+776）。-1=未参数化。
+            int parameterizeIndex = -1;
+            // E-mote mesh subdivision count (PSB "meshDivision", reference node+2008).
+            // Kept so the probe can observe what the data authors.
+            // E-mote 面片细分计数（PSB "meshDivision"，参考 node+2008）。为探针保留。
+            int meshDivision = 0;
+            std::vector<PSBMotionFrame> frames; // own timeline, sorted by time
+        };
+        void addMotionNodes(const std::string &archiveKey,
+                            const std::string &sceneName,
+                            const std::string &motionName,
+                            std::vector<PSBMotionNode> nodes);
+        std::vector<PSBMotionNode> getMotionNodes(const std::string &archiveKey,
+                                                  const std::string &sceneName,
+                                                  const std::string &motionName) const;
+        // Motion-level parameter table (PSB "parameter"/"parameterize"). UI motions
+        // drive parameterized nodes via selectors; the Player evaluates the parameter
+        // value into a clip TIME with parameterizedClipTime semantics.
+        // motion 级参数表（PSB "parameter"/"parameterize"）。UI 动画用选择器驱动
+        // 参数化节点；Player 按 parameterizedClipTime 语义把参数值换算成 clip 时间。
+        void setMotionParameters(const std::string &archiveKey,
+                                 const std::string &sceneName,
+                                 const std::string &motionName,
+                                 std::vector<PSBMotionParameter> parameters);
+        std::vector<PSBMotionParameter> getMotionParameters(
+            const std::string &archiveKey,
+            const std::string &sceneName,
+            const std::string &motionName) const;
+        // M2 motion-level loop metadata. loopTime > 0 means the timeline loops
+        // (e.g. the yuzulogo/m2logo intros keep playing until the script advances),
+        // mirroring Player_initNonEmoteMotion's read of PSB "loopTime".
+        // M2 motion 级循环元数据。loopTime > 0 表示时间线循环（如 yuzulogo/m2logo
+        // 片头会一直播到脚本推进），对应 Player_initNonEmoteMotion 读取 PSB "loopTime"。
+        void setMotionLoopTime(const std::string &archiveKey,
+                               const std::string &sceneName,
+                               const std::string &motionName,
+                               tjs_int loopTime);
+        tjs_int getMotionLoopTime(const std::string &archiveKey,
+                                  const std::string &sceneName,
+                                  const std::string &motionName) const;
+        void addMotionTracks(const std::string &archiveKey,
+                             const std::string &sceneName,
+                             const std::string &motionName,
+                             std::vector<PSBMotionLayerTrack> tracks);
+        std::vector<PSBMotionLayerTrack> getMotionTracks(const std::string &archiveKey,
+                                                         const std::string &sceneName,
+                                                         const std::string &motionName) const;
+        std::vector<std::string> getMotionNames(const std::string &archiveKey,
+                                                const std::string &sceneName) const;
+
+        // Force the archive identified by `archiveKey` (e.g. "yuzulogo.mtn") to be
+        // parsed and registered NOW, so layer positions and motion tracks become
+        // queryable before a consumer asks for them. Idempotent: after the first
+        // successful load later calls are no-ops. Needed because PSB archives load
+        // lazily on first resource access, and motion data must be ready before
+        // Player/captureCanvas reads it on the very first frame.
+        // 立即解析并注册 `archiveKey`（如 "yuzulogo.mtn"）对应的归档，让图层坐标与
+        // motion 时间线在消费者查询前就绪。幂等：首次成功后后续调用为空操作。用于
+        // 绕开"归档首次访问资源才懒加载"的时序，确保首帧时 motion 数据已可用。
+        bool ensureArchiveLoaded(const std::string &archiveKey);
+
     private:
         using ResourceMap = std::unordered_map<std::string, CacheEntry>;
 
@@ -148,5 +477,9 @@ namespace PSB {
         std::unordered_set<std::string> _loadedArchives;
         std::unordered_map<std::string, std::vector<LayerPosition>> _layerPositions;
         std::unordered_map<std::string, std::vector<ButtonBoundInfo>> _buttonBoundsMap;
+        std::unordered_map<std::string, std::vector<PSBMotionLayerTrack>> _motionTracks;
+        std::unordered_map<std::string, std::vector<PSBMotionNode>> _motionNodes;
+        std::unordered_map<std::string, tjs_int> _motionLoopTimes;
+        std::unordered_map<std::string, std::vector<PSBMotionParameter>> _motionParameters;
     };
 } // namespace PSB
