@@ -17,11 +17,7 @@
 
 **语言 / Language**: 中文 | [English](README_EN.md)
 
-> 🙏 本项目 **PocketKrKr**（<https://github.com/FiresonZ/PocketKrKr>）基于
-> [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next) 二次开发而成，感谢上游作者的贡献。
-
-> 🤖 **AI Agent 协作说明**：本项目有大批量代码由 AI Agent 编写。新 AI Agent 请先阅读根目录
-> [AGENTS.md](AGENTS.md)（首屏指令）与 [docs/dev/](docs/dev/README.md)（速查文档），再开始改代码。
+PocketKrKr 使用 GPL-3.0 协议发布。开发入口、架构约束和参考资料见 [docs/dev/](docs/dev/README.md)。
 
 ## 简介
 
@@ -91,10 +87,9 @@ C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engi
 
 ## 相关文档
 
-- AI Agent 首屏指令：[AGENTS.md](AGENTS.md)
-- 开发文档（AI Agent 速查）：[docs/dev/](docs/dev/README.md)
+- 开发文档：[docs/dev/](docs/dev/README.md)
 - 项目主页：<https://github.com/FiresonZ/PocketKrKr>
-- 直接上游（基于 KrKr2-Next 二次开发）：<https://github.com/reAAAq/KrKr2-Next>
+- 兼容性与参考资料：[docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)
 
 ## 许可证
 

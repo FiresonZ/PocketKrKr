@@ -1,473 +1,70 @@
-# 待办 / 已知问题
+# 待办与已知问题
 
-> 维护当前未完成或待验证的工程事项，供 AI Agent 与开发者交接。
-> 完成某项并验证后删除/移入文末「已解决（极简）」，并同步 AGENTS.md 的「当前状态」。
-> 已完成的历史排查过程不在这里归档（如需回溯看 git log / 具体提交注释）。
+本文只记录当前仍需处理或验证的事项。历史调查、个人测试日志、内部提交编号和临时分析文件不在文档中保存。
 
-## 进行中 / 待办（按优先级）
+## 高优先级
 
-### P0 — §2. Z（krkrz/KIRIKIRI Z）插件兼容：移动端黑屏根因【高优】
-> 移植清单/参考源（在线）：见 [krkrz-compat.md](krkrz-compat.md)；Kirikiroid2（安卓完整移植）为最强参考。
-- **现象**（魔女的夜宴/sabbat_kr 目录版）：启动正常、XP3 全挂载、脚本/图层照常，但合成源纹理始终
-  `(0,0,0,255)` 纯黑、draw 计数卡死不涨 → **主 DrawBuffer 从未被合成**（=初始 0xFF000000）。
-- **已排除**：`VideoOverlay total=0` → 不是视频；源纹理=主 LayerManager DrawBuffer → 走的是 Z 专属路径，
-  我们未接入。
-- **插件缺口**（real 游戏 `plugin/` 全 Failed，引擎无实现/stub）：`drawdeviceD3D/Z`、`kztouch`、`k2compat`、
-  `kagexopt`、`multiimage`、`squirrel`、`PackinOne`。
-- **已做**：③ 挂名 + 逐个实现（`cpp/plugins/zcompat/`）：
-  - 挂名 16 个 Z 插件名（link 不再 Failed）；drawdeviceD3DZ/D3D、kztouch、menu 确认功能已内建核心。
-  - **k2compat**：内嵌 Krkr2Compat 纯 TJS 层（`zcompat/k2compat_scripts.cpp`，10 脚本）已生成，
-    **但引擎启动(LoadAllModules)时强制执行抛异常 → 三游戏全黑（engine(22)），已回退为挂名**
-    （CMakeLists 不再编译该文件）。真实现待改走"游戏运行时显式 Plugins.link(k2compat.dll)"时机再放回。
-  - **motionplayer_nod3d → motionplayer.dll 映射**（PluginImpl.cpp `TVPLoadPlugin`），复用已有实现。
-- **下一步**：① Windows 跑同游戏二分（引擎 vs 渲染链路）；② 对照 Kirikiroid2
-  `src/core/visual/RenderManager_ogl.cpp`+`BasicDrawDevice.cpp` 与我们的 `RenderManager.*`，定位
-  DrawBuffer 未合成原因；③ squirrel 移植（krkr2 trunk `src/plugins/win32/squirrel` + Squirrel VM 源码
-  可得，待按 k2compat 同法内嵌；multiimage 源码不可得，暂挂名）。
-- **缺口核对（2026-09-09）**：核心 API 层已确认不缺 `Pad`/`PassThroughDrawDevice`/`MenuItem`/`KAGParser`
-  （核心均注册）；唯一可选缺项 `System.getDisplayMonitors`（K2COMPAT_SPEC_DESKTOPINFO 默认关）。
-  真正未收口仍是 P0 引擎能力：Z 主层 DrawBuffer 合成 + krmovie Present。
+### Z 兼容渲染路径
 
-### P1 — §2a. motionplayer 缺 `Motion.D3DAdaptor` + `captureCanvas`：千恋万花首屏后无法进入【属 motionplayer 兼容】
-> `Motion.D3DAdaptor` 是 **krkr2 motionplayer** 成员（Direct3D affine），非 krkrz/Z 专属——实证
-> Kirikiroid2_patch(zeas2) 给千恋万花的 patch.tjs 用 `typeof Motion.D3DAdaptor=="undefined"` 兜底，说明
-> 真机 krkr2 的 motionplayer.dll 确有 D3DAdaptor。移动端标准做法=undefined+useD3D=0；我们暂用「可 new 空类」
-> 让 `new Motion.D3DAdaptor(...)` 走通、由 CPU/GL motion 播 logo。
-- 现况：`getD3DAdaptor` 返回 `new tTJSNativeClass("D3DAdaptor")`（`cpp/plugins/motionplayer/main.cpp`）。
-- **2026-09-09 实测（engine(23)）**：三游戏(千恋万花) logo 能显示、渲染健康（SourceSample 25/25、PSB 14 图已缓存），
-  **点击后走 `yuzulogo` 动画 `drawAffine` 时，`_window.motionWorkLayer.captureCanvas()` 报
-  `Member "captureCanvas" does not exist` → 致命脚本错误 → 闪退**。
-- `captureCanvas`/`motionWorkLayer` 是**千恋万花 data 自带 `affinesourcemotion.tjs`** 动画辅助 API，
-  **krkrz/krkr2/Kirikiroid2/KrKr2-Next 源码全都没有该实现** ⇒ 无参考可抄。
-- **2026-09-09 宿主定位（脚本字节码符号表）**：4 个 data 脚本（patch/affinelayer/affinesourcemotion/motion.tjs
-  均为编译后 `TJS2100` 字节码）。`captureCanvas` 是 **affinesourcemotion.tjs 里 AffineLayer 派生类的脚本类
-  成员**（与 `D3DAdaptor`/`motionWorkLayer`/`motionD3DAdaptor`/`unloadUnusedTextures`/`updateImage`
-  同簇）；base `affinelayer.tjs` **不含**它。
-- **2026-09-09 根因反转 ×2（真机 engine(24/25/5) 实证）**：
-  - ① `b008020`（native Layer captureCanvas no-op）进了 main@7927938 但真机仍 `captureCanvas`
-    缺失 → 工作层对象非 native Layer 继承链（换 D3DAdaptor 为正式类 + 类上 no-op 后见下）。
-  - ② **`Motion.D3DAdaptor` 不能是 undefined**：engine(5) 两次打开千恋万花均崩在
-    `mainwindow.tjs (property getter) motionD3DAdaptor`——它**无条件**取 `Motion.D3DAdaptor`
-    （先算 scWidth/2、pxHeight/2 再访问），置 undefined → `Member "D3DAdaptor" does not exist`
-    致命。Kirikiroid2 能跑此游戏正说明它**定义**了 D3DAdaptor（krkr2 motionplayer 本来就有该成员）。
-- **修复**：`cpp/plugins/motionplayer/main.cpp` `getD3DAdaptor` 返回**内建空类**
-  `Create_NC_D3DAdaptor() = new tTJSNativeClass("D3DAdaptor")`（`new` 收任意参创建实例）。
-  Layer 原生 `captureCanvas`/`unloadUnusedTextures` no-op（LayerIntf.cpp `b008020`）兜底。
-  ⚠️ 迭代史：`815d8c3` 移除→undefined 崩（Member 不存在）；`4166901` NCB 空类无构造→`new`
-  崩（"Called method is not implemented"）；`948ee37` classic tjsNative 在自由函数用
-  TJS_BEGIN_NATIVE_MEMBERS→**编译失败**（该宏用 `this`）；**`6d36839` 回退内建空类，编译通过**。
-  ⚠️ 但 engine(24) 实证：内建空类 + Layer-native captureCanvas 时，`motionWorkLayer.captureCanvas()`
-  仍报 Member 缺失 → motionWorkLayer 既非 Layer 也非空 D3DAdaptor 实例，是**脚本对象**。
-- 待定（需决策）：captureCanvas 落在脚本对象上，native 无解。两路并行参考：
-  ① **脚本 polyfill**：运行时给游戏 AffineLayer 系脚本类注入 `captureCanvas`/`unloadUnusedTextures`
-  no-op（需要游戏脚本类名/宿主，读 mainwindow.world 字节码确认）；② **Kirikiroid2 同款**（绝对参考）：
-  让 `Motion` 整体不存在 → 游戏 `_motionD3DAdaptor` 不赋值 → CPU 路径，根本不调 captureCanvas
-  （但会影响真用 motion 的 Z 游戏，需用户取舍）。
-- **2026-09-09 方案②证伪 + Kirikiroid2 实证（最新，方向反转）**：
-  - **Kirikiroid2 不是"让 Motion 整体不存在"**——GitHub 仓库源码（zeas2/Kirikiroid2）确实搜不到
-    Motion/motionplayer，但那是**源码未同步**；下载官方发布 APK（1.3.9）反查 `libgame.so`，
-    **完整存在**：`D3DEmotePlayer/D3DEmoteModule/SeparateLayerAdaptor/D3DAdaptor/useD3D/enableD3D/
-    Motion::ResourceManager/setEmotePSBDecryptSeed/setEmotePSBDecryptFunc/captureCanvas/
-    unloadUnusedTextures/canvasCaptureEnabled/motionplayer.dll/emoteplayer.dll`。
-  - zeas2 官方补丁库 `Kirikiroid2_patch`（github.com/zeas2/Kirikiroid2_patch）含**千恋万花补丁**
-    （patch/ゆずソフト/千恋＊万花/patch.tjs）：`Plugins.link("motionplayer.dll")` +
-    `typeof Motion.D3DAdaptor` 两分支**都强制 `useD3D=0`**（移动端无 D3D9，走 CPU/GL），
-    并 `System.setArgument("-hdresomode","1080")` + 清空 movieQualitySelectMenuItem。
-  - ⇒ 结论：**保持 Motion 存在（D3DAdaptor 可 new）+ captureCanvas/unloadUnusedTextures 挂到
-    SeparateLayerAdaptor（motionWorkLayer 宿主）+ useD3D=0** 与 Kirikiroid2 行为一致；当前主线正确。
-  - **本次改动（待提交）**：`cpp/plugins/motionplayer/main.cpp` SeparateLayerAdaptor 新增
-    `captureCanvas`/`unloadUnusedTextures` no-op 注册（转发目标 Layer，兜底清空返回值）。
-  - 其余成员（`Motion.Player.varibleKeys`/`Motion.EmotePlayer.setCameraCoord/Rotate/Scale`）：
-    Kirikiroid2 APK **也没有**，游戏脚本自带 `typeof==="undefined"` polyfill 兜底，无需实现。
-- 附：engine(5) 二次打开千恋万花（崩溃后不杀进程再进）出现 `The object is already invalidated`
-  （mainwindow defaultStableHandler）——重启后的残留原生对象被访问，属独立 restart 问题（待查）。
-- 待办：① ✅ 根因 ×2 + D3DAdaptor 正式类（captureCanvas/unloadUnusedTextures no-op 双覆盖 +
-  SeparateLayerAdaptor no-op，2026-09-09 补）；② 真机复验 yuzulogo 后不再崩；③ 若仍报 missing member，
-  读 mainwindow.tjs motionD3DAdaptor getter 完整字节码，逐个补 D3DAdaptor 实例成员。
+- **现状**：部分 Z 作品依赖专用主绘制设备或特殊合成路径，当前移动端不保证所有主 DrawBuffer 场景正常显示。
+- **解法**：梳理主窗口、LayerManager、DrawDevice 和 RenderManager 的目标绑定关系；为每个绘制目标记录生命周期和 context generation；在 GPU 合成前后验证目标纹理、FBO 和更新计数。
+- **验收**：启动、连续重绘、转场和返回操作均有有效帧；源纹理不是固定黑色；不同游戏连续打开不会污染绘制目标。
 
-### P1 — §2b. motionplayer 的 `EmotePlayer`（emoteplayer.dll）未实现【NEW】
-- 现况：`cpp/plugins/motionplayer/EmotePlayer.{h,cpp}` 是**空壳 stub**（仅 `_useD3D` 读写，无 emote 物理/播放）。
-- 影响：M2-Emote 型作品（如 limelight-lemonade-jam 那类）派 motion 时无真正向量骨骼动画。
-- 优先级：**排在 §2（krkrz 黑屏）之后**；与 §2a/§6 独立，无前置依赖。无稳定环境复现，属"有空再做"补齐。
+### 视频画面合成
 
-### P1 — §2c. motion 动画播放（M2 时间轴，logo/标题真正动起来）【当前在做】
-- 现象（K2 对照）：K2 里首屏 logo、首页标题是**连续播放的动画**；我们目前**静态合成**——把动画所有
-  帧的图层一次性画出来（`yuzu_logo` 两帧 y 差 17px 叠出重影 + 中心黑线；`title_bg` 的 `char_move`
-  运动角色钉在某一帧）。能出画面但"不还原游戏表现"。
-- 目标：按时间推进播放 motion 帧（`progress()` 推时钟 → draw 时只画当前时刻该出现的帧/节点，
-  带位置/透明度取值），对齐 krkrsdl3 `emoteengine`（`plugins/emoteplayer/{emotefile,emoterunner}.{cpp,h}`）。
-- 现状基础：`psbfile/PSBMedia` 已能解析对象树/图层坐标/motion 字典/`ExtractFrameInfo`（帧级 time/abort）。
-- 方案（MVP→完整）：① 帧步进：每 motion 关键帧按 time 取当前帧，只画当前帧引用的图层（先不做节点插值）；
-  ② 补透明度/位置插值；③ 完整移植 krkrsdl3 emoteengine（网格/节点/物理/时间轴）为远期。
-- 进度：✅ 首屏动起来的主因已修：PSB 归档是**懒加载**的，`loadMotionTracks` 在首帧归档未解析时查
-  得 0 条并把空结果永久锁存（`_motionTracksLoaded=true`），此后只走静态 `drawPSBImages`、`drawAnimated`
-  永不触发。已新增 `PSBMedia::ensureArchiveLoaded()`（幂等），在 `Player::draw` 里先强制解析归档再
-  `cachePSBImages`/`loadMotionTracks`（engine(6) 实证 `Stored 13 tracks for LOGO/yuzulogo` 但读时却是 0）。
-- 进度：✅ **时间单位换算（2026-09-11，engine(11) 实证根因）**：PSB `frameList[].time` 是 **60fps 帧数**
-  （yuzulogo 尾帧 t=241=4s、m2logo back_white t=91=1.5s、title t=120=2s），而 `progress(delta)` 由脚本以
-  **毫秒**推进时钟 → 4 秒的 logo 时间线约 240ms 就播完，所有角色/字母瞬间同时出现（用户："人物没有依次
-  出现、时间太短；logo 动画特别乱"）。已改为在 `PSBMedia.cpp` 解析处统一 `time ×1000/60` 转毫秒
-  （扁平轨道 `CollectMotionTracksFromMotion` + 节点树 `CollectMotionNodeFrames` + `loopTime` 同换算），
-  下游 `progress`/`drawAnimatedTree`/`drawAnimatedFlat` 全用毫秒比较。
-- 进度：✅ **容器帧插值（2026-09-11）**：插值条件从"仅 `src/` 图像帧"放宽为"任意有内容帧"
-  （含 `src='layout'`/子运动容器帧），logo 字母/柚子汉字的滑入（cx 48→-24→0）与 m2logo 部件淡入
-  平滑过渡，不再在关键帧间跳变。
-- 进度：✅ **空帧即隐藏（2026-09-11，engine(3) 实证）**：去掉"时间线播完→保持末内容帧"回退，
-  空帧在覆盖时段内隐藏该层（含时间线末尾空帧）。此前 yuzulogo 字母/柚子汉字/software 在 t=215f
-  后仍被 keep 到 4s，导致"播放前背景有完整静止 yuzulogo"（真实动画 3.58s 字母即消失、只剩白底）。
-  节点树 `drawAnimatedTree` 与扁平 `drawAnimatedFlat` 同步修改；稳态 motion（normal/status）
-  末尾本来就是内容帧，不受影响。
-- 进度：✅ **PSB 帧 `type` 解析（2026-09-11）**：补充读 PSB 帧的 `type` 字段，`type==0` 视为不可见帧
-  （libkrkr2 `sub_6926B4 parseFrame` 语义），`PSBMotionFrame` 增 `type`，`Player.h` 日志加 `ty=`。
-  ⚠️ 但这**不是**"播放前完整静止 yuzulogo"的根因——真机日志(engine(12))证明 `white`/`logo` 层
-  t=0 帧是 `ty=2`（非 0）。
-- 进度：✅ **PSB 帧透明度字段 `op`→`opa`（2026-09-11，根因真解）**：用独立 PSB 解码器
-  （参考仓库 `/tmp/krkr2-tools`，临时分析，未入库）解出 `yuzulogo.mtn`，确凿根因：
-  - PSB M2 帧透明度字段名是 **`opa`**（0..255），我们一直读 **`op`**，`GetPSBFloat(f["op"],255)`
-    恒取不到 → 兜底 255 → 所有靠透明度淡入/隐藏的层被画成**完全不透明**。
-  - `white`/`logo` 层 t=0 帧 `content:{src:'src/yuzu/yuzu_logo', type:2, opa:0}` —— 开首应
-    透明度 0（透明、不可见），被我们画成实心。
-  - RL 解码确认：`yuzu_logo`(720x417) 是**浅青色实心完整 logo**（avgRGB≈124,214,245），叠加
-    白底 `white_box` 上清晰可见 → 正是用户"播放前背景就有完整静止 yuzulogo"。
-  - 修复：`PSBMedia.cpp` 两处帧解析（`CollectMotionTracksFromMotion`+`CollectMotionNodeFrames`）
-    改译 `opa`，缺失才回退 `op`。
-  - 附带修正此前误判（type0 根因 → 实为 opa：0）。此 bug 也解释了"主界面角色瞬间出现"
-    （角色淡入 `opa` 应从 0 插值）与 m2logo 播放错误（大量 `opa` 淡入）。
-- 进度：✅ **M2 文本子树左对齐（2026-09-11，engine(3) 实证）**：m2logo "cheeseware" 字母
-  （str_clip/str_locate 子树）按文本笔位在 advance 锚点**左对齐**绘制，不再居中——居中会让
-  较宽的 'w'（icon39 比 'e' 宽 30px）向左压到前一个字母，整行字错乱。`_nodeInStrSubtree`
-  预计算（祖先链含 str_* 容器）；普通图像节点（yuzu 字母等）保持居中。
-- 待真机：① 三游戏 logo + 标题入场时序/速度对照 K2；② m2logo 仍缺 `iconXX` 部分纹理
-  （`Unsupported image format (header 19190519)` → 1x1 透明兜底）；③ yuzulogo 语音（脚本驱动）核对；
-  ④ ✅ **m2logo `str_clip` 裁剪已实现（2026-09-11）**——见下方 str_clip 条目，待真机确认
-  cheeseware 文字逐字裁切/擦除效果；
-  ⑤ 标题入场→steady 切换处"最后几像素瞬移"：日志确认人物滑入平滑，跳变在游戏切换稳态
-  （entrance 终位 vs normal 稳态坐标差）或亚像素截断，需含稳态段的日志复核；
-  ⑥ 若标题入场后（2000ms）背景变黑 → 说明游戏依赖 hold 而非切换稳态，届时对非 logo 场景
-  恢复"末尾保持"。
-- 进度：⚠️ **翻转沿父链 XOR 累加（2026-09-11）**：绿叶"方向反了"根因=只对叶子自身 `fx/fy`
-  做单层盒中心镜像、父容器翻转未继承。已改为沿 parent 链 `wfx ^= parent.wfx` XOR 累加
-  （参考 Player_Rendering_Architecture `node.flipX ^= parent.flipX`），并用累加后翻转
-  `effFx/effFy` 驱动仿射；draw 探针加 `eff=` + `parent#`，另加 `[M2Logo]` 字母笔位探针。
-  待真机确认 yuzusoft 绿叶朝向与 K2 一致。
-- 进度：✅ **绿叶 angle（旋转）已代入仿射（2026-09-11）**：yuzu_ha 全程 fl=0/eff=0/scale=1，
-  它的摆动/朝向是 **angle（content "angle"，度）**。已解析 PSB 帧 `angle` 字段、帧间插值、
-  沿父链累加，并绕显示盒中心旋转仿射（F=R·M0、T'=R·T0+center−R·center），macOS/Linux 兼容。
-  待真机确认绿叶摆动方向与 K2 一致。
-- 进度：✅ **绿叶"方向反"根因=旋转枢轴错（2026-09-11，读 engine(4) 日志）**：叶子 `ox=91,
-  oy=21`（纹理原点热区），参考（libkrkr2 sub_699940 + PlayerUpdateGeometry）以**原点**为旋转
-  枢轴（orgX=posX−(m12·OY+OX·m11)），而我们绕**显示盒中心**旋转→绕错点，±40° 摆动时显得
-  方向反/抖动。已把枢轴从盒中心改为原点热区 `(ox,oy)`（含翻转镜像），无旋转节点不受影响。
-- 进度：✅ **绿叶摆向反→ 取反旋转（engine(5) 复验，ad75268）**：叶子能摆了、背景正常、m2logo
-  可读，但叶子 "应向左却向右"（左右镜像）。矩阵与参考一致 ⇒ 是 K2 用 Y-up、我们 Y-down 的
-  手性差，同一正角视觉摆向相反。已在 buildLocalMatrix 与 operateAffine 旋转处**取反角度**
-  （R(-θ)），对所有旋转节点统一修正（非叶子特判）。待真机确认叶子摆向正确。
-- 进度：✅ **m2logo "乱"根因= str_clip 缩放下传（2026-09-11，读 engine(4) 日志）**：m2logo
-  `str_clip` 容器 `s=9,1`（zx/zy 是**裁剪窗口**缩放），前面的累加器把 9× 原样乘进所有字母
-  → 字母继承 ~18× 糊成团，看不出 "CHEESEWARE"。libkrkr2 用 inheritMask 门控缩放继承
-  （bit 0x20/0x40），我们暂未解析，已针对 str_clip 容器**不向子层下传自身缩放**（子层仍从
-  main/layout 祖先拿到 logo 真实缩放）。另 `str_clip` 节点 `type=7`、`box=0x0`，此前按
-  width/height>0 判段永不触发的 str_clip 裁剪逻辑实际没生效——已在日志确认为死分支，未造成
-  回归。待真机确认字母大小可读。
-- 进度：⚠️ **m2logo "M 字/十字缺失" 根因（engine(22) 确认）：静态图层被动画跳过**。m2logo
-  动画=只有 `back_white` 这一条 motion（play 了 2 次），它应显示 M 字(icon25/27/28 碎片)+
-  十字+ CHEESEWARE。但 M 碎片是**静态图层位置**（在 `_psbImages`/getLayerPositions 里），
-  `drawPSBImages` 只要有 motion 轨道就只走 `drawAnimated`（motion 节点），**从不合成静态
-  _psbImages** → M 碎片全程没画。修法：动画时把静态 _psbImages 里属于当前 motion 的 M 碎片
-  一并合成（需匹配当前 motion 的底布白/黑，避免另一底色像素点叠上去）；z 序要在动画底布之后、
-  CHEESEWARE 之下。这是 m2logo 显示的真正根因，之前字级/裁剪方向上的工作是错的层面。
-- 进度：✅ **叶子"摆向反"（engine(5) 复验）已被推翻**：叶子可摆、背景正常，但"应向左却向
-  右"。矩阵与参考逐位一致、数据 flip=0 → 是**渲染坐标手性**的左右镜像，**不是角度符号**
-  （取反角度后仍向右，`6d70869` 已撤销）。真正成因待定：可能需对该叶子做水平镜像(flipX)或
-  坐标 x 镜像，需对照 K2 参考帧才能定论。
-- 进度：✅ **inheritMask + transformOrder 已解析并按位门控（2026-09-11，对齐 libkrkr2）**：
-  - `PSBMotionNode` 新增 `inheritMask`（默认 0x1FC=全部继承）、`transformOrder[4]`（默认
-    [0,1,2,3]=flip,angle,scale,s slant）；`PSBMedia.cpp` 节点构建处读取并打探针（`inh=0x..
-    to=..`），据此可在真机日志核对 m2logo 字母等各节点真实 inheritMask/order。
-  - `drawAnimatedTree` 把 flip(0x4/0x8)/angle(0x10)/scaleX(0x20)/scaleY(0x40) 的继承改为按
-    inheritMask 位门控：位置=1 累加父贡献（flip XOR、angle 相加、scale 相乘），=0 只用自身值。
-    这是"子节点刻意不继承祖先变换"的**通用机制**（不再是 str_clip 特判）；str_clip 不下传缩放
-    保留为兜底。默认 0x1FC 资产（yuzulogo）行为不变。
-  - **已对齐/待真机**：① ✅ **子节点位置改用父矩阵变换**（`pos=parentM·local+parentPos`，
-    根/恒等父矩阵退化为原加法，背景与 yuzu 字母不受影响；旋转/缩放父节点现在能正确带动子层）；
-    ② `transformOrder` 已解析、供局部矩阵与父矩阵构建用；③ slant 倾斜未实现；④
-    `independentLayerInherit`（Player 级）未解析。
-- 进度：⚠️ **m2logo `str_clip` 文字裁剪（2026-09-11 实现，待真机）**：对 `str_clip` 容器节点
-  （label 前缀 str_clip、有显示盒 width/height）在绘制其字母子树前，用其显示盒（映射到层坐标、
-  含父级缩放）设 dest 层 `setClip`，子树画完/出现兄弟节点时恢复之前裁剪，drawAnimatedTree 结束
-  兜底恢复。当前用 `strclip:` 探针（打在容器帧）确认裁剪盒取值；若盒不对（如 label 前缀不同/
-  width/height 非裁剪区），据探针改判据。字母笔位(擦除方向)若仍不对，结合 [M2Logo] 探针复核。
-- 第二輪遗留（已推进）：`clip` 裁切矩形(content "clip" [l,t,r,b])仍只探针未应用（m2logo 该值
-  恒 0，非主因）；`str_clip`(src='clip') 文字裁剪已按容器显示盒实现（上方条目）；m2logo 字母笔位
-  左对齐已完成（上方 M2 文本子树条目）。
-- 进度：✅ **原点锚定统一模型（2026-09-11，B7，对齐 AetherKiri 全链路比对）**：与 AetherKiri
-  （libkrkr2 逆向移植）完整比对后，把 `drawAnimatedTree` 的锚点语义整块改成参考模型：
-  - 位置只累加 coord(cx,cy)；content ox/oy **不进位置**（此前 ox+cx 双计，yuzusoft 叶子
-    ox=91 因此整体漂移/镜像，是叶子"摆向反"的真正结构根因，推翻之前手性镜像猜测）。
-  - 绘制统一为 `org = pos - M*(iconOrigin+ox, iconOriginY+oy)`、四边形 `org+M*[0..iw,0..ih]`，
-    仿射直接用已累加世界矩阵 `wm11..wm22`（flip/angle/scale 经 transformOrder+inheritMask）；
-    废除显示盒折叠/居中锚定/独立枢轴 hack，并**删除 str 笔位左对齐特判**（参考无 pen 系统，
-    字母就是普通节点，各自动画自己的 coord）。
-  - 新解析 **icon originX/originY**（ImageMetadata→MotionType icon dict→CachedImageInfo→
-    getImageInfo）：全画布居中 logo（如 yuzu_logo）与各字形枢轴由此正确；icon 无该字段时
-    默认 0（与参考一致）。
-  - 遗留风险：若个别图标 dict 无 originX/originY 且作者以"中心"语义编坐标，原点锚定会偏移
-    半盒——待真机日志（`origin=`/`pos=`/`org=` 探针）核对；确认后按 asset 补 icon origin 或
-    修正解析。
-  - ✅ **该风险已兑现→按"中心"默认修复（2026-09-11，13430f2）**：真机反馈"整体向右下偏移"=该
-    锚定退化。图标 dict 无 originX/originY（默认0）时 `org` 落到纹理左上角 → 所有精灵下移右移
-    半盒。修复：`drawAnimatedTree` 恢复 `resolveCoordOrigin()`（默认0=中心）锚定，左上角减半宽/半高，
-    与静态合成 `cachePSBImages`（坐标=盒中心）一致；**保留** B7 两处真修（ox/oy 不进位置、旋转绕
-    ox/oy 热区）。若个别 asset 确按左上角编码，用命令行 `-psb_coord_origin=topleft` 切回。
-  - ✅ **B8 单一世界矩阵+原点锚定（2026-09-11，7dcefa7）+源文件实证**：用户提供 title/m2logo/yuzulogo
-    三个 .mtn + title.pimg，用自写 PSB 解析器（.uploads/psb_dump.py、motion_dump.py）读取真实数据后
-    **证实根因 = icon origin 非中心**：`ch1_芳乃` originX=529（宽973，中心应为486，偏右43px），其余
-    字符/bg/logo 均为 w/2。此前"中心锚定"把 ch1 画到偏右43px，末尾被按真实 origin 烘焙的
-    `title_charall` 盖住时"向左挪43px"（正是"只有 ch1 挪"）。B8 按 icon origin 锚定（`org=pos-M·
-    (origin+ox,oy)`）即修。**坐标系确认是画布中心**（logo coord -705、head -954，负值在左）。
-  - ✅ 叶子枢轴实证：`yuzu_ha` icon origin=(w/2,h/2)=(93,28)=中心、帧 ox=91/oy=21 → 参考枢轴=
-    origin+ox=(184,49)；旧代码用 top-left+ox=(91,21) 致摆动绕错点（叶子小问题），B8 已按参考修正。
-  - ⏳ **遗留：M2 用 `ccc` 贝塞尔缓动，我们仍线性插值**（叶子 22.9→−39.5 跳变、m2logo 字母滑入
-    时序由此而来）。已确证这些 .mtn 帧都带 `ccc={c,x,y}` 贝塞尔控制，是"未完全对齐参考"的最后一环，
-    待实现 keyframe 贝塞尔插值后再放回平滑。
-  - ✅ **B9 已实现 ccc 三次贝塞尔缓动（2026-09-11，216a3d6）**：源文件证实 ccc 是"出发帧→下一帧"
-    的三次贝塞尔（(0,0)→(1,1)，控制点 (x[1],y[1]),(x[2],y[2])）。`PSBMotionFrame` 增 easing 字段 +
-    PSBMedia 解析 content "ccc"；`drawAnimatedTree` 插值时用 `BezierEase`（二分解 x(t)=u 求 y(t)）
-    重映射进度，应用到 ox/oy/cx/cy/opacity/scale/angle 全部插值属性；无 ccc 帧保持线性。待真机确认
-    叶子摆动平滑、m2logo 字母滑入顺。
-  - ✅ **B10 M2 时间线单位是帧(tick)不是毫秒（2026-09-11，e34706e）→ ⚠️ 误诊已回退（2026-09-12，B11）**：
-    真机反馈 m2logo"硬变/白块盖 CheeseWare/无折叠感"，当时误以为 time/lastTime 是**帧**并加
-    `delta*60/1000` 换算。2026-09-12 读新引擎日志实证**误诊**：PSBMedia.cpp 解析处已把原始 60fps
-    帧数换算成毫秒（yuzulogo 241tick→4016ms≈4s、back_white 91tick→1516ms≈1.5s、叶子 yuzu_ha 摆动
-    t=1200..2516ms），progress(delta) 调用方传的就是真实毫秒——B10 的二次换算让**所有动画慢约
-    17 倍**（4016ms 时间线要 67s 真实时间），真机表现"动画全慢、只看到白底、跳过才看到完整 logo 拉伸
-    消失"。回退为 `_tickCount += delta`（毫秒直推）。待真机确认各动画速度/时序。
-  - ✅ **B11 str_clip 裁剪窗口锚定修正（2026-09-12）**：m2logo 字母（c..e，t=316 出现）的局部
-    cx+ox 相对 str_locate，而 str_locate 又相对 str_clip 偏移 cx=-114；旧代码把窗口锚在 str_clip
-    自身位置 → 窗口右移约 114×scale，截掉前 5 个字母（"CheeseWare" 只显示 "ar" 之类，即"字母显示
-    混乱"）。修复：窗口锚定在**文字容器（str_locate）的世界位置**（用 str_clip 世界矩阵 × 容器
-    活跃帧局部坐标 + str_clip 世界位置复算），尺寸=字母局部范围×下传缩放。通用判据仍是 type==7。
-  - ✅ **B12 对齐 AetherKiri 动画实现（2026-09-12）**：用户反馈"M 折叠一直不对、不是横线平滑
-    弯折"，逐项与 AetherKiri（`/tmp/akiri` 全量 clone，libkrkr2 血统）对比动画实现：
-    ① **360° 最短路径角度插值**（AetherKiri interpolateSlots / libkrkr2 sub_699AE4）：
-       m2logo 折叠链 node6 286°→0、node9 270°→0，旧线性插值转 ~286°/270°（几乎一整圈），
-       参考只转 74°/90°——"M 乱转、不是平滑弯折"的根因。已按参考回绕。
-    ② **transformOrder case-3 slant**（libkrkr2 sub_699940 / applyLocalTransform）：
-       此前整段跳过，带斜切节点丢失斜切。已解析 content "sx"/"sy" + 实现 [1,sx;sy,1] 左乘，
-       inheritMask bit 0x080/0x100 门控累加。
-    ③ **可见性语义对齐**（updateLayers 0x6BB8F4）：type-0 帧**隐藏**节点（此前"保持末内容帧"
-       把 m2logo 折叠件从 t=0 一直显示 + backdrop 白块永不消失）；node type 2 结构组保持 active；
-       **子运动内容**（expandSubMotionNodes 展开，新 submotionContent 标记）跟随**父 motion 节点
-       活动**（参考子播放器），motion 播完（非循环）后保持末内容帧（主界面入场不黑，替代旧 hold）。
-       效果：m2logo 折叠件 t=200 才出现（已带旋转角）、backdrop 白块 1516ms 后消失、折叠角最短路径。
-  - ✅ **B13 修复 B12 可见性回归（2026-09-12）**：真机反馈"m2logo 中间十字看不见 + 主界面看不到
-    人物依次出场"。日志实证两处：
-    ① 子运动内容保持缺"已越过末可见帧"条件：标题的 title_charall/logo/head 从 **now=0** 就
-       保持末帧（t=1983/t=1250）整屏盖住，入场动画完全被遮（tick=0 画 3 图）。修复：保持条件
-       加 `af->time >= lastVisibleFrame->time`——末帧之前（首内容帧之前）保持隐藏。
-    ② B12 参考语义把 m2logo 折叠件/icon48("2") 在 t=716 全部隐藏（链节点 type-0 帧），
-       只剩 icon42 十字 + 字母。修复：节点内容结束后（`af->time >= lastVisibleFrame->time`
-       且 `af->time < motionEnd`）**保持末可见状态**，让成型 M/2 持续到末尾淡出/压缩；
-       子运动内容在**父内容段结束**（新预计算 nodeContentEnd）后保持。backdrop 白块
-       （t=1516 == motionEnd）仍正确隐藏。效果：m2logo 完整 M+十字+2 保持、白块仍消失；
-       标题人物 ch1..ch4 依 t=333/500/666/833 依次升起。
-  - ⏳ **遗留（AetherKiri 对比发现的后续）**：① 子运动 child-player 时间映射（motionDt/
-    motionDofst/motionTimeOffset 驱动子时间线，现为"父活动+保持末帧"近似，需 mtn 实证精确映射）；
-    ② 逐属性缓动曲线（ccc=透明度/颜色、acc=角度、zcc=缩放、scc=斜切、位置=线性，现 ccc 全属性）；
-    ③ AetherKiri 的 evaluateBezierCurve 是分段三次参数式（y[] 控制点），与我们 BezierEase 解 x(t)=u
-    不同。待用户再提供 m2logo/yuzulogo/title 的 .mtn 后逐项实证。
-- 进度：✅ **鉴赏模式返回（2026-09-11）**：安卓系统返回键本就被 `PopScope(canPop:false)`
-  + `EngineSurface._onKeyEvent` 转发为 ESC/back 进引擎，但鉴赏/画廊界面游戏脚本不响应 →
-  无返回手段。按用户要求：折叠菜单加"Back"项，点击发合成 escape keyDown+back+keyUp
-  （`EngineSurface.sendBack()`），走游戏正常退出逻辑。
-- 进度：✅ **主界面黑屏修复（2026-09-11，engine(21) 实证根因）**：title 是非循环
-  motion（loopTime=0），其 `main`/`bg`/角色在时间线末尾的空帧被"空帧即隐藏"逻辑
-  整棵藏掉 → 入场播完后 `nonBlack=0/25 avg=(0,0,0,255)` 全黑（15:53:47~15:54:04
-  黑 17s，直到进鉴赏模式）。参考语义：非循环 motion 播完应**保持末内容帧**。修复：
-  `drawAnimatedTree` 对 `loopTime==0` 且当前帧已越过末内容帧的节点改写为保持
-  `lastContentFrame`（不再用末尾空帧隐藏）。ste notch 待真机确认 title 静止 + yuzusoft
-  logo 播完保持完整 logo。
-- 参考提交/对照清单：见 [krkrz-compat.md](krkrz-compat.md)「krkrsdl3 emoteplayer 对照」。
+- **现状**：FFmpeg 解码链路可用，视频帧提交到场景纹理的完整路径仍需收口。
+- **解法**：实现统一的帧时钟、丢帧策略、像素格式转换和目标 Layer 更新；明确视频层、普通 Layer 和 Flutter 纹理之间的所有权。
+- **验收**：视频首帧、连续播放、暂停、跳转、结束和重复播放均正确；无线程泄漏和纹理泄漏。
 
-### — 文本尺寸比 K2 略小 + 选项框文字偏左上【待做，独立于 motion】
-- 现象：同款游戏文字 K2 略大一点点；选项框文字在框的左上（K2 里框内正常）。首次上报于 engine(5)，
-  早于 motion 改动；且选项界面无 motion 活动（engine(30) 实证 drawPSBImages/drawOnto 未出现）→
-  与 motionplayer 无关，是引擎**文本渲染/字形度量或全局文本缩放**问题。
-- 已排除：`realLayer geo left=0 top=0 w=1920 h=1080`（合成目标层无原点偏移，engine(30)）；
-  letterbox 缩放链路结构正确（ui_stubs.cpp FlutterWindowLayer 等比 letterbox + SetWindowSize 不动虚拟屏）。
-- krkrz 源码无 `hdresomode`/全局字号常量 → 字号为每游戏脚本自定（虚拟屏+Font），模拟器不统一。
-- 待做：拿 K2 与我们**同画面对照截图**（最好带像素标尺）量字号倍率，区分"全局缩放/度量系数"（可能连带
-  修好选项框偏移）vs"字体度量"（改文本渲染 `textrender`/字形）。
+### 预渲染字体与选项框
 
-### P1/P2 — krmovie Present 未实现（视频帧→场景合成）
-- 现状：ffmpeg 解码链路完整（`cpp/core/movie/ffmpeg/`），但 `VideoPresentOverlay::PresentPicture` 及 overlay
-  合成到场景/纹理仍是 stub（只打 warn）。
-- 备注：**已证实非魔女的夜宴黑屏根因**（`VideoOverlay total=0`）；供真正 OP/影片游戏使用。
-- 参考：Kirikiroid2 `src/core/movie/krmovie.cpp`+`ffmpeg/KRMovie*.{h,cpp}`、krkrz `movie/win32/krmovie.cpp`。
+- **现状**：预渲染字形与运行时字体的基线、绘制区域和裁剪规则仍可能不一致。
+- **解法**：分别记录字形原点、基线、绘制矩形和目标 Layer 坐标；将预渲染字体的度量与字形位图绑定，避免使用另一字体的 ascent 推导布局；补充选项框的区域回归。
+- **验收**：选项文字在不同字号、全角字符、混排字符和缩放比例下均位于框内；对话文字不回归。
 
-### — §3c. runtime-restart 切换【不同】游戏：旧 auto-path 未清→路径污染/黑屏【已修，待真机】
-- 现象：reset（进程内）后同款可重开；换不同游戏变黑屏（用户疑为 xp3 挂载）。
-- 根因：全局 `TVPAutoPathList` 跨重启**只增不清**——上一游戏归档路径（`TVPAutoMountProjectXP3Archives`/
-  `Storages.addAutoPath`）残留搜索表，切新游戏可能命中旧归档。同款因 `TVPBoostAutoMountPaths` 去重而掩盖。
-- 修复（提交，`StorageIntf.{h,cpp}`+`StorageImpl.cpp`）：新增 `TVPClearAutoPathListForRestart()`，
-  `TVPResetStorageImplForRestart` 调用，reset 链清空累积 auto-path。
-- 待真机：两个不同 krkr2 游戏互切均正常渲染。
+## 中优先级
 
-### — §3d. 二次游玩（不杀进程 restart）二次进入 FBO incomplete → 黑屏【新增，待真机】
-- 现象（引擎 engine(4)/run 34311307313）：首次游玩正常；**退出不杀进程再进** → 闪屏 → 主界面
-  `FlutterWindowLayer::SourceSample: FBO incomplete 0x8cd6`(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
-  持续 → BlackScreen。
-- 根因：EGL context 在 restart 时先 Shutdown 再重建（run2 重新 "ANGLE EGL context created"），
-  但 run2 的 `blitSrcTex/nativeTex` 与 run1 **同 id(=83)** → 该 GL 纹理/渲染目标对象是进程级残留，
-  新 context 下附件失效。`_FBO` 已由 `5fd30da` 在 `FireRendererRecreated` 重建，但**纹理（主
-  DrawBuffer/背景等图形缓存 gcache 条目）没有在新 context 里重新上传**，被 continue 复用。
-- 修复（提交）：`RenderManager_ogl.cpp` 的 `OnRendererRecreated` 回调内追加 `TVPClearGraphicCache()`，
-  让残留 GL id 在下个 context 按需重新上传为有效纹理（对应 Kirikiroid2 式 context-loss 清缓存）。
-- 待真机：退出→不杀进程→二次游玩渲染正常；若仍黑，需运行时探针定位 id83 纹理确切宿主
-  （LayerManager DrawBuffer vs gcache），再针对性重建。
+### Layer 特效 API
 
-### — §3e. 换不同游戏（restart）后 BGM 与上一游戏重叠【已修，待真机】
-- 现象（engine(8) 实测链路 IINCHO→Kemomusu→IINCHO）：二次打开**不同**游戏后，BGM 疑似叠加了
-  上一游戏的（都 StartApplication 正常、无异常）。同游戏复开不明显。
-- 根因：`ShutdownWaveSoundBuffers` 是**一次性 `tTVPAtExit`（PRI_PREPARE）**，首次 engine_destroy 的
-  `TVPCauseAtExit` 已把 `TVPAtExitInfos` delete 置空；之后每次重启 teardown 的 `TVPCauseAtExit` 提前 return，
-  **不再停混音线程 `TVPWaveSoundBufferThread`** → 上一游戏 BGM 继续响、叠进下一游戏（与日志闭包 `4221543`
-  同类一次性 at-exit 问题，但声音模块无 restart 特例）。
-- 修复（提交，`SysInitIntf.cpp` `TVPResetRuntimeForRestart` + `WaveImpl.cpp`）：新增
-  `TVPStopAllWaveSoundsForRestart()`——停掉 `TVPWaveSoundBufferThread` + 释放存活 buffer（`TVPReleaseSoundBuffers`），
-  restart 末尾显式调用。
-- 待真机：切游戏后 BGM 不再残留（首屏 logo 即干净）。
+- **现状**：部分扩展特效接口只有注册名或兼容桩，缺少完整像素实现。
+- **解法**：先定义 alpha、亮度、马赛克和遮罩的输入输出语义，再复用现有 CPU/GPU 像素操作；每个效果提供标量基准和边界用例。
+- **验收**：方法存在性、透明度、边缘像素、空 Layer 和重复调用行为稳定。
 
-### — §3b. 快速 skip 消息框黑块【间歇，挂起低优先】
-- 现象：快速 skip 时本应透明的消息框偶发整块变黑；再次 skip 未复现。
-- 方向：skip 快速帧间混合/预乘路径或遮罩刷新；与 runtime-restart 无关。
-- 处置：下次再现记录触发场景 + 抓渲染探针（`enable_render_probe=true`）日志。
+### Motion / Emote 播放器
 
-### — §4. SIMD 11 个 PS 混合回退标量（保正确）【低优先】
-- 现况：Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/HardLight/Exclusion 在 `tvpgl_simd_init.cpp`
-  **不再注册 SIMD**（回退标量）。原因：逐字节 u16+`OrderedDemote2To` 饱和 vs 标量 32 位打包跨字节借位截断，
-  结构性不等（CI 曾 16 处 mismatch）；`8ff8760` 回退后 Linux CI 全绿。
-- 放回前提：用 [harness_ps.cpp](https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp) 实证位级一致的算法 = u8 混合核心+u32 打包 alpha；
-  改写 Highway **u32 lane** 后放回。功能已由标量保证；非 PS 混合已对齐标量。
+- **现状**：PSB 基础资源和部分时间轴已支持；复杂网格、粒子、子运动和物理行为仍不完整。
+- **解法**：将时间轴评估、父子变换、网格求值和渲染提交拆成独立阶段；所有坐标使用同一矩阵约定，子播放器使用显式时钟；保留静态标量路径作为回归基准。
+- **验收**：节点可见性、关键帧插值、旋转枢轴、裁剪和非循环末帧在连续帧中稳定。
 
-### P1 — §2d. 真缺"功能实现"的 Z 插件/API 清单【新增，待排队】
-> 与挂名(ZCompatStub)区分：这些是**调用会崩/演出缺损的真正功能缺口**（对照 krkrz / Kirikiroid2）。
-> 现状核实于 2026-09-10（grep 核心无实现）：
-- **Layer alpha 特效三方法**（P1，Kirikiroid2_patch 19 款游戏高频）：`Layer.AlphaColorBlend` /
-  `TranslucentColorBlend` / `LuminanceForAlpha` —— 核心 Layer 无实现，调用报 `Member does not exist`。
-  方向：仿 layerExAlpha 实现（KrKr2 layerEx）并内建到 LayerIntf.cpp 的 Layer 类 / extrans 挂名处补真体。
-- **Layer.AddMosaic**（P1，Patch 库 46 次最高频单项）：`extrans.cpp` 仅 `NCB_MODULE_NAME` 挂名 stub，
-  **无方法体**。方向：Mosaic 马赛克绘制实现。
-- **PrerenderFont(...) → .tpf 位图字体通道**（P0 关联：选项框字偏小/偏左上/裁切，见下文独立条目）：
-  `PreRenderFont` 前缀未接入 `.tpf/.tpr` 预渲染位图字形；`PrerenderedFont` 类能解析 .tpf 结构但未被
-  `GetBeingFont`/字体通道启用。KrKr/Kirikiroid2 的该通道正是选项文字上屏正解（K2 正常而我们错位）。
-- **krmovie Present**（P0，视频 OP/过场）：ffmpeg 已解码，但"帧→场景叠加显示"仍是 stub——
-  引擎能力非插件，独立条目见 §P1/P2。
-- **Squirrel 插件**（P1）：`zcompat g_z_squirrel` 纯挂名，无 VM/类；部分 Z 游戏存档/系统脚本依赖。
-- 优先级：Alpha 三方法 + AddMosaic（高频、方法缺失、好落地）＞ .tpf 字体通道（连动选项框字）
-  ＞ Squirrel ＞ krmovie（引擎改动）。
+### 字体异常降级
 
-### P1 — §2e. Yuzusoft 选项框文字偏小/偏左上/只显示上部【当前在做，等日志】
->- 现象（engine(7)，用户实测）：选项框文字比 Kirikiroid2 **小、位置偏到框左上、只显示上半约 2/3**，
->  颜色样式正常；对话/消息框文字正常。
->- 已明确矛盾：对话(`*ヘッダ`/`*システム`)与选项框(`PrerenderFont(スキップ),ＭＳ ゴシック`)**
->  最终都被 `GetBeingFont` fallback 成同一个 `Noto Sans CJK JP`**（日志 `being='Noto Sans CJK JP'`），
->  系统仅注册 `NotoSansCJK-Regular.ttc` 一个 CJK 字体 → 字体名解析造不出对话/选项的差异，
->  根因更可能在绘制区域/基线/裁剪或 `.tpf` 预渲染位图字体通道。
->- 已做：① 剥离 `PrerenderFont(...)` 前缀 + 等宽/全角优先回退（`8ec234c`）；② 绘制入口探针
->  `[TextProbe]`（destRect/x/y/face/height/AscentOfs/prerender 是否非 0，`26ba8de`）；③ 动画修复同批
->  待真机（`1aca7bf`）。
->- **扫描结论（2026-09-11，对照 krkrz / Kirikiroid2 / KrKr2-Next 全字库管线）**：
->  - 我们的 being 字体管线（FontSystem→FreeType→.tpf 解析/Find/Retrieve→TVPGetCharacter→
->    InternalDrawText）与 krkrz/K2 **逐字节同构**，非管线逻辑差异；我们相对上游仅加探针/
->    前缀剥离/等宽回退/restart 复位。
->  - 探针实证（engine(11) 前后）：选项文本 `prerender=0xb4…` **非空**——`.tpf` 已映射并在走
->    预渲染字形；对话 `*システム` 同样非空但**正常**。
->  - **机制定位（高置信）**：`.tpf` 字形按**原始字体**（MS ゴシック，ascent≈0.86×h）预烘焙，
->    定位 `data->OriginY = -pitem->OriginY + aofsy`，而 `aofsy` 取自**回退字体** ascent
->    （Noto CJK≈1.16×h，实测 height=39→aofsy=45）。基线被压低约 0.3×h →
->    字形下移、框底被裁 → 选项文字"偏左上 + 只见上半"。K2 用 DroidSansFallback（ascent≈0.9）
->    偏差小所以正常。对话字符在 `.tpf` 里 MISS → 走栅格化（同字体自洽）所以正常。
->  - 另发现差异（与尺寸无关，未改）：`tTJSNI_BaseLayer::DrawText/DrawGlyph` 我们对 color
->    多做了一次 `TVP_REVRGB`（krkrz 没有），仅影响颜色、用户实测颜色正常。
->  - **engine(14) 复判（2026-09-11）**：
->    - 选项/名字文本 `[TextProbe]`：face='PreRenderFont(スキップ),ＭＳ ゴシック'
->      `multi destRect=(0,0,792,53) xy=(2,9)`（'【 将臣 】'）与 `single destRect=(0,0,113,68)`
->      `xy=(10,10)`（选择肢）——**绘制区/裁切矩形很窄(113) 且贴近左上(0,0)**。
->      选项"偏小/偏左上/跳出框"定位到**绘制区域/坐标**，而非 ascent。
->    - 曾试按 §2e 修 aofsy 全局覆盖为 .tft ascent（`a6232b1`）：选项 aofs 45→37 仍偏小靠左上，
->      但**对话被回归**（`*システム/*ヘッダ` 也映射 .tft，命中和栅格化字形用同一非 Noto 基值 →
->      有的字偏上有的字偏下）。因 .tft 命中(MSゴシック≈0.86h)与 Noto miss(≈1.16h) ascent 不同，
->      单一 aofs 无法同时取悦两者 → **已整体回退（`ffc93c0`）**，对话恢复。
->  - **新方向（选项框）**：不再动 ascent。去查**选择肢/名字层的绘制几何**：为何 destRect 只有
->    ~113 宽且贴 (0,0) 角落——是脚本 DrawText 的 clip rect、还是选择肢层(LayerEx/选择层)尺寸/
->    定位错误；对比同名层在 K2/Kirikiroid2 里的实际宽高与坐标。
+- **现状**：无法取得字形时应跳过当前字形并继续绘制，仍需补充字体对象失效、字体切换和重启场景的生命周期检查。
+- **解法**：为字体对象维护有效状态和代数；字体库初始化、字面创建、缓存和释放使用成对生命周期；空字形只作为最后降级，不掩盖字体加载错误。
+- **验收**：缺字不阻断脚本；字体切换和引擎重启不访问失效对象；日志可区分缺字与字体对象失效。
 
-### — §R. krkr2-tools 反编译参考资源清单（2026-09-11 盘点）【参考索引，非待办】
-> 位置：宿主机本地 `/tmp/krkr2-tools`（K2 完整移植源码 + libkrkr2.so 反编译重建，**不 commit 进仓库**；
-> 若环境清理需重新获取：`git clone` 对应工程 + IDA 反编译产物重建）。配套参考：
-> `/tmp/krkrz`（Z 引擎）、`/tmp/Kirikiroid2`（K2 移植）、`/tmp/krkrz_dev`（Z 工具/插件）。
-- **`analysis/`（24 份 libkrkr2.so 反编译分析，全 motion/渲染）**：Player_Draw_Full_RenderPath.md、
-  PlayerUpdateLayers / player_updateLayers_accum.md、Player_Rendering_Architecture_libkrkr2so.md、
-  EmotePlayer_Internal_Implementation.md（contains 支持圆/矩形/凸四边形、setVariable 9 类分发、
-  progress 物理步进）、NodeTree_Construction.md、PSB_RL_Decompression_libkrkr2so.md、
-  GPU_RenderPath_libkrkr2so.md、Window_DrawDevice_Scaling_libkrkr2so.md 等。
-- **`cpp/plugins/motionplayer/`（44 文件，反编译重建的完整 motionplayer/emoteplayer）**：
-  PlayerCore / PlayerRender / PlayerRenderItems / PlayerRenderTargets / PlayerDrawDispatch /
-  PlayerUpdateLayers / PlayerUpdateGeometry / PlayerUpdateChildMotion / PlayerUpdateAnchor /
-  PlayerUpdateParticles / PlayerTimeline / PlayerFrameProgress / PlayerMotionLoad / PlayerResource /
-  PlayerLayerQuery / PlayerVariable / NodeTree / MotionNode / D3DAdaptor / D3DEmoteModule /
-  SeparateLayerAdaptor / SourceCache / ResourceManager / RuntimeSupport / EmotePlayer / main.cpp。
-  注意：其中的 EmotePlayer.cpp 本身也多为 stub（STUB_WARN），真实现靠 analysis 文档 + D3DEmoteModule.h。
-- **`cpp/core/movie/ffmpeg/KRMoviePlayer.cpp`**：`VideoPresentOverlay::PresentPicture` 真实实现
-  （pts 同步 + 按 pts 跳帧 + YUV 上屏）——krmovie Present（P0）的目标参考；K2 用 cocos2d sprite
-  上屏，移植时换成我们自己的纹理路径。
-- **`tools/`**：tjsdump（TJS 字节码反汇编）、ksdec（KAG 脚本反编译）、mtndump（motion 转储）、
-  motionsim（motion 模拟器 + 轨迹对比，可验证 Player 与真实引擎逐帧一致）、xp3 / xp3pack。
-- **目标映射（"空函数能不能用它实现"结论）**：
-  - ✅ 能直接照做：**krmovie Present**（P0，当前 stub）；**motionplayer 完整管线补齐**
-    （粒子 / mesh 透视 / anchor / 物理等，当前 Player.h 为简化版）；**EmotePlayer**（按 analysis 文档）。
-  - ✅ 工具可复用：tjsdump / ksdec / mtndump / motionsim / xp3。
-  - ❌ 参考里也没有、需自研：**AddMosaic**（layerExMosaic）、**TranslucentColorBlend / LuminanceForAlpha**
-    （layerExColor）、**squirrel**、**multiimage**（todo 已注明"源码不可得"）、**kagexopt**、**kztouch**、
-    **drawdeviceD3DZ**（D3D 桌面概念）。
-  - ✅ 已有内建能力、挂名正确勿动：wuvorbis / wuopus / wuflac / extrans。
+## 低优先级
 
-### — §5. KAGEX / KAG 差异兼容（kagexopt 相关）
-- 调研并规划对依赖较新 KAG/KAGEX 行为或未登官方插件的游戏做兼容（需求待明确）。
+### SIMD 混合公式
 
-### — §6. multiimage（多图/psd 相关）支持
-- 规划 `multiimage` 能力；范围与用例待明确。
+- **现状**：部分 PS 混合暂时使用标量实现，以保证与标量结果一致。
+- **解法**：以标量函数为规范，使用每像素 `u32` lane 重现打包、截断和跨通道算术；加入随机像素、边界值和透明度组合的逐字节对比。
+- **验收**：SIMD 与标量逐像素一致后再启用注册；不一致时自动回退标量。
 
-### — §8. 去除桌面端残余文件【工程清理，未来执行】
-- 目标：专注移动端（iOS/Android，macOS 为 Apple 开发目标）。
-- 约定：`win32/` 是跨平台共享实现不能删（conventions §1）；macOS runner 保留。
-- 待清理：`platforms/windows`、`platforms/linux/main.cpp`、纯 Win32 窗体
-  `cpp/core/environ/win32/{MainFormUnit,WindowFormUnit,ConfigFormUnit,VersionFormUnit,…}`、
-  `plugins/layerex_draw/windows/*`、`bridge/flutter_engine_bridge/{linux,windows}/…`。
-- 做法：先 grep 确认无 CMake/target 引用再删，删后 Linux 预设验证一次。
+### Flutter 帧缓冲与尺寸变化
 
-### — §9. 安卓构建链防崩备忘录（2026-09 对账）
-> 防"从上游合并/照搬"再次弄崩 arm64 构建。对账对象：`reAAAq/KrKr2-Next`。
-- 我们的 Android 管线基本自研（上游 CMakePresets 无 Android 预设）→ 别全量合回上游 CMake/triplet/vcpkg。
-- 别合并上游 `vcpkg.json`（bullet3/breakpad/libogg/opus 等差异；我们独有 oboe）。
-- engine_api 用**普通链接** `krkr2core+krkr2plugin`，**别加 `--whole-archive`**（重复符号）。
-- JNI 契约自洽：包 `dev.krkr2.flutter_engine_bridge` ↔ `Java_dev_krkr2_flutter_1engine_1bridge_...`
-  （改包名必须同步改 JNI 方法名）。
-- oboe 用 `find_library` 链接，不用 `find_package(oboe CONFIG)`。
-- arm64 triplet ABI 修复是我们独有（`-DANDROID_ABI=arm64-v8a`/`CMAKE_SYSTEM_PROCESSOR=aarch64`），别覆盖。
+- **现状**：CPU 回读和纹理路径存在重复分配、复制和异步尺寸请求。
+- **解法**：引入尺寸请求版本号，丢弃过期请求；复用描述结构和像素缓冲区；保留 stride、frame serial 和一次重试机制。
+- **验收**：旋转、窗口变化、快速切换渲染路径时不出现旧尺寸覆盖、新旧帧混用或资源泄漏。
 
-### — §11. Android「添加文件/压缩包」死代码 bug【暂缓：功能未使用】
-- `home_page.dart _addGameArchive()` 走 `pickFile`，但 Android/iOS 平台通道均无实现 → 必抛
-  `MissingPluginException`。Android 目录访问用 SAF `content://` URI 得持久授权（权限模型差异，非"不能访问"）。
-- 若启用再补：Android 原生 `pickFile`（`ACTION_OPEN_DOCUMENT`+SAF+copy 私有目录）或 `FilePicker.pickFiles`。
+### 资源与脚本缓存
 
-## 已解决（极简，供回溯）
+- **现状**：资源缓存、脚本缓存和游戏列表持久化仍有可优化的分配与写入频率。
+- **解法**：使用容量和命中率指标决定 LRU 参数；对非关键元数据写入做合并调度；保留存档顺序、会话去重和崩溃恢复语义。
+- **验收**：缓存命中率改善，峰值内存不升高，崩溃恢复和存档兼容性不变。
 
-- **runtime-restart 退出卡死 + 二次打开黑屏**：日志闭包未在引擎销毁前释放（`4221543`）+ 音效线程析构
-  `Terminate()` 在 `WaitFor()` 后致 join 死锁（`081a9c1`）+ EGL context 重建后复用渲染器 GL 状态失效且
-  `FireRendererRecreated` 从未调用（`5fd30da`）。真机复验不杀进程二次打开正常。
-- **Android 启动链路**：SDL Java 层缺失（闪退）、JNI 平台层补齐（`a2d8d75`）、主界面转圈
-  （`63b8537`）、日志写 `PocketKrKrLogs`（`c312272`）。
-- **非标准目录（散装 xp3）启动**：`TVPAutoMountProjectXP3Archives` 支持目录内 xp3 自动挂载。
-- **切换不同游戏 auto-path 清理**：见上 §3c。
+## 验证规则
+
+1. 修改渲染、字体、缓存或生命周期代码前，先建立对应的标量或旧路径基准。
+2. 优先运行 Linux 核心验证，再运行目标平台构建；涉及纹理、字体、音频或线程时必须进行目标平台回归。
+3. 诊断日志只记录必要的状态和计数，默认关闭高频探针。
+4. 每个已解决事项应从本文移除，保留一句简短状态记录即可。

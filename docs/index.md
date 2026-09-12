@@ -3,76 +3,71 @@ hide:
   - toc
 ---
 
-# 口袋里的吉里吉里2
+# PocketKrKr
 
 <p align="center">
-    <img src="resources/logo.png" alt="PocketKrKr 双鱼 Logo" width="120">
+    <img src="resources/logo.png" alt="PocketKrKr" width="120">
 </p>
 
-**PocketKrKr** 是一个基于 [Flutter](https://flutter.dev) 与 [ANGLE](https://github.com/google/angle)（Metal / Vulkan）重构的
-[KiriKiri2（吉里吉里2）](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎运行环境，
-**专注移动端：iOS + Android**（macOS 保留为 Apple 开发/调试目标）。
-
-它完全兼容原版游戏脚本，通过 ANGLE 离屏渲染 + IOSurface / SurfaceTexture **零拷贝**纹理共享实现硬件加速，
-并在渲染性能与脚本执行效率上做了大量优化。
+**PocketKrKr** 是面向移动端的 KiriKiri2 运行环境，采用 C++ 引擎、Flutter 壳和稳定的 C ABI 桥接层。支持 iOS、Android 和 macOS 开发目标，Linux 用于引擎验证。
 
 ## 特性
 
 <div class="grid cards" markdown>
 
-- :material-gamepad-square-outline: **原生兼容**
+- :material-gamepad-square-outline: **视觉小说运行环境**
 
-    内置高精度 TJS2 解析器，完全兼容原版 KiriKiri2 游戏脚本；支持 PSB 动画、Live2D Cubism、PSD 素材与 LayerEx 扩展。
+    提供 TJS2、KAG、XP3、Layer、PSB/M2 动画和常用扩展能力。
 
-- :material-lightning-bolt-outline: **零拷贝渲染**
+- :material-lightning-bolt-outline: **多平台渲染**
 
-    ANGLE 离屏渲染（iOS/macOS 用 Metal 后端，Android 用 Vulkan 后端），经 IOSurface / SurfaceTexture 直达 Flutter 原生纹理，低功耗告别卡顿。
+    通过 ANGLE 使用 Metal 或 Vulkan，并支持 IOSurface、SurfaceTexture 和 RGBA 回读路径。
 
 - :material-cellphone: **移动优先**
 
-    iOS 与 Android 为主目标；无 Mac 也能在 Windows 上构建 Android APK，iOS 打包走 GitHub Actions 的 macOS runner。
+    iOS 和 Android 是主要目标，macOS 用于开发与调试。
 
 </div>
 
-## 架构
+## 平台
 
-```
-C++ 引擎 (cpp/core, TJS2) ──engine_api C ABI──> Dart FFI (flutter_engine_bridge)
-        │ ANGLE EGL/GLES2 离屏渲染                     │ Flutter Texture
-        └─ iOS/macOS: IOSurface ──┐
-        └─ Android:  SurfaceTexture ─┴──────────────────┘ 显示
-```
-
-采用 **「C++ 引擎 + Flutter 壳」** 架构：C++ 引擎离屏渲染到 IOSurface（iOS/macOS）或 SurfaceTexture（Android），
-Flutter 以原生纹理零拷贝显示，UI 完全由 Flutter 构建。桥接层 `bridge/engine_api` 提供稳定 C ABI，
-Dart 优先走 FFI，MethodChannel 为兜底。
-
-## 平台状态
-
-| 平台 | 状态 | 图形后端 | 纹理共享 | 引擎形态 |
-|------|------|----------|----------|----------|
-| iOS | 主目标，开发中 | Metal | IOSurface | 静态库链接进 Runner |
-| Android | 主目标，开发中 | Vulkan | SurfaceTexture | `libengine_api.so` 打包进 APK |
-| macOS | 开发目标 | Metal | IOSurface | dylib 打包进 Frameworks |
+| 平台 | 图形后端 | 纹理路径 | 引擎形态 |
+|---|---|---|---|
+| iOS | Metal | IOSurface | 静态库链接进 Runner |
+| Android | Vulkan | SurfaceTexture | 自包含 `libengine_api.so` |
+| macOS | Metal | IOSurface | `libengine_api.dylib` |
+| Linux | Vulkan | 宿主验证 | 不提供应用包 |
 
 ## 快速开始
 
 ```bash
-./build.sh ios release     # 构建 iOS（需 macOS + Xcode，或走 CI）
-./build.sh android debug   # 构建 Android APK（任意主机）
-./build.sh macos debug     # 构建 macOS（开发）
+./build.sh ios release
+./build.sh android debug
+./build.sh macos debug
 ```
 
-## 文档地图
+完整工具链和产物说明见 [构建文档](dev/build.md)。
 
-- :material-school-outline: **新手**：[入门指南](dev/getting-started.md)
-- :material-sitemap-outline: **架构与源码**：[架构](dev/architecture.md) · [源代码结构地图](dev/source-map.md) · [关键引用](dev/key-references.md)
-- :material-hammer-wrench-outline: **构建与约定**：[构建](dev/build.md) · [约定与陷阱](dev/conventions.md)
-- :material-debug-step-over: **排查与优化**：[渲染/黑屏诊断](dev/rendering-diagnosis.md) · [兼容性](dev/compatibility.md) · [性能优化](dev/perf-optimization.md)
-- :material-format-list-checks: **协作队列**：[待办 / 已知问题](dev/todo.md)
-- :material-download: **下载最新构建**：[下载](download.md)
+## 文档
 
-## 致谢
+- [入门指南](dev/getting-started.md)
+- [架构](dev/architecture.md)
+- [源码地图](dev/source-map.md)
+- [关键引用](dev/key-references.md)
+- [构建](dev/build.md)
+- [开发约定](dev/conventions.md)
+- [兼容性测试](dev/compatibility.md)
+- [渲染诊断](dev/rendering-diagnosis.md)
+- [待优化方案](dev/optimization-roadmap.md)
+- [待办](dev/todo.md)
+- [下载](download.md)
+- [插件与扩展](plugins.md)
+- [支持的游戏](support_games.md)
 
-本项目基于 [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next) 二次开发而成，感谢所有上游作者与贡献者。
-本项目以 [GPL-3.0](https://github.com/FiresonZ/PocketKrKr/blob/main/LICENSE) 协议开源。
+## 参考资料
+
+格式、协议和行为对照资料统一见 [兼容性与参考资料](dev/krkrz-compat.md)。
+
+## 许可证
+
+本项目使用 GPL-3.0，详见 [LICENSE](../LICENSE)。

@@ -1,42 +1,26 @@
-## 安装glib失败
+# 常见问题
 
-### 在Wndows为Android进行跨平台编译时遇到vcpkg无法安装glib时
+## Android 构建依赖失败
 
-#### 原因
+如果 Android arm64 构建在 glib、Meson 或安装阶段失败，先确认：
 
-- 是因为 meson 生成的 install.dat 的路径不正常如
+1. 使用仓库声明的 NDK、vcpkg manifest 和 overlay port。
+2. 清理与目标 triplet 对应的失效二进制缓存后重新配置。
+3. 检查 `vcpkg/ports/glib/portfile.cmake` 是否包含当前平台修复。
+4. 不直接修改 vcpkg 下载目录中的第三方源码；临时环境修复不可作为项目配置提交。
 
-```
-D:/source/vcpkg/packages/glib_arm64-android/debug/share/gdb/auto-load/./D:/source/vcpkg/packages/glib_arm64-android/debug/lib
-```
+## 构建缓存异常
 
-- 需要修改`meson`的`minstall.py`
+源码改动应触发对应目标重新编译。若产物没有包含头文件改动，清理目标构建目录和 ccache 后重新配置；vcpkg 依赖缓存通常无需删除。
 
-#### 具体步骤
+## Android 安装失败
 
-1. 根据`vcpkg的dbg err 信息`锁定是哪一个'meson'如果没有更改`glib`版本那么应该是`1.6.1`
-2. 进入`meson`目录,在`VCPKG_ROOT/downloads/tools/meson-1.6.1-哈希值/mesonbuild`,我的路径是`VCPKG_ROOT\vcpkg\downloads\tools\meson-1.6.1-6779de\mesonbuild`
-3. 打开`minstall.py`
-4. 替换`install_data`
+确认设备满足 API 24、arm64-v8a 和 Vulkan 要求。覆盖安装时必须使用与旧包相同的签名；签名不同需要先卸载旧包。
 
-```py
-def install_data(self, d: InstallData, dm: DirMaker, destdir: str, fullprefix: str) -> None:
-        
+## iOS 安装失败
 
-        for i in d.data:
-            if not self.should_install(i):
-                continue
-            if "/./" in i.install_path:
-                i.install_path = i.install_path.split('.')[0]+i.install_path.split('\\')[-1]
-            fullfilename = i.path
-            outfilename = get_destdir_path(destdir, fullprefix, i.install_path)
-            
-            outdir = os.path.dirname(outfilename)
-            try:
-                if self.do_copyfile(fullfilename, outfilename, makedirs=(dm, outdir), follow_symlinks=i.follow_symlinks):
-                    self.did_install_something = True
-            except Exception as e:
-                print(f"Error installing {fullfilename} to {outfilename}: {e}")
-            self.set_mode(outfilename, i.install_mode, d.install_umask)
-```
+iOS 产物通常为未签名 IPA，需要使用有效的 Apple 账户和签名工具重新签名。设备系统需满足项目最低版本要求。
 
+## 黑屏或画面停帧
+
+启用渲染探针并按 [渲染诊断](dev/rendering-diagnosis.md) 的顺序检查源纹理、重绘请求、事件投递和目标纹理。

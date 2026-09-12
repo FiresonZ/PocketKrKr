@@ -1,66 +1,44 @@
-# 开发文档索引
+# 开发文档
 
-> 本目录面向 **AI Agent 与开发者**，用于快速掌握项目技术栈、架构与关键位置，
-> 避免每次从头扫描整个代码库浪费上下文与 token。
-> 请保持本目录内容与代码库现状同步；平台结构调整后务必更新。
->
-> **新 AI Agent 上手顺序**：根目录 [AGENTS.md](https://github.com/FiresonZ/PocketKrKr/blob/main/AGENTS.md)（首屏指令）→ 本文档（索引）
-> → [conventions.md](conventions.md)（约定与陷阱，最重要）→ [key-references.md](key-references.md)（关键文件/符号）。
-> 本项目有大批量代码由 AI Agent 编写，请沿用本目录的文档约定并保持同步。
+本目录提供 PocketKrKr 的架构、构建、源码和兼容性资料。内容以当前代码状态为准，历史排查过程不在这里保存。
 
-## 项目一句话
+## 阅读顺序
 
-**PocketKrKr**：KiriKiri2（吉里吉里2）视觉小说引擎的现代化运行环境。
-C++ 引擎（TVP/TJS2）离屏渲染 → IOSurface / SurfaceTexture 零拷贝 → Flutter 纹理显示，
-Flutter 壳应用提供 UI。当前**面向移动端**（iOS + Android 为主目标，macOS 为 Apple 开发目标）。
+1. [入门指南](getting-started.md)：快速了解项目、构建和运行。
+2. [架构](architecture.md)：查看引擎、桥接和渲染数据流。
+3. [源码地图](source-map.md)：按目录定位模块职责。
+4. [关键引用](key-references.md)：查找主要文件和 C ABI 符号。
+5. [构建](build.md)：查看平台工具链、产物和 CI。
+6. [约定](conventions.md)：修改平台、生命周期、链接和 SIMD 代码前必读。
+7. [兼容性](compatibility.md)：执行游戏兼容性回归。
+8. [渲染诊断](rendering-diagnosis.md)：排查黑屏、停帧和显示链路问题。
+9. [优化路线](optimization-roadmap.md)：查看性能、稳定性和代码结构优化方案。
+10. [待办](todo.md)：查看当前未完成事项。
 
-- 本项目主页：<https://github.com/FiresonZ/PocketKrKr>
-- 直接上游（基于 KrKr2-Next 二次开发）：<https://github.com/reAAAq/KrKr2-Next>
-- 许可证：GPL-3.0
+## 项目边界
 
-## 目录索引
-
-| 文档 | 内容 |
-|------|------|
-| [getting-started.md](getting-started.md) | **入门指南**：项目是什么 / 目录地图 / 构建运行 / 装游戏 / 渲染原理 / 改代码调试（新开发者先读这个） |
-| [rendering-diagnosis.md](rendering-diagnosis.md) | **渲染/黑屏诊断方法（探针）**：怎么开探针、怎么读日志二分定位、日志文件会不会膨胀 |
-| [tech-stack.md](tech-stack.md) | 技术栈、语言、关键三方库、vcpkg 依赖 |
-| [architecture.md](architecture.md) | 模块架构、渲染数据流、桥接层设计、GPU 管线现状 |
-| [source-map.md](source-map.md) | **源代码结构地图**：按目录树的 CPP + Flutter 源码逐模块讲解（学习/开发用） |
-| [key-references.md](key-references.md) | 关键文件 / 符号 / C API 索引（改代码先看这里） |
-| [build.md](build.md) | 构建与工具链（iOS / Android / macOS / Linux 验证）、产物、CI、排错 |
-| [conventions.md](conventions.md) | 目录命名、平台约定、历史陷阱、SIMD 审计记录（重要） |
-| [compatibility.md](compatibility.md) | 游戏兼容性测试方法论（与 Z 持平目标的闭环流程） |
-| [perf-optimization.md](perf-optimization.md) | 性能优化与代码重构候选（收益/风险/验证方式） |
-| [todo.md](todo.md) | **待办 / 已知问题（AI Agent 协作队列，先看这里）** |
-
-## 极简速览（TL;DR）
-
-```
-apps/flutter_app/             Flutter 壳应用（ios / android / macos 平台目录）
-bridge/engine_api/            C ABI 引擎桥接（engine_create/tick/destroy…）
-bridge/flutter_engine_bridge/ Flutter 平台插件（IOSurface / SurfaceTexture + Dart FFI）
-cpp/core/                     C++ 引擎核心（tjs2/base/environ/sound/visual/movie…）
-cpp/plugins/                  TJS 插件（psb/psd/layerex/motionplayer/fstat/cubism…）
-build.sh + build/*.sh         iOS / Android / macOS 一键构建
-CMakeLists.txt + CMakePresets.json   MacOS/iOS/Android/Linux 预设
-vcpkg.json + vcpkg/triplets/  arm64-ios / arm64-android 依赖与 triplet
-platforms/apple/macos/        macOS 独立资源（Flutter 壳已接管入口）
+```text
+apps/flutter_app/                  Flutter 壳和用户界面
+bridge/engine_api/                 C ABI、生命周期和帧接口
+bridge/flutter_engine_bridge/      Dart FFI、MethodChannel、原生纹理桥接
+cpp/core/                          TJS2、存储、渲染、音频、视频和生命周期
+cpp/plugins/                       PSB、PSD、motionplayer、LayerEx 等插件
+build.sh、build/                   平台构建入口
+vcpkg.json、vcpkg/                 依赖、端口和 triplet
+docs/                              用户文档和开发文档
 ```
 
-**iOS 构建链路**：`./build.sh ios debug|release`
-→ CMake iOS 预设编译 `libengine_api.a`（静态库）
-→ `build_ios.sh` 用 `libtool` 合并工程/三方静态库到 `bridge/flutter_engine_bridge/ios/Libs/`
-→ `flutter build ios`。
+## 平台形态
 
-**Android 构建链路**：`./build.sh android debug|release`
-→ CMake Android 预设编译 `libengine_api.so`（自包含共享库，含 JNI 胶水）
-→ `build_android.sh` 拷贝到 `apps/flutter_app/android/app/src/main/jniLibs/arm64-v8a/`
-→ `flutter build apk`。
+| 平台 | 引擎产物 | 图形路径 |
+|---|---|---|
+| iOS | 静态库，链接进 Runner | ANGLE Metal、IOSurface，保留 RGBA 回读兜底 |
+| Android | 自包含 `libengine_api.so` | ANGLE Vulkan、SurfaceTexture，保留 RGBA 回读兜底 |
+| macOS | `libengine_api.dylib` | ANGLE Metal、IOSurface |
+| Linux | 宿主验证构建 | CI 验证，不提供应用包 |
 
-**关键概念**：iOS 上引擎以**静态库**链接进 Runner，Dart 用 `DynamicLibrary.process()` 加载；
-macOS 上为**动态库** `libengine_api.dylib`，打包进 App 的 Frameworks；
-Android 上为**自包含 .so**（插件源码经 `target_sources(PUBLIC)` 的 `INTERFACE_SOURCES`
-直接编进 `engine_api.so`，普通链接 `krkr2core+krkr2plugin`；不用 `--whole-archive`），
-Dart FFI 直接加载。
-详见 [architecture.md](architecture.md) 与 [build.md](build.md)。
+Android 的插件源码通过目标源传播进引擎共享库，使用普通链接即可；不要使用 `--whole-archive`。
+
+## 参考资料
+
+外部实现、格式资料和行为对照入口统一收录在 [krkrz-compat.md](krkrz-compat.md)。参考资料只用于理解协议和行为，不代表 PocketKrKr 已具备对应能力，也不直接复制外部代码。

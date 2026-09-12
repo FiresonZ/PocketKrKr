@@ -18,10 +18,7 @@
 #include "tjsUtils.h"
 #include "SysInitIntf.h"
 #include "DebugIntf.h"
-
-#include "StorageImpl.h"
 #include "LayerBitmapIntf.h"
-#include "MsgIntf.h"
 
 void tTVPGraphicHandlerType::Load(void *formatdata, void *callbackdata,
                                   tTVPGraphicSizeCallback sizecallback,

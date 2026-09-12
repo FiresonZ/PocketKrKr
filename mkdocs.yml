@@ -107,7 +107,7 @@ nav:
       - 关键引用: dev/key-references.md
   - 构建与约定:
       - 构建与工具链: dev/build.md
-      - 约定与历史陷阱: dev/conventions.md
+      - 开发约定: dev/conventions.md
       - 渲染 / 黑屏诊断: dev/rendering-diagnosis.md
   - 兼容与性能:
       - 游戏兼容性: dev/compatibility.md
