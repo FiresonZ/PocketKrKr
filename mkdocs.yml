@@ -45,6 +45,9 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+extra_javascript:
+  - javascripts/language-redirect.js
+
 extra:
   generator: false
   social:
@@ -57,6 +60,46 @@ plugins:
         - zh
         - en
       separator: '[\s\u200b\-_,:！？\[\]（）()]+'
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: zh
+          name: 简体中文
+          default: true
+          build: true
+        - locale: en
+          name: English
+          build: true
+          site_name: PocketKrKr
+          site_description: Mobile-oriented KiriKiri2 runtime
+          nav_translations:
+            首页: Home
+            项目简介: Project
+            FAQ: FAQ
+            插件清单: Plugins
+            支持的游戏: Supported games
+            开发文档: Development
+            开发文档索引: Developer index
+            入门指南: Getting started
+            技术栈: Technology stack
+            待办 / 已知问题: Known issues
+            待优化方案: Optimization roadmap
+            架构与源码: Architecture and source
+            架构: Architecture
+            源代码结构地图: Source map
+            关键引用: Key references
+            构建与约定: Build and conventions
+            构建与工具链: Build and toolchain
+            开发约定: Development conventions
+            渲染 / 黑屏诊断: Rendering diagnosis
+            兼容与性能: Compatibility and performance
+            游戏兼容性: Game compatibility
+            KIRIKIRI Z(krkrz) 插件兼容移植清单: KIRIKIRI Z plugin compatibility
+            性能优化候选: Performance candidates
+            下载: Downloads
 
 markdown_extensions:
   - admonition
@@ -101,6 +144,7 @@ nav:
       - 入门指南: dev/getting-started.md
       - 技术栈: dev/tech-stack.md
       - 待办 / 已知问题: dev/todo.md
+      - 待优化方案: dev/optimization-roadmap.md
   - 架构与源码:
       - 架构: dev/architecture.md
       - 源代码结构地图: dev/source-map.md

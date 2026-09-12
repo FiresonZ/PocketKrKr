@@ -6,6 +6,12 @@
 
 ## 前置要求
 
+文档站使用 MkDocs Material 和 `mkdocs-static-i18n` 构建。首次构建前安装固定版本：
+
+```bash
+pip install mkdocs-material==9.7.1 mkdocs-static-i18n==1.3.1
+```
+
 ### iOS / macOS（macOS 主机）
 
 - macOS（Apple Silicon 或 Intel）+ Xcode
