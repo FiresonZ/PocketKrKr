@@ -1,19 +1,16 @@
 # PocketKrKr 开发指南
 
-改代码前先阅读 [docs/dev/README.md](docs/dev/README.md)、[docs/dev/conventions.md](docs/dev/conventions.md) 和 [docs/dev/key-references.md](docs/dev/key-references.md)。当前文档只描述长期有效的项目约束，不保存个人测试记录或历史推理过程。
+这是代理首屏规则。先读本文件；涉及具体模块时，再读 [开发文档索引](docs/dev/README.md)、[开发约定](docs/dev/conventions.md) 和 [关键引用](docs/dev/key-references.md)。本文只保存长期有效的事实与约束，不保存个人测试、临时路径、提交编号或历史推理。
 
-## 项目结构
+## 项目边界
 
 - `apps/flutter_app/`：Flutter 壳、页面、游戏管理和本地化。
-- `bridge/engine_api/`：C ABI、引擎生命周期、帧接口和 Android JNI。
-- `bridge/flutter_engine_bridge/`：Dart FFI、MethodChannel 和原生纹理桥接。
+- `bridge/`：C ABI、生命周期、帧接口、Dart FFI、MethodChannel 和原生纹理桥接。
 - `cpp/core/`：TJS2、存储、归档、渲染、字体、音频、视频和主循环。
 - `cpp/plugins/`：PSB、PSD、motionplayer、LayerEx、Cubism 和兼容扩展。
-- `build.sh`、`build/`、`CMakePresets.json`：平台构建入口与预设。
-- `vcpkg.json`、`vcpkg/`：依赖、overlay port 和平台 triplet。
-- `docs/`：用户文档和开发文档。
+- `build.sh`、`build/`、`CMakePresets.json`：构建入口；`vcpkg.json`、`vcpkg/`：依赖配置；`docs/`：项目文档。
 
-## 构建命令
+## 常用构建
 
 ```bash
 ./build.sh ios release
@@ -22,26 +19,38 @@
 cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build"
 ```
 
-iOS 使用静态库，Android 使用自包含 `libengine_api.so`，macOS 使用动态库；Linux 用于宿主验证。Android 插件源码通过 CMake 目标源传播进共享库，使用普通链接，禁止 `--whole-archive`。
+iOS 使用静态库，macOS 使用动态库，Android 使用自包含 `libengine_api.so`，Linux 用于宿主验证。Android 插件通过 CMake 目标源进入共享库，使用普通链接，禁止 `--whole-archive`。
 
-## 硬性约束
+## 必须遵守
 
-1. `sound/win32/`、`utils/win32/` 和 `environ/win32/` 中的部分实现跨平台共享，不能按目录名称删除。
-2. 不要随意删除平台守卫；删除前须核对所有目标平台的源码列表和构建结果。
-3. Apple 使用 ANGLE Metal feature，Android/Linux 使用 Vulkan feature。
-4. Cubism SDK 缺失时自动禁用是正常状态，不得让可选 SDK 阻断核心构建。
-5. Android JNI 的 Java 包名、native 方法名和 C++ 声明必须同步。
-6. EGL context 重建后不得复用旧纹理、FBO、shader 或扩展状态；GPU 对象必须绑定当前 context generation。
-7. `cpp/core/visual/tvpgl.cpp` 的标量实现是像素混合正确性基准；SIMD 修改必须逐像素对比。
-8. 未完成逐位验证的 PS 混合保持标量回退。
-9. 探针默认关闭，高频日志必须采样或限频。
-10. 文档只写当前事实、约束、解法和验收标准；不写个人设备、日志文件、临时路径、内部提交编号或外部代码复制过程。
-11. 改动完成后运行对应的格式检查、类型检查、构建或测试；渲染和生命周期改动必须进行目标平台回归。
+1. 只在 `codex` 分支工作。先运行 `git status` 并保留用户已有改动；禁止 `reset --hard`、`checkout`、`clean -f` 等破坏性操作。
+2. 改代码前确认模块边界、调用方、错误处理、配置和现有测试；不为小改动引入新库，不顺手重构无关代码。
+3. `sound/win32/`、`utils/win32/`、`environ/win32/` 中的部分实现跨平台共享；平台守卫也不得未经核对移除。
+4. Apple 使用 ANGLE Metal feature，Android/Linux 使用 Vulkan feature；不得混用 triplet 或图形后端。
+5. Cubism SDK 是可选依赖。缺失时自动禁用属于正常状态，不得阻断核心构建；启用路径见 [开发约定](docs/dev/conventions.md)。
+6. Android JNI 的 Java 包名、native 方法名和 C++ 声明必须同步；修改公共 C ABI 时同步检查 Dart binding、生命周期和版本约束。
+7. EGL context 重建后不得复用旧纹理、FBO、shader 或扩展状态；GPU 对象必须绑定当前 context generation。异步回调、线程和资源必须有明确所有权。
+8. `cpp/core/visual/tvpgl.cpp` 的标量实现是像素混合基准。SIMD 修改须逐像素覆盖透明度、边界、溢出和负值路径；未验证的 PS 混合保持标量回退。
+9. 探针默认关闭，高频日志采样或限频；诊断代码不得改变正常时序、生命周期或性能。
+10. 注释只解释非显然的约束、算法和生命周期；复杂源码注释使用简短中英双语，避免复述代码。
+11. 文档只写当前事实、约束、解法和验收标准；外部资料统一从 [兼容性与参考资料](docs/dev/krkrz-compat.md) 进入，不描述逐段复制或个人验证过程。
 
-## 待办入口
+## 执行与验证
 
-当前未完成事项见 [docs/dev/todo.md](docs/dev/todo.md)，性能和结构方案见 [docs/dev/optimization-roadmap.md](docs/dev/optimization-roadmap.md)。外部格式和行为资料统一见 [docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)。
+- 先读取目标文件上下文，搜索调用方、配置和测试；跨模块改动先确认影响范围。
+- 修改后运行匹配的格式检查、类型检查、构建或测试；渲染、生命周期、JNI 和平台代码尽量做目标平台回归。
+- 工具或依赖不可用时，不伪称通过；说明未执行的检查、原因和可复现命令。
+- 完成后检查 `git diff --check`、`git status` 和最终 diff，排除临时文件、密钥、构建产物及无关改动。
+- 文档或接口变化同步更新对应入口，避免重复复制架构、构建和兼容性说明。
+
+## 当前入口
+
+- 待办：[docs/dev/todo.md](docs/dev/todo.md)
+- 优化：[docs/dev/optimization-roadmap.md](docs/dev/optimization-roadmap.md)
+- 架构与源码：[docs/dev/README.md](docs/dev/README.md)
+- 构建：[docs/dev/build.md](docs/dev/build.md)
+- 兼容性与参考：[docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)
 
 ## Git 协作
 
-只在 `codex` 分支工作。提交前手动 `git add` 和 `git commit`，提交信息说明改动文件及原因；不修改历史、不 amend、不 rebase、不 force push、不直接 push、不创建 PR。
+用户明确要求提交时，手动执行 `git add <明确文件>` 和 `git commit`，提交信息说明文件及原因；不 amend、rebase、force push、push 或创建 PR。未明确要求时不自动提交。
