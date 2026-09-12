@@ -2,13 +2,13 @@
  * @file krkr_egl_context.h
  * @brief Headless EGL context manager using ANGLE.
  *
- * Replaces GLFW window + GLViewImpl with an offscreen
- * EGL Pbuffer surface, providing a pure headless OpenGL ES 2.0
- * context that works on all platforms via ANGLE:
- *   - macOS  → Metal backend
- *   - Windows → D3D11 backend
- *   - Linux  → Desktop GL / Vulkan backend
- *   - Android → native GLES / Vulkan backend
+ * Replaces GLFW window + GLViewImpl with an offscreen EGL Pbuffer
+ * and OpenGL ES 2.0 context managed through ANGLE. Apple builds use
+ * ANGLE Metal; Android and Linux use the configured Vulkan path when
+ * available, with the platform fallback selected by ANGLE.
+ * 使用 ANGLE 管理离屏 EGL Pbuffer 和 OpenGL ES 2.0 context，替代窗口依赖。
+ * Apple 构建使用 ANGLE Metal；Android/Linux 优先使用配置的 Vulkan 路径，
+ * 具体回退由 ANGLE 和平台能力决定。
  */
 #pragma once
 

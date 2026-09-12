@@ -369,6 +369,9 @@ bool IsHandleLiveLocked(engine_handle_t handle) {
 
 engine_result_t ValidateHandleLocked(engine_handle_t handle,
                                      engine_handle_s** out_impl) {
+  // A handle is valid only while present in the live registry; a non-null
+  // pointer alone is not sufficient after engine_destroy.
+  // handle 只有仍在 live registry 中才有效；engine_destroy 后非空指针也不能使用。
   if (handle == nullptr) {
     return SetThreadErrorAndReturn(ENGINE_RESULT_INVALID_ARGUMENT,
                                    "engine handle is null");
@@ -737,6 +740,10 @@ engine_result_t OpenGameCore(engine_handle_t handle,
 void RunOpenGameAsync(engine_handle_t handle,
                       engine_handle_s* impl,
                       std::string game_root_path_utf8) {
+  // The worker owns startup only until it releases the EGL context; the owner
+  // thread must make the context current again before the next engine_tick.
+  // worker 只负责启动阶段；释放 EGL context 后由 owner 线程在下一次
+  // engine_tick 前重新 MakeCurrent，避免跨线程继续使用图形上下文。
   PushStartupLog(impl, "engine_open_game_async: worker started");
   TVPTerminated = false;
   TVPTerminateCode = 0;
@@ -878,6 +885,9 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     g_live_handles.erase(handle);
   }
 
+  // Remove the handle from the live registry before joining. The worker can
+  // finish without publishing logs into a handle that is being destroyed.
+  // join 前先从 live registry 摘除 handle，避免销毁过程继续接收启动日志。
   if (startup_worker.joinable()) {
     startup_worker.join();
   }
@@ -900,23 +910,15 @@ engine_result_t engine_destroy(engine_handle_t handle) {
     TVPTerminated = false;
     TVPTerminateCode = 0;
 
-    // ---- runtime-restart（热重启）teardown ----
-    // 参考上游 vcdlk PR#12「make runtime restartable after engine_destroy」
-    // （reAAAq/KrKr2-Next，2026-06-16）。修"不杀后台无法再开游戏"的真根因：
-    // 此前 engine_destroy 只清 g_runtime_active/g_runtime_owner，却从不复位
-    // g_runtime_started_once，第二次 engine_open_game 必命中
-    // "runtime restart is not supported yet"。现改为完整卸载 + 复位各子系统，
-    // 并复位 started_once，使不杀进程也能再次 create/open。逐级打点便于真机定位。
-    //
-    // 安全退出的关键（对照上游顺序）：**先 Application->OnExit() 让脚本引擎在
-    // 安全上下文退出**（OnExit 内部 TVPUninitScriptEngine + delete TVPSystemControl），
-    // 再 TVPSystemUninit()。裸调 TVPSystemUninit 会在 TJS 调用栈内销毁脚本引擎，
-    // 是 krkrz host（Flutter）模式自声明的 undefined behavior（hang），真机表现为
-    // 退出即静默卡死（详见 SysInitImpl.cpp TVPTerminateSync 注释）。上游正是靠
-    // OnExit 前置规避，随后 TVPSystemUninit 中 TVPUninitScriptEngine 因守卫标志
-    // 已置为 no-op。
+    // Runtime teardown is ordered so script callbacks stop before the VM and
+    // graphics resources are released. The reset chain makes the process
+    // reusable for a later engine_open_game call.
+    // 运行时销毁必须先停止脚本回调，再释放脚本 VM 和图形资源；随后通过复位链
+    // 清理进程级状态，使同一进程可以再次调用 engine_open_game。
 
-    // 1. 注销内部插件（需在脚本引擎销毁前），避免二次 AllRegist 重复 append 注册器。
+    // 1. Unregister internal plugins before destroying the script engine; this
+    // prevents a later startup from appending duplicate registrations.
+    // 1. 脚本引擎销毁前注销内部插件，避免下一次启动重复追加注册器。
     try {
       spdlog::info("engine_destroy: TVPUnregisterInternalPluginsForRestart begin");
       TVPUnregisterInternalPluginsForRestart();
@@ -956,8 +958,8 @@ engine_result_t engine_destroy(engine_handle_t handle) {
       spdlog::info("engine_destroy: EngineLoop deleted");
     }
 
-    // 5. 复位各子系统静态标志位与缓存，确保二次初始化干净。
-    //    （顺序严格对照上游 PR#12 的复位链。）
+    // 5. Reset subsystem flags and caches after their owners are destroyed.
+    // 5. 在所有者销毁后复位各子系统静态标志位与缓存，确保下次初始化干净。
     try {
       TVPResetRuntimeForRestart();
       TVPResetScriptEngineForRestart();
@@ -978,7 +980,8 @@ engine_result_t engine_destroy(engine_handle_t handle) {
       spdlog::error("engine_destroy: reset-for-restart threw");
     }
 
-    // 6. EngineBootstrap 关闭（上游置于复位链之后）。
+    // 6. Shut down the bootstrap layer after subsystem reset.
+    // 6. 子系统复位后关闭 EngineBootstrap。
     if (g_engine_bootstrapped) {
       spdlog::info("engine_destroy: TVPEngineBootstrap::Shutdown...");
       TVPEngineBootstrap::Shutdown();
@@ -1341,6 +1344,11 @@ engine_result_t engine_set_log_file_path(const char* path) {
 }
 
 engine_result_t engine_tick(engine_handle_t handle, uint32_t delta_ms) {
+  // A tick consumes input, restores the owner-thread EGL context, runs the
+  // engine, then publishes either a native-surface frame or RGBA readback.
+  // delta_ms is retained for ABI compatibility; the current loop uses its own clock.
+  // 每次 tick 依次处理输入、恢复 owner 线程 EGL context、运行引擎，并发布
+  // native surface 帧或 RGBA 回读；delta_ms 暂保留兼容性，当前循环使用内部时钟。
   (void)delta_ms;
 
   std::lock_guard<std::recursive_mutex> registry_guard(g_registry_mutex);

@@ -35,11 +35,17 @@ tjs_error motion::ResourceManager::setEmotePSBDecryptFunc(tTJSVariant *r,
                                                           tjs_int n,
                                                           tTJSVariant **p,
                                                           iTJSDispatch2 *obj) {
+    // The registration entry is kept for script compatibility; custom decrypt
+    // callbacks are not executed by the current loader.
+    // 保留该注册接口以兼容脚本，但当前加载器不会执行自定义解密回调。
     LOGGER->critical("setEmotePSBDecryptFunc no implement!");
     return TJS_S_OK;
 }
 
 tTJSVariant motion::ResourceManager::load(ttstr path) const {
+    // Cache keys are case-insensitive; the shared PSB object stays alive while
+    // either the cache or a motion player still owns it.
+    // 缓存键不区分大小写；只要缓存或 motion player 持有对象，共享 PSB 就不会释放。
     auto canonical = path.AsLowerCase().AsStdString();
     auto file = std::make_shared<PSB::PSBFile>();
     file->setSeed(_decryptSeed);

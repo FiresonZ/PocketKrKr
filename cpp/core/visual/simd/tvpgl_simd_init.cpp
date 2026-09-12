@@ -63,8 +63,9 @@ void TVPAdditiveAlphaBlend_ao_hwy(tjs_uint32 *dest, const tjs_uint32 *src, tjs_i
 // Phase 2: AlphaColorMat
 void TVPAlphaColorMat_hwy(tjs_uint32 *dest, const tjs_uint32 color, tjs_int len);
 
-// Phase 3: Photoshop blend modes (16 types × 4 variants = 64 functions)
-// Part 1: Fully SIMD-able (8 modes × 4 variants = 32)
+// Phase 3: Photoshop blend candidates. Declarations do not imply dispatch;
+// each function must pass the scalar comparison before registration.
+// 第三阶段：Photoshop 混合候选实现。声明不代表会派发，注册前必须通过标量对比。
 #define DECLARE_PS_BLEND_4V(Name)                                             \
     void TVPPs##Name##Blend_hwy(tjs_uint32 *dest, const tjs_uint32 *src,      \
                                 tjs_int len);                                  \
