@@ -2097,7 +2097,7 @@ namespace motion {
                 // icon25/icon27 重叠）。把每块面板经世界矩阵变换后在**屏幕坐标**的四角
                 // AABB（min/max）打出来，让下一次日志定量呈现每处缝隙/重叠由哪个锚点项
                 // 引起，便于定点修复而非盲改。
-                if(logger && now >= 190.0 && now <= 430.0 &&
+                if(logger && now >= 190.0 &&
                    (af->src == "src/logo/icon25" ||
                     af->src == "src/logo/icon26" ||
                     af->src == "src/logo/icon27" ||
@@ -2124,10 +2124,10 @@ namespace motion {
                         minY = std::min(minY, sy); maxY = std::max(maxY, sy);
                     }
                     logger->info(
-                        "m2foldProbe: '{}' now={:.0f}ms t={} src='{}' ang={:.1f} "
+                        "m2foldProbe: '{}' now={:.1f}ms t={} src='{}' ang={:.1f} "
                         "aabbX=[{:.1f},{:.1f}] aabbY=[{:.1f},{:.1f}] w={:.0f} h={:.0f} "
                         "anchor=({:.1f},{:.1f}) ic={}",
-                        node.label, now, static_cast<tjs_int>(af->time), af->src,
+                        node.label, static_cast<float>(now), static_cast<tjs_int>(af->time), af->src,
                         finalAngle, minX, maxX, minY, maxY, (maxX - minX), (maxY - minY),
                         anchorX, anchorY,
                         (hasIconOrigin ? (std::to_string(static_cast<int>(iconOrX)) + "," +
