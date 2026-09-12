@@ -2942,6 +2942,14 @@ namespace motion {
                 unsigned char *buf = (unsigned char *)ni->GetMainImagePixelBufferForWrite();
                 const tjs_int pitch = ni->GetMainImagePixelBufferPitch();
                 if(!buf || pitch < w * 4) return false;
+                // Probe (P3): gather the first opaque resulting pixel + opaque count so the
+                // physical layer really holds the tint color (and in the right R/G/B order)
+                // — this distinguishes a bad tint write from the color being absent in data.
+                // 探针(P3)：统计首个不透明结果像素 + 不透明像素数，确认层缓冲真的写入了
+                // tint 色且 R/G/B 通道序正确——区分"着色写失败"还是"数据里根本没色"。
+                tjs_uint32 firstOpaque = 0;
+                tjs_int opaqueCount = 0;
+                bool gotFirst = false;
                 for(tjs_int y = 0; y < h; ++y) {
                     tjs_uint32 *row = (tjs_uint32 *)(buf + (tjs_int)y * pitch);
                     // left column lerps topLeft↔bottomLeft, right column topRight↔bottomRight
@@ -2976,9 +2984,15 @@ namespace motion {
                         const tjs_uint32 na = std::min(255, tintA * static_cast<int>(srcA) / 255);
                         row[x] = (nb & 0xffu) | ((ng & 0xffu) << 8) |
                                  ((nr & 0xffu) << 16) | (na << 24);
+                        if(!gotFirst) { firstOpaque = row[x]; gotFirst = true; }
+                        opaqueCount++;
                     }
                 }
                 ni->Update(tTVPRect(0, 0, w, h)); // notify the layer its pixels changed / 通知层像素已变
+                { auto l = _logger();
+                  if(l) l->info(
+                      "cornerTint applied tint={:08x} firstOpaque={:08x} opaquePx={} (w={} h={} uniform={})",
+                      tints[0], firstOpaque, opaqueCount, w, h, uniform ? 1 : 0); }
                 return true;
             } catch(...) {
                 return false;
