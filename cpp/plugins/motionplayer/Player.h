@@ -1038,22 +1038,23 @@ namespace motion {
                             } else {
                                 if(nxtA - curA > 180.0f) nxtA -= 360.0f;
                             }
-                            // Fold DIRECTION: real-device comparison (our video vs the
-                            // reference) showed our pieces go STEEP→flat (each parent's
-                            // keyframe 90/286/73/270 → 0), i.e. the fold UNWINDS into
-                            // scattered fragments. The reference folds the flat thick
-                            // line UP into the M (flat→steep). Reverse the interpolation
-                            // so the angle sweeps the OTHER way: at fold start the pieces
-                            // are flat/collinear (reads as the bar), and they steepen into
-                            // the M by the end. Measured reversal: node4 +90, node6 −74,
-                            // node7 +73, node9 −90 → a symmetric M fan.
-                            // 折叠**方向**：真机对比（我方视频 vs 参考）发现我方碎片是
-                            // 斜→平（各父节点关键帧 90/286/73/270→0），即"逆向展开成浮空
-                            // 碎片"。参考是粗横线**向上折成** M（平→斜）。翻转插值让角度
-                            // 反向扫描：折叠开始时碎片近平（读作横线），结束时变斜成 M。
-                            // 实测反转：node4 +90、node6 −74、node7 +73、node9 −90 → 对称的
-                            // M 扇面。
-                            interpAngle = nxtA + (curA - nxtA) * tAngle;
+                            // Fold DIRECTION — REVERTED. Real-device comparison after the
+                            // previous "flat→steep" reversal made the m2logo fold WORSEN
+                            // ("很多竖线变换成 m"): the tall bars icon25/27/28 at fold start
+                            // (parent angles 90/286/73/270) are rotated ~flat = a horizontal
+                            // thick bar, and they steepen to vertical strokes forming the M.
+                            // Reverting to the data's own direction (steep→flat for the
+                            // parents, i.e. horizontal-bar→M) restores the correct sweep.
+                            // Math for the anchor (sub_6BC4F0: org = pos − M·(icon.originX+
+                            // ox, icon.originY+oy)) already matches AetherKiri, so no change
+                            // is made to the pivot here.
+                            // 折叠**方向**——已撤销。上次"平→斜"反转在真机让 m2logo 折叠更
+                            // 糟（"很多竖线变换成 m"）：竖条 icon25/27/28 在折叠开始（父角
+                            // 90/286/73/270）被转到接近水平＝一条**水平粗线**，随折叠变竖直
+                            // 成 M。恢复数据自身方向（父角斜→平，即"横线→M"）才是正确扫描。
+                            // 锚点数学（sub_6BC4F0：org = pos − M·(icon.originX+ox, oy)）已与
+                            // AetherKiri 一致，此处不改枢轴。
+                            interpAngle = curA + (nxtA - curA) * tAngle;
                             if(interpAngle < 0.0f) interpAngle += 360.0f;
                             else if(interpAngle >= 360.0f) interpAngle -= 360.0f;
                         }
