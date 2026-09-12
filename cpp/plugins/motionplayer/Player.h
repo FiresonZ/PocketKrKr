@@ -961,19 +961,47 @@ namespace motion {
                         float t = static_cast<float>(now - af->time) /
                                   static_cast<float>(next->time - af->time);
                         if(t < 0.0f) t = 0.0f; else if(t > 1.0f) t = 1.0f;
-                        if(af->hasEasing) {
-                            t = static_cast<float>(BezierEase(t, af->easeX1, af->easeY1,
-                                                              af->easeX2, af->easeY2));
-                        }
+                        // Per-property easing aligned to the reference (AetherKiri
+                        // interpolateSlots): EACH attribute eases with ITS OWN curve
+                        // instead of reusing one "ccc" for everything.
+                        //   position → RAW t (linear)
+                        //   angle    → acc, else raw t
+                        //   opacity  → occ, else fall back to ccc
+                        //   scale    → zcc, else raw t
+                        //   slant    → scc, else raw t
+                        //   color    → ccc
+                        // Previously we remapped position/angle/scale through "ccc",
+                        // which mis-times the m2logo M-fold rotation ("M 折叠角乱/碎片
+                        // 扭"下来) and the other tweens vs the reference.
+                        // 逐属性缓动对齐参考（AetherKiri interpolateSlots）：每个属性用
+                        // **各自曲线**，而不是把一个 "ccc" 复用于所有属性。
+                        //   位置→原始 t（线性）、角度→acc（无则原始 t）、透明度→occ
+                        //   （无则回退 ccc）、缩放→zcc（无则原始 t）、斜切→scc（无则原始 t）。
+                        // 此前我们把 position/angle/scale 都套 "ccc"，导致 m2logo 的
+                        // M 折叠角相对参考时序/形状错误（叠成"M 碎片乱扭"）。
+                        float tAngle = af->hasAngleEasing
+                            ? static_cast<float>(BezierEase(t, af->acX1, af->acY1, af->acX2, af->acY2))
+                            : t;
+                        float tOpa = af->hasOpacityEasing
+                            ? static_cast<float>(BezierEase(t, af->ocX1, af->ocY1, af->ocX2, af->ocY2))
+                            : (af->hasEasing
+                               ? static_cast<float>(BezierEase(t, af->easeX1, af->easeY1, af->easeX2, af->easeY2))
+                               : t);
+                        float tScale = af->hasScaleEasing
+                            ? static_cast<float>(BezierEase(t, af->zcX1, af->zcY1, af->zcX2, af->zcY2))
+                            : t;
+                        float tSlant = af->hasSlantEasing
+                            ? static_cast<float>(BezierEase(t, af->sccX1, af->sccY1, af->sccX2, af->sccY2))
+                            : t;
                         interpOx = af->ox + (next->ox - af->ox) * t;
                         interpOy = af->oy + (next->oy - af->oy) * t;
                         interpCx = af->cx + (next->cx - af->cx) * t;
                         interpCy = af->cy + (next->cy - af->cy) * t;
-                        interpOp = af->opacity + (next->opacity - af->opacity) * t;
-                        interpSx = af->scaleX + (next->scaleX - af->scaleX) * t;
-                        interpSy = af->scaleY + (next->scaleY - af->scaleY) * t;
-                        interpSlx = af->slantX + (next->slantX - af->slantX) * t;
-                        interpSly = af->slantY + (next->slantY - af->slantY) * t;
+                        interpOp = af->opacity + (next->opacity - af->opacity) * tOpa;
+                        interpSx = af->scaleX + (next->scaleX - af->scaleX) * tScale;
+                        interpSy = af->scaleY + (next->scaleY - af->scaleY) * tScale;
+                        interpSlx = af->slantX + (next->slantX - af->slantX) * tSlant;
+                        interpSly = af->slantY + (next->slantY - af->slantY) * tSlant;
                         // Angle interpolates along the 360° SHORTEST PATH
                         // (AetherKiri interpolateSlots / libkrkr2 sub_699AE4 at
                         // 0x699DEC): if the span exceeds 180°, wrap the target so
@@ -994,7 +1022,7 @@ namespace motion {
                             } else {
                                 if(nxtA - curA > 180.0f) nxtA -= 360.0f;
                             }
-                            interpAngle = curA + (nxtA - curA) * t;
+                            interpAngle = curA + (nxtA - curA) * tAngle;
                             if(interpAngle < 0.0f) interpAngle += 360.0f;
                             else if(interpAngle >= 360.0f) interpAngle -= 360.0f;
                         }
@@ -1245,7 +1273,16 @@ namespace motion {
                     // (str_locate), size = the letters' local extent scaled to world.
                     // 窗口盒转到层坐标：锚定在**文字**的世界位置（str_locate），尺寸 =
                     // 字母局部范围换算到世界。
-                    wcL = static_cast<float>(_coordX + halfCw) + txtWorldX + winMin * txtScaleX;
+                    wcL = static_cast<float>(_coordX + halfCw) + txtWorldX + winMin * txtScaleX
+                    // Leave one half-glyph of headroom on the LEFT of the first letter:
+                    // the window is anchored at the letters' pen positions (cx+ox), and
+                    // the leftmost glyph ("c" of cheeseware, ox=-4) extends to the left
+                    // of its pen — starting the crop exactly at the pen nicks off the
+                    // glyph's leading edge ("Cheese 最左端 C 被挡一小块").
+                    // 在首字母左侧留出半个字形的余量：窗口锚定在字母笔位(cx+ox)，而最左
+                    // 字形（cheeseware 的 "c"，ox=-4）实际向左超出笔位——裁剪正好从笔位
+                    // 开始会切掉该字形前缘（"Cheese 最左端 C 被挡一小块"）。
+                    - 15.0f * txtScaleX;
                     wcT = static_cast<float>(_coordY + halfCh) + txtWorldY - 30.0f;
                     const float winW = std::max(1.0f, (winMax - winMin) * txtScaleX);
                     wcR = wcL + winW;

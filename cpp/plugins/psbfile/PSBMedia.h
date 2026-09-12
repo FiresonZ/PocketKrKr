@@ -207,6 +207,26 @@ namespace PSB {
             // 滑入生硬。
             bool hasEasing = false;
             float easeX1 = 0, easeY1 = 0, easeX2 = 0, easeY2 = 0; // ccc 贝塞尔控制点
+            // M2 per-property cubic-bezier easing. The reference engine (libkrkr2 /
+            // AetherKiri) eases EACH attribute with ITS OWN curve instead of reusing
+            // one "ccc" for everything:  acc→angle(0x1000), zcc→scale(0x2000),
+            // scc→slant(0x4000), occ→opacity(0x8000). "ccc"(easeX*/easeY*) stays the
+            // COLOR + opacity-fallback curve. Previously we applied "ccc" to every
+            // interpolated attribute (incl. angle), which mis-times the m2logo M-fold
+            // rotation and the position/scale tweens relative to the reference.
+            // M2 逐属性三次贝塞尔缓动。参考引擎（libkrkr2 / AetherKiri）**每个属性**用
+            // 各自曲线，而非把一个 "ccc" 复用于所有属性：acc→角度(0x1000)、zcc→缩放
+            // (0x2000)、scc→斜切(0x4000)、occ→透明度(0x8000)。"ccc"(easeX*/easeY*) 仍是
+            // **颜色 + 透明度兜底**曲线。此前我们把 "ccc" 套在全部插值属性上（含角度），
+            // 导致 m2logo 的 M 折叠角与位置/缩放补间相对参考时序/形状错误。
+            bool hasAngleEasing = false; // acc / 角度
+            float acX1 = 0, acY1 = 0, acX2 = 0, acY2 = 0;
+            bool hasScaleEasing = false; // zcc / 缩放
+            float zcX1 = 0, zcY1 = 0, zcX2 = 0, zcY2 = 0;
+            bool hasOpacityEasing = false; // occ / 透明度
+            float ocX1 = 0, ocY1 = 0, ocX2 = 0, ocY2 = 0;
+            bool hasSlantEasing = false; // scc / 斜切
+            float sccX1 = 0, sccY1 = 0, sccX2 = 0, sccY2 = 0;
             bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };
         struct PSBMotionLayerTrack {

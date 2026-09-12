@@ -1040,7 +1040,17 @@ namespace PSB {
                     // M2 cubic-bezier easing (content "ccc") for this frame's
                     // interpolation toward the NEXT keyframe, if present.
                     // M2 三次贝塞尔缓动（content "ccc"）：本帧向下一帧插值用，若存在。
-                    if(auto cccObj = std::dynamic_pointer_cast<PSBDictionary>((*content)["ccc"])) {
+                    // Per-property bezier easing: the reference (libkrkr2/AetherKiri)
+                    // reads a SEPARATE curve for EACH attribute ("ccc"=color,
+                    // "acc"=angle, "zcc"=scale, "occ"=opacity, "scc"=slant). We read all
+                    // of them so the interpolator can ease each attribute with its own
+                    // curve instead of reusing "ccc" for everything (which mis-times the
+                    // m2logo M-fold rotation and the position/scale tweens).
+                    // 逐属性贝塞尔缓动：参考（libkrkr2/AetherKiri）为**每个属性**读取各自
+                    // 曲线（"ccc"=颜色、"acc"=角度、"zcc"=缩放、"occ"=透明度、scc=斜切）。
+                    // 全部读取后，插值器才能让每个属性用各自曲线，而不是把 "ccc" 复用于
+                    // 所有属性（否则 m2logo 的 M 折叠角与位置/缩放补间会相对参考错位）。
+                    if(auto cccObj = std::dynamic_pointer_cast<PSBDictionary>((*content)["ccc"]))
                         if(auto xl = std::dynamic_pointer_cast<PSBList>((*cccObj)["x"]),
                                    yl = std::dynamic_pointer_cast<PSBList>((*cccObj)["y"]);
                            xl && yl && xl->size() >= 3 && yl->size() >= 3) {
@@ -1050,7 +1060,50 @@ namespace PSB {
                             f.easeX2 = GetPSBFloat((*xl)[2], 1.0f);
                             f.easeY2 = GetPSBFloat((*yl)[2], 1.0f);
                         }
-                    }
+                    // "acc": angle curve.
+                    if(auto accObj = std::dynamic_pointer_cast<PSBDictionary>((*content)["acc"]))
+                        if(auto xl = std::dynamic_pointer_cast<PSBList>((*accObj)["x"]),
+                                   yl = std::dynamic_pointer_cast<PSBList>((*accObj)["y"]);
+                           xl && yl && xl->size() >= 3 && yl->size() >= 3) {
+                            f.hasAngleEasing = true;
+                            f.acX1 = GetPSBFloat((*xl)[1], 0.0f);
+                            f.acY1 = GetPSBFloat((*yl)[1], 0.0f);
+                            f.acX2 = GetPSBFloat((*xl)[2], 1.0f);
+                            f.acY2 = GetPSBFloat((*yl)[2], 1.0f);
+                        }
+                    // "zcc": scale curve.
+                    if(auto zccObj = std::dynamic_pointer_cast<PSBDictionary>((*content)["zcc"]))
+                        if(auto xl = std::dynamic_pointer_cast<PSBList>((*zccObj)["x"]),
+                                   yl = std::dynamic_pointer_cast<PSBList>((*zccObj)["y"]);
+                           xl && yl && xl->size() >= 3 && yl->size() >= 3) {
+                            f.hasScaleEasing = true;
+                            f.zcX1 = GetPSBFloat((*xl)[1], 0.0f);
+                            f.zcY1 = GetPSBFloat((*yl)[1], 0.0f);
+                            f.zcX2 = GetPSBFloat((*xl)[2], 1.0f);
+                            f.zcY2 = GetPSBFloat((*yl)[2], 1.0f);
+                        }
+                    // "occ": opacity curve.
+                    if(auto occObj = std::dynamic_pointer_cast<PSBDictionary>((*content)["occ"]))
+                        if(auto xl = std::dynamic_pointer_cast<PSBList>((*occObj)["x"]),
+                                   yl = std::dynamic_pointer_cast<PSBList>((*occObj)["y"]);
+                           xl && yl && xl->size() >= 3 && yl->size() >= 3) {
+                            f.hasOpacityEasing = true;
+                            f.ocX1 = GetPSBFloat((*xl)[1], 0.0f);
+                            f.ocY1 = GetPSBFloat((*yl)[1], 0.0f);
+                            f.ocX2 = GetPSBFloat((*xl)[2], 1.0f);
+                            f.ocY2 = GetPSBFloat((*yl)[2], 1.0f);
+                        }
+                    // "scc": slant curve.
+                    if(auto sccObj = std::dynamic_pointer_cast<PSBDictionary>((*content)["scc"]))
+                        if(auto xl = std::dynamic_pointer_cast<PSBList>((*sccObj)["x"]),
+                                   yl = std::dynamic_pointer_cast<PSBList>((*sccObj)["y"]);
+                           xl && yl && xl->size() >= 3 && yl->size() >= 3) {
+                            f.hasSlantEasing = true;
+                            f.sccX1 = GetPSBFloat((*xl)[1], 0.0f);
+                            f.sccY1 = GetPSBFloat((*yl)[1], 0.0f);
+                            f.sccX2 = GetPSBFloat((*xl)[2], 1.0f);
+                            f.sccY2 = GetPSBFloat((*yl)[2], 1.0f);
+                        }
                 } else {
                     // type==0 (invisible) or a frame without content only marks
                     // a time change: the node is invisible during this range.
