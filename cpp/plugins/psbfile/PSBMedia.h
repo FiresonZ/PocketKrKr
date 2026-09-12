@@ -5,6 +5,7 @@
 
 #include <list>
 #include <mutex>
+#include <array>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -227,6 +228,17 @@ namespace PSB {
             float ocX1 = 0, ocY1 = 0, ocX2 = 0, ocY2 = 0;
             bool hasSlantEasing = false; // scc / 斜切
             float sccX1 = 0, sccY1 = 0, sccX2 = 0, sccY2 = 0;
+            // M2 per-sprite vertex color tint (content "color", 4 packed ARGB DWORDs,
+            // one per corner; a scalar color is broadcast). Mostly opaque white —
+            // only colored sprites (C/W red, the thin red→black line, the black cross)
+            // carry non-white values. Applied as a flat premultiplied-ARGB multiply in
+            // Player::applyFlatTint (operateAffine has no color channel).
+            // M2 精灵顶点色平涂（content "color"，4 个打包 ARGB DWORD，四角各一；标量
+            // 颜色广播到四个角）。大多为不透明白——只有着色精灵（C/W 红、红转黑细线、
+            // 黑色十字）带非白值。在 Player::applyFlatTint 里作为预乘 ARGB 平涂相乘
+            //（operateAffine 没有颜色通道）。
+            std::array<std::uint32_t, 4> packedColors{
+                0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu};
             bool visible = true;     // !(type==0) && has content / 本帧是否可见
         };
         struct PSBMotionLayerTrack {

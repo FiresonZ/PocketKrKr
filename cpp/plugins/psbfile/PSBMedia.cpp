@@ -1104,6 +1104,30 @@ namespace PSB {
                             f.sccX2 = GetPSBFloat((*xl)[2], 1.0f);
                             f.sccY2 = GetPSBFloat((*yl)[2], 1.0f);
                         }
+                    // M2 per-sprite vertex color (content "color"): either a
+                    // dictionary of "0".."3" (four packed ARGB DWORDs, one per corner)
+                    // or a scalar number broadcast to all four corners. Default stays
+                    // opaque white (identity — Player::applyFlatTint skips it).
+                    // M2 精灵顶点色（content "color"）：要么是 "0".."3" 的字典（四角各一
+                    // 个打包 ARGB DWORD），要么是广播到四角的标量数字。默认保持不透明白
+                    //（恒等——Player::applyFlatTint 会跳过）。
+                    if(auto colorDict =
+                           std::dynamic_pointer_cast<PSBDictionary>((*content)["color"])) {
+                        for(int ci = 0; ci < 4; ci++) {
+                            const std::string key = std::to_string(ci);
+                            const auto val = std::dynamic_pointer_cast<PSBNumber>(
+                                (*colorDict)[key]);
+                            if(val) {
+                                f.packedColors[ci] =
+                                    static_cast<std::uint32_t>(GetPSBInt(val, 0xFFFFFFFF));
+                            }
+                        }
+                    } else if(auto colorVal =
+                                  std::dynamic_pointer_cast<PSBNumber>((*content)["color"])) {
+                        const std::uint32_t packed =
+                            static_cast<std::uint32_t>(GetPSBInt(colorVal, 0xFFFFFFFF));
+                        f.packedColors = { packed, packed, packed, packed };
+                    }
                 } else {
                     // type==0 (invisible) or a frame without content only marks
                     // a time change: the node is invisible during this range.
