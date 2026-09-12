@@ -1038,7 +1038,22 @@ namespace motion {
                             } else {
                                 if(nxtA - curA > 180.0f) nxtA -= 360.0f;
                             }
-                            interpAngle = curA + (nxtA - curA) * tAngle;
+                            // Fold DIRECTION: real-device comparison (our video vs the
+                            // reference) showed our pieces go STEEP→flat (each parent's
+                            // keyframe 90/286/73/270 → 0), i.e. the fold UNWINDS into
+                            // scattered fragments. The reference folds the flat thick
+                            // line UP into the M (flat→steep). Reverse the interpolation
+                            // so the angle sweeps the OTHER way: at fold start the pieces
+                            // are flat/collinear (reads as the bar), and they steepen into
+                            // the M by the end. Measured reversal: node4 +90, node6 −74,
+                            // node7 +73, node9 −90 → a symmetric M fan.
+                            // 折叠**方向**：真机对比（我方视频 vs 参考）发现我方碎片是
+                            // 斜→平（各父节点关键帧 90/286/73/270→0），即"逆向展开成浮空
+                            // 碎片"。参考是粗横线**向上折成** M（平→斜）。翻转插值让角度
+                            // 反向扫描：折叠开始时碎片近平（读作横线），结束时变斜成 M。
+                            // 实测反转：node4 +90、node6 −74、node7 +73、node9 −90 → 对称的
+                            // M 扇面。
+                            interpAngle = nxtA + (curA - nxtA) * tAngle;
                             if(interpAngle < 0.0f) interpAngle += 360.0f;
                             else if(interpAngle >= 360.0f) interpAngle -= 360.0f;
                         }
