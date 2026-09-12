@@ -784,6 +784,14 @@ namespace motion {
             std::vector<float> wslx(n, 0.0f), wsly(n, 0.0f); // accumulated skew / 累加斜切
             std::vector<bool> wfx(n, false), wfy(n, false); // accumulated flip (XOR) / 累加翻转
             std::vector<int> wo(n, 255);
+            // Accumulated nearest non-white packedColors tint down the parent chain
+            // (M2 text/group colors can live on a str_clip / comp container and tint
+            // its descendants — e.g. the CheeseWare "C"/"W" red and the cross black are
+            // not necessarily on each leaf frame). White = inherit nothing.
+            // 沿父链累计最近的"非白"packedColors 平涂（M2 的文本/组颜色可落在
+            // str_clip / comp 容器上给整棵子树着色——如 CheeseWare 的 C/W 红与十字黑并不
+            // 一定在叶子帧上）。白=不继承。
+            std::vector<std::uint32_t> wtint(n, 0xFFFFFFFFu);
             std::vector<bool> vis(n, true);
             // Per-node accumulated WORLD linear 2x2 matrix (rotation×scale×flip), used to
             // transform each child's LOCAL offset into world space (gap-1 alignment to
@@ -1185,6 +1193,17 @@ namespace motion {
                 const int lop = std::clamp(static_cast<int>(interpOp), 0, 255);
                 const int wop = baseOp * lop / 255;
                 wx[i] = px; wy[i] = py; wsx[i] = scxChild; wsy[i] = scyChild;
+                // Effective tint: the node's own non-white frame color, else the parent
+                // chain's nearest non-white container color (text/group tint). White =
+                // no tint. Stored so descendants inherit the container color too.
+                // 生效 tint：节点自身非白的帧色，否则沿父链取最近的非白容器色（文本/组
+                // 着色）。白=不着色。存起来供子节点继续继承该容器色。
+                const std::uint32_t effTint =
+                    (interpTint != 0xFFFFFFFFu)
+                        ? interpTint
+                        : ((node.parentIndex >= 0) ? wtint[node.parentIndex]
+                                                   : 0xFFFFFFFFu);
+                wtint[i] = effTint;
                 // Store this node's WORLD linear matrix (from accumulated flip/angle/scale)
                 // so its children can be position-transformed by it next (pre-order).
                 // 存储本节点的**世界线性矩阵**（由累加 flip/angle/scale 构建），供下一轮
@@ -1462,8 +1481,8 @@ namespace motion {
                 // 绘制前把 M2 纯色顶点色平涂到字形纹理（白色为恒等跳过）。正是它给
                 // m2logo 的 C/W 上红、细线红转黑、黑色十字竖线上色的——operateAffine
                 // 没有颜色通道，因此在此乘源像素。
-                if(interpTint != 0xFFFFFFFFu) {
-                    const bool tintApplied = applyFlatTint(temp, interpTint);
+                if(effTint != 0xFFFFFFFFu) {
+                    const bool tintApplied = applyFlatTint(temp, effTint);
                     // Diagnostic: log any non-white tint so a real-device run pinpoints
                     // whether the M2 color parsed (non-white here) and whether the
                     // premultiplied write reached the sampled texture (applied).
@@ -1471,7 +1490,7 @@ namespace motion {
                     //（此处非白）以及预乘写入是否作用到被采样纹理（applied）。
                     if(logger)
                         logger->info("drawAnimatedTree tint: '{}' color={:08x} applied={}",
-                                     node.label, interpTint, tintApplied ? 1 : 0);
+                                     node.label, effTint, tintApplied ? 1 : 0);
                 }
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha

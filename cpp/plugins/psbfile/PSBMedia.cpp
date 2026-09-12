@@ -1127,6 +1127,23 @@ namespace PSB {
                         const std::uint32_t packed =
                             static_cast<std::uint32_t>(GetPSBInt(colorVal, 0xFFFFFFFF));
                         f.packedColors = { packed, packed, packed, packed };
+                    } else if(auto colorList =
+                                  std::dynamic_pointer_cast<PSBList>((*content)["color"])) {
+                        // M2 text glyphs sometimes store the color as a flat list of
+                        // four packed ARGB DWORDs (per corner) instead of a { "0".."3" }
+                        // dict or a scalar. Fall back to the list so C/W and the cross
+                        // vertical line actually get their red/black tint.
+                        // M2 文本字形有时把颜色存成**扁平四值 list**（每个打包 ARGB DWORD，
+                        // 四角各一），而不是 { "0".."3" } 字典或标量。回退到 list，让 C/W
+                        // 和十字竖线真正拿到红/黑着色。
+                        for(int ci = 0; ci < 4 && ci < static_cast<int>(colorList->size()); ci++) {
+                            const auto val = std::dynamic_pointer_cast<PSBNumber>(
+                                (*colorList)[ci]);
+                            if(val) {
+                                f.packedColors[ci] =
+                                    static_cast<std::uint32_t>(GetPSBInt(val, 0xFFFFFFFF));
+                            }
+                        }
                     }
                 } else {
                     // type==0 (invisible) or a frame without content only marks
