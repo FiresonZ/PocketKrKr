@@ -374,13 +374,15 @@ with (global.Krkr2CompatUtils = new Krkr2CompatUtils()) // replace singleton ins
 const char *k2compat_win32dialog_tjs = R"KRKRZ(Plugins.link("win32dialog.dll") if (typeof global.WIN32Dialog == "undefined");
 
 class WIN32DialogEX extends WIN32Dialog {
+	var allBitmaps = [];
+
 	// コンストラクタ
 	function WIN32DialogEX(owner) {
 		this.owner = owner if (typeof owner == "Object");
 		super.WIN32Dialog(null); // 必ず自分自身にイベントを投げる
 	}
 	function finalize() {
-		removeAllBitmap();
+		if (typeof allBitmaps == "Object") removeAllBitmap();
 		super.finalize(...);
 	}
 	// オーナーへのイベント投げは自分
@@ -509,8 +511,8 @@ class WIN32DialogEX extends WIN32Dialog {
 		allBitmaps.add(bmp);
 		return super.setItemBitmap(getNumberdId(id), bmp);
 	}
-	var allBitmaps = [];
 	function removeAllBitmap() {
+		if (typeof allBitmaps != "Object") return;
 		for (var i = allBitmaps.count-1; i >= 0; i--) invalidate allBitmaps[i];
 		allBitmaps.clear();
 	}

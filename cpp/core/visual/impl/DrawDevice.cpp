@@ -101,6 +101,10 @@ bool tTVPDrawDevice::TransformToPrimaryLayerManager(tjs_int &x, tjs_int &y) {
         }
     }
 
+    if (x < src_left || y < src_top || x >= src_left + src_w ||
+        y >= src_top + src_h)
+        return false;
+
     // Map from source (surface) coordinates to primary layer coordinates
     x = src_w ? ((x - src_left) * pl_w / src_w) : 0;
     y = src_h ? ((y - src_top)  * pl_h / src_h) : 0;

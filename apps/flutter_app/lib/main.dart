@@ -96,6 +96,23 @@ class _AppState extends State<PocketKrKrApp> {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? Colors.white
+                : Colors.white70;
+          }),
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? Colors.black87
+                : Colors.black26;
+          }),
+          trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? Colors.black87
+                : Colors.black38;
+          }),
+        ),
         cardTheme: CardThemeData(
           elevation: 1,
           shape: RoundedRectangleBorder(
@@ -110,6 +127,23 @@ class _AppState extends State<PocketKrKrApp> {
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? Colors.white
+                : Colors.white70;
+          }),
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? Colors.white38
+                : Colors.white12;
+          }),
+          trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.selected)
+                ? Colors.white38
+                : Colors.white24;
+          }),
+        ),
         cardTheme: CardThemeData(
           elevation: 1,
           shape: RoundedRectangleBorder(
