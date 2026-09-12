@@ -1,79 +1,58 @@
-# AGENTS.md — AI Agent 快速上手指南
+# PocketKrKr 开发指南
 
-> 给**无上下文的 AI Agent** 的首屏指令。改代码前必读（指到详细文档，别全塞在这）：
-> [docs/dev/README.md](docs/dev/README.md)（索引）→ [docs/dev/conventions.md](docs/dev/conventions.md)（约定，最重要）→ [docs/dev/key-references.md](docs/dev/key-references.md)（符号索引）。
+这是代理首屏规则。先读本文件；涉及具体模块时，再读 [开发文档索引](docs/dev/README.md)、[开发约定](docs/dev/conventions.md) 和 [关键引用](docs/dev/key-references.md)。本文只保存长期有效的事实与约束，不保存个人测试、临时路径、提交编号或历史推理。
 
-## 项目一句话
+## 项目边界
 
-**PocketKrKr** = [KiriKiri2（吉里吉里2）](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎的现代化运行环境，**面向移动端 iOS + Android**（macOS 为 Apple 开发目标，Linux 仅 CI 宿主验证）。
+- `apps/flutter_app/`：Flutter 壳、页面、游戏管理和本地化。
+- `bridge/`：C ABI、生命周期、帧接口、Dart FFI、MethodChannel 和原生纹理桥接。
+- `cpp/core/`：TJS2、存储、归档、渲染、字体、音频、视频和主循环。
+- `cpp/plugins/`：PSB、PSD、motionplayer、LayerEx、Cubism 和兼容扩展。
+- `build.sh`、`build/`、`CMakePresets.json`：构建入口；`vcpkg.json`、`vcpkg/`：依赖配置；`docs/`：项目文档。
 
-- **架构**：C++ 引擎（TVP/TJS2）离屏渲染（ANGLE：iOS/macOS=Metal、Android=Vulkan）→ IOSurface/SurfaceTexture 零拷贝 → Flutter 纹理显示；Dart 优先 FFI，MethodChannel 兜底。
-- 主页 <https://github.com/FiresonZ/PocketKrKr> · 上游（基于 [KrKr2-Next](https://github.com/reAAAq/KrKr2-Next) 二次开发）· 文档体系 `docs/dev/` 专为 AI 设计，改代码务必与文档同步。
-
-## 仓库结构速览
-
-```
-apps/flutter_app/     Flutter 壳（页面/引擎封装/平台目录）
-bridge/engine_api/    C ABI 引擎桥（engine_create/tick/destroy…）
-bridge/flutter_engine_bridge/  Flutter 插件（IOSurface/SurfaceTexture + FFI）
-cpp/core/             C++ 引擎核心（tjs2/base/environ/sound/visual/movie…）
-cpp/plugins/          TJS 插件（psb/psd/layerex/motionplayer/fstat/cubism…）
-build.sh + build/*.sh + CMakePresets.json   构建入口/预设
-vcpkg.json + vcpkg/triplets/  arm64-ios / arm64-android 依赖
-docs/  docs/dev/     GitHub Pages 落地页 + AI Agent 开发文档
-.github/workflows/    iOS/Android 打包 + Linux 引擎验证
-```
-
-## 构建命令
+## 常用构建
 
 ```bash
-./build.sh ios release     # iOS（macOS/Xcode 或 CI）
-./build.sh android debug   # Android APK（需 ANDROID_NDK_HOME）
-./build.sh macos debug     # macOS（开发）
-cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build"  # CI 宿主验证
+./build.sh ios release
+./build.sh android debug
+./build.sh macos debug
+cmake --preset "Linux Debug Config" && cmake --build --preset "Linux Debug Build"
 ```
 
-## 硬性约定（改前必读，详见 conventions.md）
+iOS 使用静态库，macOS 使用动态库，Android 使用自包含 `libengine_api.so`，Linux 用于宿主验证。Android 插件通过 CMake 目标源进入共享库，使用普通链接，禁止 `--whole-archive`。
 
-1. **平台守卫是惰性的，别删**：`#if __ANDROID__`/`#ifdef _WIN32`/`#if __linux__` 等在 Apple 构建不编译，是潜在复用代码，剥离是高危重构（§2）。
-2. **`win32/` 是跨平台共享实现**（音频/线程/系统控制），不是 Windows 专属，绝不能删（§1）。
-3. **SIMD（Highway）公式以 [tvpgl.cpp](cpp/core/visual/tvpgl.cpp) 的 `*_c` 标量为准**；非 PS 混合已到位级一致，**11 个 PS 混合已回退标量**（逐字节 u16+saturation 与标量 32 位打包跨字节借位结构性不等，等待做 u32 lane 后再放回，§9 / todo §4）。
-4. **Live2D（cubism）按 SDK 磁盘存在与否条件编译**，CI 上自动禁用；缺库是正常状态，不是 bug（§4）。
-5. **vcpkg 的 angle 分平台**：Apple 用 `metal` feature，Android/Linux 用 `vulkan`，不可混用。
-6. **Android 引擎是自包含 `libengine_api.so`**：插件源码经 `target_sources(PUBLIC)`→`INTERFACE_SOURCES` 直接编进 .so，**普通链接** `krkr2core+krkr2plugin`；**别再 `--whole-archive`**，否则 ld.lld 重复符号；JNI 在 `bridge/engine_api/src/engine_api_android_jni.cpp`。
-7. `*.md` 不再被 gitignore，新增 md 正常 `git add`；`build/` 已反忽略。
-8. 改 vcpkg 依赖 → CI 缓存 key 变 + 首次全量重编（半小时级）属正常。
-9. **待办在 [docs/dev/todo.md](docs/dev/todo.md)**，动手前先看是否已有条目。
-10. **krkrz/Z 兼容的参考源码**（在线，勿直接 commit 进仓库）：krkrz 引擎 [github.com/krkrz/krkrz](https://github.com/krkrz/krkrz)、Z 工具/插件 [github.com/krkrz/krkrz_dev](https://github.com/krkrz/krkrz_dev)、安卓完整移植（渲染/视频参考最强）[github.com/zeas2/Kirikiroid2](https://github.com/zeas2/Kirikiroid2)；清单见 [docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)。
+## 必须遵守
 
-## Git 协作规则（务必遵守）
+1. 只在 `codex` 分支工作。先运行 `git status` 并保留用户已有改动；禁止 `reset --hard`、`checkout`、`clean -f` 等破坏性操作。
+2. 改代码前确认模块边界、调用方、错误处理、配置和现有测试；不为小改动引入新库，不顺手重构无关代码。
+3. `sound/win32/`、`utils/win32/`、`environ/win32/` 中的部分实现跨平台共享；平台守卫也不得未经核对移除。
+4. Apple 使用 ANGLE Metal feature，Android/Linux 使用 Vulkan feature；不得混用 triplet 或图形后端。
+5. Cubism SDK 是可选依赖。缺失时自动禁用属于正常状态，不得阻断核心构建；启用路径见 [开发约定](docs/dev/conventions.md)。
+6. Android JNI 的 Java 包名、native 方法名和 C++ 声明必须同步；修改公共 C ABI 时同步检查 Dart binding、生命周期和版本约束。
+7. EGL context 重建后不得复用旧纹理、FBO、shader 或扩展状态；GPU 对象必须绑定当前 context generation。异步回调、线程和资源必须有明确所有权。
+8. `cpp/core/visual/tvpgl.cpp` 的标量实现是像素混合基准。SIMD 修改须逐像素覆盖透明度、边界、溢出和负值路径；未验证的 PS 混合保持标量回退。
+9. 探针默认关闭，高频日志采样或限频；诊断代码不得改变正常时序、生命周期或性能。
+10. 注释只解释非显然的约束、算法和生命周期；复杂源码注释使用简短中英双语，避免复述代码。
+11. 文档只写当前事实、约束、解法和验收标准；外部资料统一从 [兼容性与参考资料](docs/dev/krkrz-compat.md) 进入，不描述逐段复制或个人验证过程。
 
-1. **只改 `codex` 分支**，绝不动 `main`。
-2. **手动 `git add` + `git commit`**，commit message 写明改动文件及原因。
-3. **绝不 `push`**、**不建 PR**、**不 `amend`**、**不 `rebase`**、**不 `force push`**、**不改任何历史**（历史提交只增不改）。
-4. 完成后把提交留给用户手动推送/合并。
+## 执行与验证
 
-## 当前状态（2026-09，详见 todo.md）
+- 先读取目标文件上下文，搜索调用方、配置和测试；跨模块改动先确认影响范围。
+- 若源文件与预期状态、当前任务或已读取上下文不一致，暂停该文件的修改并报告差异；不得覆盖、强行合并或猜测性修复。
+- 修改后运行匹配的格式检查、类型检查、构建或测试；渲染、生命周期、JNI 和平台代码尽量做目标平台回归。
+- 工具或依赖不可用时，不伪称通过；说明未执行的检查、原因和可复现命令。
+- 完成后检查 `git diff --check`、`git status` 和最终 diff，排除临时文件、密钥、构建产物及无关改动。
+- 文档或接口变化同步更新对应入口，避免重复复制架构、构建和兼容性说明。
+- 每次改动完成并验证后必须提交；未完成、验证失败或存在未解决差异时不得提交。
 
-| 平台/模块 | 状态 |
-|---|---|
-| iOS 构建 + CI 打包 | ✅ 可出无签名 IPA（nosign.ipa 供 AltStore/Sideloadly）；已出测试版骨架，准备预发布 |
-| iOS 黑屏诊断 | 🔬 探针已加，真机日志排除视频后根因转向 **Z 插件兼容**（缺 drawdeviceD3DZ/kztouch/k2compat 等，主 DrawBuffer 从未被合成、源纹理保持初始黑） |
-| Android 构建链路 | ✅ APK 可出、真机不再闪退/不转圈；SDL Java 层 + 上游 JNI 平台层已补齐（`a2d8d75`），引擎日志写公共存储 `PocketKrKrLogs`（`c312272`），已进入真机日志筛查游戏兼容性 |
-| vcpkg meson × Android | ⚠️ glib 等 meson 端口与 arm64 错配；修法见 `vcpkg/ports/glib/portfile.cmake` |
-| Linux 引擎验证 CI | ✅ 绿灯（`tvpgl_simd_compare` 全绿） |
-| SIMD 公式 | ⚠️ 非 PS 混合已对齐标量；**11 个 PS 混合回退标量**（`8ff8760`，逐字节 u16+saturation 与标量 32 位打包借位结构性不等，已按 §9 回退保正确）；待做 u32 lane 后再放回（算法已由 harness_ps.cpp 实证） |
-| runtime-restart（退出→再开另一游戏） | ✅ **已解决**（真机复验）：退出卡死 = ①日志闭包未在脚本引擎销毁前释放（`4221543`）②音效线程析构 `Terminate()` 在 `WaitFor()` 之后致 join 死锁（`081a9c1`）；二次打开黑屏/乱屏 = EGL context 重启时销毁重建，复用渲染器单例的 shader/共享 `_FBO` 失效且 `FireRendererRecreated` 从未被调用，已补调用并重建 shader+`_FBO`（`5fd30da`）。两游戏不杀进程二次打开渲染正常 |
+## 当前入口
 
-## 建议的下一步
+- 待办：[docs/dev/todo.md](docs/dev/todo.md)
+- 优化：[docs/dev/optimization-roadmap.md](docs/dev/optimization-roadmap.md)
+- 架构与源码：[docs/dev/README.md](docs/dev/README.md)
+- 构建：[docs/dev/build.md](docs/dev/build.md)
+- 兼容性与参考：[docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)
 
-1. **快速 skip 消息框黑块（新，小 bug）**：快速 skip 时本应透明的消息框偶发变黑色色块
-   （见 [todo.md](docs/dev/todo.md) §3b）。方向：skip 快速帧间的混合/预乘路径或遮罩层刷新，
-   抓 skip 瞬间渲染探针日志复核。
-2. **千恋万花 D3DAdaptor 复验**：`getD3DAdaptor` 已改返回可 `new` 的 `tTJSNativeClass`，真机复验首屏
-   logo 后不再崩溃。
-3. **Z 插件兼容黑屏**（iOS/Android）：核心待办是补 `drawdeviceD3DZ/kztouch/k2compat` 等 Z 插件
-   （见 todo §2），trunk 走向与 Z 闭源版兼容持平。
-4. SIMD（低优先，功能已被标量保证）：把 11 个 PS 混合按 u32 lane 复现标量打包算术后放回注册
-   （算法由 harness_ps.cpp 实证）。
-5. 真机问题修复后进入游戏兼容性测试（[docs/dev/compatibility.md](docs/dev/compatibility.md)）。
+## Git 协作
+
+每次改动完成并通过可用验证后，手动执行 `git add <明确文件>` 和 `git commit`。提交信息必须同时说明改动对象、目的和原因，禁止使用无法表达目的的模糊标题；提交前确认只包含本次改动。不得 amend、rebase、force push、push 或创建 PR。

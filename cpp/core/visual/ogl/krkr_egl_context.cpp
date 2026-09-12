@@ -222,6 +222,9 @@ bool EGLContextManager::Initialize(uint32_t width, uint32_t height,
 }
 
 void EGLContextManager::Destroy() {
+    // Release render-target objects while the context is still valid, then
+    // unbind and destroy the context itself. No GL handle survives this point.
+    // 必须在 context 有效时释放渲染目标，再解除绑定并销毁 context；之后不得复用任何 GL 句柄。
     DestroyNativeWindowResources();
     // 在 context 仍 current 时清理 IOSurface FBO/纹理/Pbuffer 资源并复位字段，
     // 避免 runtime-restart 二次 AttachIOSurface 沿用上一 context 的陈旧 GL 句柄。
@@ -341,7 +344,9 @@ bool EGLContextManager::AttachIOSurface(uint32_t iosurface_id,
         return false;
     }
 
-    // Clean up previous IOSurface resources
+    // Replace the previous target while the current context is still valid;
+    // the manager owns only the EGL/GL objects, not the caller's IOSurface object.
+    // 在当前 context 仍有效时替换旧目标；管理器只持有 EGL/GL 对象，不拥有调用方的 IOSurface 对象。
     DestroyIOSurfaceResources();
 
     // Look up the IOSurface by ID
@@ -673,7 +678,9 @@ bool EGLContextManager::AttachNativeWindow(void* window,
         return false;
     }
 
-    // Clean up previous WindowSurface resources
+    // Replace the previous window target before acquiring the new reference.
+    // The manager releases its retained ANativeWindow reference during detach.
+    // 替换旧窗口目标后再获取新引用；detach 时由管理器释放自己持有的 ANativeWindow 引用。
     DestroyNativeWindowResources();
 
     auto* nativeWindow = static_cast<ANativeWindow*>(window);

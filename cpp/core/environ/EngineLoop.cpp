@@ -124,6 +124,10 @@ void EngineLoop::Start() {
 }
 
 void EngineLoop::Tick(float delta) {
+    // started_ is the execution gate; update_enabled_ is retained state and is
+    // currently not checked here. DoStartup enables started_ after its first Tick.
+    // started_ 控制 Tick 是否执行；update_enabled_ 目前仅保留状态且不参与判断。
+    // DoStartup 会在首次 Tick 后设置 started_，因此该首次调用不会运行主循环。
     if (!started_)
         return;
     ::Application->Run();
@@ -156,7 +160,9 @@ void EngineLoop::DoStartup(const std::string& path) {
     malloc_zone_pressure_relief(nullptr, 0);
 #endif
 
-    // Run one frame immediately (matches original behavior)
+    // The first Tick is intentionally issued before started_ is enabled; it is
+    // currently a no-op, while subsequent ticks run after startup completes.
+    // 首次 Tick 有意发生在 started_ 开启之前，目前不会运行主循环；启动完成后后续 Tick 才执行。
     Tick(0);
 
     started_ = true;

@@ -1,7 +1,8 @@
 /*
  * KrKr2 Engine - Highway SIMD Photoshop Blend Modes (Part 1)
  *
- * Implements fully SIMD-able PS blend modes:
+ * Implements candidate SIMD PS blend modes; dispatch requires scalar validation.
+ * 实现候选的 SIMD PS 混合模式；是否派发必须以标量验证结果为准。
  *   PsAlphaBlend, PsAddBlend, PsSubBlend, PsMulBlend,
  *   PsScreenBlend, PsLightenBlend, PsDarkenBlend, PsDiffBlend
  *
@@ -57,10 +58,9 @@ static HWY_INLINE hn::Vec<hn::ScalableTag<uint8_t>> PsApplyAlpha(
     auto d_hi = hn::PromoteUpperTo(d16, vd);
     auto a_hi = hn::PromoteUpperTo(d16, va);
 
-    // result = ((s - d) * a >> 8) + d   (bit-identical to scalar *_c packed alpha
-    // blend). The u16 wrap in Sub/Mul is harmless: ordered demote keeps only the
-    // low byte, and floor((diff * a) mod 65536 >> 8) == floor(diff * a >> 8) mod
-    // 256, so the truncated 16-bit multiply reproduces the scalar rounding.
+    // This packed arithmetic is only an implementation candidate; compare it
+    // with the scalar path before enabling dispatch.
+    // 这里只是 packed 算术候选实现；启用派发前必须与标量路径逐像素对比。
     auto diff_lo = hn::Sub(s_lo, d_lo);
     auto diff_hi = hn::Sub(s_hi, d_hi);
     auto r_lo = hn::Add(hn::ShiftRight<8>(hn::Mul(diff_lo, a_lo)), d_lo);

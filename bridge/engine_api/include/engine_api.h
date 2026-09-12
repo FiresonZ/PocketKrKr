@@ -43,6 +43,8 @@ typedef enum engine_result_t {
 } engine_result_t;
 
 typedef struct engine_create_desc_t {
+  /* struct_size lets newer runtimes accept older callers safely. */
+  /* struct_size 允许新运行时安全接收旧调用方的结构体。 */
   uint32_t struct_size;
   uint32_t api_version;
   const char* writable_path_utf8;
@@ -65,6 +67,8 @@ typedef enum engine_pixel_format_t {
 } engine_pixel_format_t;
 
 typedef struct engine_frame_desc_t {
+  /* Callers initialize struct_size so newer runtimes can extend this ABI. */
+  /* 调用方先初始化 struct_size，运行时才能向后兼容地扩展此 ABI。 */
   uint32_t struct_size;
   uint32_t width;
   uint32_t height;
@@ -240,6 +244,9 @@ ENGINE_API_EXPORT engine_result_t engine_set_surface_size(engine_handle_t handle
 /*
  * Gets current frame descriptor.
  * out_frame_desc->struct_size must be initialized by caller.
+ * The descriptor and readback buffer may differ after a surface resize; callers
+ * should use the latest descriptor before reading pixels.
+ * surface resize 后描述信息和回读缓冲区可能短暂不一致；读取像素前应重新获取描述信息。
  */
 ENGINE_API_EXPORT engine_result_t engine_get_frame_desc(
     engine_handle_t handle, engine_frame_desc_t* out_frame_desc);
@@ -247,6 +254,9 @@ ENGINE_API_EXPORT engine_result_t engine_get_frame_desc(
 /*
  * Reads current frame into caller-provided RGBA8888 buffer.
  * out_pixels_size must be >= stride_bytes * height from engine_get_frame_desc.
+ * The returned error string is owned by the handle and may change on the next
+ * API call; copy it if it must outlive that call.
+ * 错误字符串由 handle 持有，下一次 API 调用可能改变；需要长期保存时请自行复制。
  */
 ENGINE_API_EXPORT engine_result_t engine_read_frame_rgba(
     engine_handle_t handle, void* out_pixels, size_t out_pixels_size);

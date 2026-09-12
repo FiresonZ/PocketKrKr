@@ -760,10 +760,10 @@ namespace PSB {
         // animation. Mirrors CollectLayersFromMotion but keeps EVERY frame, not
         // just frame0, so the player can pick the frame active at the current
         // clock — this is what makes logo/title actually animate.
-        // 提取单个 motion 的完整帧时间线：每个图层的 frameList 变成一条
-        // PSBMotionLayerTrack（帧按 time 排序）。与 CollectLayersFromMotion 同构，
-        // 但保留所有帧（而非只取 frame0），播放器可按当前时钟选取生效帧——让
-        // logo/标题真正动起来的基础。
+        // Extract the complete timeline: frame 0 is enough for static discovery,
+        // but playback needs every keyframe to select state at the current clock.
+        // 提取完整时间线：静态资源发现只需 frame 0，播放则必须保留全部关键帧，
+        // 以便按当前时钟选择图层状态。
         void CollectMotionTracksFromMotion(
             const std::shared_ptr<PSBDictionary> &motionDict,
             const std::string &motionName,
