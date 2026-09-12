@@ -30,6 +30,7 @@ Android、iOS 和 macOS 构建脚本会在环境变量 `ENABLE_RENDER_PROBE` 明
 | `[TpfMap]` | 确认字体 face/字号映射到的 `.tpf` 路径 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | 映射时；低成本 |
 | `[TpfProbe] HIT/MISS` | 确认字符是否命中预渲染字体以及缺字回退信息 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | 按 face、字号、字符和结果去重；低成本 |
 | `[TextProbe] single/multi` | 对比文本目标矩形、绘制位置、ascent 偏移和预渲染字体路径 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | 文本绘制时；受控日志成本，不执行额外像素扫描 |
+| `[TextLayoutProbe]` | 对比请求坐标、最终字形矩形、裁剪后矩形、源矩形和 ascent 偏移，定位 GAL 选项文字偏小或偏出选项框 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` 的 `InternalDrawText()` | 按字体、字号和目标矩形去重；低成本 |
 | `PSB frameColor` | 检查 PSB 帧颜色字段是否存在及其四角颜色解析结果 | `cpp/plugins/psbfile/PSBMedia.cpp` | 目标 PSB 帧解析时；低成本 |
 | `loadProbe` | 对比 MotionPlayer 资源的实际加载尺寸和 PSB 缓存元数据 | `cpp/plugins/motionplayer/Player.h` | 目标 m2logo 线条节点加载时；低成本 |
 | `m2foldProbe` | 检查 M2 折叠部件的最终角点包围盒、锚点和变换结果 | `cpp/plugins/motionplayer/Player.h` | 目标图标且达到折叠阶段；有几何计算和日志成本 |

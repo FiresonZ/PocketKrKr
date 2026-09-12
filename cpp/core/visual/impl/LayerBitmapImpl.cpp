@@ -988,6 +988,7 @@ bool tTVPNativeBaseBitmap::InternalDrawText(tTVPCharacterData *data, tjs_int x,
     drect.top = y + data->OriginY;
     drect.right = drect.left + data->BlackBoxX;
     drect.bottom = drect.top + data->BlackBoxY;
+    const tTVPRect glyphRect = drect;
 
     tTVPRect srect;
     srect.left = srect.top = 0;
@@ -1005,8 +1006,29 @@ bool tTVPNativeBaseBitmap::InternalDrawText(tTVPCharacterData *data, tjs_int x,
         drect.right = dtdata->rect.right;
     }
 
-    if(srect.left >= srect.right)
+    if(srect.left >= srect.right) {
+#if defined(KRKR_RENDER_PROBE)
+        static std::set<std::string> sProbedEmptyLayouts;
+        const std::string layoutKey = Font.Face.AsNarrowStdString() + "|" +
+            std::to_string(Font.Height) + "|" +
+            std::to_string(dtdata->rect.left) + ":" + std::to_string(dtdata->rect.top) + "|" +
+            std::to_string(dtdata->rect.right) + ":" + std::to_string(dtdata->rect.bottom) + "|" +
+            std::to_string(glyphRect.left) + ":" + std::to_string(glyphRect.top) + ":" +
+            std::to_string(glyphRect.right) + ":" + std::to_string(glyphRect.bottom);
+        if(sProbedEmptyLayouts.insert(layoutKey).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info("[TextLayoutProbe] face='{}' height={} prerender={} "
+                             "request=({},{}) glyph=({},{},{},{}) clipped=empty "
+                             "source=empty ascent=({},{})",
+                             Font.Face.AsNarrowStdString(), Font.Height,
+                             PrerenderedFont ? 1 : 0, x, y,
+                             glyphRect.left, glyphRect.top, glyphRect.right, glyphRect.bottom,
+                             AscentOfsX, AscentOfsY);
+            }
+        }
+#endif
         return false; // not drawable
+    }
 
     if(drect.top < dtdata->rect.top) {
         srect.top += (dtdata->rect.top - drect.top);
@@ -1018,8 +1040,53 @@ bool tTVPNativeBaseBitmap::InternalDrawText(tTVPCharacterData *data, tjs_int x,
         drect.bottom = dtdata->rect.bottom;
     }
 
-    if(srect.top >= srect.bottom)
+    if(srect.top >= srect.bottom) {
+#if defined(KRKR_RENDER_PROBE)
+        static std::set<std::string> sProbedVerticalEmptyLayouts;
+        const std::string layoutKey = Font.Face.AsNarrowStdString() + "|" +
+            std::to_string(Font.Height) + "|" +
+            std::to_string(dtdata->rect.left) + ":" + std::to_string(dtdata->rect.top) + "|" +
+            std::to_string(dtdata->rect.right) + ":" + std::to_string(dtdata->rect.bottom) + "|" +
+            std::to_string(glyphRect.left) + ":" + std::to_string(glyphRect.top) + ":" +
+            std::to_string(glyphRect.right) + ":" + std::to_string(glyphRect.bottom);
+        if(sProbedVerticalEmptyLayouts.insert(layoutKey).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info("[TextLayoutProbe] face='{}' height={} prerender={} "
+                             "request=({},{}) glyph=({},{},{},{}) clipped=empty "
+                             "source=empty ascent=({},{})",
+                             Font.Face.AsNarrowStdString(), Font.Height,
+                             PrerenderedFont ? 1 : 0, x, y,
+                             glyphRect.left, glyphRect.top, glyphRect.right, glyphRect.bottom,
+                             AscentOfsX, AscentOfsY);
+            }
+        }
+#endif
         return false; // not drawable
+    }
+
+#if defined(KRKR_RENDER_PROBE)
+    {
+        static std::set<std::string> sProbedLayouts;
+        const std::string layoutKey = Font.Face.AsNarrowStdString() + "|" +
+            std::to_string(Font.Height) + "|" +
+            std::to_string(dtdata->rect.left) + ":" + std::to_string(dtdata->rect.top) + "|" +
+            std::to_string(dtdata->rect.right) + ":" + std::to_string(dtdata->rect.bottom);
+        if(sProbedLayouts.insert(layoutKey).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info(
+                    "[TextLayoutProbe] face='{}' height={} prerender={} "
+                    "request=({},{}) glyph=({},{},{},{}) clipped=({},{},{},{}) "
+                    "source=({},{},{},{}) ascent=({},{})",
+                    Font.Face.AsNarrowStdString(), Font.Height,
+                    PrerenderedFont ? 1 : 0, x, y,
+                    glyphRect.left, glyphRect.top, glyphRect.right, glyphRect.bottom,
+                    drect.left, drect.top, drect.right, drect.bottom,
+                    srect.left, srect.top, srect.right, srect.bottom,
+                    AscentOfsX, AscentOfsY);
+            }
+        }
+    }
+#endif
 
     return InternalBlendText(data, dtdata, color, srect, drect);
 }

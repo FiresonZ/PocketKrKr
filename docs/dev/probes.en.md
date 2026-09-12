@@ -30,6 +30,7 @@ The Android, iOS, and macOS build scripts explicitly pass `ON` or `OFF` whenever
 | `[TpfMap]` | Confirm which `.tpf` path is mapped for a face and size | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | On mapping; low cost |
 | `[TpfProbe] HIT/MISS` | Confirm prerendered-font hits and missing-glyph fallback details | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | Deduplicated by face, size, character, and result; low cost |
 | `[TextProbe] single/multi` | Compare text rectangles, draw positions, ascent offsets, and prerendered-font paths | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | On text drawing; controlled logging cost, no extra pixel scan |
+| `[TextLayoutProbe]` | Compare requested coordinates, final glyph rectangle, clipped rectangle, source rectangle, and ascent offsets to diagnose GAL option text size or placement | `cpp/core/visual/impl/LayerBitmapImpl.cpp`, `InternalDrawText()` | Deduplicated by face, size, and target rectangle; low cost |
 | `PSB frameColor` | Check whether PSB frame color fields exist and how four-corner colors were parsed | `cpp/plugins/psbfile/PSBMedia.cpp` | On target PSB frame parsing; low cost |
 | `loadProbe` | Compare actual MotionPlayer resource dimensions with PSB cached metadata | `cpp/plugins/motionplayer/Player.h` | When target m2logo line nodes load; low cost |
 | `m2foldProbe` | Check folded M2 parts using final corner bounds, anchors, and transform results | `cpp/plugins/motionplayer/Player.h` | Target icons during the fold stage; geometry and logging cost |
