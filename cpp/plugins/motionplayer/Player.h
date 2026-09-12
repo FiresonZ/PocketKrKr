@@ -756,6 +756,27 @@ namespace motion {
                 for(const auto &f : nd.frames)
                     if(f.time > motionEnd) motionEnd = f.time;
             if(motionEnd <= 0) motionEnd = 100;
+            // Per-node content-span END: the time of the FIRST frame after the node's
+            // last VISIBLE frame (i.e. when its animation is done). Used to hold
+            // sub-motion content after its parent finished folding (m2logo M stays
+            // assembled) and after the title entrance's `main` ends. -1 = no content.
+            // 每节点内容段**结束**：最后一个可见帧之后首帧的时刻（即动画完成的时刻）。
+            // 用于父折叠完成后保持子运动内容（m2logo 的 M 保持成型）以及主界面 `main`
+            // 结束后保持入场。为 -1 表示无可见内容。
+            std::vector<tjs_int> nodeContentEnd(n, -1);
+            for(int i = 0; i < n; i++) {
+                const auto &frames = _motionNodes[i].frames;
+                int lastVis = -1;
+                for(int j = 0; j < static_cast<int>(frames.size()); j++) {
+                    if(frames[j].visible) lastVis = j;
+                }
+                if(lastVis >= 0) {
+                    if(lastVis + 1 < static_cast<int>(frames.size()))
+                        nodeContentEnd[i] = frames[lastVis + 1].time;
+                    else
+                        nodeContentEnd[i] = frames[lastVis].time; // no trailing frame: ends at its own time
+                }
+            }
             std::vector<float> wx(n, 0.0f), wy(n, 0.0f);
             std::vector<float> wsx(n, 1.0f), wsy(n, 1.0f); // accumulated scale / 累加缩放
             std::vector<float> wa(n, 0.0f);          // accumulated angle (deg) / 累加角度
@@ -792,15 +813,16 @@ namespace motion {
                 // - **子运动内容**节点跟随父 motion 节点的活动（参考子播放器）；
                 //   非循环 motion 播完后保持末内容帧（主界面入场不黑）。
                 const auto &frames = node.frames;
-                // Last CONTENT (src) frame of this node's timeline — used to hold
-                // sub-motion content while the parent is active / motion finished.
-                // 节点时间线的末**内容**帧——用于父 active / motion 播完时对子运动内容保持。
-                const PSB::PSBMedia::PSBMotionFrame *lastContentFrame = nullptr;
+                // Last VISIBLE frame of this node's timeline (any src, incl. layout
+                // containers) — used to HOLD after the node's content ends so the
+                // assembled m2logo M/2 persist and the title entrance stays on screen.
+                // 节点时间线的末**可见**帧（任意 src，含 layout 容器帧）——内容结束后
+                // 用它**保持**，让成型的 m2logo M/2 持续、主界面入场保持在屏。
+                const PSB::PSBMedia::PSBMotionFrame *lastVisibleFrame = nullptr;
                 for(const auto &f : frames) {
-                    if(f.visible && f.src.size() > 4 &&
-                       f.src.compare(0, 4, "src/") == 0) {
-                        if(!lastContentFrame || f.time > lastContentFrame->time) {
-                            lastContentFrame = &f;
+                    if(f.visible) {
+                        if(!lastVisibleFrame || f.time > lastVisibleFrame->time) {
+                            lastVisibleFrame = &f;
                         }
                     }
                 }
@@ -837,13 +859,33 @@ namespace motion {
                     //     结束，不是隐藏）；motion 播完（非循环）后保持，主界面入场不黑。
                     const bool parentActive =
                         (node.parentIndex < 0) || vis[node.parentIndex];
+                    const bool parentEnded =
+                        (node.parentIndex >= 0) &&
+                        (nodeContentEnd[node.parentIndex] >= 0) &&
+                        (now >= nodeContentEnd[node.parentIndex]);
                     const bool pastMotionEnd =
                         (_motionLoopTime <= 0) && (now >= motionEnd);
                     if(node.submotionContent) {
-                        if(parentActive && lastContentFrame) {
-                            af = lastContentFrame; // hold visible content / 保持可见内容
-                        } else if(pastMotionEnd && lastContentFrame) {
-                            af = lastContentFrame; // end-of-motion hold / 播完保持
+                        // Parent active: the sub-motion content is live; hold its last
+                        // content once its OWN content ended (e.g. m2logo fold pieces
+                        // whose only content frame is t=0). Before its own content
+                        // starts (title_charall at t=0) it stays hidden.
+                        // 父 active：子运动内容播放中；一旦**自身**内容结束就保持末内容帧
+                        //（如 m2logo 折叠件只有 t=0 一个内容帧）。自身内容开始前（主界面
+                        // title_charall 在 t=0）保持隐藏。
+                        if(parentActive) {
+                            if(lastVisibleFrame && af->time >= lastVisibleFrame->time) {
+                                af = lastVisibleFrame;
+                            } else {
+                                vis[i] = false;
+                                continue;
+                            }
+                        } else if((parentEnded || pastMotionEnd) && lastVisibleFrame) {
+                            // Parent finished folding / motion finished: hold the content
+                            // (m2logo M stays assembled; title entrance persists).
+                            // 父折叠完成 / motion 播完：保持内容（m2logo 的 M 保持成型；
+                            // 主界面入场保持）。
+                            af = lastVisibleFrame;
                         } else {
                             vis[i] = false;
                             continue;
@@ -851,6 +893,18 @@ namespace motion {
                     } else if(node.type == 2) {
                         // Structural group: keep active, draw nothing itself.
                         // 结构组：保持 active，自身不绘制。
+                    } else if(lastVisibleFrame && af->time >= lastVisibleFrame->time &&
+                              af->time < motionEnd) {
+                        // Content finished but the motion is still running: HOLD the
+                        // last visible state so the assembled logo persists (m2logo
+                        // M-chain containers, "2", icon26/29, letters) until the final
+                        // fade/squish. A hidden frame AT the motion end is a real hide
+                        // (backdrop white disappears at 1516).
+                        // 内容结束但 motion 仍在播：**保持末可见状态**，让成型的 logo
+                        // 持续（m2logo 的 M 链容器、"2"、icon26/29、字母），直到最后
+                        // 淡出/压缩。恰好落在 motion 末尾的隐藏帧是真正的隐藏（backdrop
+                        // 白块在 1516ms 消失）。
+                        af = lastVisibleFrame;
                     } else {
                         vis[i] = false;
                         continue;
@@ -947,16 +1001,15 @@ namespace motion {
                     }
                 }
                 // Sub-motion content may keep rendering after the parent motion
-                // node's own timeline ends (type-0 frame) IF the whole motion has
-                // finished (non-looping) — the title entrance holds on screen this
-                // way (reference keeps the child player's last frame at motion end).
-                // 子运动内容可在父 motion 节点自身时间线结束（type-0 帧）后继续渲染，
-                // 前提是整个 motion 已播完（非循环）——主界面入场借此保持（参考在 motion
-                // 结束时保持子播放器的末帧）。
+                // node's own content span ended (fold done / entrance `main` done) —
+                // the m2logo M stays assembled and the title entrance holds this way.
+                // 子运动内容可在父 motion 节点自身内容段结束后继续渲染（折叠完成 /
+                // 入场 `main` 结束）——m2logo 的 M 保持成型、主界面入场保持都靠它。
                 const bool parentOn = (node.parentIndex >= 0)
                     ? (vis[node.parentIndex] ||
-                       (node.submotionContent && _motionLoopTime <= 0 &&
-                        now >= motionEnd))
+                       (node.submotionContent &&
+                        nodeContentEnd[node.parentIndex] >= 0 &&
+                        now >= nodeContentEnd[node.parentIndex]))
                     : true;
                 if(!parentOn) { vis[i] = false; continue; } // hidden parent hides subtree
                 const float baseX = (node.parentIndex >= 0) ? wx[node.parentIndex] : 0.0f;

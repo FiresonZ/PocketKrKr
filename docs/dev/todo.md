@@ -260,6 +260,17 @@
        **子运动内容**（expandSubMotionNodes 展开，新 submotionContent 标记）跟随**父 motion 节点
        活动**（参考子播放器），motion 播完（非循环）后保持末内容帧（主界面入场不黑，替代旧 hold）。
        效果：m2logo 折叠件 t=200 才出现（已带旋转角）、backdrop 白块 1516ms 后消失、折叠角最短路径。
+  - ✅ **B13 修复 B12 可见性回归（2026-09-12）**：真机反馈"m2logo 中间十字看不见 + 主界面看不到
+    人物依次出场"。日志实证两处：
+    ① 子运动内容保持缺"已越过末可见帧"条件：标题的 title_charall/logo/head 从 **now=0** 就
+       保持末帧（t=1983/t=1250）整屏盖住，入场动画完全被遮（tick=0 画 3 图）。修复：保持条件
+       加 `af->time >= lastVisibleFrame->time`——末帧之前（首内容帧之前）保持隐藏。
+    ② B12 参考语义把 m2logo 折叠件/icon48("2") 在 t=716 全部隐藏（链节点 type-0 帧），
+       只剩 icon42 十字 + 字母。修复：节点内容结束后（`af->time >= lastVisibleFrame->time`
+       且 `af->time < motionEnd`）**保持末可见状态**，让成型 M/2 持续到末尾淡出/压缩；
+       子运动内容在**父内容段结束**（新预计算 nodeContentEnd）后保持。backdrop 白块
+       （t=1516 == motionEnd）仍正确隐藏。效果：m2logo 完整 M+十字+2 保持、白块仍消失；
+       标题人物 ch1..ch4 依 t=333/500/666/833 依次升起。
   - ⏳ **遗留（AetherKiri 对比发现的后续）**：① 子运动 child-player 时间映射（motionDt/
     motionDofst/motionTimeOffset 驱动子时间线，现为"父活动+保持末帧"近似，需 mtn 实证精确映射）；
     ② 逐属性缓动曲线（ccc=透明度/颜色、acc=角度、zcc=缩放、scc=斜切、位置=线性，现 ccc 全属性）；
