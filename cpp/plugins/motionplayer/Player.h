@@ -2083,6 +2083,67 @@ namespace motion {
                     static_cast<tjs_int>(af->time), px, py, anchorX, anchorY,
                     mA, mB, mC, mD, outputTx, outputTy,
                     iw, ih, finalAngle, wop, af->blendMode, af->src);
+                // Probe: m2logo M-fold palette screen coverage — at the very START of
+                // the fold (horizontal-bar phase) the six panels (icon25/26/27/28/29/48)
+                // must tile into ONE continuous thick line (then the chain folds up to an
+                // M). Real-device runs reported "出现时不是连成一排的粗横线" — a 125px gap
+                // between icon27 and icon29 plus an icon25/icon27 overlap. Log each panel's
+                // screen-space AABB (min/max over {0,iw}×{0,ih} corners pushed through the
+                // world matrix) so the next run quantifies every gap/overlap and tells us
+                // which anchor/coord term causes the mis-tiling, instead of guessing.
+                // 探针：m2logo M 折叠链的屏幕覆盖——折叠**起始**（粗横线阶段）这 6 块面板
+                //（icon25/26/27/28/29/48）必须拼成**一条连续**的粗横线再折成 M。真机报
+                // "出现时不是连成一排的粗横线"（icon27 与 icon29 之间约 125px 断档 +
+                // icon25/icon27 重叠）。把每块面板经世界矩阵变换后在**屏幕坐标**的四角
+                // AABB（min/max）打出来，让下一次日志定量呈现每处缝隙/重叠由哪个锚点项
+                // 引起，便于定点修复而非盲改。
+                if(logger && now >= 190.0 && now <= 430.0 &&
+                   (af->src == "src/logo/icon25" ||
+                    af->src == "src/logo/icon26" ||
+                    af->src == "src/logo/icon27" ||
+                    af->src == "src/logo/icon28" ||
+                    af->src == "src/logo/icon29" ||
+                    af->src == "src/logo/icon48")) {
+                    auto screenX = [&](float pixX, float pixY) -> float {
+                        return static_cast<float>(outputTx) + mA * (pixX - anchorX) +
+                            mB * (pixY - anchorY);
+                    };
+                    auto screenY = [&](float pixX, float pixY) -> float {
+                        return static_cast<float>(outputTy) + mC * (pixX - anchorX) +
+                            mD * (pixY - anchorY);
+                    };
+                    float minX = screenX(0, 0), maxX = minX;
+                    float minY = screenY(0, 0), maxY = minY;
+                    const float corners[4][2] = {{0, 0}, {static_cast<float>(iw), 0},
+                                                 {0, static_cast<float>(ih)},
+                                                 {static_cast<float>(iw), static_cast<float>(ih)}};
+                    for(const auto &co : corners) {
+                        const float sx = screenX(co[0], co[1]);
+                        const float sy = screenY(co[0], co[1]);
+                        minX = std::min(minX, sx); maxX = std::max(maxX, sx);
+                        minY = std::min(minY, sy); maxY = std::max(maxY, sy);
+                    }
+                    logger->info(
+                        "m2foldProbe: '{}' now={:.0f}ms t={} src='{}' ang={:.1f} "
+                        "aabbX=[{:.1f},{:.1f}] aabbY=[{:.1f},{:.1f}] w={:.0f} h={:.0f} "
+                        "anchor=({:.1f},{:.1f}) ic={}",
+                        node.label, now, static_cast<tjs_int>(af->time), af->src,
+                        finalAngle, minX, maxX, minY, maxY, (maxX - minX), (maxY - minY),
+                        anchorX, anchorY,
+                        (hasIconOrigin ? (std::to_string(static_cast<int>(iconOrX)) + "," +
+                                          std::to_string(static_cast<int>(iconOrY)))
+                                       : std::string("-")));
+                }
+                // Probe: log scene-composite SUBLAYER order for m2logo so we can tell
+                // whether a missing glyph is a load failure vs. z-order vs. occlusion.
+                // 探针：打印 m2logo 场景合成子层顺序，判断缺字是加载失败、z 序还是遮挡。
+                if(logger && now >= 190.0 && now <= 430.0 &&
+                   (af->src == "src/logo/icon25" ||
+                    af->src == "src/logo/icon65" || af->src == "src/logo/icon9" ||
+                    af->src == "src/logo/icon35" || af->src == "src/logo/icon39" ||
+                    af->src == "src/logo/icon32" || af->src == "src/logo/icon17"))
+                    logger->info("m2foldProbe z: '{}' src='{}' op={} bm={}",
+                                 node.label, af->src, wop, af->blendMode);
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Apply the M2 PER-CORNER vertex-color tint to the glyph texture before
                 // drawing (identity when all corners white). This is what colors the
