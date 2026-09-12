@@ -894,19 +894,20 @@ namespace motion {
                     } else if(node.type == 2) {
                         // Structural group: keep active, draw nothing itself.
                         // 结构组：保持 active，自身不绘制。
-                    } else if(lastVisibleFrame && af->time >= lastVisibleFrame->time &&
-                              af->time < motionEnd) {
-                        // Content finished but the motion is still running: HOLD the
-                        // last visible state so the assembled logo persists (m2logo
-                        // M-chain containers, "2", icon26/29, letters) until the final
-                        // fade/squish. A hidden frame AT the motion end is a real hide
-                        // (backdrop white disappears at 1516).
-                        // 内容结束但 motion 仍在播：**保持末可见状态**，让成型的 logo
-                        // 持续（m2logo 的 M 链容器、"2"、icon26/29、字母），直到最后
-                        // 淡出/压缩。恰好落在 motion 末尾的隐藏帧是真正的隐藏（backdrop
-                        // 白块在 1516ms 消失）。
-                        af = lastVisibleFrame;
                     } else {
+                        // A regular (non-sub-motion) image node: honor its type-0 frame
+                        // as a REAL hide. The reference (libkrkr2/AetherKiri) hides the
+                        // node for the type-0 range instead of holding the previous
+                        // visible frame. Holding was too broad: it kept `dummy_bar` (the
+                        // m2logo thick line) visible past its t=200 hide, so the bar no
+                        // longer "folds into" the M — it stayed as a separate bar while
+                        // the fold fragments rotated. Sub-motion content and structural
+                        // groups are handled above and keep their own hold semantics.
+                        // 常规（非子运动）图像节点：把它的 type-0 帧当作**真正的隐藏**。
+                        // 参考（libkrkr2/AetherKiri）在 type-0 区段隐藏节点，而不是保持前
+                        // 一可见帧。此前保持太宽：把 m2logo 的粗横线 dummy_bar 在其 t=200
+                        // 的隐藏帧后仍保持显示，导致它不再"折叠进 M"，而是作为一条单独的
+                        // 横杠与折叠碎片同时出现。子运动内容与结构组在上方单独处理。
                         vis[i] = false;
                         continue;
                     }
@@ -1462,7 +1463,15 @@ namespace motion {
                 // m2logo 的 C/W 上红、细线红转黑、黑色十字竖线上色的——operateAffine
                 // 没有颜色通道，因此在此乘源像素。
                 if(interpTint != 0xFFFFFFFFu) {
-                    applyFlatTint(temp, interpTint);
+                    const bool tintApplied = applyFlatTint(temp, interpTint);
+                    // Diagnostic: log any non-white tint so a real-device run pinpoints
+                    // whether the M2 color parsed (non-white here) and whether the
+                    // premultiplied write reached the sampled texture (applied).
+                    // 诊断：非白 tint 一律记录，真机运行据此定位 M2 颜色是否解析成功
+                    //（此处非白）以及预乘写入是否作用到被采样纹理（applied）。
+                    if(logger)
+                        logger->info("drawAnimatedTree tint: '{}' color={:08x} applied={}",
+                                     node.label, interpTint, tintApplied ? 1 : 0);
                 }
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
