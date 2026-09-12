@@ -1,75 +1,269 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
-         <loc>https://krkr2next.com/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/FAQ/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/FAQ/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/FAQ/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/FAQ/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/download/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/download/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/download/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/download/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/plugins/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/plugins/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/plugins/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/plugins/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/support_games/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/support_games/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/support_games/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/support_games/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/architecture/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/architecture/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/architecture/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/build/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/build/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/build/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/build/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/compatibility/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/compatibility/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/compatibility/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/compatibility/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/conventions/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/conventions/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/conventions/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/conventions/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/getting-started/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/getting-started/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/getting-started/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/getting-started/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/key-references/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/key-references/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/key-references/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/key-references/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/krkrz-compat/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/krkrz-compat/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/krkrz-compat/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/krkrz-compat/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/perf-optimization/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/optimization-roadmap/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/optimization-roadmap/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/optimization-roadmap/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/rendering-diagnosis/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/perf-optimization/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/perf-optimization/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/perf-optimization/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/source-map/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/rendering-diagnosis/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/rendering-diagnosis/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/rendering-diagnosis/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/tech-stack/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/source-map/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/source-map/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/source-map/"/>
     </url>
     <url>
-         <loc>https://krkr2next.com/dev/todo/</loc>
-         <lastmod>2026-09-12</lastmod>
+        <loc>https://krkr2next.com/dev/tech-stack/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/tech-stack/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/tech-stack/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/dev/todo/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/todo/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/todo/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/FAQ/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/FAQ/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/FAQ/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/download/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/download/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/download/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/plugins/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/plugins/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/plugins/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/support_games/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/support_games/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/support_games/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/architecture/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/architecture/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/build/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/build/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/build/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/compatibility/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/compatibility/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/compatibility/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/conventions/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/conventions/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/conventions/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/getting-started/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/getting-started/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/getting-started/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/key-references/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/key-references/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/key-references/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/krkrz-compat/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/krkrz-compat/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/krkrz-compat/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/optimization-roadmap/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/optimization-roadmap/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/optimization-roadmap/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/perf-optimization/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/perf-optimization/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/perf-optimization/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/rendering-diagnosis/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/rendering-diagnosis/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/rendering-diagnosis/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/source-map/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/source-map/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/source-map/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/tech-stack/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/tech-stack/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/tech-stack/"/>
+    </url>
+    <url>
+        <loc>https://krkr2next.com/en/dev/todo/</loc>
+        <lastmod>2026-09-12</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://krkr2next.com/en/dev/todo/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://krkr2next.com/dev/todo/"/>
     </url>
 </urlset>

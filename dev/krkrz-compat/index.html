@@ -20,10 +20,14 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../../en/dev/krkrz-compat/" hreflang="en">
+        
       
       
       <link rel="icon" href="../../resources/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +35,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#kirikiri-zkrkrz" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -151,6 +155,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../../en/dev/krkrz-compat/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -457,6 +487,8 @@
       
         
       
+        
+      
     
     
     
@@ -582,6 +614,34 @@
     
   
     待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimization-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待优化方案
   
 
     
@@ -855,7 +915,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -1061,60 +1121,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#commit" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#aetherkiri-2026-09-11-tmpakiri-clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AetherKiri 对本项目其余缺口的价值（2026-09-11，本地下 /tmp/akiri 全量 clone）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        移植总原则
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#z" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        插件清单（按对"跑通 Z 游戏"的关键性排序）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        建议推进顺序
+        当前能力矩阵
       
     </span>
   </a>
@@ -1122,235 +1132,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2026-09-08-kirikiroid2-clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        关键认知
+        兼容边界
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#kirikiroid2-grep-rin" class="md-nav__link">
-    <span class="md-ellipsis">
       
-        实测缺口（对照 Kirikiroid2 全仓库 grep -rin，区分"插件"与"引擎"）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
+        <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        结论
+        统一参考入口
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#z-2026-09-09cpppluginszcompatzcompat_plugincpp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Z 插件兼容现状（2026-09-09，cpp/plugins/zcompat/zcompat_plugin.cpp）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#krkrsdl3-emoteplayer-2026-09-10-pluginsemoteplayeremoteplayerclasshcpp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        krkrsdl3 emoteplayer 对照（2026-09-10，重读 plugins/emoteplayer/emoteplayerclass.{h,cpp}）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#api-2026-09-09-kirikiroid2-vs-core" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#kirikiroid2_patch-2026-09-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Kirikiroid2_patch 补丁库 → 内建状态对照（2026-09-09）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#drawdeviced3dz-2026-09-08" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        drawdeviceD3DZ 深挖（2026-09-08）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="drawdeviceD3DZ 深挖（2026-09-08）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        结论（重要）
+        使用参考资料的规则
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        待实机复核的 3 处候选（按性价比排序）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        首选下一步
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-09-08-iincho-reco" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        探针实测结论（2026-09-08，先开 IINCHO-Re.co 后开 千恋万花）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="探针实测结论（2026-09-08，先开 IINCHO-Re.co 后开 千恋万花）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        证据
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        结论（纠正方向，重要）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#drawdeviced3dz" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        下一步（替换原 drawdeviceD3DZ 首选）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-09-08" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        重启复位链静态审计（2026-09-08）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="重启复位链静态审计（2026-09-08）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        结论
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_10" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        诚实结论（重要）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1452,60 +1262,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#commit" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#aetherkiri-2026-09-11-tmpakiri-clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AetherKiri 对本项目其余缺口的价值（2026-09-11，本地下 /tmp/akiri 全量 clone）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        移植总原则
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#z" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        插件清单（按对"跑通 Z 游戏"的关键性排序）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        建议推进顺序
+        当前能力矩阵
       
     </span>
   </a>
@@ -1513,235 +1273,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2026-09-08-kirikiroid2-clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        关键认知
+        兼容边界
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#kirikiroid2-grep-rin" class="md-nav__link">
-    <span class="md-ellipsis">
       
-        实测缺口（对照 Kirikiroid2 全仓库 grep -rin，区分"插件"与"引擎"）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
+        <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        结论
+        统一参考入口
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#z-2026-09-09cpppluginszcompatzcompat_plugincpp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Z 插件兼容现状（2026-09-09，cpp/plugins/zcompat/zcompat_plugin.cpp）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#krkrsdl3-emoteplayer-2026-09-10-pluginsemoteplayeremoteplayerclasshcpp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        krkrsdl3 emoteplayer 对照（2026-09-10，重读 plugins/emoteplayer/emoteplayerclass.{h,cpp}）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#api-2026-09-09-kirikiroid2-vs-core" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#kirikiroid2_patch-2026-09-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Kirikiroid2_patch 补丁库 → 内建状态对照（2026-09-09）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#drawdeviced3dz-2026-09-08" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        drawdeviceD3DZ 深挖（2026-09-08）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="drawdeviceD3DZ 深挖（2026-09-08）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        结论（重要）
+        使用参考资料的规则
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        待实机复核的 3 处候选（按性价比排序）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        首选下一步
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-09-08-iincho-reco" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        探针实测结论（2026-09-08，先开 IINCHO-Re.co 后开 千恋万花）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="探针实测结论（2026-09-08，先开 IINCHO-Re.co 后开 千恋万花）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        证据
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        结论（纠正方向，重要）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#drawdeviced3dz" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        下一步（替换原 drawdeviceD3DZ 首选）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-09-08" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        重启复位链静态审计（2026-09-08）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="重启复位链静态审计（2026-09-08）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        结论
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_10" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        诚实结论（重要）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1765,1307 +1325,106 @@
   
 
 
-<h1 id="kirikiri-zkrkrz">KIRIKIRI Z（krkrz）插件兼容移植清单<a class="headerlink" href="#kirikiri-zkrkrz" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>目标：让 PocketKrKr 能运行 <strong>KIRIKIRI Z</strong>（魔女的夜宴等 Z 引擎游戏），核心是
-<strong>先治黑屏</strong>（Z 主层 drawdevice 未接入），再逐个恢复 Z 常用插件能力，目标对齐
-krkrz 闭源版与 Kirikiroid2（安卓端完整实现）。</p>
-<p>关联待办：<a href="../todo/">todo.md</a> #2（黑屏根因）、#2b（krmovie Present）。</p>
-</blockquote>
-<h2 id="commit">参考源（在线仓库，作移植蓝本，勿直接 commit 进仓库）<a class="headerlink" href="#commit" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>本环境无本地 <code>/tmp/krkrz-ref</code> 副本，参考以在线仓库为准（可用 <code>git clone --depth=1</code> 拉取）。</p>
-</blockquote>
+<h1 id="_1">兼容性与参考资料<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>本文只保留当前兼容边界、能力缺口和统一资料入口。外部资料用于理解格式、接口与行为，不代表 PocketKrKr 已实现对应功能，也不直接复制外部代码。</p>
+<h2 id="_2">当前能力矩阵<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>仓库</th>
-<th>在线地址</th>
-<th>用途</th>
+<th>能力</th>
+<th>当前状态</th>
+<th>主要位置</th>
+<th>下一步</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>krkrz/krkrz</td>
-<td>https://github.com/krkrz/krkrz</td>
-<td>KIRIKIRI Z 引擎核心；<code>movie/win32/krmovie.cpp</code></td>
+<td>TJS2 与 KAG 基础运行</td>
+<td>已支持</td>
+<td><code>cpp/core/tjs2/</code>、<code>cpp/core/base/</code></td>
+<td>按兼容性回归补齐边界行为</td>
 </tr>
 <tr>
-<td>krkrz/krkr2</td>
-<td>https://github.com/krkrz/krkr2</td>
-<td>kwiki 全量 win32 插件源码；<code>src/plugins/win32/*</code>（drawdeviceZ_D3D9、squirrel、drawdeviceD3D 等）</td>
+<td>XP3、ZIP、7z、TAR 资源读取</td>
+<td>已支持</td>
+<td><code>cpp/core/base/</code></td>
+<td>补充加密和异常路径测试</td>
 </tr>
 <tr>
-<td>krkrz/krkrz_dev</td>
-<td>https://github.com/krkrz/krkrz_dev</td>
-<td>Z 工具 + win32 插件（menu、fftgraph、theora…）</td>
+<td>PNG、JPEG、WEBP、TLG、PSB 等图像</td>
+<td>已支持部分格式</td>
+<td><code>cpp/core/visual/</code>、<code>cpp/plugins/psbfile/</code></td>
+<td>统一格式探测和错误回退</td>
 </tr>
 <tr>
-<td>zeas2/Kirikiroid2</td>
-<td>https://github.com/zeas2/Kirikiroid2</td>
-<td><strong>安卓端完整移植（最强参考）</strong>：<code>src/core/visual/ogl</code>（RenderManager_ogl=GL drawdevice）、<code>src/core/movie/krmovie.cpp</code>+<code>ffmpeg/</code>、<code>src/core/visual/win32/DrawDevice.h</code>/<code>BasicDrawDevice.*</code>/<code>PassThroughDrawDevice.*</code>、<code>src/plugins/InternalPlugins.cpp</code></td>
+<td>Layer 与常规转场</td>
+<td>已支持</td>
+<td><code>cpp/core/visual/</code></td>
+<td>补齐扩展特效边界</td>
 </tr>
 <tr>
-<td>krkrz/Krkr2Compat</td>
-<td>https://github.com/krkrz/Krkr2Compat</td>
-<td><code>k2compat/k2compat.tjs</code>：krkr2→Z 兼容层，纯 TJS 脚本</td>
+<td>PSB/M2 基础动画</td>
+<td>已支持部分时间轴和节点</td>
+<td><code>cpp/plugins/psbfile/</code>、<code>cpp/plugins/motionplayer/</code></td>
+<td>完善网格、子运动、粒子和物理</td>
 </tr>
 <tr>
-<td>krkrsdl3/krkrsdl3</td>
-<td>https://github.com/krkrsdl3/krkrsdl3</td>
-<td><strong>SDL3 重实现 + 开源 emoteplayer</strong>：<code>plugins/emoteplayer/emoteplayerclass.{h,cpp}</code> 有 <code>D3DAdaptor/SeparateLayerAdaptor/captureCanvas/motionWorkLayer</code> 全量 C++ 实现（GitHub 上仅此一家，Kirikiroid2 系闭源）。captureCanvas 契约：<code>void captureCanvas(iTJSDispatch2* targetLayer)</code>= 单 object 目标层，与我们日志 <code>p0=object</code> 吻合。GPU 离屏 target + <code>memcpy→目标层像素缓冲+Update()</code>（详见下方对照）</td>
+<td>Live2D Cubism</td>
+<td>可选</td>
+<td><code>cpp/plugins/cubism/</code></td>
+<td>SDK 存在时构建并回归</td>
 </tr>
 <tr>
-<td>krkrsdl2/krkrsdl2</td>
-<td>https://github.com/krkrsdl2/krkrsdl2</td>
-<td>krkrsdl3 前身（SDL2 + Kirikiri2/Z 基，更成熟）；同家族 emoteplayer 参考，架构同 krkrsdl3</td>
+<td>Z 专用主合成路径</td>
+<td>部分支持</td>
+<td><code>cpp/core/visual/</code>、<code>cpp/plugins/zcompat/</code></td>
+<td>核对主 DrawBuffer、目标纹理和更新链</td>
 </tr>
 <tr>
-<td>crate-1556/tjs2-decompiler</td>
-<td>https://github.com/crate-1556/tjs2-decompiler</td>
-<td><strong>TJS2（TJS2100）字节码反编译器（Python）</strong>：把游戏编译字节码脚本还原为可读/可执行 TJS2，支持反汇编+文件信息。用于读取加密 <code>.tjs</code>（如 affinesourcemotion.tjs），不再只靠运行时诊断猜契约</td>
+<td>视频显示合成</td>
+<td>解码可用，显示路径待收口</td>
+<td><code>cpp/core/movie/ffmpeg/</code>、<code>cpp/core/visual/</code></td>
+<td>完成帧时钟、Present 和目标 Layer 更新</td>
 </tr>
 <tr>
-<td>AetherKiri/AetherKiri</td>
-<td>https://github.com/AetherKiri/AetherKiri</td>
-<td><strong>开源 M2/EMotionPlayer 权威参考（2026-09-11 用户提供）</strong>：对 <code>libkrkr2.so</code> 的完整反向移植，自带全套 <code>cpp/plugins/motionplayer/</code>（Player.h/PlayerUpdateLayers.cpp/NodeTree.h/EmotePlayer.h）+ <code>cpp/plugins/psbfile/</code>。与本项目 motionplayer 逐项对照<strong>全一致</strong>：旋转矩阵 <code>[[c,-s],[s,c]]</code> 左乘（applyLocalTransform/sub_699940）、transformOrder 默认 [0,1,2,3]、inheritMask 位门控（+slant 0x080/0x100）、angle 相加(度)/scale 相乘/flip XOR、绕纹理原点枢轴 <code>orgX=posX-(m12*totalOY+totalOX*m11)</code>、str_clip type-7 裁剪（SetClip/ResetClip + 字形省略 scale）。自带 <code>logoChainTrace</code> 顶点校验可作对拍基准。比对这次最相关：修 yuzulogo 叶子 angle/枢轴 与 m2logo str_clip 裁剪</td>
+<td>Layer Alpha/Mosaic 扩展</td>
+<td>部分接口为兼容桩</td>
+<td><code>cpp/plugins/</code>、<code>cpp/core/visual/</code></td>
+<td>先定义像素语义，再补实现</td>
 </tr>
 <tr>
-<td>YuriSizuku/Kirikiroid2Yuri</td>
-<td>https://github.com/YuriSizuku/Kirikiroid2Yuri</td>
-<td><strong>zeas2/Kirikiroid2 的 fork（2026-09-11 用户提供，价值低）</strong>：仅 Android UI 壳/插件小幅演进，<strong>无 M2/PSB motionplayer 实现</strong>，对本项目 M2 动画无参考价值；仅作维护版 fork 备查</td>
+<td>Squirrel 等可选脚本插件</td>
+<td>未完整支持</td>
+<td><code>cpp/plugins/zcompat/</code></td>
+<td>明确运行时依赖后按需实现</td>
 </tr>
 </tbody>
 </table>
-<h3 id="aetherkiri-2026-09-11-tmpakiri-clone">AetherKiri 对本项目其余缺口的价值（2026-09-11，本地下 <code>/tmp/akiri</code> 全量 clone）<a class="headerlink" href="#aetherkiri-2026-09-11-tmpakiri-clone" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>AetherKiri 几乎是完整 KiriKiri 引擎（AE/Kirikiroid2 血统 + 完整 ffmpeg 视频），不止 motionplayer。
-下面按我们对齐清单里的缺口逐条列"它有啥、在哪"，后续需要时按路径取源码即可（勿直接 commit 进仓库）。</p>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th>缺口（krkrz-compat 清单）</th>
-<th>AetherKiri 位置</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>krmovie 视频回放（P0，缺 Present/合成到 Layer）</strong></td>
-<td><code>cpp/core/movie/ffmpeg/</code>：<code>KRMoviePlayer.cpp/.h</code>、<code>VideoPlayer.cpp</code>、<code>DemuxFFmpeg.cpp</code>、<code>VideoReferenceClock</code>、<code>Timer.cpp</code>、<code>Thread/MessageQueue</code>；配套 <code>cpp/core/visual/VideoOvlIntf.cpp/.h</code></td>
-<td><strong>整套 ffmpeg 播放器</strong>，含时钟/线程/消息队列与播放调度——可直接对照/移植 KRMoviePlayer+VideoPlayer 补我们缺的 Present + 帧→Layer 合成</td>
-</tr>
-<tr>
-<td>multiimage（我们 P2 疑闭源）</td>
-<td><code>cpp/plugins/multiimage.cpp</code></td>
-<td><strong>有真实现</strong>，可解除"无源码"顾虑</td>
-</tr>
-<tr>
-<td>packinone（我们 C 级跳过/疑闭源）</td>
-<td><code>cpp/plugins/packinone.cpp</code></td>
-<td>有真实现</td>
-</tr>
-<tr>
-<td>extNagano（我们 C 级跳过）</td>
-<td><code>cpp/plugins/extNagano.cpp</code></td>
-<td>有真实现</td>
-</tr>
-<tr>
-<td>kagparserex / extkagparser</td>
-<td><code>cpp/plugins/kagparserex/</code>、<code>cpp/plugins/extkagparser/</code></td>
-<td>KAGParserEx 体系真实现</td>
-</tr>
-<tr>
-<td>layerExAlpha（AlphaColorBlend 等，P1 缺）</td>
-<td><code>cpp/plugins/layerExBTOA.cpp</code> + <code>layerExBase.hpp</code></td>
-<td>AlphaColorBlend/TranslucentColorBlend 等</td>
-</tr>
-<tr>
-<td>Layer.AddMosaic / layerEx 特效（P1 缺）</td>
-<td><code>cpp/plugins/layerExImage.cpp</code>、<code>layerExLongExposure.cpp</code>、<code>layerExAreaAverage.cpp</code>、<code>layerExPerspective.cpp</code>、<code>layerExRaster.cpp</code>、<code>layerExSaveCompat.cpp</code>、<code>layerex_draw/</code></td>
-<td>Mosaic 等特效方法真实现</td>
-</tr>
-<tr>
-<td>layerExMovie（视频层 vs）</td>
-<td><code>cpp/plugins/layerExMovie.cpp</code></td>
-<td>有</td>
-</tr>
-<tr>
-<td>captureCanvas GPU 捕获</td>
-<td><code>cpp/plugins/GlesCaptureUtils.h</code></td>
-<td>GL 像素捕获，贴 motionplayer captureCanvas/D3DAdaptor</td>
-</tr>
-<tr>
-<td>其它 z 插件 / 系统</td>
-<td><code>cpp/plugins/kirikiroid2.cpp</code>、<code>krkrgles.cpp</code>、<code>drawDeviceD2DCompat.cpp</code>、<code>saveStruct.cpp</code>、<code>sqliteXp3Vfs.cpp</code>、<code>windowEx.cpp</code>、<code>addFont.cpp</code>、<code>getSample.cpp</code>、<code>csvParser</code>、<code>dirlist</code>、<code>fftgraph</code>、<code>json</code>、<code>qrcode</code>、<code>tomlPlugin</code>、<code>wutcwf</code></td>
-<td>多数我们已内建；个别可对照</td>
-</tr>
-<tr>
-<td>渲染核心对拍（同源）</td>
-<td><code>cpp/core/visual/</code>：<code>RenderManager.cpp</code>、<code>LayerBitmapIntf.cpp</code>、<code>LayerManager.cpp</code>、<code>BitmapLayerTreeOwner.cpp</code>，含 <code>impl/</code>、<code>ogl/</code>、<code>gl/</code> 后端变体；<code>LoadBPG/JXR/PVRv3/AMV</code>、<code>SaveTLG6</code></td>
-<td>我们与它同源（都源自 AE/Kirikiroid2），主要交叉核对某段 DrawBuffer/合成实现</td>
-</tr>
-<tr>
-<td>音频</td>
-<td><code>cpp/core/sound/</code>：<code>FFWaveDecoder</code>、MIDI、PhaseVocoder</td>
-<td>次要</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>⚠️ 优先级建议：开局 logo（yuzusoft/m2logo）不影响游玩体验。若 logo 动画长期修不好，<strong>换方向优先做 krmovie（P0，影响视频 OP/通关回放）与 zcompat 插件真实现</strong>，把 krmovie 回放先从 AetherKiri 整套搬到我们 core。</p>
-</blockquote>
-<h2 id="_1">移植总原则<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h2 id="_3">兼容边界<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>兼容性目标是尽量保持 TJS2、KAG、Layer、资源读取和常见插件接口的行为一致，不承诺所有桌面扩展均可用。</li>
+<li>移动端不使用桌面 D3D9 绘制设备；需要验证的是移动端 RenderManager、LayerManager、DrawDevice 和 Flutter 纹理之间的合成关系。</li>
+<li>C++ 插件经 CMake 目标编入对应平台产物；纯 TJS 兼容层应保持脚本加载边界，不混入 C++ 生命周期。</li>
+<li>可选 SDK、桌面专属接口和来源不明的插件应明确标记为可选或未支持，不能用“已加载”代替“功能已实现”。</li>
+</ul>
+<h2 id="_4">统一参考入口<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li>KIRIKIRI Z 引擎与插件资料：<a href="https://github.com/krkrz/krkrz">https://github.com/krkrz/krkrz</a></li>
+<li>KIRIKIRI 2 插件资料：<a href="https://github.com/krkrz/krkr2">https://github.com/krkrz/krkr2</a></li>
+<li>Z 工具与扩展资料：<a href="https://github.com/krkrz/krkrz_dev">https://github.com/krkrz/krkrz_dev</a></li>
+<li>Android 移植与平台行为资料：<a href="https://github.com/zeas2/Kirikiroid2">https://github.com/zeas2/Kirikiroid2</a></li>
+<li>KIRIKIRI 2 兼容脚本资料：<a href="https://github.com/krkrz/Krkr2Compat">https://github.com/krkrz/Krkr2Compat</a></li>
+<li>SDL 运行时和 M2 播放器资料：<a href="https://github.com/krkrsdl3/krkrsdl3">https://github.com/krkrsdl3/krkrsdl3</a></li>
+<li>TJS2 字节码工具：<a href="https://github.com/crate-1556/tjs2-decompiler">https://github.com/crate-1556/tjs2-decompiler</a></li>
+</ul>
+<h2 id="_5">使用参考资料的规则<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>插件 = TJS Native Class（ncb）</strong>：用 <code>tvpRegisterClass</code>/<code>ncb</code>/<code>simplebinder</code> 实现，
-   源码加入 <code>cpp/plugins/</code>，经 <code>target_sources(PUBLIC)</code> 编进 <code>libengine_api.so</code>
-   （Android），与现有插件一致。</li>
-<li><strong>不搬 D3D9 后端</strong>：drawdevice 的 Windows 插件依赖 D3D9/ANGLE-D3D，移动端应参考
-   Kirikiroid2 的 <strong>OpenGL（RenderManager_ogl）</strong>实现合成逻辑，而不是复制 D3D9 代码。</li>
-<li><strong>驱动的动态加载</strong>：Z 游戏通过 <code>Plugins.link()</code>/<code>loadPlugin</code> 触发，PluginManager 需能
-   命中这些插件名（缺则 <code>Failed</code>）。可先在内部注册表给插件挂名，再实现功能。</li>
-<li><strong>静态内嵌 vs TJS 脚本</strong>：C++ 才编进 .so；纯 TJS（如 k2compat）不编引擎，而是放进
-   游戏可访问的脚本路径或随包内置。</li>
+<li>先确认目标行为属于引擎、插件、脚本还是平台桥接层。</li>
+<li>只提取协议、数据结构和行为约束，在本项目中按现有架构重新实现。</li>
+<li>不将桌面专属依赖带入移动端；不把外部仓库的文件直接加入本项目。</li>
+<li>每项实现都要有标量基准、目标平台构建和兼容性回归。</li>
+<li>参考资料无法证明当前功能已支持，状态以代码和验证结果为准。</li>
 </ol>
-<h2 id="z">插件清单（按对"跑通 Z 游戏"的关键性排序）<a class="headerlink" href="#z" title="Permanent link">&para;</a></h2>
-<p>优先级：<strong>P0</strong> 关键链路（决定能不能出画面/回放）→ <strong>P1</strong> 常用功能 → <strong>P2</strong> 冷门/来源待定。</p>
-<table>
-<thead>
-<tr>
-<th>插件</th>
-<th>功能</th>
-<th>来源（参考码）</th>
-<th>依赖/注意</th>
-<th>策略</th>
-<th>优先级</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>drawdeviceD3DZ（drawdeviceZ_D3D9）</td>
-<td>Z 主画面 D3D draw device；<strong>黑屏根因</strong></td>
-<td>krkr2 <code>src/plugins/win32/drawdeviceZ_D3D9</code>；移动端真形态 Kirikiroid2 <code>src/core/visual/RenderManager_ogl.cpp</code> + <code>win32/DrawDevice.h</code>/<code>BasicDrawDevice.cpp</code></td>
-<td>强依赖 D3D9/合成链路；需 GL 化</td>
-<td>P0：对照 Kirikiroid2 OGL RenderManager 与我们的 <code>RenderManager</code>/<code>BasicDrawDevice</code> 逐环节定位主 DrawBuffer 未合成原因并补齐</td>
-<td><strong>P0</strong></td>
-</tr>
-<tr>
-<td>krmovie</td>
-<td>视频回放（解码→合成）；性能优于纯软件</td>
-<td>Kirikiroid2 <code>src/core/movie/krmovie.cpp</code> + <code>ffmpeg/KRMovie*.{h,cpp}</code>；krkrz <code>movie/win32/krmovie.cpp</code></td>
-<td>我们已 ffmpeg 解码，缺 Present/overlay 合成</td>
-<td>P0：把 Kirikiroid2 的 krmovie 帧→Layer 合成路径移植进 <code>cpp/core/movie/</code></td>
-<td><strong>P0</strong></td>
-</tr>
-<tr>
-<td>squirrels plugin（squirrel）</td>
-<td>内嵌 <strong>Squirrel</strong> 脚本语言（很多 Z 游戏系统/存档逻辑用它）</td>
-<td>krkr2 <code>src/plugins/win32/squirrel</code></td>
-<td>需接入 tjs2 扩展：暴露 <code>Squirrel</code> 类/宿主调用</td>
-<td>P1</td>
-<td>1</td>
-</tr>
-<tr>
-<td>k2compat</td>
-<td>krkr2→Z 兼容函数/类兼容（<code>Window.innerSunken</code> 等）</td>
-<td>TJS：Krkr2Compat <code>data/k2compat/*.tjs</code></td>
-<td>纯 TJS，非 C++；需打进游戏脚本可加载路径</td>
-<td>P1：内置脚本 + 让 <code>Plugins</code>/<code>Scripts</code> 能 include</td>
-<td>1</td>
-</tr>
-<tr>
-<td>drawdeviceD3D</td>
-<td>krkr2 的 D3D drawdevice（Z 之前的常规 draw device）</td>
-<td>krkr2 <code>src/plugins/win32/drawdeviceD3D</code></td>
-<td>D3D9；移动端参考 OGL</td>
-<td>P1：比 drawdeviceZ_D3D9 更通用，促成同链路</td>
-<td>1</td>
-</tr>
-<tr>
-<td>PassThroughDrawDevice</td>
-<td>透传 draw device（部分补丁/特效需要）</td>
-<td>Kirikiroid2 <code>src/core/visual/win32/PassThroughDrawDevice.*</code>；uyjulian/PassThroughDrawDevice</td>
-<td></td>
-<td>P1</td>
-<td>1</td>
-</tr>
-<tr>
-<td>menu</td>
-<td>MenuItem / window.menu(dll)</td>
-<td>krkrz_dev <code>src/plugins/win32/menu</code></td>
-<td>我们已有 win32dialog / 对话框</td>
-<td>P1</td>
-<td>1</td>
-</tr>
-<tr>
-<td>kztouch</td>
-<td>Z 触摸/触摸控件</td>
-<td>来源待确认（独立/第三方，未在三仓库钓出）</td>
-<td></td>
-<td>P2：先定位源码再移植</td>
-<td>2</td>
-</tr>
-<tr>
-<td>kagexopt</td>
-<td>KAG 系统扩展（KAGEX 优化，<code>kagexopt</code>）</td>
-<td>独立第三方（keepcreating/wtnbgo 等）</td>
-<td></td>
-<td>P2：定位源码仓库</td>
-<td>2</td>
-</tr>
-<tr>
-<td>multiimage</td>
-<td>多图/多图层纹理（PSD 相关）</td>
-<td>来源待确认（gist 无来源，可能是私有）</td>
-<td></td>
-<td>P2：先确认有无开源</td>
-<td>2</td>
-</tr>
-<tr>
-<td>PackinOne</td>
-<td>打包/资源插件</td>
-<td>作者/开源未知（gist 评论区质疑），<strong>疑似闭源</strong></td>
-<td></td>
-<td>P2：无开源则跳过，记录兼容缺口</td>
-<td>2</td>
-</tr>
-<tr>
-<td>fftgraph</td>
-<td>频谱可视化画层</td>
-<td>krkrz_dev <code>src/plugins/win32/fftgraph</code> + Cirikiroid2</td>
-<td>我们已 <code>fftgraph.cpp</code></td>
-<td>已有可跑，可选升级</td>
-<td>低</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_2">建议推进顺序<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<ol>
-<li><strong>黑屏定位（P0 起点）</strong>：深入对比 <code>Kirikiroid2/src/core/visual/RenderManager_ogl.cpp</code> +
-   <code>BasicDrawDevice.cpp</code> 与我们的 <code>cpp/core/visual/RenderManager.*</code>，找出 Z 主层
-   <code>DrawBuffer</code> 从未被合成的原因，先达成" Z 游戏能出画面"。</li>
-<li><strong>krmovie Present（P0）</strong>：移植 Kirikiroid2 的视频帧→Layer 合成，替代现有 stub。</li>
-<li><strong>squirrel + k2compat（P1）</strong>：恢复 Z 游戏脚本/系统逻辑。</li>
-<li>逐一消化 P1 其余（menu、PassThroughDrawDevice、drawdeviceD3D…），P2 待源码确认。</li>
-</ol>
-<h2 id="2026-09-08-kirikiroid2-clone">差距分析（2026-09-08，实测于 Kirikiroid2 全量 clone）<a class="headerlink" href="#2026-09-08-kirikiroid2-clone" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>背景：我们已 <code>git clone --depth=1</code> zeas2/Kirikiroid2（本地 <code>/tmp/Kirikiroid2</code>），
-想逐个确认缺哪些插件。</p>
-</blockquote>
-<h3 id="_3">关键认知<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>drawdeviceD3DZ 在移动端不是插件</strong>：Kirikiroid2 用 <code>src/core/visual/RenderManager_ogl.cpp</code></li>
-<li><code>win32/DrawDevice.*</code>/<code>BasicDrawDevice.*</code> 作为<strong>核心渲染管理器</strong>直接合成 Z 主 DrawBuffer，
-   不走 <code>plugin/*.dll</code> 的 ncb 通道。魔女的夜宴等 Z 游戏黑屏根因在此，属 <strong>core/visual 引擎能力</strong>，
-   不是"写个插件"能解决 → P0 优先走渲染管线，勿当插件实现。</li>
-<li><strong>同源 fork → 插件大面积重合</strong>：我们与 Kirikiroid2 同源，其 <code>src/plugins/*</code> 的 ncb 插件
-   （extrans/wuvorbis/wuflac/wuopus、layerEx 全家、AlphaMovie、psb/psd、xp3filter、fftgraph、
-   drawDeviceD2Dm、krkrsteam、krkrgles、json、fstat…）我们 <code>_internal_plugins</code> 基本都已注册。
-   真要补的插件很少。</li>
-</ol>
-<h3 id="kirikiroid2-grep-rin">实测缺口（对照 Kirikiroid2 全仓库 <code>grep -rin</code>，区分"插件"与"引擎"）<a class="headerlink" href="#kirikiroid2-grep-rin" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>插件</th>
-<th>态况</th>
-<th>缺的是插件还是引擎</th>
-<th>决策</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>drawdeviceD3DZ</td>
-<td>Z 主画面，<strong>黑屏根因</strong></td>
-<td><strong>引擎</strong>（RenderManager_ogl）</td>
-<td>P0，对核心渲染链路</td>
-</tr>
-<tr>
-<td>krmovie Present</td>
-<td>视频回放</td>
-<td><strong>引擎</strong>（<code>movie/krmovie.cpp</code>）</td>
-<td>P0</td>
-</tr>
-<tr>
-<td>squirrel</td>
-<td>很多 Z 存档/系统脚本</td>
-<td>插件（krkr2 <code>squirrel</code>）</td>
-<td>P1</td>
-</tr>
-<tr>
-<td>k2compat</td>
-<td>krkr2→Z 兼容函数</td>
-<td>脚本/TJS（Krkr2Compat）</td>
-<td>P1，内置脚本</td>
-</tr>
-<tr>
-<td>menu / drawdeviceD3D / PassThroughDrawDevice</td>
-<td>常用</td>
-<td>插件</td>
-<td>P1</td>
-</tr>
-<tr>
-<td><strong>PackinOne</strong></td>
-<td>千恋万花实载 Failed；<strong>Kirikiroid2 全仓库无此实现</strong></td>
-<td>插件（疑似闭源）</td>
-<td><strong>C 级，跳过</strong>：下载已解包游戏可跑；仅整包加密需解包</td>
-</tr>
-<tr>
-<td><strong>extNagano</strong></td>
-<td>千恋万花实载 Failed；<strong>Kirikiroid2 全仓库无此实现</strong></td>
-<td>插件（独立冷门扩展）</td>
-<td><strong>C 级，跳过</strong>：基干无它照跑</td>
-</tr>
-<tr>
-<td>kztouch / kagexopt / multiimage</td>
-<td>冷门，来源待确认</td>
-<td>插件</td>
-<td>P2，等源码</td>
-</tr>
-</tbody>
-</table>
-<h3 id="_4">结论<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<ul>
-<li>真缺且急用的插件只有 <strong>squirrel</strong>（P1）；PackinOne/extNagano 多为下载解包版可跳过，
-  只做"挂名不报 Failed"或直接跳过，等有真实游戏卡在它们头上再补。</li>
-<li>当前最大阻塞仍是 P0 两个<strong>引擎能力</strong>（drawdeviceZ 主 buffer 合成 + krmovie Present），
-  不靠写插件解决。</li>
-</ul>
-<h3 id="z-2026-09-09cpppluginszcompatzcompat_plugincpp">Z 插件兼容现状（2026-09-09，<code>cpp/plugins/zcompat/zcompat_plugin.cpp</code>）<a class="headerlink" href="#z-2026-09-09cpppluginszcompatzcompat_plugincpp" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>关键认知（Kirikiroid2 实证）：<strong>移动端没有"加载 Z 插件 DLL"这回事</strong>。Kirikiroid2 的
-<code>TVPLoadPlugin</code> 密封所有 DLL 加载（<code>return; // seal all plugins</code>），<code>Plugins.link</code>
-只查内部注册表，功能全部内建在引擎核心。因此"真正兼容"= <strong>功能内建引擎 + link 命中</strong>，
-与"挂名"在形态上同构，差异只在"功能是否真的在"。</p>
-</blockquote>
-<p>按状态分四类：</p>
-<table>
-<thead>
-<tr>
-<th>状态</th>
-<th>插件</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>功能已内建</td>
-<td>drawdeviceD3DZ / drawdeviceD3D</td>
-<td>主 DrawBuffer 由 core/visual 渲染管线合成（Kirikiroid2 RenderManager_ogl 同思路），非独立插件</td>
-</tr>
-<tr>
-<td>功能已内建</td>
-<td>kztouch</td>
-<td>移动端触摸类已内建（Window.getTouchPoint 等，WindowImpl.cpp）</td>
-</tr>
-<tr>
-<td>功能已内建</td>
-<td>menu</td>
-<td>MenuItem 类核心全局注册（ScriptMgnIntf.cpp registerObject），link 即用</td>
-</tr>
-<tr>
-<td>真实现（暂回退挂名）</td>
-<td>k2compat</td>
-<td>内嵌 Krkr2Compat 纯 TJS 层（<code>zcompat/k2compat_scripts.cpp</code>）已就绪，<strong>但引擎启动时强制执行会抛异常打断启动链</strong>（engine(22) 实测三游戏全黑），已回退挂名；真实现待改走"游戏运行时显式 link"再放回</td>
-</tr>
-<tr>
-<td>名字映射</td>
-<td>motionplayer_nod3d</td>
-<td>PluginImpl.cpp <code>TVPLoadPlugin</code> 映射到 motionplayer.dll，复用已有实现</td>
-</tr>
-<tr>
-<td>挂名（暂不可实现）</td>
-<td>kagexopt / multiimage / squirrel / yuzuex / lzfs / win32ole / PackinOne / extNagano / pkutil / xpzdec</td>
-<td>源码不可得（multiimage 闭源）/ 桌面概念（win32ole）/ 待移植（squirrel 源码可得，VM 在 krkr2 trunk），挂名消除 Failed，调用缺类仍会抛错</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li><strong>刻意不挂名</strong>：krmovie（P0 引擎工作，挂名会让游戏期待视频能力而实际 Present 未实现）；
-  KAGParser（游戏走内置 KAGParser 类即可，挂名与否无关）。</li>
-<li><strong>motionplayer（motionplayer.dll / emoteplayer.dll）+ D3DAdaptor</strong>：千恋万花等 Yuzusoft 作品 data 自带
-  <code>affinesourcemotion.tjs</code>（编译字节码）声明的 AffineLayer 派生脚本类含 <code>captureCanvas</code>/
-  <code>unloadUnusedTextures</code>/<code>motionWorkLayer</code>/<code>motionD3DAdaptor</code> 等，且 <code>mainwindow.tjs</code> 的
-  <code>motionD3DAdaptor</code> getter <strong>无条件 <code>new Motion.D3DAdaptor(...)</code></strong>（实测置 undefined 崩溃）。
-  <strong>Kirikiroid2 实证（2026-09-09，反查官方 APK libgame.so）</strong>：<code>Motion</code> 完整存在——<code>D3DEmotePlayer/
-  D3DEmoteModule/SeparateLayerAdaptor/D3DAdaptor/useD3D/captureCanvas/unloadUnusedTextures/
-  Motion::ResourceManager</code> 全在（GitHub 源码仓库虽搜不到，属源码未同步）。zeas2 补丁库
-  <code>Kirikiroid2_patch</code> 给千恋万花的 patch.tjs：<code>typeof Motion.D3DAdaptor</code> 两分支<strong>都强制 <code>useD3D=0</code></strong>
-  （移动端无 D3D9 → CPU/GL 渲染）。⇒ 我们的做法对齐：<code>Motion.D3DAdaptor</code> 返回可 new 内建空类
-  （<code>main.cpp</code> <code>Create_NC_D3DAdaptor</code>）+ <code>useD3D</code> 默认 false + <code>SeparateLayerAdaptor</code> 与 <code>Layer</code> 双挂
-  <code>captureCanvas</code>/<code>unloadUnusedTextures</code> no-op 兜底（详见 todo.md §2a）。</li>
-<li><strong>canvasCaptureEnabled 的 setter 绝不可为 nullptr</strong>：只读属性若用
-    <code>TJSCreateNativeClassProperty(get, nullptr)</code> 注册，游戏脚本对该属性<strong>赋值</strong>时
-    <code>tTJSNativeClassProperty::PropSet</code> 会调用空函数指针 → SIGSEGV。千恋万花 yuzulogo
-    开场动画会写 <code>motionWorkLayer.canvasCaptureEnabled</code>，即为崩溃点（engine(12) 栈
-    frame[1]=tTJSNativeClassProperty::PropSet 实证）。必须提供 no-op setter 吞掉值。
-    教训：用 classic tjsNative 动态注册属性时，宁给 no-op setter 也别传 nullptr。</li>
-<li><strong>Motion.Player 成员需按 Yuzusoft affinesourcemotion.tjs 枚举补齐</strong>：<code>canSync()</code>
-    读 <code>loopTime</code>（非 emote）/<code>animating</code>（emote）；<code>getOptions()</code> 遍历固定成员表
-    <code>motion/chara/tickCount/speed/outline/zpos/...</code> 生成选项字典。任一缺失都会让
-    KAG 链路（backupLayer/doEnvTrans/storeFlags→onStore→getOptions）抛
-    <code>Member "xxx" does not exist</code> 致命错误并卡白屏（千恋万花实证：loopTime→outline
-    逐个暴露）。遇到新游戏白屏先查日志 <code>Member "..." does not exist</code>，按枚举表补成员。
-    Motion.Player members must cover the Yuzusoft affinesourcemotion.tjs enumeration:
-    canSync() reads loopTime/animating, getOptions() enumerates
-    motion/chara/tickCount/speed/outline/zpos. Missing members throw a fatal
-    "Member ... does not exist" and freeze the scene (verified: loopTime then
-    outline). On white screen, check the log for the missing member and add it.</li>
-</ul>
-<h3 id="krkrsdl3-emoteplayer-2026-09-10-pluginsemoteplayeremoteplayerclasshcpp">krkrsdl3 emoteplayer 对照（2026-09-10，重读 <code>plugins/emoteplayer/emoteplayerclass.{h,cpp}</code>）<a class="headerlink" href="#krkrsdl3-emoteplayer-2026-09-10-pluginsemoteplayeremoteplayerclasshcpp" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>这是 GitHub 上唯一开源的 Yuzusoft M2 emoteplayer 全实现（Kirikiroid2 系闭源），
-行为契约与千恋万花场景强相关。逐项对照我们 motionplayer：</p>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th>主题</th>
-<th>krkrsdl3 emoteplayer</th>
-<th>我们 motionplayer</th>
-<th>结论/参考价值</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>D3DAdaptor</code> 形态</td>
-<td><code>D3DAdaptor(winRef,w,h,orgX,orgY)</code> 持 GPU 离屏 <code>_target</code>+<code>_maskTarget</code>+<code>_clearColor</code></td>
-<td>可 new 空壳类（<code>Create_NC_D3DAdaptor</code>）+ 正字 <code>captureCanvas</code>/<code>unloadUnusedTextures</code>/<code>canvasCaptureEnabled</code></td>
-<td>方向一致；krkrsdl3 是真 GPU target，我们无 D3D target</td>
-</tr>
-<tr>
-<td><code>captureCanvas</code> 契约</td>
-<td><code>void captureCanvas(iTJSDispatch2* targetLayer)</code>——<strong>单 object 目标层</strong>；实现=把离屏渲染帧 <code>memcpy</code> 进 targetLayer 像素缓冲 + <code>Update()</code></td>
-<td>我们的诊断日志实测 <code>p0=object</code>，现用 <code>operateRect</code> 把 PSB 图逐张写进 <code>p0</code></td>
-<td><strong>契约验证</strong>：<code>p0</code> 就是游戏传入的目标 Layer，理解正确；krkrsdl3 用整帧 memcpy 更贴近 D3D 语义，我们 operateRect 逐图等效但其实现更省</td>
-</tr>
-<tr>
-<td><code>SeparateLayerAdaptor</code></td>
-<td>包一个真实 <code>Layer</code>（<code>tTJSNI_Layer*</code>，挂 <code>kag.poolLayer</code> 下，type=alpha, hitType=province）+ GPU target；<code>motionWorkLayer</code> 全局 = 它</td>
-<td>我们也注册 <code>SeparateLayerAdaptor</code> 类，但它非真实 Layer（另走了 displayLayer 方案）</td>
-<td><strong>关键差异</strong>：krkrsdl3 的 motionWorkLayer 是真实子 Layer，<strong>由游戏脚本自己控 absolute 序</strong> → 印证"不加自有层，让游戏管层级"是正确方向</td>
-</tr>
-<tr>
-<td><code>Player::draw(objthis)</code> 目标类型</td>
-<td>三种：SeparateLayerAdaptor / D3DAdaptor / 原始 Layer，分别走不同 target+ 回读</td>
-<td>只处理通用 layer，经 <code>resolveRealLayer</code> 路由</td>
-<td>krkrsdl3 对 D3DAdaptor 只画离屏、随后由 captureCanvas 拷入目标层 → 支持我们 capture-only</td>
-</tr>
-<tr>
-<td>渲染模型</td>
-<td>真 M2 引擎（emoteengine 网格动画 + GL/渲染后端 <code>iTVPRenderBackend</code>）</td>
-<td>静态 PSB 图层合成（cache 图像 + operateRect）</td>
-<td>krkrsdl3 是完整动画引擎，我们是近似；追求动画保真再移植，非短期补丁</td>
-</tr>
-<tr>
-<td>输出路径</td>
-<td>画进游戏传入层（motionWorkLayer/captureCanvas targetLayer），不动层序</td>
-<td>之前 displayLayer overlay（会盖菜单）+ 现 captureCanvas <code>p0</code></td>
-<td><strong>采纳</strong>：删 overlay，只走 captureCanvas <code>p0</code>，即对齐 krkrsdl3/原版</td>
-</tr>
-</tbody>
-</table>
-<p><strong>一句话</strong>：krkrsdl3 证实「captureCanvas(p0=目标Layer) + motion 只进游戏自己管的真实层、由脚本控 z-order」才是原版行为；我们的 capture-only 方向对，overlay 是多余且会干扰游戏后续渲染的层。</p>
-<ul>
-<li>实现顺序仍按 P0（渲染管线/krmovie）→ P1（squirrel/k2compat 已做完 k2compat，squirrel 待移植）。</li>
-</ul>
-<h3 id="api-2026-09-09-kirikiroid2-vs-core">核心 API 缺口核对（2026-09-09，对照 Kirikiroid2 核心 vs 我们 core）<a class="headerlink" href="#api-2026-09-09-kirikiroid2-vs-core" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>澄清：早前误列"缺 Pad / PassThroughDrawDevice"，实测<strong>核心均已注册</strong>，不在缺口内。</p>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th>项目</th>
-<th>我们核心</th>
-<th>缺口</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>Pad</code> 类</td>
-<td>✅ <code>ScriptMgnIntf.cpp:503</code> registerObject</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>PassThroughDrawDevice</code></td>
-<td>✅ <code>ScriptMgnIntf.cpp:538</code> Window 静态成员</td>
-<td>—</td>
-</tr>
-<tr>
-<td><code>System.getDisplayMonitors</code></td>
-<td>❌ 全区 grep 无定义</td>
-<td><strong>可选</strong>：仅 <code>K2COMPAT_SPEC_DESKTOPINFO</code>（k2compat 默认关）时用；实现可返回主显示器矩形（对齐 Kirikiroid2）</td>
-</tr>
-<tr>
-<td><code>MenuItem</code> / <code>KAGParser</code></td>
-<td>✅ 全局注册</td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
-<p><strong>结论</strong>：插件/核心 API 层对"跑通 Z 游戏"已经基本不缺。真正未收口的仍是 P0 两个<strong>引擎能力</strong>
-（Z 主层 DrawBuffer 合成 + krmovie Present），不是缺类。</p>
-<h3 id="kirikiroid2_patch-2026-09-09">Kirikiroid2_patch 补丁库 → 内建状态对照（2026-09-09）<a class="headerlink" href="#kirikiroid2_patch-2026-09-09" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>实证来源：<code>github.com/zeas2/Kirikiroid2_patch</code>（zeas2 官方补丁库，474 款游戏 / 345 份
-<code>patch.tjs</code> / 325 份 <code>xp3filter.tjs</code>）。逐游戏 patch 是模拟器式做法；我们引擎采用
-<strong>内建核心 + 挂名兜底</strong>，不对游戏逐一打包。此表用于"遇到某款游戏时，它的常见依赖
-我们是否已就绪"，按需补缺口（用户决策：只产清单，后续按需补）。</p>
-</blockquote>
-<h4 id="a-patchtjs">A. patch.tjs 高频链接的插件（按出现次数降序）→ 我们的内建状态<a class="headerlink" href="#a-patchtjs" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>插件（Patch 库 link）</th>
-<th>次数</th>
-<th>宿主</th>
-<th>我们状态</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>emoteplayer.dll</code></td>
-<td>19</td>
-<td>M2-Emote</td>
-<td>✅ PluginImpl.cpp 映射到 <code>motionplayer.dll</code> 复用实现</td>
-</tr>
-<tr>
-<td><code>layerExAlpha.dll</code></td>
-<td>19</td>
-<td>Layer.AlphaColorBlend 等 alpha 特效</td>
-<td>❌ <strong>缺</strong>：核心 Layer 无 AlphaColorBlend/TranslucentColorBlend/LuminanceForAlpha；<code>layerExAlpha</code> 本身也未内建</td>
-</tr>
-<tr>
-<td><code>LayerExMosaic.dll</code></td>
-<td>18</td>
-<td>Layer.AddMosaic/opacity 等</td>
-<td>🟡 仅 NCB_MODULE_NAME 挂名（<code>extrans.cpp</code> stub），<strong>无 AddMosaic 方法实现</strong></td>
-</tr>
-<tr>
-<td><code>windowEx.dll</code></td>
-<td>9</td>
-<td>Window 扩展</td>
-<td>✅ 已内建 <code>cpp/plugins/windowEx.cpp</code></td>
-</tr>
-<tr>
-<td><code>fstat.dll</code></td>
-<td>8</td>
-<td>文件状态</td>
-<td>✅ 已内建 <code>cpp/plugins/fstat/</code></td>
-</tr>
-<tr>
-<td><code>textrender.dll</code></td>
-<td>5(+2)</td>
-<td>文本渲染</td>
-<td>✅ 已内建 <code>cpp/plugins/textrender.cpp</code>（TextRender 大小写同名）</td>
-</tr>
-<tr>
-<td><code>layerExImage.dll</code></td>
-<td>5</td>
-<td>Layer 图像特效</td>
-<td>✅ 已内建 <code>cpp/plugins/layerExImage.cpp</code>（colorize/gaussianBlur 等）</td>
-</tr>
-<tr>
-<td><code>csvParser.dll</code></td>
-<td>5</td>
-<td>CSV 解析</td>
-<td>✅ 已内建 <code>cpp/plugins/csvParser.cpp</code></td>
-</tr>
-<tr>
-<td><code>util_generic.dll</code></td>
-<td>5</td>
-<td>通用工具</td>
-<td>❌ 未内建（桌面通用概念，Patch 库也多为防御性 link）</td>
-</tr>
-<tr>
-<td><code>extrans.dll</code></td>
-<td>4</td>
-<td>扩展 trans</td>
-<td>✅ 已内建 <code>cpp/plugins/extrans.cpp</code></td>
-</tr>
-<tr>
-<td><code>layerExRaster.dll</code></td>
-<td>4</td>
-<td>Layer 光栅</td>
-<td>✅ 已内建</td>
-</tr>
-<tr>
-<td><code>layerExSave.dll</code></td>
-<td>3</td>
-<td>Layer 保存</td>
-<td>✅ 已内建</td>
-</tr>
-<tr>
-<td><code>layerExMovie.dll</code></td>
-<td>3</td>
-<td>Layer 视频</td>
-<td>✅ 已内建</td>
-</tr>
-<tr>
-<td><code>perspective.dll</code>、<code>LayerExColor.dll</code>、<code>motionplayer.dll</code></td>
-<td>各2</td>
-<td>PS/透视/运动</td>
-<td>✅ 已内建</td>
-</tr>
-<tr>
-<td><code>KAGParserExb.dll</code></td>
-<td>2</td>
-<td>KAG 扩展解析</td>
-<td>❌ 未内建（KAGParserEx 类而非标准 KAGParser）</td>
-</tr>
-<tr>
-<td><code>DrawDeviceD3D.dll</code>/<code>win32dialog.dll</code>/<code>getSample.dll</code>/<code>addFont.dll</code></td>
-<td>各1</td>
-<td>—</td>
-<td>✅ zcompat 挂名 / 已内建</td>
-</tr>
-<tr>
-<td><code>kirikiroid2.dll</code></td>
-<td>19</td>
-<td>模拟器自有插件</td>
-<td>⛔ 不适用（它是 Kirikiroid2 内部插件，非游戏依赖，我们无此项）</td>
-</tr>
-</tbody>
-</table>
-<h4 id="b-patchtjs-layerwindowsystem-api">B. patch.tjs 高频调用的 Layer/Window/System API → 核心内建状态<a class="headerlink" href="#b-patchtjs-layerwindowsystem-api" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>API</th>
-<th>次数</th>
-<th>我们核心（LayerIntf.cpp 等）</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>Layer.AddMosaic</code></td>
-<td>46</td>
-<td>❌ 无 → layerExMosaic 方法，宿主缺</td>
-</tr>
-<tr>
-<td><code>Layer.AlphaColorBlend</code></td>
-<td>34</td>
-<td>❌ 无 → layerExAlpha 方法，宿主缺</td>
-</tr>
-<tr>
-<td><code>Layer.MaskImageRideRect</code></td>
-<td>21</td>
-<td>❌ 无 → layerEx 扩展，宿主缺</td>
-</tr>
-<tr>
-<td><code>Window.updateButton</code> / <code>Window.visible</code>/<code>opacity</code></td>
-<td>45/45/45</td>
-<td>✅（标准 Window/Layer 属性）</td>
-</tr>
-<tr>
-<td><code>System.inform</code> / <code>Window.setMessageHook</code> / <code>getNotificationNum</code> / <code>registerExEvent</code></td>
-<td>—</td>
-<td>✅ / ✅ / ✅ / ✅（核心已有）</td>
-</tr>
-<tr>
-<td><code>Layer.TranslucentColorBlend</code> / <code>LuminanceForAlpha</code> / <code>copyVertical*Raster</code> / <code>beginTransition</code> / <code>setupUvMap</code> / <code>applyTexture</code></td>
-<td>—</td>
-<td>🟡 部分：beginTransition ✅；copyVertical* / setupUvMap / applyTexture 为 layerEx 扩展，host 部分缺</td>
-</tr>
-<tr>
-<td><code>Window.movieQualitySelectMenuItem</code> / <code>-hdresomode</code></td>
-<td>1/78</td>
-<td>✅ 引擎支持 hdresomode；movieQualitySelectMenuItem 可清空</td>
-</tr>
-</tbody>
-</table>
-<h4 id="c-xp3filtertjs325">C. <code>xp3filter.tjs</code>（325 份）→ 结论<a class="headerlink" href="#c-xp3filtertjs325" title="Permanent link">&para;</a></h4>
-<ul>
-<li><strong>不复现</strong>：每份是单游戏专属的 cxdec 加密解密 key，属游戏数据解密，与引擎无关。</li>
-<li>我们引擎已支持 Xp3 读取 + extraction filter；需对应游戏的 key 时才按需提供（用解包/解密目录版可跳过）。</li>
-</ul>
-<h4 id="d">D. 未来按需补齐的优先级建议<a class="headerlink" href="#d" title="Permanent link">&para;</a></h4>
-<ol>
-<li><strong>layerExAlpha</strong>（AlphaColorBlend/TranslucentColorBlend/LuminanceForAlpha）—— 19 游戏高频，若遇 Alpha 特效报 <code>Member does not exist</code> 则补核心 Layer no-op→真实现。</li>
-<li><strong>LayerExMosaic</strong>（AddMosaic）—— 46 次最高频单项；Mosaic 特效暂无，若游戏调用报缺则补。</li>
-<li><code>KAGParserExb</code>（2）—— 遇 KAGParserEx 体系游戏再评估。</li>
-<li><code>util_generic</code>（5）默认跳过，防御性 link 报 Failed 不影响启动。</li>
-</ol>
-<h2 id="drawdeviced3dz-2026-09-08">drawdeviceD3DZ 深挖（2026-09-08）<a class="headerlink" href="#drawdeviced3dz-2026-09-08" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>对 Kirikiroid2 <code>RenderManager_ogl.cpp</code> 与本项目同文件逐环节比对（子代理 + 人工复核），
-结论与定位如下，防止返工。</p>
-</blockquote>
-<h3 id="_5">结论（重要）<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>黑屏根因不在 <code>RenderManager_ogl.cpp</code> 内部合成算法</strong>：本文件与 Kirikiroid2 逐环节
-  一一对应、逻辑等价（<code>SetRenderTarget/_RestoreGLStatues/InitGL/GetTempTexture2D/CopyTexture/
-  CreateTexture2D/OperateRect/OperateTriangles/OperatePerspective/Stencil</code> 全匹配）。</li>
-<li><strong>场景一次绘制入口不在本文件</strong>：合成入口在 <code>cpp/core/visual/LayerBitmapIntf.cpp</code>
-  （<code>TVPGetRenderManager()-&gt;OperateRect</code>）、<code>LayerIntf.cpp</code>、<code>impl/PassThroughDrawDevice.cpp</code>；
-  参考(Kirikiroid2)对应在它自己的 <code>LayerImpl.cpp</code>/<code>BitmapLayerTreeOwner.cpp</code>。</li>
-<li>因此 <strong>drawdeviceD3DZ 在移动端不存在可照搬的独立"插件文件"</strong>，它是渲染管线如何让
-  Z 主 <code>DrawBuffer</code> 被实际画入 primary texture 的问题，属 core/visual 能力，非插件。</li>
-</ul>
-<h3 id="3">待实机复核的 3 处候选（按性价比排序）<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>候选</th>
-<th>现状</th>
-<th>真机验证动作</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>C</td>
-<td>渲染管理器注册/链接</td>
-<td><strong>代码已核实正确</strong>：<code>EngineBootstrap.cpp:61</code> 在 EGL 就绪后、首次 <code>TVPGetRenderManager()</code> 前调 <code>TVPForceRegisterOpenGLRenderManager()</code>；宏在 <code>RenderManager.h:319-326</code></td>
-<td>首帧打点确认 <code>TVPGetRenderManager()</code> 非空且为 OpenGL 管理器</td>
-</tr>
-<tr>
-<td>A</td>
-<td><code>krkr::gl</code> 包装 vs <code>cocos2d::GL</code> 语义等价（viewport/FBO bind/blend cache/attribute enable）</td>
-<td>本项目相对参考新增的重写层，最可能画错/画到失效 FBO</td>
-<td>开 <code>enable_render_probe</code> 抓 <code>SourceSample</code>/<code>PostBlit</code>，看主 DrawBuffer 是否被写入纹理</td>
-</tr>
-<tr>
-<td>B</td>
-<td>Renderer-recreated/FBO 重建</td>
-<td><code>5fd30da</code> 已增强重建 <code>_FBO</code>/<code>_stencil_FBO</code> 并复位状态（二次打开），系正确修复</td>
-<td>两游戏不杀进程二次打开复核渲染</td>
-</tr>
-</tbody>
-</table>
-<h3 id="_6">首选下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<p>真机开 <code>enable_render_probe=true</code> 抓二次打开黑屏日志：确认主 <code>DrawBuffer</code> 的 <code>OperateRect</code>/
-合成是否真的被触发。若 <code>SourceSample</code>/draw 计数缺失（现状据 2026-09-08 日志正是如此，
-且日志仍存在重复问题见 <code>engine_api.cpp</code> 4e47e97 修复），则先到 <code>LayerBitmapIntf.cpp</code>/
-<code>PassThroughDrawDevice.cpp</code> 定位"主 DrawBuffer 从未被合成"的调用缺失一环，再据候选 A/B 修正。</p>
-<h2 id="2026-09-08-iincho-reco">探针实测结论（2026-09-08，先开 IINCHO-Re.co 后开 千恋万花）<a class="headerlink" href="#2026-09-08-iincho-reco" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>开 <code>KRKR_RENDER_PROBE</code> 抓 <code>pocketkrkr_engine(8).log</code>（修复日志重复前）。长 3347 行，
-两次 <code>engine_open_game</code> 各一段。关键在 <code>FlutterWindowLayer::UpdateDrawBuffer/SourceSample/PostBlit</code>。</p>
-</blockquote>
-<h3 id="_7">证据<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>项目</th>
-<th>第一游戏 IINCHO-Re.co（正常）</th>
-<th>第二游戏 千恋万花（黑屏）</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>UpdateDrawBuffer</td>
-<td><code>nativeTex=83 srcTex=83 blitTex=84 1280x720 layers=69 draw=15</code>，持续</td>
-<td><code>nativeTex=3 srcTex=3 blitTex=7 1920x1080 layers=215 draw=5</code>，仅 1 帧</td>
-</tr>
-<tr>
-<td>SourceSample</td>
-<td><code>nonBlack=25/25</code> 全程健康，颜色随时间渐变</td>
-<td><code>nonBlack=0/25 avg=(0,0,0,255)</code>（全黑）</td>
-</tr>
-<tr>
-<td>PostBlit center</td>
-<td>非黑</td>
-<td><code>(0,0,0,255)</code>（黑）</td>
-</tr>
-<tr>
-<td>渲染频率</td>
-<td>持续 ~20 采样/秒</td>
-<td>首帧后 <strong>2.8s 无任何 frame 采样</strong>（探针每 5 帧必打）→ present/渲染循环停摆</td>
-</tr>
-<tr>
-<td>插件</td>
-<td>—</td>
-<td><code>k2compat/kztouch/krmovie/kagexopt/menu/yuzuex/lzfs/multiimage/win32ole/motionplayer_nod3d/PackinOne/extNagano/krkrsteam</code> 全 <strong>Failed</strong></td>
-</tr>
-<tr>
-<td>启动脚本</td>
-<td>正常</td>
-<td><code>startup.tjs</code> 正常跑完，<code>layers=215</code>，无崩溃</td>
-</tr>
-</tbody>
-</table>
-<h3 id="_8">结论（纠正方向，重要）<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>这次黑屏是 runtime-restart（二次打开）专属问题，不是 drawdeviceD3DZ 的 Z 引擎根本缺口。</strong>
-  依据：千恋万花作为<strong>第一个游戏</strong>已被真机验证能正常出画面；探针也证明第一游戏合成+blit
-  全链路正常，仅重启后的第二游戏出问题。</li>
-<li><strong>黑屏现象两异常</strong>：</li>
-<li>第二游戏 <code>draw=5</code>（引擎发起了合成）但 <code>SourceSample</code> 全黑 → <strong>合成没画进 blit 源纹理
-     srcTex=3</strong>。→ 对应候选 A（<code>krkr::gl</code> FBO/state 在重启后的语义错配）。</li>
-<li>首帧后 2.8s 无任何 frame → <strong>游戏逻辑/定时器或 present 循环重启后未恢复</strong>（与"第二次
-     打开日志比第一次少"观察吻合）。</li>
-<li><strong>插件大量 Failed 不是本次黑屏主因</strong>：它们缺但游戏能作为第一游戏跑起来，故 Z 插件兼容属
-  独立问题（见本文档清单），与本次二次打开黑屏脱钩。</li>
-</ul>
-<h3 id="drawdeviced3dz">下一步（替换原 drawdeviceD3DZ 首选）<a class="headerlink" href="#drawdeviced3dz" title="Permanent link">&para;</a></h3>
-<p>不再先做 drawdeviceD3DZ。转向重启状态排查：
-1. 定位第二游戏 <code>draw</code> 的合成为何没进 <code>srcTex</code>（<code>krkr::gl</code> FBO bind / FlutterWindowLayer
-   <code>blitSrcTexture</code> 在重启后的解析）→ 候选 A。
-2. 定位第二游戏渲染循环为何停摆：<code>EngineLoop</code> tick 调度 / 连续处理器 / present 未随二次
-   <code>StartApplication</code> 重新拉起。</p>
-<h2 id="2026-09-08">重启复位链静态审计（2026-09-08）<a class="headerlink" href="#2026-09-08" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>背景：上游 KrKr2-Next master 的 <code>engine_destroy</code> 仍报 "runtime restart is not supported yet"
-（即上游不热重启），我们这份"对照 PR#12"的重启复位链是全 fork 自写的、无上游可对照。
-因此改为审计我们自身复位链完整性，找出漏掉的进程级静态。</p>
-</blockquote>
-<h3 id="_9">结论<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
-<p>复位链（<code>engine_api.cpp engine_destroy</code> 内）对多数子系统已彻底：脚本/存储/窗口/字体/位图/插件/
-EGL context（Destroy+重建）/OpenGL 共享 <code>_FBO</code> 重建（<code>OnRendererRecreated</code>）均已清或重建。</p>
-<p>剩余 4 处进程级静态漏项，但<strong>只有个别对 Android 二次黑屏成立</strong>：</p>
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>漏项</th>
-<th>位置</th>
-<th>是否解释 Android 二次黑屏</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td><code>tTVPAtExit</code> 一次性注册失效，二次退出静态清理不执行，跨代累积污染</td>
-<td><code>base/SysInitIntf.cpp:114-160</code></td>
-<td>结构性；单次重启影响弱</td>
-</tr>
-<tr>
-<td>2</td>
-<td><code>TVPDrawSceneOnce</code> 的 <code>static lastTick</code> 不复位</td>
-<td><code>environ/EngineLoop.cpp:62-75</code></td>
-<td>❌ 不适用：<code>engine_tick</code> 恒 <code>interval=0</code> 调用，合成照常发生（探针 draw 增长为证）</td>
-</tr>
-<tr>
-<td>3</td>
-<td><code>EGLContextManager::Destroy()</code> 漏调 <code>DestroyIOSurfaceResources()</code> 复位 IOSurface 字段</td>
-<td><code>visual/ogl/krkr_egl_context.cpp:224</code></td>
-<td>❌ 仅 iOS/macOS；Android 走 NativeWindow 不受影响</td>
-</tr>
-<tr>
-<td>4</td>
-<td><code>TVPIsSoftwareRenderManager</code> 的 <code>static bool ret</code></td>
-<td><code>visual/RenderManager.cpp:4966</code></td>
-<td>低危</td>
-</tr>
-</tbody>
-</table>
-<h3 id="_10">诚实结论（重要）<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
-<p>静态审计<strong>未能为 Android "第二游戏 draw=5 但 blit 源全黑 + 首帧后停摆"给出决定性单线根因</strong>。</p>
-<h1 id="23-android-android-flutterwindowlayer">2/#3 与 Android 现象对不上。Android 高概率根因仍在：重启后 <code>FlutterWindowLayer</code> 的<a class="headerlink" href="#23-android-android-flutterwindowlayer" title="Permanent link">&para;</a></h1>
-<p><code>blitSrcTexture</code> 与引擎实际主 DrawBuffer 未同步（此前候选 A）。要定死需一次探针日志区分
-"合成画错地方" vs "渲染循环停摆"。</p>
-<h3 id="android">可低风险顺手修的（正确性卫生，非 Android 根因）<a class="headerlink" href="#android" title="Permanent link">&para;</a></h3>
-<ul>
-<li>
-<h1 id="2-tvpdrawsceneonce-lasttick-interval">2：显式复位 <code>TVPDrawSceneOnce</code> 的 <code>lastTick</code>（保护正 interval 内部路径）。<a class="headerlink" href="#2-tvpdrawsceneonce-lasttick-interval" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="3eglcontextmanagerdestroy-destroyiosurfaceresourcesios">3：<code>EGLContextManager::Destroy()</code> 内补 <code>DestroyIOSurfaceResources()</code>（iOS 干净重置）。<a class="headerlink" href="#3eglcontextmanagerdestroy-destroyiosurfaceresourcesios" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="4-static-bool-ret">4：失效 <code>static bool ret</code>。<a class="headerlink" href="#4-static-bool-ret" title="Permanent link">&para;</a></h1>
-</li>
-</ul>
-<h2 id="2026-09-08_1">二次实测补充（2026-09-08，真机）<a class="headerlink" href="#2026-09-08_1" title="Permanent link">&para;</a></h2>
-<p><strong>新证据</strong>：第一个游戏成功跑完后，第二个不同游戏黑屏；但<strong>不杀进程再次点开第一个游戏，仍能正常跑</strong>。</p>
-<p><strong>判定（修正方向，重要）</strong>：
-- 全局重启 teardown（EGL context 重建 + FBO 重建 + FlutterWindowLayer blit 路径）<strong>基本健康</strong>——
-  若全局渲染状态脏，重开同一个游戏也会黑，但实测不会。
-- 黑屏是<strong>游戏/图层资源特定</strong>的：同游戏复开正常、换游戏才黑 → 不同游戏走了不同的主层渲染路径。
-  IINCHO 用标准 primary layer 能出画面；千恋万花（Yuzusoft/Z 引擎）可能走 Z 型主 DrawBuffer，
-  引擎未给其合成 → 黑屏。这与"千恋万花作为第一游戏其实也只是开了 logo、未真正渲染"一致。
-- 因此<strong>候选 A（krkr::gl 全局状态）权重下调</strong>；问题重新指向"Z 主层 DrawBuffer 未走标准合成"——
-  即 drawdeviceD3DZ 兼容（又回到 P0 渲染管线，但性质是"不同游戏主层路径"，非"重启残留"）。</p>
-<p><strong>待 RTProbe 定死</strong>：<code>FlutterWindowLayer::RTProbe blitSrcTex X fboAttachedTex Z [SAME]/[DIFF]</code>
-- 对黑屏游戏若为 <code>DIFF</code> → 其主层画进了别的纹理（非 blit 源），属游戏特定主层/渲染目标设定。
-- 对黑屏游戏若为 <code>SAME</code> 但仍黑 → 引擎对它的主层画了黑/没画，指向该游戏主层用了未接入的钻取路径。</p>
-<h3 id="22026-09-08engine9log-rtprobe">二次实测补充②（2026-09-08，engine(9).log，旧版无 RTProbe）<a class="headerlink" href="#22026-09-08engine9log-rtprobe" title="Permanent link">&para;</a></h3>
-<p><strong>序列</strong>：Kemomusu(1st)｜正常(SourceSample 25/25 持续) → IINCHO(2nd)｜<strong>无帧</strong> → Kemomusu(3rd)｜正常(25/25 持续)。</p>
-<p><strong>决定性证据（修正方向②，重要）</strong>：
-- 2nd 段 <code>StartApp 完成(923)</code> 到 destroy(945) 共 5.5s：仅 1 次 <code>engine_tick auto-attached</code>，
-  <strong>其间无任何 UpdateDrawBuffer/SourceSample/帧</strong>；那次 engine_tick 调 <code>Application-&gt;Run()</code> 也
-  <strong>未触发任何 blit</strong>。
-- 1st/3rd 段（相同游戏 Kemomusu）都持续出帧。
-- 结论：<strong>二次打开(open#2)是"帧驱动/主窗口绘制没恢复"，既非合成画错目标，也非 drawdeviceD3DZ 主层，
-  更非具体游戏</strong>（IINCHO+Tick 平时能跑，作为 2nd 打开照样无帧）。且呈位置性：open#2 失败、open#3 成功。</p>
-<p><strong>已加判别探针</strong>（<code>engine_api.cpp</code> engine_tick，KRKR_RENDER_PROBE，每 15 tick）：
-<code>Application::Run enter / return</code> paired with 原有 <code>UpdateDrawBuffer</code>。
-- 2nd 段看到 enter/return 却无 UpdateDrawBuffer → <code>Application-&gt;Run()</code> 走不下（主窗口/绘制未恢复）。
-- 2nd 段连 enter 都没有 → host 停止调用 engine_tick。
-（此判别探针连同 RTProbe + 3 处复位卫生修复见 <code>d29009f</code>。）</p>
-<h3 id="32026-09-08engine10log-rtprobe-applicationrun-release">二次实测补充③（2026-09-08，engine(10).log，带 RTProbe + Application::Run 探针的 release 包）<a class="headerlink" href="#32026-09-08engine10log-rtprobe-applicationrun-release" title="Permanent link">&para;</a></h3>
-<p><strong>序列</strong>：Kemomusu(1st) 正常 → IINCHO(2nd) 黑 → Kemomusu(3rd)（同题）。
-<strong>决定性证据（彻底定性）</strong>：
-- 1st/3rd：<code>RTProbe</code> <strong>每帧</strong> <code>blitSrcTex=3 engineCurFbo=1 fboAttachedTex=3 [SAME]</code>，
-  <code>Application::Run</code> 每 tick 进出，合成进同一纹理、持续出帧。
-- 2nd（IINCHO，5.4s）：<code>Application::Run enter/return</code> <strong>持续每 tick 都在</strong>
-  （tick=15…600），但 <strong>RTProbe/UpdateDrawBuffer 只出现 1 帧（行1050 <code>blitSrcTex=81 [SAME]</code>）</strong>，
-  之后到 destroy 再无 blit。
-- 结论：<strong>host 一直在调 engine_tick、Application::Run 一直在跑</strong>；不是"合成画错目标"、
-  也不是"host 停摆"。回收链是 <strong><code>Application::Run → SystemWatchTimerTimer → DeliverEvents → 
-  tTVPWinUpdateEvent → Window::UpdateContent → DrawDevice-&gt;Update()+Show → UpdateDrawBuffer</code></strong>，
-  二次打开从第 1 帧起<strong>不再有窗口重绘（win update event/Show 不再触发）</strong> → 画面停在第 1 帧黑块。</p>
-<p><strong>因此根因在框架重绘调度，不在 GL/合成/目标/ host 帧回调</strong>。候选集中于：
-- <code>tTVPAtExit</code> 一次性注册失效（审计#1）→ 二次打开定时器/连续处理器未恢复，游戏不再请求重绘；
-- 或二次打开的 <code>TVPSystemControl</code>/<code>TVPTimer</code>/主窗口 update 事件投递未恢复。</p>
-<p><strong>下一步判别</strong>：在 <code>tTVPWinUpdateEvent::Deliver</code>/<code>TVPWinUpdateEventQueue</code> 或 <code>TVPTimer::ProgressAllTimer</code>
-打点，确认 2nd 段是否还有窗口重绘事件被投递/分发，从而区分"框架没投递重绘"vs"投递了但 Show 没 blit"。</p>
-<h3 id="2026-09-08-deliverwinupdate">候选排查结论（2026-09-08，静态核对 + 已加 DeliverWinUpdate 探针）<a class="headerlink" href="#2026-09-08-deliverwinupdate" title="Permanent link">&para;</a></h3>
-<ul>
-<li>已<strong>排除</strong>：<code>TVPSystemControl</code>（OnExit 时 delete、二次 open 时 <code>new</code> 重建，Application.cpp:865/412）；
-  <code>TVPEventInvoked</code>（每 tick 经 <code>_TVPDeliverAllEvents→TVPEventReceived()</code>（EventIntf.cpp:481/46）复位，
-  不易卡死）；<code>TVPContinuousHandlerCallLimitThread</code>/<code>TVPTimer</code> 由 End/BeginContinuousEvent 切换。</li>
-<li>确定性结论：二次打开从第 1 帧起<strong>不再有窗口重绘（win update 事件投递/交付）</strong>，回收链
-  <code>RequestUpdate→TVPPostWindowUpdate→TVPInvokeEvents→(Run 每tick)DeliverEvents→TVPDeliverWindowUpdateEvents
-  →UpdateContent→Show→UpdateDrawBuffer</code> 在 2nd 段断在 blit 之前。</li>
-<li><strong>已加探针</strong>（<code>EventIntf.cpp</code> TVPDeliverWindowUpdateEvents，KRKR_RENDER_PROBE）：
-  <code>DeliverWinUpdate: queue=N -&gt; UpdateContent</code>。下一轮 release+probe 日志即可判：</li>
-<li>2nd 段 <code>DeliverWinUpdate</code> 持续打印、但无 RTProbe/blit → <strong>投递→Show 段坏</strong>（Show guard/Managers 空）；</li>
-<li>2nd 段 <code>DeliverWinUpdate</code> 根本不打印 → <strong>游戏/脚本未请求重绘</strong>（RequestUpdate 未发生，指向脚本/连续处理器未恢复）。</li>
-</ul>
-<h3 id="releaseprobe">二次黑屏探针矩阵（一次 release+probe 日志即可定死整条链）<a class="headerlink" href="#releaseprobe" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>链路节点</th>
-<th>探针</th>
-<th>打印内容</th>
-<th>判定</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>游戏请求重绘</td>
-<td><code>RequestUpdate</code>（WindowIntf.cpp）</td>
-<td><code>RequestUpdate: repaint requested (cum=N)</code>，每 60 次</td>
-<td>有=游戏在画；无=脚本/连续处理器没恢复</td>
-</tr>
-<tr>
-<td>重绘事件投递</td>
-<td><code>TVPDeliverWindowUpdateEvents</code>（EventIntf.cpp）</td>
-<td><code>DeliverWinUpdate: queue=N -&gt; UpdateContent</code>（queue 非空）</td>
-<td>有=投递发生</td>
-</tr>
-<tr>
-<td>Show 被调但没 blit</td>
-<td><code>tTVPBasicDrawDevice::Show</code>（BasicDrawDevice.cpp）</td>
-<td><code>BasicShow: skip (buf=null \| form/Managers)</code></td>
-<td>有=Show 守卫生效（Managers 空等）</td>
-</tr>
-<tr>
-<td>blit 是否到纹理</td>
-<td><code>RTProbe</code>（ui_stubs.cpp）</td>
-<td><code>blitSrcTex=… engineCurFbo=… [SAME/DIFF]</code></td>
-<td>有 blit 则每帧；<code>SAME/DIFF</code> 定合成目标</td>
-</tr>
-<tr>
-<td>引擎帧驱动</td>
-<td><code>Application::Run enter/return</code>（engine_api.cpp）</td>
-<td>每 15 tick</td>
-<td>每 tick 有=引擎在跑</td>
-</tr>
-</tbody>
-</table>
-<p>组合判：
-- <code>RequestUpdate</code> 无 + 全部其他无 → 游戏/脚本未推进（脚本引擎/连续处理器重启问题）。
-- <code>RequestUpdate</code>/<code>DeliverWinUpdate</code> 有 + <code>BasicShow: skip</code> 打法 → Show 段（主层 Manager 空）。
-- <code>DeliverWinUpdate</code> 无但 <code>RequestUpdate</code> 有 → 投递链（DeliverEvents）坏。</p>
-<h3 id="2026-09-08engine11log">决定性实测结论（2026-09-08，engine(11).log，完整探针矩阵）<a class="headerlink" href="#2026-09-08engine11log" title="Permanent link">&para;</a></h3>
-<p><strong>序列</strong>：Kemomusu(1st) 健康 → IINCHO(2nd) 黑屏 → Kemomusu(3rd)。
-<strong>各段探针</strong>：
-| 段 | Application::Run | RequestUpdate | DeliverWinUpdate | RTProbe/blit |
-|---|---|---|---|---|
-| 1st Kemomusu | 每 tick | <code>cum=1/61/121…</code> 持续 | 持续 queue=1 | 每帧 SAME |
-| 2nd IINCHO | 每 tick | <strong>0 次</strong> | 仅 1 次(queue=1) | 仅 1 帧 SAME |
-| 3rd Kemomusu | 每 tick | 持续 | 持续 | 每帧 |</p>
-<p><strong>板钉结论</strong>：断点在最上游——<strong>第二游戏从第 1 帧起不再调用 <code>RequestUpdate</code></strong>（不再请求重绘）。
-引擎投递/Show/blit 机制全程健康（DeliverWinUpdate 工作过、RTProbe [SAME]），<code>Application::Run</code>
-每 tick 都跑。是<strong>游戏侧每帧驱动（主层连续更新/脚本/定时器）没恢复</strong>，与"第二游戏日志更少"吻合。</p>
-<p><strong>收窄到候选①强化</strong>：<code>RequestUpdate</code> 由主层更新触发；二次打开其连续/每帧驱动不转。
-下一步直接从"主层如何触发 RequestUpdate + 连续重绘/TJS 定时器在二次打开的复位"入手，
-而不再查渲染/投递链路（已证明健康）。</p>
-<h3 id="2026-09-08_2">渲染侧彻底排除 + 根因定性（2026-09-08）<a class="headerlink" href="#2026-09-08_2" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>RequestUpdate</code> 唯一触发：主层内容变化 → <code>iTVPLayerManager</code>/<code>tTVPDrawDevice::NotifyLayerImageChange</code>
-  → <code>Window-&gt;RequestUpdate()</code>（DrawDevice.cpp:302-307）。第二游戏 <code>RequestUpdate=0</code> ⇒ <strong>主层从未产生
-  新内容 ⇒ 游戏脚本没在画</strong>。</li>
-<li>整条显示链已逐环节证明健康：<code>Application::Run</code> 每tick 在跑、<code>TVPSystemControl</code> 重建、
-  <code>TVPEventInvoked</code> 每tick 复位、<code>DeliverWinUpdate</code> 工作过、<code>RTProbe [SAME]</code>、<code>Show</code> 无 skip。
-  加上第 3 段同游戏复开正常 ⇒ 渲染与重启渲染机制无误。</li>
-<li><strong>根因定性</strong>：二次打开（open#2）的<strong>游戏侧每帧驱动（TJS 脚本推进/定时器/连续处理/主层连续重绘）
-  未转</strong>，脚本起了一次（startup.tjs 跑完、建 layers）后便不再产出画面 → 黑屏定格。与"第二游戏日志
-  更少"吻合。属脚本引擎/连续处理器重启问题，非渲染谱系。</li>
-<li><code>TVPResetScriptEngineForRestart</code>（ScriptMgnIntf.cpp:591）仅清 guard 标志，疑似不是此处；
-  最可能是一次性 <code>tTVPAtExit</code> 注册失效（<code>TVPDestroyContinuousHandlerVector</code>/timer 线程）致二次打开的
-  连续/定时驱动不建立（候选①强化）。</li>
-</ul>
-<h3 id="ttvpatexit-2026-09-08">tTVPAtExit 一次性注册失效——核实 + 安全修复（2026-09-08）<a class="headerlink" href="#ttvpatexit-2026-09-08" title="Permanent link">&para;</a></h3>
-<p><strong>核实结论：部分成立——"二次退出不跑 at-exit 清理"属实（清理卫生缺口），但它不是黑屏根因。</strong>
-- 二次退出（open#2 的 teardown）确实不会再跑进程启动时那批 at-exit 清理（清理卫生缺口）。
-- 它<strong>并不阻止第二游戏建立每帧驱动</strong>，因为这些驱动都是懒重建/静态向量，二次 <code>StartApplication</code>
-  会重新建立：
-  - <code>TVPTimerThread</code>：<code>Add()→Init()</code> 懒创建（TimerImpl.cpp:307-333），游戏#2 首个 TJS 定时器即重建。
-  - <code>TVPContinuousHandlerCallLimitThread</code>：<code>TVPBeginContinuousEvent</code> 里 <code>if(!...)</code> 懒创建（EventImpl.cpp:234）。
-  - <code>TVPContinuousHandlerVector</code> / <code>TVPContinuousEventVector</code>：静态 vector，<code>TVPAddContinuousHandler</code> 重填。
-- 结论：at-exit 一次性注册失效不会让 game#2 的每帧驱动"建立不起来"；真根因仍需从脚本驱动侧实测确认。</p>
-<p><strong>但"清理卫生缺口"曾误判为需修——实测重放会崩，已回退（终判：at-exit 是一次性进程 teardown，原设计正确）</strong>：
-- 曾尝试把 <code>TVPAtExitInfos</code> 改为持久清单、每次 <code>engine_destroy</code> 重放全部 at-exit handler（含把
-  <code>TVPDestroyLogObjects</code> 复位 init 标志）——<strong>真机第 2 个游戏退出时在 CLEANUP handler 上 SIGSEGV 闪退</strong>
-  （二次 <code>engine_destroy</code> 的 <code>TVPCauseAtExit</code> 重放，<code>handler[15]=FreeAllocator</code> 之前那个 pri=10000 崩溃）。
-- 根因定性：这些 at-exit handler 是<strong>按进程周期一次性</strong>设计的（进程启动注册一次、进程末清理），
-  不是"置空+下次 Init 重建"的按引擎周期 teardown；跨游戏重放会触碰已按需重建的单例，导致
-  double-free/use-after-free。多 handler 都长这样，逐个修是打地鼠且高风险。
-- 终判：<strong>回退该修复</strong>（<code>SysInitIntf</code>/<code>DebugIntf</code> 恢复原样）。框架单例本就跨游戏安全复用
-  （timer/连续事件懒重建），不漏 teardown 不致命；原设计对 runtime-restart 是正确模型。
-- 教训：runtime-restart 下，at-exit 只该在"真进程退出前"跑一次；引擎间复用应全走 lazy-init/显式 lifecycle，别重放 at-exit。</p>
-<h3 id="krkr_render_probe">已加脚本驱动侧判别探针（KRKR_RENDER_PROBE，与现有探针一次日志定死）<a class="headerlink" href="#krkr_render_probe" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>探针</th>
-<th>位置</th>
-<th>打印</th>
-<th>判</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ContinuousProbe</code></td>
-<td><code>EventIntf.cpp</code> TVPDeliverContinuousEvent</td>
-<td><code>eventVec / handlerVec</code> 大小，每 30 次</td>
-<td>两向量空且不涨=连续驱动没建立</td>
-</tr>
-<tr>
-<td><code>TimerProbe</code></td>
-<td><code>TVPTimer.cpp</code> ProgressAllTimer（FireNext 计数）</td>
-<td><code>cumulativeFired / delta</code>，每 30 次</td>
-<td>delta=0= TJS 定时器没推进</td>
-</tr>
-<tr>
-<td><code>KAGLoadScenario</code></td>
-<td><code>KAGParser.cpp</code> LoadScenario</td>
-<td><code>name / curStorage / hitRewind / curLine</code>，每次加载</td>
-<td>hitRewind=1 且 curLine&gt;0=二次命中 Rewind 续跑（宏前奏不复重）</td>
-</tr>
-<tr>
-<td><code>KAGTag</code></td>
-<td><code>KAGParser.cpp</code> _GetNextTag（tagname 取出处）</td>
-<td><code>storage.line tag=名</code>，每 256 条 tag</td>
-<td>二次打开首条即 [linemode] 且 line=1 → 宏前奏确实没跑；序列正常 → 宏注册本身失效</td>
-</tr>
-<tr>
-<td>（已有）<code>RTProbe</code>/<code>RequestUpdate</code>/<code>Run</code>/<code>DeliverWinUpdate</code></td>
-<td>见上</td>
-<td>—</td>
-<td>渲染链已证明健康</td>
-</tr>
-</tbody>
-</table>
-<p>配合判：
-- game#2 段 <code>TimerProbe delta=0</code> + <code>ContinuousProbe</code> 两向量空 → <strong>脚本每帧驱动未建立</strong>（即使脚本起过一次），
-  治脚本/连续重启；若向量非空但 delta=0 → 注册了但调度不上，治 EngineLoop/tick 调度口。
-- game#2 段 <code>TimerProbe delta≈4</code> 在转 + <code>[TVP Console] エラーが発生しました</code> → <strong>游戏脚本/KAG 自身报错</strong>停画，非重启状态 bug。</p>
-<h3 id="pocketkrkr_engine12log-iincho-log132026-09-08">换游戏黑屏的实测定性（pocketkrkr_engine(12).log + IINCHO 单开 log13，2026-09-08）——重启残留已证实<a class="headerlink" href="#pocketkrkr_engine12log-iincho-log132026-09-08" title="Permanent link">&para;</a></h3>
-<p><strong>决定性对比（Kemomusu→IINCHO 重启 vs IINCHO 单开全新）：</strong>
-- <strong>IINCHO 单开（全新进程，engine(13).log）</strong>：渲染链全程健康——<code>RequestUpdate</code> 增长、<code>DeliverWinUpdate</code>
-  持续、<code>UpdateDrawBuffer layers=69 draw=15</code>、<code>PostBlit err=0</code> 且颜色逐帧变化（245,252→200,239→147,224…，
-  即在播内容）。<strong>全程无 <code>[linemode]</code> 报错、无 <code>first.ks : [linemode]</code> 字样</strong>。其 <code>first.ks</code> 先走前奏
-  <code>@eval KAGLoadScript('debug.dtjs')</code> → <code>@call ks_system.ks</code> → <code>@call cmdMacro.ks</code>（注册大量 <code>[macro ...]</code>），
-  之后 <code>[linemode]</code> 已被宏/标签覆盖定义，正常运行。
-- <strong>Kemomusu→IINCHO 重启（engine(12).log）</strong>：KAG 模块表与单开<strong>完全一致</strong>（都无 LineMode.tjs，模块表不是差异）；
-  <code>first.ks</code> 却<strong>跳过前奏</strong>，直接命中 <code>[linemode]</code> → <code>タグ/マクロ "linemode" は存在しません</code> → 画停黑屏。</p>
-<p>⇒ <strong>用户"重启后脚本/宏加载未 reset、仍是残留状态"的方向成立</strong>：二次启动时 first.ks 的宏定义前奏
-（KAGLoadScript/<code>@call cmdMacro.ks</code>）没执行/失效，导致 <code>[linemode]</code> 未注册。这不是插件列表（已否决），
-而是 <strong>KAG 场景宏/脚本的加载态在 in-process 重启下残留</strong>。修复方向：定位并复位 KAG 场景/宏加载的
-进程级残留（宏注册表/场景位置/已加载脚本缓存），使二次打开时 first.ks 前奏完整重跑。</p>
-<p><strong>reset 链缺口核对（2026-09-08）：<code>TVPScenarioCache</code> 是唯一未纳入 reset 的进程级全局。</strong>
-- engine_destroy 的 reset-for-restart 覆盖各子系统：存储/插件/类安装/渲染/字体/窗口/trans/drawscene/
-  extension 等均有 <code>TVPResetXXXForRestart()</code>。
-- 但 KAGParser.cpp 文件作用域的 <code>tTVPScenarioCache TVPScenarioCache(8)</code>（KAGParser.cpp:249）<strong>只在
-  <code>KAGParser::Clear()</code> 内部经 <code>TVPClearScnearioCache()</code> 清空</strong>，该 Clear 由脚本侧 <code>kag.Clear()</code> 触发；
-  engine 生命周期结束的 reset-for-restart <strong>没有清它</strong>。
-- 若二次启动的 KAG 沿用了首游戏遗留的场景缓存对象（两个游戏 first.ks 名不同本应不命中，但 cmdMacro/
-  KAGLoadScript 等共享名若在缓存中会命中首游戏残留），则前奏/宏注册场景可能被错误复用。
-- 候选修复：新增 <code>TVPClearScnearioCache()</code> 到 reset-for-restart 链（或在 teardown 时清一次），
-  与其余子系统一致。需评估脚本侧是否已自行 Clear（多数 KAG 启动会 new KAGParser，实例内各自独立，
-  全局缓存却是共享的）。</p>
-<h3 id="kag-engine1log2026-09-08iinchokemomusuiincho">KAG 探针首投实测（engine(1).log，2026-09-08，IINCHO→Kemomusu→IINCHO 三连）<a class="headerlink" href="#kag-engine1log2026-09-08iinchokemomusuiincho" title="Permanent link">&para;</a></h3>
-<p><strong>结论前置：宿命证据是 <code>curLine=510789971</code> 垃圾值 —— 二次打开 first.ks 时 KAGParser 的 CurLine 未初始化。</strong>
-- 第 1 次 IINCHO（正常）：<code>first.ks curLine=0/0</code> 干净启动，full KAG 宏加载链（cmdMacro→cmdEffects→
-  usr_macro→wesave… 大量 <code>KAGTag: macro/endmacro/eval</code>），RequestUpdate++ → DeliverWinUpdate → PostBlit
-  全程健康，进 title。
-- 第 2 次 Kemomusu：<code>first.ks curLine=510789971/0</code> —— <strong>CurLine 是垃圾地址/未初始化值</strong>。此后
-  KAGTag 宏加载输出骤减（仅 4077-4085 每条文件一两行），无 RequestUpdate/DeliverWinUpdate/PostBlit，
-  脚本几乎不推进。start 后即 destroy。
-- 第 3 次 IINCHO：<code>first.ks curLine=0/0</code> 干净，但 startup 后<strong>无后续 KAG 加载链</strong>，start → 立即 destroy，
-  无任何渲染/宏加载。
-- 相较旧 log12 的 <code>[linemode]</code> 报错：本次三连都<strong>没打印 linemode / KAG 标签错误</strong>，说明问题已从
-  "特定标签缺失"退化为"二次启动后 KAG 场景/脚本整体不振"；且第三次再开同游戏也不再提振。
-- <strong>判读</strong>：<code>curLine</code> 垃圾值指向 KAGParser 场景对象在重启复用时未正确重建（复用已释放内存/状态）。
-  <code>TVPScenarioCache</code> 全局缓存未随 restart 清理是首要嫌疑（见上节），其缓存项引用旧消息释放的
-  Scenario，二次 <code>LoadScenario</code> 命中后 CurLine/指针指向失效内存。</p>
-<h3 id="1">换游戏黑屏的实测定性（历史版本保留供追溯）——第 1 版结论已被证伪<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
-<p><strong>第 1 版（已废弃）：误判为 "IINCHO 本身 KAG 不兼容"</strong>。依据：game1=Kemomusu 渲染全健康，
-game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <strong><code>タグ/マクロ "linemode" は存在しません</code></strong> 后画停。
-但用户实测确认 <strong>IINCHO 是能正常游玩的正经游戏</strong> ⇒ 该 KAG 错误只在"作为第二游戏重启打开"时才出现，
-<strong>它就是 runtime-restart 残留的症状</strong>，不是游戏本身不兼容。
-- 现象复核：全新启动的 IINCHO，<code>[linemode]</code> 标签是在的；作为第二游戏启动时该标签不见了
-  （KAG 标签/宏注册没在二次启动时重新建立 → "不存在"）。这正是"换游戏才黑、同游戏复开正常"的本质：
-  重启后脚本/KAG 全局状态残留了第一个游戏（Kemomusu）的东西，没有正确清空/重建。
-- 时间线证据（与重启无关的判据在此不成立）：错误发生在二次 <code>StartApplication</code> 的 KAG 场景解析期，
-  而引擎 tick / 定时器 / 连续 handler 仍照常运转——说明<strong>驱动没停，是 KAG 层注册态坏了</strong>。
-- 结论修正：黑屏真根因仍指向<strong>脚本引擎/连续处理器/全局脚本态的 runtime-restart 复位缺失</strong>
-  （候选①方向复活）。
-- <strong>日志里最具体的重启签名（<code>[linemode]</code> 由 KAG 的 LineMode 模块定义）：</strong>
-  - game1（Kemomusu）KAG 模块表<strong>加载了 <code>LineMode.tjs</code>+<code>LineModeEx.tjs</code></strong>（本 log 行 233-234，
-    在 DefaultMover 之后、MainWindow 之前）→ <code>[linemode]</code> 有定义，场景正常画。
-  - game2（IINCHO）KAG 模块表<strong>从 DefaultMover 直接到 MainWindow，全程未加载 LineMode.tjs</strong>
-    （行 1307-1308）→ <code>first.ks</code> 第 1 行 <code>[linemode]</code> 未定义报错 → 画停 → 黑屏。
-  - 若 IINCHO 全新启动能正常游玩（KAG 里本应有 LineMode/<code>[linemode]</code>），则"作为第二游戏时
-    LineMode 没被加载"就是重启残留的具体表现——KAG 模块/脚本加载链在二次启动少加载了模块。
-- <strong>复核实验（无需改代码即可定死）</strong>：抓一份 IINCHO 作为<strong>第一游戏、全新进程</strong>的日志，对比
-  其 KAG 模块表是否包含 <code>LineMode.tjs</code>：
-  - 全新 IINCHO 含 LineMode 但二次打开不含 ⇒ 重启下 KAG 模块/脚本加载丢失，修复目标锁定该加载链。
-  - 全新 IINCHO 也不含 LineMode 但能玩 ⇒ <code>[linemode]</code> 由别处（宏/override）定义，二次打开该处失效，
-    继续追宏/override 的加载。
-- <code>[linemode]</code> 未在本项目 C++ 源码定义（仅脚本/KAG 侧注册），引擎源码仅一处无关 MultilineMode。</p>
-<p><strong>"reset 后还是第一个游戏的插件列表"假设——已被日志否决：</strong>
-- game2 的 <code>tvpLoadPlugins</code> 用的是 <strong>IINCHO 自己的插件列表</strong>（extrans/layerExBTOA/layerExImage/wuvorbis/
-  KAGParser/menu/xpzdec），不是 Kemomusu 的（AlphaMovie/KAGParserEx/getSample/layerExDraw/psbfile/psd/windowEx）。
-- game2 挂载的也是自己的 8 个 xp3（iincho-re.co），路径/归档无 Kemomusu 残留 ⇒ 存储未泄漏。
-- reset 链本身完整：<code>TVPResetPluginSystemForRestart</code>（清自动加载计数/模块状态/ncb 注册表）、
-  <code>TVPResetExtensionClassInstallStateForRestart</code>（清全局类安装态）、<code>TVPResetStorageImplForRestart</code> 等均已实现。
-- 故"插件列表 stale"不成立；真正差异仍集中在<strong>game2 自己的 KAG 模块表缺 LineMode.tjs</strong>（见上），
-  待全新 IINCHO 日志定它是包配置如此还是重启加载丢失。</p>
-<p>记录此日志文件名供后续对照：<code>.uploads/29c5fff9-...-pocketkrkr_engine(12).log</code></p>
-<h3 id="ab-restart-engine1415log2026-09-08">决定性 A/B：换游戏黑屏是 restart 专属（engine(14)/(15).log，2026-09-08）<a class="headerlink" href="#ab-restart-engine1415log2026-09-08" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>用两份"同一进程多开"日志把换游戏黑屏定性为<strong>纯 restart 残留</strong>，并排除三个假说。</p>
-</blockquote>
-<p><strong>取证（log15 = IINCHO→Kemomusu→IINCHO 同一进程）：</strong>
-- game1 IINCHO(白)：<code>Config.tjs</code>(→118) → <code>KAG System スクリプトを読み込んでいます</code>(120) → 全 KAG 模块 →
-  <code>KAGMainWindow コンストラクタ</code>(156) → <code>RequestUpdate</code>(153) → 渲染。<strong>但全程无 <code>kag:</code> 对象</strong>（KAGParser.dll Failed）。
-- game3 IINCHO(黑)：插件 → 建窗 → <code>Startup script ended</code>(3950) → <strong>无 Config/KAG-System 模块加载块</strong> → 永不 RequestUpdate → 黑。
-- log14 game3 Kemomusu(白, 也 restart)：<strong>同样跳过 Config/KAG-System 块</strong>（无 LineMode 重载，<code>Member "kag" does not exist</code> L1233），
-  但 L1239 重建 <code>kag:</code> 对象、L1264 <code>UpdateDrawBuffer layers=207 draw=12</code> → 照样渲染。</p>
-<p><strong>结论：</strong>
-1. 黑屏 = restart 后游戏 startup 的"KAG System 模块加载块"被跳过，KAGMainWindow/层从未建立 → 永不 RequestUpdate。
-2. 该"跳过"是重启共性；Kemomusu 因能重建 KAG 解析器对象照常渲染，IINCHO 依赖该块致致命。
-3. <strong>排除假说</strong>：① KAGParser.dll 缺失 —— IINCHO 首次也 Failed 却正常；② 全局 <code>kag</code> 缺失 —— IINCHO 首次就无它却正常；
-   ③ TVPScenarioCache 残留 —— 重启 IINCHO 连 <code>first.ks</code> 也未加载，清缓存不会重新触发被跳过的 boot 块。
-4. 门控状态来源：Global 每次新建(tTJS <code>new</code>)、原生类每次重注册，均排除；<strong>剩余为某跨 restart 未复位的
-   C++ 进程级状态</strong> —— 触发点尚未从日志单钉死，待加"KAG boot 每步探针/抓首个抛错点"定位。</p>
-<p><strong>记录对比日志</strong>：<code>.uploads/0f0103b2-...-engine(14).log</code>（Kemomusu→IINCHO→Kemomusu）、
-<code>.uploads/77a31787-...-engine(15).log</code>（IINCHO→Kemomusu→IINCHO）。</p>
-<h3 id="pr12-2026-09-08">与上游 PR#12 的复位差异补口（2026-09-08）<a class="headerlink" href="#pr12-2026-09-08" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>逐条对照 <code>reAAAq/KrKr2-Next#12</code> 后，我们的复位序列基本同位，仅缺 OpenGL 渲染器复位；已移植。</p>
-</blockquote>
-<ul>
-<li><strong>曾移植（85684a8/86f2391，后因回归回退 →1fd6206/109704f）</strong>：
-  <code>TVPResetOpenGLRenderManagerForRestart()</code> + <code>TVPResetOpenGLGlobalsForRestart()</code>（清扩展/格式/GL 函数指针/
-  shader 缓存）+ <code>krkr::gl::ClearRendererRecreatedCallbacks()</code>。
-  <strong>回退原因</strong>：<code>ClearRendererRecreatedCallbacks()</code> 清掉了 <code>5fd30da</code> 依赖的、供 EGL context 重建后
-  <code>FireRendererRecreated()</code> 触发的"重建共享 _FBO/_stencil_FBO + shader"回调；而我们复用渲染器单例
-  （<code>TVPResetRenderManagerForRestart</code> 明言绝不 delete），PR#12 的设计是重建实例、二者生命周期不同 →
-  清回调致二次打开乱屏复现。且 OGL 复位也<strong>未修好换游戏黑屏</strong>。故整体回退，保留 5fd30da 机制。
-  <strong>未移植</strong>：PR#12 的异步启动状态机（<code>EnsureEngineRuntimeInitialized</code>/<code>engine_get_startup_state</code>/
-  <code>engine_drain_startup_logs</code>）——体量大属架构改造，暂缓。</li>
-</ul>
-<h3 id="startupprobe-conclusiveengine16log2026-09-09">StartupProbe 首测 conclusive（engine(16).log，2026-09-09）<a class="headerlink" href="#startupprobe-conclusiveengine16log2026-09-09" title="Permanent link">&para;</a></h3>
-<ul>
-<li>三次启动（Kemomusu→IINCHO→Kemomusu）<code>StartupProbe</code> <strong>均为 <code>completed without throwing</code></strong>。</li>
-<li>首开 Kemomusu：<code>AppConfig/Config.tjs</code> + <code>KAG System スクリプト</code> 全链加载。</li>
-<li>非首开（IINCHO、重开 Kemomusu）：<strong>不加载 Config/KAG-System boot 块</strong>，且<strong>无任何文件打开失败/抛错</strong>。</li>
-<li>⇒ <strong>排除</strong>"异常吞掉/fallback"假设。黑屏是游戏 startup.tjs 里<strong>静默条件分支</strong>：restart 后读到某跨游戏
-  残留状态即提前返回、跳 KAG boot。Kemomusu 无 boot 也能渲染，IINCHO 依赖 boot 致黑。门控状态待进一步定位。</li>
-<li><strong>误判澄清（engine(2).log）</strong>：IINCHO(黑)启动段出现 <code>RequestUpdate: repaint requested (cum=181)</code> 一度
-  怀疑跨 restart 重绘残留；查证 <code>cpp/core/visual/WindowIntf.cpp</code> 的 RequestUpdate 中 cum 是
-  KRKR_RENDER_PROBE 下<strong>静态局部变量 s_reqUpd</strong>（不随 restart 重置）的纯计数，非引擎残留状态，属探针伪影。</li>
-<li><strong>推进</strong>：引擎侧已排除（异常/fallback/漏复位/重绘残留），改加 StorageExec 探针（TVPExecuteStorage 低频
-  记录 startup 链实际执行的文件），直接对比 restart 时从哪个脚本断掉/跳过 KAG boot。</li>
-</ul>
-<h3 id="startupprobe-engine31log2026-09-09kemomusuiinchokemomusu">StartupProbe 二次确认 + 执行链定性（engine(3)(1).log，2026-09-09，Kemomusu→IINCHO→Kemomusu 探针包）<a class="headerlink" href="#startupprobe-engine31log2026-09-09kemomusuiinchokemomusu" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>StartupProbe</code> 三次启动<strong>均为 <code>completed without throwing</code></strong> → gate 再次排除异常/fallback，是 startup.tjs 静默分支。</li>
-<li><strong>渲染侧铁证</strong>：IINCHO(第2个游戏) startup 后<strong>仅一次全黑 blit</strong>，此后 ~2.6s 运行期 <code>RequestUpdate=0</code>、
-  <code>DeliverWinUpdate=0</code>；而 C++ tick/Timer 健康（TimerProbe 56→94 持续触发）→ 黑屏 = 游戏脚本从不请求重绘，
-  tick/定时器/事件线程未停。</li>
-<li><strong>资产/KAG 标记</strong>：Kemomusu 两次启动都在 startup 窗口内 <code>kag:</code>（motionplayer ResourceManager）+ 加载
-  <code>ezsave.PIMG</code>/<code>bgmtitle.PIMG</code>；IINCHO <strong>完全不加载任何 psb、无 motionplayer 初始化</strong> → boot 链从未推进到
-  场景资产加载。</li>
-<li><strong>cmdArgGen 澄清（非 gate）</strong>：</li>
-<li>entry 值 Kemomusu=2、IINCHO=1 的差来自 <strong>patch.tjs 是否存在</strong>：Kemomusu 有 patch.tjs（exec#1，其中
-    <code>System.exeCommandLine=</code> 一次 +1）；IINCHO 无 patch.tjs → entry=1。与 restart 残留无关。</li>
-<li>IINCHO startup 期间 1→12（11 次 <code>System.exeCommandLine=</code>）= 其 config 链（config/gameConfig.tjs 等）
-    自身行为，首开同样会发生，非门控。</li>
-<li><strong>IINCHO 启动链采样</strong>（exec#121/#161）：config/gameConfig.tjs → <code>Plugins.link</code>（KAGParser.dll / menu.dll
-  Failed 被脚本吞掉继续）→ 建窗 → exDefaultMover.tjs → 完成。KAGParser.dll 加载失败属插件兼容清单
-  （P0 drawdeviceD3DZ 之外的 KAGParser 类插件），但首开也会失败，不是 restart gate。</li>
-<li><strong>重开 Kemomusu（第3会话）正常渲染</strong> → restart 残留并不破坏 Kemomusu；gate 是 IINCHO 特有的静默分支。</li>
-<li><strong>下一步</strong>：缺 IINCHO<strong>首开</strong>（工作态）基线。StorageExec 探针已改全量记录（exec# 累计序号），
-  用同一探针包跑「IINCHO 首开」与「Kemomusu→IINCHO」，diff 两条 StorageExec 链即可钉死分支断点脚本。</li>
-</ul>
-<h3 id="diff-tvp-console-restart-bugengine19engine20log2026-09-09">链 diff 定论 + [TVP Console] 日志系统 restart bug（engine(19)/engine(20).log，2026-09-09）<a class="headerlink" href="#diff-tvp-console-restart-bugengine19engine20log2026-09-09" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>engine(19)=IINCHO 首开（工作态），engine(20)=Kemomusu→IINCHO（黑屏）</strong>。全量 StorageExec 链 diff：</li>
-<li>两条 IINCHO 链 <strong>逐条完全相同</strong>（各 67 个脚本：patch→startup→ks_system/exLayer→config/gameConfig→
-    system/Initialize.tjs→Config..exSE→savesc/savesu→AfterInit→gmPlugin..exButtonLayer）。</li>
-<li>⇒ <strong>推翻"跳过 KAG boot"假说</strong>：黑屏会话也完整加载了 KAG System。</li>
-<li><strong>首开会话 boot 尾段（可见输出）</strong>：exButtonLayer 后 → sys_load/sys_save 等 11 个系统图层加载 →
-  AfterInit 完成 → <code>Scenario loaded : first.ks</code> → <code>処理を開始します</code> → first.ks 逐 tag 处理（@call ks_system.ks
-  等）→ <code>ContinuousProbe: eventVec=0 handlerVec=2</code>（KAG 更新循环以 <code>System.addContinuousHandler</code> 注册）→
-  RequestUpdate → 渲染。</li>
-<li><strong>黑屏会话</strong>：同样 67 脚本后 <strong>无任何可见 boot 尾段输出、无 first.ks、无 ContinuousProbe（=连续事件投递从未发生，
-  <code>TVPProcessContinuousHandlerEventFlag</code> 未置位/无 handler 注册）、无 RequestUpdate</strong>。StartupProbe 仍 completed。</li>
-<li><strong>关键新发现——日志系统 restart bug（已修）</strong>：<code>DebugIntf.cpp</code> 的 <code>TVPDestroyLogObjects</code>（tTVPAtExit 注册，
-  每次 TVPSystemUninit 触发）删除 <code>TVPLogDeque</code>/<code>TVPImportantLogs</code> 后<strong>未复位 <code>TVPLogObjectsInitialized</code></strong>，
-  导致 restart 后 <code>TVPEnsureLogObjects</code> 提前返回、<code>TVPAddLog</code> 静默丢弃 → 全部 <code>[TVP Console]</code> 输出（含 KAG 场景/
-  错误信息）在 restart 会话永久消失。修复：销毁时复位标志。<strong>此 bug 同时解释了此前"KAG boot 被跳过"的误判——
-  场景处理日志在 restart 后本就不可见</strong>。</li>
-<li><strong>残余问题</strong>：修复日志后黑屏成因仍待一次复测——若 boot 尾段实际执行（图像加载/AfterInit/first.ks 只是日志被吞），
-  黑屏=连续事件投递/重绘未建立；若尾段真未执行，则看恢复后的 KAG 报错。</li>
-</ul>
-<h3 id="tvpscenariocache-engine21log2026-09-09">根因钉死：TVPScenarioCache 跨游戏同名场景碰撞（engine(21).log，2026-09-09，日志修复后复测）<a class="headerlink" href="#tvpscenariocache-engine21log2026-09-09" title="Permanent link">&para;</a></h3>
-<ul>
-<li>日志修复后黑屏会话可见完整 boot 尾段：sys_* 图层加载 → AfterInit(232ms) → <code>Scenario loaded : first.ks</code> →
-  <strong><code>first.ks : [linemode]</code> → <code>エラーが発生しました / タグ/マクロ "linemode" は存在しません</code>（行 1）</strong>。</li>
-<li><strong>首开会话（engine(19)）first.ks 从 <code>@eval</code>/<code>@nextskip</code> 开始处理，无任何错误</strong> ⇒ 同一 <code>kag.loadScenario("first.ks")</code>
-  两次加载到了<strong>不同的 first.ks 内容</strong>：</li>
-<li>首开加载 IINCHO 自己的 first.ks（KAG3 stock 结构，@eval 开头）→ 正常。</li>
-<li>restart 后加载到 <strong>Kemomusu 的 first.ks</strong>（<code>[linemode]</code> 开头，KAGParserEx 系）→ IINCHO 的 KAG3 无 linemode → 报错 → boot 中止 → 黑屏。</li>
-<li><strong>机制</strong>：<code>TVPGetScenario</code>（KAGParser.cpp:266）以<strong>场景短名</strong>（如 "first.ks"）为 key 存进程级
-  <code>TVPScenarioCache</code>（文件作用域 static，KAGParser.cpp:249）；restart 不随 TJS VM 销毁、<code>TVPClearScnearioCache</code>
-  仅被 <code>KAGParser::Clear()</code>（脚本调 kag.clear()）触发。前一个游戏（Kemomusu）加载 first.ks 后缓存命中即跨游戏复用。</li>
-<li><strong>排除项</strong>：auto-path 表无污染（IINCHO 会话重建后 Total 3084 = IINCHO 自身 8 个 xp3 文件数，恰为
-  116+323+502+83+101+480+17+1462）；兄弟 xp3 扫描两者均 "No sibling"（xp3 在各游戏目录内，父目录无裸 xp3）。</li>
-<li><strong>修复</strong>：<code>TVPResetRuntimeForRestart</code>（engine_destroy 复位链）中调用 <code>TVPClearScnearioCache()</code>，
-  换游戏/复开前清空跨游戏残留的场景缓存。同游戏复开仅损失一次场景解压。</li>
-<li><strong>✅ 真机复验通过（2026-09-09）</strong>：Kemomusu → 退出 → IINCHO 换游戏后正常出画面，黑屏根治。</li>
-</ul>
-<h3 id="pr12-2026-09-0809">PR#12 剩余差异全量扫描（2026-09-08/09）<a class="headerlink" href="#pr12-2026-09-0809" title="Permanent link">&para;</a></h3>
-<ul>
-<li>✅ <strong>已对齐且保留</strong>：全部 <code>TVPReset*ForRestart</code> + <code>TVPUnregisterInternalPluginsForRestart</code> +
-  <code>TVPResetPluginSystemForRestart</code> + <code>ncbAutoRegister::ResetModuleStateForRestart</code> + FontImpl release；
-  EngineLoop 析构复位（6521e4f）。</li>
-<li>⭕ <strong>回退</strong>：OGL 复位/GL 函数指针/ClearRendererRecreatedCallbacks（见上，回归同游戏复开乱屏）。</li>
-<li>🟡 <strong>暂缓</strong>：LogSetup.cpp/h（异步机日志辅助，不移植异步机为死代码）。</li>
-<li>⚪ <strong>不适用/无需</strong>：</li>
-<li>StorageImpl <code>_tjs_normalize_nfc</code> GetLen —— 我们的 Apple 路径已用 <code>static_cast&lt;CFIndex&gt;(name.GetLen())</code>，殊途同归。</li>
-<li>cubism/krkrlive2d（+188/-16 / +14/-3）—— R4→R5 SDK 迁移，我们仍用 R4 API，直接挪编译不过；与 restart 无关。</li>
-<li>platforms/{linux,windows}/main.cpp 桌面端 spdlog —— Android 走自有路径。</li>
-<li>CMakeLists/vcpkg libarchive/.gitignore/pubspec.lock —— 构建依赖/杂项。</li>
-</ul>
-<h2 id="_11">自检 / 验收<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
-<ul>
-<li>目标游戏（魔女的夜宴/sabbat_kr）启动后：主 <code>DrawBuffer</code> 被合成、源纹理非全黑、draw 计数增长。</li>
-<li><code>plugin/</code> 目录缺失插件从"Failed"变为可 <code>Plugins.link</code>。</li>
-<li>视频 OP 可播放（krmovie Present）。</li>
-</ul>
 
 
 
@@ -3181,7 +1540,9 @@ game2=IINCHO 在 <code>first.ks</code> 第 1 行 <code>[linemode]</code> 抛 <st
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/language-redirect.js"></script>
       
     
   </body>

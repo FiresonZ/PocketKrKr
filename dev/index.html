@@ -20,10 +20,14 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../en/dev/" hreflang="en">
+        
       
       
       <link rel="icon" href="../resources/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +35,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -151,6 +155,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/dev/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -459,6 +489,8 @@
       
         
       
+        
+      
     
     
     
@@ -584,6 +616,34 @@
     
   
     待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="optimization-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待优化方案
   
 
     
@@ -857,7 +917,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -1114,7 +1174,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        项目一句话
+        阅读顺序
       
     </span>
   </a>
@@ -1125,7 +1185,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        目录索引
+        项目边界
       
     </span>
   </a>
@@ -1133,10 +1193,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tldr" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        极简速览（TL;DR）
+        平台形态
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        参考资料
       
     </span>
   </a>
@@ -1163,104 +1234,66 @@
   
 
 
-<h1 id="_1">开发文档索引<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>本目录面向 <strong>AI Agent 与开发者</strong>，用于快速掌握项目技术栈、架构与关键位置，
-避免每次从头扫描整个代码库浪费上下文与 token。
-请保持本目录内容与代码库现状同步；平台结构调整后务必更新。</p>
-<p><strong>新 AI Agent 上手顺序</strong>：根目录 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/AGENTS.md">AGENTS.md</a>（首屏指令）→ 本文档（索引）
-→ <a href="conventions/">conventions.md</a>（约定与陷阱，最重要）→ <a href="key-references/">key-references.md</a>（关键文件/符号）。
-本项目有大批量代码由 AI Agent 编写，请沿用本目录的文档约定并保持同步。</p>
-</blockquote>
-<h2 id="_2">项目一句话<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p><strong>PocketKrKr</strong>：KiriKiri2（吉里吉里2）视觉小说引擎的现代化运行环境。
-C++ 引擎（TVP/TJS2）离屏渲染 → IOSurface / SurfaceTexture 零拷贝 → Flutter 纹理显示，
-Flutter 壳应用提供 UI。当前<strong>面向移动端</strong>（iOS + Android 为主目标，macOS 为 Apple 开发目标）。</p>
-<ul>
-<li>本项目主页：<a href="https://github.com/FiresonZ/PocketKrKr">https://github.com/FiresonZ/PocketKrKr</a></li>
-<li>直接上游（基于 KrKr2-Next 二次开发）：<a href="https://github.com/reAAAq/KrKr2-Next">https://github.com/reAAAq/KrKr2-Next</a></li>
-<li>许可证：GPL-3.0</li>
-</ul>
-<h2 id="_3">目录索引<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h1 id="_1">开发文档<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>本目录提供 PocketKrKr 的架构、构建、源码和兼容性资料。内容以当前代码状态为准，历史排查过程不在这里保存。</p>
+<h2 id="_2">阅读顺序<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="getting-started/">入门指南</a>：快速了解项目、构建和运行。</li>
+<li><a href="architecture/">架构</a>：查看引擎、桥接和渲染数据流。</li>
+<li><a href="source-map/">源码地图</a>：按目录定位模块职责。</li>
+<li><a href="key-references/">关键引用</a>：查找主要文件和 C ABI 符号。</li>
+<li><a href="build/">构建</a>：查看平台工具链、产物和 CI。</li>
+<li><a href="conventions/">约定</a>：修改平台、生命周期、链接、Live2D 和 SIMD 代码前必读。</li>
+<li><a href="compatibility/">兼容性</a>：执行游戏兼容性回归。</li>
+<li><a href="rendering-diagnosis/">渲染诊断</a>：排查黑屏、停帧和显示链路问题。</li>
+<li><a href="optimization-roadmap/">优化路线</a>：查看性能、稳定性和代码结构优化方案。</li>
+<li><a href="todo/">待办</a>：查看当前未完成事项。</li>
+</ol>
+<h2 id="_3">项目边界<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>apps/flutter_app/                  Flutter 壳和用户界面
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bridge/engine_api/                 C ABI、生命周期和帧接口
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bridge/flutter_engine_bridge/      Dart FFI、MethodChannel、原生纹理桥接
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>cpp/core/                          TJS2、存储、渲染、音频、视频和生命周期
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>cpp/plugins/                       PSB、PSD、motionplayer、LayerEx 等插件
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>build.sh、build/                   平台构建入口
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>vcpkg.json、vcpkg/                 依赖、端口和 triplet
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>docs/                              用户文档和开发文档
+</code></pre></div>
+<h2 id="_4">平台形态<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>文档</th>
-<th>内容</th>
+<th>平台</th>
+<th>引擎产物</th>
+<th>图形路径</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="getting-started/">getting-started.md</a></td>
-<td><strong>入门指南</strong>：项目是什么 / 目录地图 / 构建运行 / 装游戏 / 渲染原理 / 改代码调试（新开发者先读这个）</td>
+<td>iOS</td>
+<td>静态库，链接进 Runner</td>
+<td>ANGLE Metal、IOSurface，保留 RGBA 回读兜底</td>
 </tr>
 <tr>
-<td><a href="rendering-diagnosis/">rendering-diagnosis.md</a></td>
-<td><strong>渲染/黑屏诊断方法（探针）</strong>：怎么开探针、怎么读日志二分定位、日志文件会不会膨胀</td>
+<td>Android</td>
+<td>自包含 <code>libengine_api.so</code></td>
+<td>ANGLE Vulkan、SurfaceTexture，保留 RGBA 回读兜底</td>
 </tr>
 <tr>
-<td><a href="tech-stack/">tech-stack.md</a></td>
-<td>技术栈、语言、关键三方库、vcpkg 依赖</td>
+<td>macOS</td>
+<td><code>libengine_api.dylib</code></td>
+<td>ANGLE Metal、IOSurface</td>
 </tr>
 <tr>
-<td><a href="architecture/">architecture.md</a></td>
-<td>模块架构、渲染数据流、桥接层设计、GPU 管线现状</td>
-</tr>
-<tr>
-<td><a href="source-map/">source-map.md</a></td>
-<td><strong>源代码结构地图</strong>：按目录树的 CPP + Flutter 源码逐模块讲解（学习/开发用）</td>
-</tr>
-<tr>
-<td><a href="key-references/">key-references.md</a></td>
-<td>关键文件 / 符号 / C API 索引（改代码先看这里）</td>
-</tr>
-<tr>
-<td><a href="build/">build.md</a></td>
-<td>构建与工具链（iOS / Android / macOS / Linux 验证）、产物、CI、排错</td>
-</tr>
-<tr>
-<td><a href="conventions/">conventions.md</a></td>
-<td>目录命名、平台约定、历史陷阱、SIMD 审计记录（重要）</td>
-</tr>
-<tr>
-<td><a href="compatibility/">compatibility.md</a></td>
-<td>游戏兼容性测试方法论（与 Z 持平目标的闭环流程）</td>
-</tr>
-<tr>
-<td><a href="perf-optimization/">perf-optimization.md</a></td>
-<td>性能优化与代码重构候选（收益/风险/验证方式）</td>
-</tr>
-<tr>
-<td><a href="todo/">todo.md</a></td>
-<td><strong>待办 / 已知问题（AI Agent 协作队列，先看这里）</strong></td>
+<td>Linux</td>
+<td>宿主验证构建</td>
+<td>CI 验证，不提供应用包</td>
 </tr>
 </tbody>
 </table>
-<h2 id="tldr">极简速览（TL;DR）<a class="headerlink" href="#tldr" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>apps/flutter_app/             Flutter 壳应用（ios / android / macos 平台目录）
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bridge/engine_api/            C ABI 引擎桥接（engine_create/tick/destroy…）
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bridge/flutter_engine_bridge/ Flutter 平台插件（IOSurface / SurfaceTexture + Dart FFI）
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>cpp/core/                     C++ 引擎核心（tjs2/base/environ/sound/visual/movie…）
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>cpp/plugins/                  TJS 插件（psb/psd/layerex/motionplayer/fstat/cubism…）
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>build.sh + build/*.sh         iOS / Android / macOS 一键构建
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>CMakeLists.txt + CMakePresets.json   MacOS/iOS/Android/Linux 预设
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>vcpkg.json + vcpkg/triplets/  arm64-ios / arm64-android 依赖与 triplet
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>platforms/apple/macos/        macOS 独立资源（Flutter 壳已接管入口）
-</code></pre></div>
-<p><strong>iOS 构建链路</strong>：<code>./build.sh ios debug|release</code>
-→ CMake iOS 预设编译 <code>libengine_api.a</code>（静态库）
-→ <code>build_ios.sh</code> 用 <code>libtool</code> 合并工程/三方静态库到 <code>bridge/flutter_engine_bridge/ios/Libs/</code>
-→ <code>flutter build ios</code>。</p>
-<p><strong>Android 构建链路</strong>：<code>./build.sh android debug|release</code>
-→ CMake Android 预设编译 <code>libengine_api.so</code>（自包含共享库，含 JNI 胶水）
-→ <code>build_android.sh</code> 拷贝到 <code>apps/flutter_app/android/app/src/main/jniLibs/arm64-v8a/</code>
-→ <code>flutter build apk</code>。</p>
-<p><strong>关键概念</strong>：iOS 上引擎以<strong>静态库</strong>链接进 Runner，Dart 用 <code>DynamicLibrary.process()</code> 加载；
-macOS 上为<strong>动态库</strong> <code>libengine_api.dylib</code>，打包进 App 的 Frameworks；
-Android 上为<strong>自包含 .so</strong>（插件源码经 <code>target_sources(PUBLIC)</code> 的 <code>INTERFACE_SOURCES</code>
-直接编进 <code>engine_api.so</code>，普通链接 <code>krkr2core+krkr2plugin</code>；不用 <code>--whole-archive</code>），
-Dart FFI 直接加载。
-详见 <a href="architecture/">architecture.md</a> 与 <a href="build/">build.md</a>。</p>
+<p>Android 的插件源码通过目标源传播进引擎共享库，使用普通链接即可；不要使用 <code>--whole-archive</code>。</p>
+<h2 id="_5">参考资料<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>外部实现、格式资料和行为对照入口统一收录在 <a href="krkrz-compat/">krkrz-compat.md</a>。参考资料只用于理解协议和行为，不代表 PocketKrKr 已具备对应能力，也不直接复制外部代码。</p>
 
 
 
@@ -1376,7 +1409,9 @@ Dart FFI 直接加载。
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/language-redirect.js"></script>
       
     
   </body>

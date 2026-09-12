@@ -20,10 +20,14 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../../en/dev/build/" hreflang="en">
+        
       
       
       <link rel="icon" href="../../resources/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +35,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -151,6 +155,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../../en/dev/build/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -457,6 +487,8 @@
       
         
       
+        
+      
     
     
     
@@ -582,6 +614,34 @@
     
   
     待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimization-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待优化方案
   
 
     
@@ -1076,7 +1136,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -1528,6 +1588,9 @@
 根 CMake 设置 <code>CMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake</code>，依赖由 vcpkg manifest 安装。</p>
 </blockquote>
 <h2 id="_2">前置要求<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>文档站使用 MkDocs Material 和 <code>mkdocs-static-i18n</code> 构建。首次构建前安装固定版本：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material<span class="o">==</span><span class="m">9</span>.7.1<span class="w"> </span>mkdocs-static-i18n<span class="o">==</span><span class="m">1</span>.3.1
+</code></pre></div>
 <h3 id="ios-macosmacos">iOS / macOS（macOS 主机）<a class="headerlink" href="#ios-macosmacos" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
@@ -1545,7 +1608,7 @@
   GNU libtool 提供 <code>libtool.m4</code> 供 aclocal 使用）</p>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>cmake<span class="w"> </span>ninja<span class="w"> </span>bison<span class="w"> </span>autoconf<span class="w"> </span>automake<span class="w"> </span>autoconf-archive<span class="w"> </span>libtool<span class="w"> </span>gettext<span class="w"> </span>pkg-config
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>brew<span class="w"> </span>install<span class="w"> </span>cmake<span class="w"> </span>ninja<span class="w"> </span>bison<span class="w"> </span>autoconf<span class="w"> </span>automake<span class="w"> </span>autoconf-archive<span class="w"> </span>libtool<span class="w"> </span>gettext<span class="w"> </span>pkg-config
 </code></pre></div>
 <blockquote>
 <p>⚠️ Homebrew 的 GNU libtool 会覆盖 PATH 里的 <code>libtool</code>。
@@ -1555,7 +1618,7 @@
 <ul>
 <li>
 <p>Android NDK（r25+ 推荐），设置环境变量：
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ANDROID_NDK_HOME</span><span class="o">=</span><span class="s2">"</span><span class="nv">$ANDROID_HOME</span><span class="s2">/ndk/&lt;版本&gt;"</span><span class="w">   </span><span class="c1"># Windows: set ANDROID_NDK_HOME=...</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">ANDROID_NDK_HOME</span><span class="o">=</span><span class="s2">"</span><span class="nv">$ANDROID_HOME</span><span class="s2">/ndk/&lt;版本&gt;"</span><span class="w">   </span><span class="c1"># Windows: set ANDROID_NDK_HOME=...</span>
 </code></pre></div></p>
 <blockquote>
 <p><code>build_android.sh</code> 会自动从 <code>ANDROID_NDK_HOME</code> / <code>ANDROID_NDK_ROOT</code> / <code>$ANDROID_HOME/ndk/*</code>（取最新）定位 NDK。</p>
@@ -1575,17 +1638,17 @@
 </li>
 </ul>
 <h2 id="_3">快速开始<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 一键构建 iOS（默认 debug，需 macOS）</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>./build.sh<span class="w"> </span>ios<span class="w"> </span>debug
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># 或 release</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>./build.sh<span class="w"> </span>ios<span class="w"> </span>release
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Android APK（Windows / macOS / Linux 均可）</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>./build.sh<span class="w"> </span>android<span class="w"> </span>debug
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1"># macOS</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>./build.sh<span class="w"> </span>macos<span class="w"> </span>debug
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 一键构建 iOS（默认 debug，需 macOS）</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>./build.sh<span class="w"> </span>ios<span class="w"> </span>debug
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># 或 release</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>./build.sh<span class="w"> </span>ios<span class="w"> </span>release
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Android APK（Windows / macOS / Linux 均可）</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>./build.sh<span class="w"> </span>android<span class="w"> </span>debug
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1"># macOS</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>./build.sh<span class="w"> </span>macos<span class="w"> </span>debug
 </code></pre></div>
 <h2 id="ios-buildbuild_iossh">iOS 构建步骤（build/build_ios.sh 内部）<a class="headerlink" href="#ios-buildbuild_iossh" title="Permanent link">&para;</a></h2>
 <ol>
@@ -1692,13 +1755,13 @@
 </tbody>
 </table>
 <h2 id="_5">常用操作<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 清理某平台产物</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>./build.sh<span class="w"> </span>--clean<span class="w"> </span>ios
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./build.sh<span class="w"> </span>--clean<span class="w"> </span>android
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>./build.sh<span class="w"> </span>--clean<span class="w"> </span>macos
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># 并行数</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nv">JOBS</span><span class="o">=</span><span class="m">16</span><span class="w"> </span>./build.sh<span class="w"> </span>ios<span class="w"> </span>release
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># 清理某平台产物</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>./build.sh<span class="w"> </span>--clean<span class="w"> </span>ios
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>./build.sh<span class="w"> </span>--clean<span class="w"> </span>android
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>./build.sh<span class="w"> </span>--clean<span class="w"> </span>macos
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># 并行数</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nv">JOBS</span><span class="o">=</span><span class="m">16</span><span class="w"> </span>./build.sh<span class="w"> </span>ios<span class="w"> </span>release
 </code></pre></div>
 <h2 id="ci-github-actions">CI 打包（GitHub Actions）<a class="headerlink" href="#ci-github-actions" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1710,10 +1773,7 @@
   setup Flutter + JDK 17 + 自动安装 NDK（<code>sdkmanager "ndk;27.0.12077973"</code>）+ <code>./build.sh android &lt;type&gt;</code>。</p>
 </li>
 <li>
-<p><strong>引擎核心验证（Linux）</strong>：<code>.github/workflows/engine_verify.yml</code>（push/PR 自动触发），
-  运行于 <code>ubuntu-22.04</code>：以宿主构建（<code>Linux Debug</code> 预设，<code>x64-linux</code> triplet）编译引擎核心 +
-  tools，跑 ctest（tests/ 目录，目前为空）+ <code>tools/xp3 --help</code> 冒烟。
-  这是最快的反馈闭环（5-10 分钟），后续 SIMD 逐像素比对等测试挂这里。</p>
+<p><strong>引擎核心验证（Linux）</strong>：<code>.github/workflows/engine_verify.yml</code> 使用 <code>Linux Debug</code> 预设和 <code>x64-linux</code> triplet，构建核心与工具并运行可用测试。SIMD 逐像素对比等测试应接入该工作流。</p>
 </li>
 <li>
 <p>vcpkg 二进制缓存：<code>~/.cache/vcpkg</code>（key 基于 <code>vcpkg.json</code>/<code>vcpkg-configuration.json</code>/<code>vcpkg/**</code>），
@@ -1751,9 +1811,9 @@ keystore 不同 → <strong>签名每次不一致，用户无法覆盖更新（�
 <li><strong>配置 Secrets</strong>（仓库 Settings → Secrets and variables → Actions）：
   <code>ANDROID_KEYSTORE_BASE64</code>、<code>ANDROID_KEYSTORE_PASSWORD</code>、<code>ANDROID_KEY_ALIAS</code>、<code>ANDROID_KEY_PASSWORD</code>。</li>
 <li><strong>生成 keystore + base64</strong>（本地一次，妥善保存，丢失则旧包无法更新）：
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>keytool<span class="w"> </span>-genkeypair<span class="w"> </span>-v<span class="w"> </span>-keystore<span class="w"> </span>release.jks<span class="w"> </span>-alias<span class="w"> </span>release<span class="w"> </span>-keyalg<span class="w"> </span>RSA<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>-keysize<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-validity<span class="w"> </span><span class="m">10000</span><span class="w"> </span>-storepass<span class="w"> </span>&lt;pw&gt;<span class="w"> </span>-keypass<span class="w"> </span>&lt;pw&gt;<span class="w"> </span>-dname<span class="w"> </span><span class="s2">"CN=PocketKrKr"</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>base64<span class="w"> </span>-w0<span class="w"> </span>release.jks<span class="w">        </span><span class="c1"># 全部输出即为 ANDROID_KEYSTORE_BASE64</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>keytool<span class="w"> </span>-genkeypair<span class="w"> </span>-v<span class="w"> </span>-keystore<span class="w"> </span>release.jks<span class="w"> </span>-alias<span class="w"> </span>release<span class="w"> </span>-keyalg<span class="w"> </span>RSA<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>-keysize<span class="w"> </span><span class="m">2048</span><span class="w"> </span>-validity<span class="w"> </span><span class="m">10000</span><span class="w"> </span>-storepass<span class="w"> </span>&lt;pw&gt;<span class="w"> </span>-keypass<span class="w"> </span>&lt;pw&gt;<span class="w"> </span>-dname<span class="w"> </span><span class="s2">"CN=PocketKrKr"</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>base64<span class="w"> </span>-w0<span class="w"> </span>release.jks<span class="w">        </span><span class="c1"># 全部输出即为 ANDROID_KEYSTORE_BASE64</span>
 </code></pre></div></li>
 <li><strong>iOS 无此问题</strong>：iOS 产物是未签名 IPA，由用户用<strong>自己的 Apple ID</strong> 侧载签名；只要 bundle ID
   （<code>org.pocketkrkr.app</code>）不变、每次用同一 Apple ID 重签，即可覆盖更新，无需 CI 签名密钥。</li>
@@ -1775,23 +1835,8 @@ keystore 不同 → <strong>签名每次不一致，用户无法覆盖更新（�
 <p><strong>静态库重复符号</strong>：多为冗余三方库未排除（libpng/libjpeg/libwebpdecoder 等），核对合并脚本排除列表。</p>
 </li>
 <li>
-<p><strong>Android debug 编译失败 / release 却正常（2026-09-08 记录，已决定暂缓）</strong>：</p>
+<p><strong>vcpkg 缓存路径异常</strong>：如果导出目标引用了另一构建类型或另一工作目录，删除对应 triplet 的失效二进制缓存，再重新配置；同时确认缓存 key 包含 manifest、overlay port、triplet 和构建类型。不要修改下载目录中的第三方源码。</p>
 </li>
-<li>现象：<code>./build.sh android debug</code> 在 CMake Generate 阶段报
-    <code>Imported target "libgdiplus::libgdiplus" includes non-existent path
-    .../out/android/release/vcpkg_installed/arm64-android/include</code>；但 <code>release</code> 构建正常出包。</li>
-<li>根因：<strong>vcpkg 二进制缓存按 triplet（<code>arm64-android</code>）共享，不按 debug/release 区分</strong>；
-    <code>libgdiplus</code>（及其 pkg-config 依赖 glib/cairo/fontconfig/freetype）在 <strong>release</strong> 配置下生成
-    的导出目标，把 <code>INTERFACE_INCLUDE_DIRECTORIES</code> 烤成了绝对 <code>release/.../vcpkg_installed/.../include</code>
-    路径并写入共享缓存。后续 <strong>debug</strong> 配置 <code>find_package(libgdiplus)</code> 复用该缓存 → 引用 release 专属
-    绝对路径 → 该目录在 debug 树/前缀下不存在 → Generate 失败。<code>--clean</code> 只清
-    <code>out/android/$BUILD_TYPE</code>（当前构建类型），清不掉这份共享缓存；当前 GitHub Actions 缓存空间也不足。</li>
-<li>关联：glib 属 meson 端口，与 Android arm64 的 include 路径错配是本仓库已知旧坑
-    （见 AGENTS「vcpkg meson × Android」⚠️，修法参考 <code>vcpkg/ports/glib/portfile.cmake</code>）。</li>
-<li>临时规避：清掉 vcpkg <code>arm64-android</code> 二进制缓存后重编 debug；release 不受影响。</li>
-<li><strong>根治（待做，缓存空间不足暂搁置）</strong>：让 vcpkg 缓存 key 区分 debug/release，或把
-    <code>libgdiplus</code>/glib 的导出 include 路径改为相对/正确前缀，避免绝对路径串流 debug/release。
-    （此问题与引擎代码改动无关，属构建基础设施。）</li>
 </ul>
 
 
@@ -1847,13 +1892,13 @@ keystore 不同 → <strong>签名每次不一致，用户无法覆盖更新（�
         
         
           
-          <a href="../conventions/" class="md-footer__link md-footer__link--next" aria-label="下一页: 约定与历史陷阱">
+          <a href="../conventions/" class="md-footer__link md-footer__link--next" aria-label="下一页: 开发约定">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一页
               </span>
               <div class="md-ellipsis">
-                约定与历史陷阱
+                开发约定
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1908,7 +1953,9 @@ keystore 不同 → <strong>签名每次不一致，用户无法覆盖更新（�
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/language-redirect.js"></script>
       
     
   </body>

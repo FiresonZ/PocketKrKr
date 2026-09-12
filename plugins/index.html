@@ -20,10 +20,14 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../en/plugins/" hreflang="en">
+        
       
       
       <link rel="icon" href="../resources/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +35,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -78,6 +82,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -146,6 +155,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/plugins/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -385,6 +420,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    插件清单
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -402,6 +457,58 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        当前插件目录
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实现边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        外部资料
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -454,6 +561,8 @@
       
         
           
+        
+      
         
       
         
@@ -587,6 +696,34 @@
     
   
     待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/optimization-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待优化方案
   
 
     
@@ -860,7 +997,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -1104,6 +1241,49 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        当前插件目录
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实现边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        外部资料
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1123,226 +1303,70 @@
   
 
 
-  <h1>插件清单</h1>
-
+<h1 id="_1">插件与扩展<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>PocketKrKr 的插件分为三类：核心内建能力、随引擎编译的 C++ 插件、游戏侧加载的脚本扩展。名称能够被 <code>Plugins.link</code> 找到，不等于相关功能全部实现。</p>
+<h2 id="_2">当前插件目录<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">DLL name</th>
-<th style="text-align: left;">Source or binary location</th>
+<th>目录或文件</th>
+<th>作用</th>
+<th>状态</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;">AlphaMovie.dll</td>
-<td style="text-align: left;"><a href="http://kaede-software.com/krlm/plugin/alphamovie.zip">http://kaede-software.com/krlm/plugin/alphamovie.zip</a></td>
+<td><code>cpp/plugins/psbfile/</code></td>
+<td>PSB 资源与动画解析</td>
+<td>内建</td>
 </tr>
 <tr>
-<td style="text-align: left;">DrawDeviceD3D.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/krkr2/tree/master/kirikiri2/trunk/kirikiri2/src/plugins/win32/drawdeviceD3D">https://github.com/krkrz/krkr2/tree/master/kirikiri2/trunk/kirikiri2/src/plugins/win32/drawdeviceD3D</a></td>
+<td><code>cpp/plugins/psdfile/</code></td>
+<td>PSD 资源解析</td>
+<td>内建</td>
 </tr>
 <tr>
-<td style="text-align: left;">DrawDeviceD3DZ.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/drawdeviceD3D">https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/drawdeviceD3D</a></td>
+<td><code>cpp/plugins/motionplayer/</code></td>
+<td>M2/PSB 动画播放</td>
+<td>内建，复杂功能持续完善</td>
 </tr>
 <tr>
-<td style="text-align: left;">ExtKAGParser.dll</td>
-<td style="text-align: left;"><a href="http://keepcreating.g2.xrea.com/krkrplugins/ExtKAGParser/ExtKAGParser-0143.zip">http://keepcreating.g2.xrea.com/krkrplugins/ExtKAGParser/ExtKAGParser-0143.zip</a></td>
+<td><code>cpp/plugins/layerex_draw/</code></td>
+<td>扩展绘制</td>
+<td>内建</td>
 </tr>
 <tr>
-<td style="text-align: left;">KAGParserEx.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/KAGParserEx">https://github.com/wtnbgo/KAGParserEx</a></td>
+<td><code>cpp/plugins/fstat/</code></td>
+<td>文件状态查询</td>
+<td>内建</td>
 </tr>
 <tr>
-<td style="text-align: left;">KAGParserExb.dll</td>
-<td style="text-align: left;"><a href="https://github.com/sakano/krkr_archives/tree/master/kagex_plugin/KAGParserExb">https://github.com/sakano/krkr_archives/tree/master/kagex_plugin/KAGParserExb</a></td>
+<td><code>cpp/plugins/cubism/</code></td>
+<td>Live2D 接入</td>
+<td>可选 SDK</td>
 </tr>
 <tr>
-<td style="text-align: left;">KaichoTrans.dll</td>
-<td style="text-align: left;"><a href="http://keepcreating.g2.xrea.com/krkrplugins/KaichoTrans/KaichoTrans.zip">http://keepcreating.g2.xrea.com/krkrplugins/KaichoTrans/KaichoTrans.zip</a></td>
+<td><code>cpp/plugins/zcompat/</code></td>
+<td>兼容名称映射和桩</td>
+<td>部分能力待实现</td>
 </tr>
 <tr>
-<td style="text-align: left;">LayerExDraw.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/layerExDraw">https://github.com/wtnbgo/layerExDraw</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">LayerExImage.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/layerExImage">https://github.com/wtnbgo/layerExImage</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">LayerExSave.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/layerExSave">https://github.com/wtnbgo/layerExSave</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">PSBFile.dll</td>
-<td style="text-align: left;">M2 Inc. PSB Library</td>
-</tr>
-<tr>
-<td style="text-align: left;">PackinOne.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">TextRender.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">addFont.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/addFont">https://github.com/wtnbgo/addFont</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">csvParser.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/csvParser">https://github.com/wtnbgo/csvParser</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">dirlist.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/dirlist">https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/dirlist</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">emoteplayer.dll</td>
-<td style="text-align: left;">M2 Inc. : <a href="https://emote.mtwo.co.jp/download/">https://emote.mtwo.co.jp/download/</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">expat.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/expat">https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/expat</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">extNagano.dll</td>
-<td style="text-align: left;"><a href="https://web.archive.org/web/20120604091809fw_/http://ymtkyk.sakura.ne.jp/krkr.STG/plugin/extNagano.html">https://web.archive.org/web/20120604091809fw_/http://ymtkyk.sakura.ne.jp/krkr.STG/plugin/extNagano.html</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">extrans.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/SamplePlugin/tree/master/extrans">https://github.com/krkrz/SamplePlugin/tree/master/extrans</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">fftgraph.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/fftgraph">https://github.com/krkrz/fftgraph</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">savestruct.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/saveStruct">https://github.com/wtnbgo/saveStruct</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">fstat.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/fstat">https://github.com/wtnbgo/fstat</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">getSample.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/getSample">https://github.com/wtnbgo/getSample</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">getabout.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">gfxEffect.dll</td>
-<td style="text-align: left;"><a href="http://kaede-software.com/krlm/plugin/gfx_effect.zip">http://kaede-software.com/krlm/plugin/gfx_effect.zip</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">json.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/json">https://github.com/wtnbgo/json</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">kirikiroid2.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">layerExAlpha.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">layerExAreaAverage.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/layerExAreaAverage">https://github.com/wtnbgo/layerExAreaAverage</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">layerExBTOA.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/layerExBTOA">https://github.com/wtnbgo/layerExBTOA</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">layerExImage.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/layerExImage">https://github.com/wtnbgo/layerExImage</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">layerExMovie.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/layerExMovie">https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/layerExMovie</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">layerExRaster.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/layerExRaster">https://github.com/wtnbgo/layerExRaster</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">layerExShimmer.dll</td>
-<td style="text-align: left;"><a href="http://keepcreating.g2.xrea.com/krkrplugins/ShimmerPlugin/layerExShimmer.zip">http://keepcreating.g2.xrea.com/krkrplugins/ShimmerPlugin/layerExShimmer.zip</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">lzfs.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">minizip.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/minizip">https://github.com/wtnbgo/minizip</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">motionplayer.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">multiimage.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">perspective.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/layerExPerspective">https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/layerExPerspective</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">saveStruct.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/saveStruct">https://github.com/wtnbgo/saveStruct</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">scriptsEx.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/scriptsEx">https://github.com/wtnbgo/scriptsEx</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">shrinkCopy.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/shrinkCopy">https://github.com/wtnbgo/shrinkCopy</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">sqlite3.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/sqlite3">https://github.com/krkrz/krkrz/tree/last_hodgepodge_repository/src/plugins/win32/sqlite3</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">util_generic.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">util_graph.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">util_system.dll</td>
-<td style="text-align: left;">nan</td>
-</tr>
-<tr>
-<td style="text-align: left;">varfile.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/varfile">https://github.com/wtnbgo/varfile</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">win32dialog.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/win32dialog">https://github.com/wtnbgo/win32dialog</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">windowEx.dll</td>
-<td style="text-align: left;"><a href="https://github.com/wtnbgo/windowEx">https://github.com/wtnbgo/windowEx</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">wutcwf.dll</td>
-<td style="text-align: left;"><a href="https://github.com/krkrz/SamplePlugin/tree/master/wutcwf">https://github.com/krkrz/SamplePlugin/tree/master/wutcwf</a></td>
-</tr>
-<tr>
-<td style="text-align: left;">xp3filter.dll</td>
-<td style="text-align: left;">nan</td>
+<td><code>cpp/plugins/*.cpp</code></td>
+<td>各类 TJS 扩展</td>
+<td>以 CMake 和注册表为准</td>
 </tr>
 </tbody>
 </table>
+<h2 id="_3">实现边界<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>核心能力应放在 <code>cpp/core/</code>，例如 Layer、渲染、存储、字体和视频基础设施。</li>
+<li>可复用的 TJS 扩展放在 <code>cpp/plugins/</code>，通过 ncbind 注册接口。</li>
+<li>纯脚本兼容层保持在脚本资源边界，不把脚本状态混入 C++ 全局生命周期。</li>
+<li>桌面专属绘制设备不能直接视为移动端实现；移动端应明确使用的图形后端和目标纹理路径。</li>
+<li>可选 SDK 缺失时保持自动禁用，不能让可选功能阻断核心构建。</li>
+</ul>
+<h2 id="_4">外部资料<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>历史插件名称、格式资料和外部仓库入口统一见 <a href="../dev/krkrz-compat/">兼容性与参考资料</a>。该页面只作为资料入口和能力边界说明，不保证外部插件可直接加载。</p>
 
 
 
@@ -1458,7 +1482,9 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/language-redirect.js"></script>
       
     
   </body>

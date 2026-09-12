@@ -20,10 +20,14 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../../en/dev/key-references/" hreflang="en">
+        
       
       
       <link rel="icon" href="../../resources/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +35,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -151,6 +155,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../../en/dev/key-references/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -457,6 +487,8 @@
       
         
       
+        
+      
     
     
     
@@ -582,6 +614,34 @@
     
   
     待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimization-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待优化方案
   
 
     
@@ -798,43 +858,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#c-abiengine_api" class="md-nav__link">
+  <a href="#c-abi-flutter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C ABI（engine_api）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dart-flutter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dart / Flutter
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#c-cppcore" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        C++ 引擎（cpp/core）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cppplugins" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        插件（cpp/plugins）
+        C ABI 与 Flutter
       
     </span>
   </a>
@@ -845,7 +872,29 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        其他
+        引擎核心
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        插件
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        修改前确认
       
     </span>
   </a>
@@ -970,7 +1019,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -1235,43 +1284,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#c-abiengine_api" class="md-nav__link">
+  <a href="#c-abi-flutter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C ABI（engine_api）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dart-flutter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dart / Flutter
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#c-cppcore" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        C++ 引擎（cpp/core）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cppplugins" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        插件（cpp/plugins）
+        C ABI 与 Flutter
       
     </span>
   </a>
@@ -1282,7 +1298,29 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        其他
+        引擎核心
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        插件
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        修改前确认
       
     </span>
   </a>
@@ -1309,11 +1347,8 @@
   
 
 
-<h1 id="_1">关键引用索引<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>改代码前先查这里。路径均相对仓库根。
-模块编译边界以各 <code>CMakeLists.txt</code> 为准；源码用 <code>target_sources</code> 决定编哪些文件。</p>
-</blockquote>
+<h1 id="_1">关键引用<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>路径以仓库根目录为基准。模块编译边界以各级 <code>CMakeLists.txt</code> 和目标源列表为准。</p>
 <h2 id="_2">构建与配置<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1325,284 +1360,77 @@
 <tbody>
 <tr>
 <td><code>CMakeLists.txt</code></td>
-<td>根编排：vcpkg 工具链、模块子目录、BUILD_TOOLS/ENABLE_TESTS（排除 iOS）</td>
+<td>根构建编排、工具链和模块入口</td>
 </tr>
 <tr>
 <td><code>CMakePresets.json</code></td>
-<td>仅 <code>MacOS Config</code> / <code>iOS Config</code>（含 Debug/Release）</td>
+<td>iOS、Android、macOS、Linux 预设</td>
 </tr>
 <tr>
 <td><code>build.sh</code></td>
-<td>统一入口，支持 <code>ios</code> / <code>macos</code></td>
+<td>平台构建统一入口</td>
 </tr>
 <tr>
 <td><code>build/build_ios.sh</code></td>
-<td>iOS：CMake→静态库合并（libtool）→<code>flutter build ios</code></td>
+<td>iOS 静态库、依赖合并和 Flutter 构建</td>
 </tr>
 <tr>
-<td><code>build/build_macos.sh</code></td>
-<td>macOS：CMake→dylib→打包进 App Frameworks→签名</td>
+<td><code>build/build_android.sh</code></td>
+<td>Android <code>.so</code>、JNI 和 APK 构建</td>
 </tr>
 <tr>
 <td><code>vcpkg.json</code></td>
-<td>依赖清单（manifest）</td>
+<td>依赖清单</td>
 </tr>
 <tr>
 <td><code>vcpkg-configuration.json</code></td>
-<td>registry + overlay ports/triplets</td>
+<td>registry 和 overlay 配置</td>
 </tr>
 <tr>
-<td><code>vcpkg/triplets/arm64-ios.cmake</code></td>
-<td>iOS triplet（arm64、deployment 15.0）</td>
-</tr>
-<tr>
-<td><code>.github/workflows/pages.yml</code></td>
-<td>部署 <code>docs/</code> 到 GitHub Pages</td>
+<td><code>vcpkg/triplets/</code></td>
+<td>平台 ABI 与编译选项</td>
 </tr>
 </tbody>
 </table>
-<h2 id="c-abiengine_api">C ABI（engine_api）<a class="headerlink" href="#c-abiengine_api" title="Permanent link">&para;</a></h2>
+<h2 id="c-abi-flutter">C ABI 与 Flutter<a class="headerlink" href="#c-abi-flutter" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p><code>bridge/engine_api/include/engine_api.h</code> — 全部导出函数与结构体</p>
-</li>
-<li>
-<p><code>bridge/engine_api/src/engine_api.cpp</code> — 实现（内部持有 <code>tTVPApplication</code>、主循环、渲染目标）</p>
-</li>
-<li>
-<p><code>bridge/engine_api/include/engine_options.h</code> — 运行时选项键</p>
-</li>
+<li><code>bridge/engine_api/include/engine_api.h</code>：生命周期、启动、帧、输入、渲染目标和统计接口。</li>
+<li><code>bridge/engine_api/src/engine_api.cpp</code>：C ABI 实现、运行时状态和主循环。</li>
+<li><code>bridge/engine_api/src/engine_api_android_jni.cpp</code>：Android Surface/JNI 胶水。</li>
+<li><code>bridge/flutter_engine_bridge/lib/src/ffi/engine_bindings.dart</code>：Dart FFI 类型绑定。</li>
+<li><code>bridge/flutter_engine_bridge/lib/src/ffi/engine_ffi.dart</code>：动态库加载与调用封装。</li>
+<li><code>apps/flutter_app/lib/engine/engine_bridge.dart</code>：Flutter 侧生命周期封装。</li>
+<li><code>apps/flutter_app/lib/widgets/engine_surface.dart</code>：纹理显示、尺寸同步和输入。</li>
 </ul>
-<p>主要函数：<code>engine_create</code> / <code>engine_destroy</code> / <code>engine_open_game(_async)</code> /
-<code>engine_get_startup_state</code> / <code>engine_drain_startup_logs</code> / <code>engine_tick</code> /
-<code>engine_pause</code> / <code>engine_resume</code> / <code>engine_set_option</code> / <code>engine_set_surface_size</code> /
-<code>engine_get_frame_desc</code> / <code>engine_read_frame_rgba</code> / <code>engine_send_input</code> /
-<code>engine_set_render_target_iosurface</code> / <code>engine_get_frame_rendered_flag</code> /
-<code>engine_get_renderer_info</code> / <code>engine_get_memory_stats</code> / <code>engine_get_last_error</code> /
-<code>engine_get_runtime_api_version</code>。</p>
-<blockquote>
-<p>注意：<code>engine_set_render_target_surface</code>（Android）在 <code>engine_api.h</code> 中仍声明，但平台代码已删除，Apple 上返回 <code>NOT_SUPPORTED</code>。</p>
-</blockquote>
-<h2 id="dart-flutter">Dart / Flutter<a class="headerlink" href="#dart-flutter" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>路径</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>apps/flutter_app/lib/main.dart</code></td>
-<td>应用入口</td>
-</tr>
-<tr>
-<td><code>apps/flutter_app/lib/engine/engine_bridge.dart</code></td>
-<td>引擎生命周期封装</td>
-</tr>
-<tr>
-<td><code>apps/flutter_app/lib/engine/flutter_engine_bridge_adapter.dart</code></td>
-<td>桥接插件适配</td>
-</tr>
-<tr>
-<td><code>apps/flutter_app/lib/widgets/engine_surface.dart</code></td>
-<td>纹理显示、零拷贝模式切换</td>
-</tr>
-<tr>
-<td><code>apps/flutter_app/lib/pages/</code></td>
-<td>home/game/settings/game_detail/scrape_select 页</td>
-</tr>
-<tr>
-<td><code>apps/flutter_app/lib/services/</code></td>
-<td>游戏管理/封面/元数据/VNDB</td>
-</tr>
-<tr>
-<td><code>apps/flutter_app/lib/l10n/</code></td>
-<td>zh/en/ja 本地化（<code>flutter gen-l10n</code>，见 <code>l10n.yaml</code>）</td>
-</tr>
-<tr>
-<td><code>bridge/flutter_engine_bridge/lib/flutter_engine_bridge.dart</code></td>
-<td>插件公开 API（FFI 优先 + 平台兜底）</td>
-</tr>
-<tr>
-<td><code>bridge/flutter_engine_bridge/lib/src/ffi/engine_ffi.dart</code></td>
-<td>FFI 加载（iOS <code>DynamicLibrary.process()</code>）</td>
-</tr>
-<tr>
-<td><code>bridge/flutter_engine_bridge/lib/src/ffi/engine_bindings.dart</code></td>
-<td>C ABI 绑定</td>
-</tr>
-<tr>
-<td><code>bridge/flutter_engine_bridge/ios/Classes/FlutterEngineBridgePlugin.swift</code></td>
-<td>iOS 纹理（IOSurface + RGBA 兼容）</td>
-</tr>
-<tr>
-<td><code>bridge/flutter_engine_bridge/macos/Classes/FlutterEngineBridgePlugin.swift</code></td>
-<td>macOS 对应实现</td>
-</tr>
-</tbody>
-</table>
-<h2 id="c-cppcore">C++ 引擎（cpp/core）<a class="headerlink" href="#c-cppcore" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>路径</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>cpp/core/CMakeLists.txt</code></td>
-<td>模块聚合（tjs2/base/environ/extension/plugin/movie/sound/visual/utils）</td>
-</tr>
-<tr>
-<td><code>cpp/core/tjs2/</code></td>
-<td>TJS2 脚本 VM（bison 生成 parser，需系统 bison）</td>
-</tr>
-<tr>
-<td><code>cpp/core/base/</code></td>
-<td>存储/归档（XP3/7z/zip/tar）/事件/消息</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/</code></td>
-<td>平台抽象 + 主循环 + 应用生命周期</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/apple/ios/platform.mm</code></td>
-<td><strong>iOS 平台实现</strong>（路径/弹窗/内存/退出）</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/apple/macos/platform.mm</code></td>
-<td>macOS 平台实现</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/Platform.h</code></td>
-<td>平台函数声明（TVPGetMemoryInfo、TVP_stat 等）</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/EngineLoop.cpp</code></td>
-<td>主循环、输入表</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/MainScene.cpp</code></td>
-<td>场景/窗口协调</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/ConfigManager/</code></td>
-<td>全局/个人/语言配置</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/sdl/tvpsdl.cpp</code></td>
-<td>SDL 系统细节（共享）</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/stubs/ui_stubs.cpp</code></td>
-<td>UI 桩（Flutter 接管 UI）</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/win32/SystemControl.cpp/.h</code></td>
-<td>系统控制（共享，勿删）</td>
-</tr>
-<tr>
-<td><code>cpp/core/visual/</code></td>
-<td>渲染（<code>RenderManager_ogl.cpp</code>、<code>ogl/krkr_egl_context.cpp</code>、<code>ogl/angle_backend.h</code>）、字体、图像编解码</td>
-</tr>
-<tr>
-<td><code>cpp/core/sound/</code> + <code>sound/win32/</code></td>
-<td>音频（OpenAL 实现位于 win32 目录，共享）</td>
-</tr>
-<tr>
-<td><code>cpp/core/movie/ffmpeg/</code></td>
-<td>视频播放器（AE/KRMovie）</td>
-</tr>
-<tr>
-<td><code>cpp/core/utils/</code> + <code>utils/win32/</code></td>
-<td>线程/定时器/剪贴板（win32 目录为共享实现）</td>
-</tr>
-<tr>
-<td><code>cpp/core/plugin/</code></td>
-<td>插件框架（ncbind）</td>
-</tr>
-</tbody>
-</table>
-<h2 id="cppplugins">插件（cpp/plugins）<a class="headerlink" href="#cppplugins" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>路径</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>cpp/plugins/CMakeLists.txt</code></td>
-<td>插件聚合（psbfile/psdfile/layerex_draw/motionplayer/kagparserex/fstat + cubism）</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/psbfile/</code></td>
-<td>PSB 图像/动画格式</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/psdfile/</code></td>
-<td>PSD 解析</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/layerex_draw/</code></td>
-<td>扩展绘制（<code>general/</code>，非 Windows 分支）</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/motionplayer/</code></td>
-<td>动态立绘播放</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/kagparserex/</code></td>
-<td>KAG 脚本扩展</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/fstat/</code></td>
-<td>文件状态</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/cubism/</code></td>
-<td>Live2D（SDK gitignored，需手动放置 <code>Core/lib/</code> 与 <code>Framework/</code>）</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/krkrgles.cpp</code> 等</td>
-<td>顶层插件源（全部参与编译，已含平台守卫）</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/krkrlive2d.cpp</code></td>
-<td>Live2D 插件，<strong>仅当 Cubism SDK 存在时编译</strong>（见 conventions §4）</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_3">其他<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>路径</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>platforms/apple/macos/</code></td>
-<td>macOS 独立资源（Info.plist/Icon，入口已由 Flutter 接管）</td>
-</tr>
-<tr>
-<td><code>tools/xp3/</code></td>
-<td>XP3 归档命令行工具（macOS/Linux 构建）</td>
-</tr>
-<tr>
-<td><code>cmake/scripts/sync_folder.py</code></td>
-<td>资源同步脚本（当前无构建引用）</td>
-</tr>
-<tr>
-<td><code>docs/</code>（含 <code>docs/dev/</code>）</td>
-<td>GitHub Pages 落地页 + 开发文档（合并自旧 <code>doc/</code>）</td>
-</tr>
-</tbody>
-</table>
+<h2 id="_3">引擎核心<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>cpp/core/tjs2/</code>：TJS2 VM、字节码、内置对象和异常。</li>
+<li><code>cpp/core/base/</code>：存储、归档、事件、消息和 KAG。</li>
+<li><code>cpp/core/environ/EngineBootstrap.*</code>：子系统初始化顺序。</li>
+<li><code>cpp/core/environ/EngineLoop.*</code>：定时器、事件和每帧执行。</li>
+<li><code>cpp/core/visual/LayerIntf.*</code>：图层接口和绘制提交。</li>
+<li><code>cpp/core/visual/LayerBitmapImpl.*</code>：位图、字体和绘制资源。</li>
+<li><code>cpp/core/visual/RenderManager*</code>：渲染目标与图形后端。</li>
+<li><code>cpp/core/visual/tvpgl.cpp</code>：像素混合标量基准。</li>
+<li><code>cpp/core/movie/ffmpeg/</code>：视频解码和播放调度。</li>
+<li><code>cpp/core/plugin/</code>：插件宿主和 ncbind。</li>
+</ul>
+<h2 id="_4">插件<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>cpp/plugins/psbfile/</code>：PSB 归档、图像、运动数据和元数据。</li>
+<li><code>cpp/plugins/psdfile/</code>：PSD 图层和资源。</li>
+<li><code>cpp/plugins/motionplayer/</code>：PSB/M2 时间轴和动态节点。</li>
+<li><code>cpp/plugins/layerex_draw/</code>：扩展绘制。</li>
+<li><code>cpp/plugins/zcompat/</code>：兼容名称映射和桩。</li>
+<li><code>cpp/plugins/cubism/</code>：可选 Live2D SDK 接入。</li>
+</ul>
+<h2 id="_5">修改前确认<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<ol>
+<li>先确认目标属于 C ABI、Flutter、核心引擎、插件还是脚本兼容层。</li>
+<li>修改公共 C ABI 时同步检查 Dart binding 和版本约束。</li>
+<li>修改渲染或生命周期时检查 context、线程、所有权和重启路径。</li>
+<li>修改 SIMD 时以 <code>tvpgl.cpp</code> 的标量函数为基准，并运行逐像素对比。</li>
+</ol>
 
 
 
@@ -1718,7 +1546,9 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/language-redirect.js"></script>
       
     
   </body>

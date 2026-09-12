@@ -20,10 +20,14 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../../en/dev/rendering-diagnosis/" hreflang="en">
+        
       
       
       <link rel="icon" href="../../resources/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -31,7 +35,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -151,6 +155,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../../en/dev/rendering-diagnosis/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -457,6 +487,8 @@
       
         
       
+        
+      
     
     
     
@@ -582,6 +614,34 @@
     
   
     待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimization-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待优化方案
   
 
     
@@ -857,7 +917,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -941,7 +1001,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        一、什么时候用探针？
+        开启探针
       
     </span>
   </a>
@@ -952,7 +1012,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        二、怎么打开探针？（默认关闭）
+        关键日志
       
     </span>
   </a>
@@ -963,7 +1023,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        三、探针都打些什么？（对照表）
+        判断顺序
       
     </span>
   </a>
@@ -974,7 +1034,7 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        四、怎么靠日志判断问题在哪一端？（二分法）
+        日志容量
       
     </span>
   </a>
@@ -985,38 +1045,10 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        五、日志文件会"拉屎"吗？
+        报告要求
       
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        六、诊断后记得
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="六、诊断后记得">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#z" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        附：真实案例（Z 兼容黑屏）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1244,7 +1276,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        一、什么时候用探针？
+        开启探针
       
     </span>
   </a>
@@ -1255,7 +1287,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        二、怎么打开探针？（默认关闭）
+        关键日志
       
     </span>
   </a>
@@ -1266,7 +1298,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        三、探针都打些什么？（对照表）
+        判断顺序
       
     </span>
   </a>
@@ -1277,7 +1309,7 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        四、怎么靠日志判断问题在哪一端？（二分法）
+        日志容量
       
     </span>
   </a>
@@ -1288,38 +1320,10 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        五、日志文件会"拉屎"吗？
+        报告要求
       
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        六、诊断后记得
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="六、诊断后记得">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#z" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        附：真实案例（Z 兼容黑屏）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1343,129 +1347,70 @@
   
 
 
-<h1 id="_1">渲染 / 黑屏诊断<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>本文教你怎么用引擎内置的<strong>渲染探针</strong>来定位"黑屏 / 画面没更新 / 视频播不出"一类问题。
-适用人群：开发者、AI Agent、以及遇到渲染问题的测试者。</p>
-</blockquote>
-<hr />
-<h2 id="_2">一、什么时候用探针？<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<ul>
-<li>游戏启动后<strong>黑屏 / 白屏 / 一直停在某一帧</strong>；</li>
-<li>画面某一块该显示却空白，或 <strong>OP/标题影片没画面</strong>；</li>
-<li>需要区分"<strong>引擎没画</strong>" vs "<strong>画了但没送进显示纹理</strong>"。</li>
-</ul>
-<p>探针是<strong>诊断工具</strong>，不是常驻功能：默认关闭，平时跑游戏零开销、零刷屏。</p>
-<hr />
-<h2 id="_3">二、怎么打开探针？（默认关闭）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>探针由编译期宏 <code>KRKR_RENDER_PROBE</code> 控制，<strong>默认 OFF</strong>。</p>
-<p>方式〇（CI 打包，最省事）：iOS / Android 打包工作流的 <strong>workflow_dispatch 手动触发</strong>下
-就有专门的开关，每次运行单独勾选，不用改代码、不用碰 CMake：
-- <code>enable_render_probe=true</code> → 这次打包开启探针（默认 <code>false</code>）；
-- <code>log_level</code> → 单独选引擎日志级别（默认 <code>auto</code>=按构建类型：release→info、debug→debug）。
-- 排查黑屏：勾上探针 + <code>log_level=debug</code>（或 <code>trace</code>）跑一次，抓日志即可，测完恢复默认。</p>
-<p>方式一（本地构建，推荐，改 CMake 选项）：
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cmake<span class="w"> </span>-DENABLE_RENDER_PROBE<span class="o">=</span>ON<span class="w"> </span>&lt;其余参数&gt;<span class="w">          </span><span class="c1"># 打开</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>cmake<span class="w"> </span>-DENABLE_RENDER_PROBE<span class="o">=</span>OFF<span class="w"> </span>&lt;其余参数&gt;<span class="w">         </span><span class="c1"># 关闭（默认）</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>cmake<span class="w"> </span>-DKRKR_LOG_LEVEL<span class="o">=</span>debug<span class="w"> </span>&lt;其余参数&gt;<span class="w">            </span><span class="c1"># 单独指定日志级别(trace|debug|info|warn|err|critical|off)</span>
+<h1 id="_1">渲染诊断<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>本文用于排查黑屏、停帧、画面未提交和视频显示问题。探针默认关闭，打开后只用于定位问题。</p>
+<h2 id="_2">开启探针<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>CI 手动构建时启用 <code>enable_render_probe=true</code>，并按需要设置 <code>log_level=debug</code> 或 <code>trace</code>。本地构建可设置：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cmake<span class="w"> </span>-DENABLE_RENDER_PROBE<span class="o">=</span>ON<span class="w"> </span>&lt;其他参数&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>cmake<span class="w"> </span>-DKRKR_LOG_LEVEL<span class="o">=</span>debug<span class="w"> </span>&lt;其他参数&gt;
 </code></pre></div>
-（在 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/CMakeLists.txt">CMakeLists.txt</a> 顶层 <code>add_compile_definitions(KRKR_RENDER_PROBE)</code>；
-日志级别经 <code>KRKR_LOG_LEVEL_NUM</code> 注入 engine_api.cpp，可独立于 debug/release。）</p>
-<p>方式二（临时，直接在某处全局定义）：
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">#define KRKR_RENDER_PROBE</span>
-</code></pre></div></p>
-<p>关掉后：<code>SourceSample / PostBlit / IOSurfacePixelSample / BlackScreen</code> 全部不编译，零性能/日志影响。</p>
-<hr />
-<h2 id="_4">三、探针都打些什么？（对照表）<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>排查结束后关闭探针，避免高频日志改变时序。</p>
+<h2 id="_3">关键日志<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>日志前缀</th>
-<th>位置</th>
-<th>含义</th>
+<th>前缀</th>
+<th>作用</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>FlutterWindowLayer::UpdateDrawBuffer</code></td>
-<td>引擎渲染 → Flutter 纹理</td>
-<td><code>path=GPU/CPU</code>、<code>srcTex/blitTex</code>、<code>layers</code>、<code>draw</code>（自上次统计以来的合成次数）</td>
+<td><code>UpdateDrawBuffer</code></td>
+<td>记录渲染路径、目标纹理、图层数和合成次数</td>
 </tr>
 <tr>
-<td><code>FlutterWindowLayer::SourceSample</code></td>
-<td>读引擎<strong>源纹理</strong> 25 点</td>
-<td><code>nonBlack/25</code> + <code>avg(R,G,B,A)</code>：引擎合出来的画面有没有内容</td>
+<td><code>SourceSample</code></td>
+<td>采样引擎源纹理，判断引擎是否写入有效像素</td>
 </tr>
 <tr>
-<td><code>FlutterWindowLayer::PostBlit</code></td>
-<td>blit 到显示目标后</td>
-<td><code>err</code>（GL 错误）、<code>center(R,G,B,A)</code>：blit 是否成功写入</td>
+<td><code>PostBlit</code></td>
+<td>判断源纹理到显示目标的提交是否成功</td>
 </tr>
 <tr>
 <td><code>IOSurfacePixelSample</code></td>
-<td>读共享 <strong>IOSurface</strong> 25 点</td>
-<td><code>nonBlack/25</code> + <code>avg</code>：画面有没有真的到达 IOSurface</td>
+<td>判断共享 IOSurface 是否收到有效像素</td>
 </tr>
 <tr>
-<td><code>FlutterWindowLayer::BlackScreen</code></td>
-<td>连续黑屏且引擎在画</td>
-<td><code>draw</code>、<code>layers</code>、<code>VideoOverlay total/active/playing</code>：判定黑屏是否与视频相关</td>
+<td><code>BlackScreen</code></td>
+<td>汇总连续黑屏时的绘制、图层和视频状态</td>
 </tr>
 <tr>
-<td><code>VideoOverlay.Open</code></td>
-<td>脚本打开影片</td>
-<td><code>mode=overlay/layer/mixer</code> + <code>file=...</code>：游戏有没有真的去播片</td>
+<td><code>VideoOverlay</code></td>
+<td>记录视频打开、播放和合成状态</td>
+</tr>
+<tr>
+<td><code>RequestUpdate</code></td>
+<td>判断图层变化是否请求窗口重绘</td>
+</tr>
+<tr>
+<td><code>DeliverWinUpdate</code></td>
+<td>判断窗口重绘事件是否被投递和处理</td>
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p><code>avg=(0,0,0,255)</code> = <strong>不透明纯黑</strong>（通常等于主 DrawBuffer 从未被合成的初始色 <code>0xFF000000</code>）。
-<code>avg=(0,0,0,0)</code> = 透明黑（内容区域是空的）。</p>
-</blockquote>
-<hr />
-<h2 id="_5">四、怎么靠日志判断问题在哪一端？（二分法）<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>黑屏时按顺序看这几条，就能把"坏在哪一段"圈出来：</p>
+<h2 id="_4">判断顺序<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong><code>SourceSample</code> 有没有色</strong>（源纹理）：</li>
-<li><strong>非黑</strong> → 引擎合成是好的；再看 <code>PostBlit</code> / <code>IOSurfacePixelSample</code>（显示链路）。</li>
-<li><strong>全黑</strong> → 引擎主合成没产出；继续看 <code>draw</code> 和 <code>VideoOverlay</code>（见第 2 步）。</li>
-<li><strong><code>draw</code> 计数在涨吗？</strong></li>
-<li><strong>在涨</strong> → 引擎在持续合成，黑的是"图层内容本身"或"没画进源纹理"。</li>
-<li><strong>卡住不涨</strong>（且 <code>layers</code> 很多、TJS 还在跑）→ 像本文附的真实案例：<strong>主合成根本没被触发</strong>，往往是<strong>绘图设备/插件缺失</strong>（见第 5 步）。</li>
-<li><strong><code>PostBlit</code> 的 <code>err</code></strong>：</li>
-<li><code>err=0x0</code> → blit 本身没 GL 错误；黑是因为源就是黑的。</li>
-<li>非 0 → blit 失败（shader/状态/RenderTarget 绑定问题）。</li>
-<li><strong><code>VideoOverlay total/active/playing</code></strong>：</li>
-<li><code>total=0</code> → 游戏压根没开视频，黑屏<strong>不是视频</strong>问题（别去做 krmovie Present）。</li>
-<li><code>playing=1</code> 且画面黑 → 才去查视频帧有没有合成（krmovie Present 路径）。</li>
-<li><strong><code>layers</code> 很多 + <code>draw</code> 不涨 + 脚本在跑的"黑屏"</strong> → <strong>绘图设备 / Z 插件缺口</strong>的典型特征
-   （对应 KRKRZ 游戏缺 <code>drawdeviceD3DZ / kztouch / k2compat</code> 等，主 DrawBuffer 从未被合成）。
-   结合日志里的 <code>Loading Plugin: ... Failed</code> 一起看。</li>
+<li>查看 <code>SourceSample</code>。源纹理非黑时，继续检查 blit 或共享纹理；源纹理全黑时，检查合成和图层更新。</li>
+<li>查看 <code>draw</code> 或合成次数。计数增长表示引擎仍在绘制；不增长时再检查更新请求、事件投递和绘制设备。</li>
+<li>查看 <code>PostBlit err</code>。零表示提交没有报告图形错误，非零表示需要检查 FBO、shader 和状态绑定。</li>
+<li>查看 <code>IOSurfacePixelSample</code> 或 SurfaceTexture 路径，确认目标纹理收到像素。</li>
+<li>视频相关问题同时检查视频帧计数、播放状态和目标 Layer 更新，不能只根据黑屏判断视频故障。</li>
 </ol>
-<hr />
-<h2 id="_6">五、日志文件会"拉屎"吗？<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>不会无限涨。日志文件是<strong>旋转文件</strong>：写满 <strong>4 MiB 自动轮转，保留 3 份</strong>（约 12 MiB 封顶，
-见 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/bridge/engine_api/include/engine_api.h">engine_api.h</a> <code>engine_set_log_file_path</code>）。</p>
-<p>另外 release 默认日志级别 = <strong>info</strong>（<code>bridge/engine_api/src/engine_api.cpp</code>
-<code>EnsureRuntimeLoggersInitialized</code>），把之前 <code>[debug]</code> 级别的刷屏（如每次文件探测的
-<code>GetLocallyAccessibleName</code>）都挡掉了，日志文件只留 info/error 等真正有用的行。
-需要极详细排查时再临时放开 debug。</p>
-<p><strong>为什么日志文件要留着</strong>：线上/"小白不会复现"的渲染问题，靠的就是这份设备日志回传
-来定位——这也是探针能发挥作用的载体。</p>
-<hr />
-<h2 id="_7">六、诊断后记得<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
-<ul>
-<li>修完问题，<strong>保持 <code>ENABLE_RENDER_PROBE</code> 为 OFF</strong>（默认），别把探针留在常驻路径里。</li>
-<li>把新发现的"现象 → 探针结论 → 根因"补充到 <a href="../todo/">todo.md</a> 或本文档，方便下次复用。</li>
-</ul>
-<hr />
-<h3 id="z">附：真实案例（Z 兼容黑屏）<a class="headerlink" href="#z" title="Permanent link">&para;</a></h3>
-<p>魔女的夜宴（sabbat_kr，KRKRZ 目录版）真机日志：
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>IOSurfacePixelSample: tick=465 size=1334x750 nonBlack=0/25 avg=(0,0,0,255)
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>BlackScreen: draw=35, layers=109 ... VideoOverlay: total=0 active=0 playing=0
-</code></pre></div>
-→ <code>draw</code> 卡在 35、源纹理保持初始黑、<code>VideoOverlay total=0</code> → <strong>不是视频</strong>、<strong>主合成从未被触发</strong>
-→ 根因锁定在 <strong>Z(krkrz) 插件兼容</strong>（缺 drawdeviceD3DZ 等），详见 <a href="../todo/">todo.md</a>。</p>
+<p><code>avg=(0,0,0,255)</code> 是不透明黑，通常表示源纹理没有被有效内容覆盖；<code>avg=(0,0,0,0)</code> 是透明黑，表示内容可能为空但透明度正常。</p>
+<h2 id="_5">日志容量<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>日志使用旋转文件，单文件达到 4 MiB 后轮转，最多保留 3 份。默认日志级别按构建类型设置；只有定位问题时才提高级别。</p>
+<h2 id="_6">报告要求<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>记录平台、构建类型、复现步骤、现象、关键日志前缀和期望行为。不要把个人路径、设备隐私、完整游戏资源或无关的高频日志提交到仓库。</p>
 
 
 
@@ -1503,7 +1448,7 @@
       <nav class="md-footer__inner md-grid" aria-label="页脚" >
         
           
-          <a href="../conventions/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 约定与历史陷阱">
+          <a href="../conventions/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 开发约定">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1513,7 +1458,7 @@
                 上一页
               </span>
               <div class="md-ellipsis">
-                约定与历史陷阱
+                开发约定
               </div>
             </div>
           </a>
@@ -1581,7 +1526,9 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/language-redirect.js"></script>
       
     
   </body>

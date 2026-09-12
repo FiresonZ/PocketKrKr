@@ -20,18 +20,22 @@
       
       
         
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../../en/dev/conventions/" hreflang="en">
+        
       
       
       <link rel="icon" href="../../resources/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>约定与历史陷阱 - PocketKrKr</title>
+        <title>开发约定 - PocketKrKr</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -115,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              约定与历史陷阱
+              开发约定
             
           </span>
         </div>
@@ -151,6 +155,32 @@
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              简体中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../../en/dev/conventions/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
     
     
       
@@ -457,6 +487,8 @@
       
         
       
+        
+      
     
     
     
@@ -582,6 +614,34 @@
     
   
     待办 / 已知问题
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimization-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    待优化方案
   
 
     
@@ -866,7 +926,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -884,7 +944,7 @@
   <span class="md-ellipsis">
     
   
-    约定与历史陷阱
+    开发约定
   
 
     
@@ -910,159 +970,65 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-win32-windows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 名为 win32 的目录是「跨平台共享实现」，不是 Windows 专属 ⚠️
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 平台守卫是惰性的，删除需谨慎
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-vcpkgports" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. vcpkg/ports 是共享的第三方构建配方，不要删
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-live2d-cubism-sdk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Live2D Cubism SDK 需手动放置（可选，缺库自动禁用）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-ios-macos" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. iOS / macOS 引擎二进制形态不同
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-angle-openglframework" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. ANGLE 与系统 OpenGL.framework 符号冲突
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-2026-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 平台收敛与恢复历史（2026-09）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8. 其他约定
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-simdhighway2026-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        9. SIMD（Highway）审计记录（2026-09）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. SIMD（Highway）审计记录（2026-09）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        高危（输出明显错误）
+        平台与目录
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#alpha" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        中危（alpha 通道不一致，合成边缘出错）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        低危（位级偏差 / 死代码）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        修复建议
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#10-android-2026-09" class="md-nav__link">
+  <a href="#live2d-cubism-sdk" class="md-nav__link">
     <span class="md-ellipsis">
       
-        10. Android 恢复要点（2026-09）
+        Live2D Cubism SDK（可选）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        构建与链接
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        生命周期
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        渲染与 SIMD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码与文档
       
     </span>
   </a>
@@ -1318,159 +1284,65 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-win32-windows" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 名为 win32 的目录是「跨平台共享实现」，不是 Windows 专属 ⚠️
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 平台守卫是惰性的，删除需谨慎
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-vcpkgports" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. vcpkg/ports 是共享的第三方构建配方，不要删
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-live2d-cubism-sdk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Live2D Cubism SDK 需手动放置（可选，缺库自动禁用）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-ios-macos" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. iOS / macOS 引擎二进制形态不同
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-angle-openglframework" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. ANGLE 与系统 OpenGL.framework 符号冲突
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-2026-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 平台收敛与恢复历史（2026-09）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8. 其他约定
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-simdhighway2026-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        9. SIMD（Highway）审计记录（2026-09）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. SIMD（Highway）审计记录（2026-09）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        高危（输出明显错误）
+        平台与目录
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#alpha" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        中危（alpha 通道不一致，合成边缘出错）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        低危（位级偏差 / 死代码）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        修复建议
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#10-android-2026-09" class="md-nav__link">
+  <a href="#live2d-cubism-sdk" class="md-nav__link">
     <span class="md-ellipsis">
       
-        10. Android 恢复要点（2026-09）
+        Live2D Cubism SDK（可选）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        构建与链接
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        生命周期
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        渲染与 SIMD
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码与文档
       
     </span>
   </a>
@@ -1497,250 +1369,64 @@
   
 
 
-<h1 id="_1">约定与历史陷阱（务必阅读）<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>这些是前人在平台收敛过程中踩过的坑与重要决策。<strong>改代码前先读本页</strong>，
-尤其是涉及目录删除、平台守卫、vcpkg 时。</p>
-</blockquote>
-<h2 id="1-win32-windows">1. 名为 <code>win32</code> 的目录是「跨平台共享实现」，不是 Windows 专属 ⚠️<a class="headerlink" href="#1-win32-windows" title="Permanent link">&para;</a></h2>
-<p>以下目录被 <strong>所有 Apple 平台无条件编译</strong>，是共享实现，<strong>绝不能删</strong>：</p>
-<table>
-<thead>
-<tr>
-<th>目录</th>
-<th>内容</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>cpp/core/sound/win32/</code></td>
-<td>音频设备实现（CDDA/MIDI/Wave/WaveMixer/tvpsnd），基于 OpenAL</td>
-</tr>
-<tr>
-<td><code>cpp/core/utils/win32/</code></td>
-<td>线程/定时器/剪贴板/触控板等实现</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/win32/SystemControl.cpp</code></td>
-<td>系统控制（事件分发、内存治理），根 <code>environ/CMakeLists.txt</code> 无条件编译</td>
-</tr>
-</tbody>
-</table>
-<p><code>environ/win32/</code> 目前仅保留 6 个必需文件：
-<code>SystemControl.cpp/.h</code>、<code>TVPWindow.h</code>、<code>ApplicationSpecialPath.h</code>、<code>EmergencyExit.h</code>、<code>DetectCPU.h</code>。
-其余 Windows UI 死代码（TVPWindow.cpp、WindowFormUnit、MouseCursor、TouchPoint 等）已删除。</p>
-<h2 id="2">2. 平台守卫是惰性的，删除需谨慎<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
-<p>共享源文件中存在 <code>#if defined(__ANDROID__)</code>、<code>#if defined(__linux__)</code>、<code>#ifdef WIN32</code> 等分支。
-在 Apple 构建中这些分支<strong>永远不会编译</strong>（惰性死代码），不影响构建。
-<strong>默认不要动它们</strong>——强行剥离是高风险重构，收益低。例子：
-<code>engine_api.cpp</code>、<code>ScriptMgnIntf.cpp</code>、<code>StorageImpl.cpp</code>、<code>krkr_egl_context.cpp</code>、
-<code>RenderManager_ogl.cpp</code>、<code>WaveMixer.cpp</code>、<code>ui_stubs.cpp</code>、<code>krkrgles.cpp</code> 等。
-若确实需要清理，必须逐文件确认 Apple 路径仍完整。</p>
-<h2 id="3-vcpkgports">3. vcpkg/ports 是共享的第三方构建配方，不要删<a class="headerlink" href="#3-vcpkgports" title="Permanent link">&para;</a></h2>
-<p><code>vcpkg/ports/*</code> 中 7zip/ffmpeg/angle 等的平台补丁（如 <code>0001-android-ffmpeg.patch</code>、
-<code>PlatformAndroid.cmake</code>）虽然名义上属于其他平台，但<strong>在现有配置中是无条件/按端口逻辑应用</strong>的，
-且 vcpkg 只会在 Apple triplet 下被调用。删除可能破坏现有可用构建。
-平台目标由 <code>vcpkg.json</code> + <code>vcpkg/triplets/arm64-ios.cmake</code> 控制（已收敛）。</p>
-<h2 id="4-live2d-cubism-sdk">4. Live2D Cubism SDK 需手动放置（可选，缺库自动禁用）<a class="headerlink" href="#4-live2d-cubism-sdk" title="Permanent link">&para;</a></h2>
-<p><code>cpp/plugins/cubism/</code> 仅含头文件；<code>Core/lib/</code>（预编译静态库）与 <code>Framework/</code>
-被 <code>.gitignore</code> 忽略，需从 live2d.com 下载后按路径放置：
-- iOS：<code>Core/lib/ios/Release-iphoneos/libLive2DCubismCore.a</code>
-- macOS：<code>Core/lib/macos/{arm64,x86_64}/libLive2DCubismCore.a</code>
-- Android：需要 Android 版 core 库，路径需自行补充到 <code>cpp/plugins/CMakeLists.txt</code></p>
-<p>缺库时 <strong>不会导致构建失败</strong>：<code>plugins/CMakeLists.txt</code> 检测 SDK 是否存在，
-不存在则跳过 <code>krkrlive2d.cpp</code>、把 <code>CubismFramework</code> 建成空的 INTERFACE 目标
-（2026-09 修复：此前 CI 因缺 Framework 直接 CMake 报错）。</p>
-<h2 id="5-ios-macos">5. iOS / macOS 引擎二进制形态不同<a class="headerlink" href="#5-ios-macos" title="Permanent link">&para;</a></h2>
+<h1 id="_1">开发约定<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<h2 id="_2">平台与目录<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>iOS</strong>：<code>engine_api</code> 为<strong>静态库</strong>，定义 <code>ENGINE_API_EXPORT_SYMBOLS</code>，链接进 Runner；
-  Dart 用 <code>DynamicLibrary.process()</code> 定位符号。静态库合并脚本见 <code>build_ios.sh</code>。</li>
-<li><strong>macOS</strong>：<code>engine_api</code> 为<strong>动态库</strong> <code>libengine_api.dylib</code>，定义 <code>ENGINE_API_BUILD_SHARED</code>，
-  打包进 App 的 <code>Contents/Frameworks/</code>。</li>
-<li><code>bridge/flutter_engine_bridge/ios/Libs/*.a</code> 是构建产物（gitignore），勿提交。</li>
+<li><code>cpp/core/sound/win32/</code>、<code>cpp/core/utils/win32/</code> 和 <code>cpp/core/environ/win32/</code> 中的部分文件是跨平台共享实现，不能按目录名称删除或改为 Windows 专属。</li>
+<li>共享源文件中的平台守卫可能承载尚未启用的平台路径。删除前必须确认所有目标平台的 CMake 源列表和构建结果。</li>
+<li>Live2D SDK 是可选依赖。SDK 不存在时应保持自动禁用，不能把缺少 SDK 当作核心构建错误。</li>
+<li><code>*.md</code> 属于正常版本控制文件；构建输出和平台产物按现有忽略规则处理。</li>
 </ul>
-<h2 id="6-angle-openglframework">6. ANGLE 与系统 OpenGL.framework 符号冲突<a class="headerlink" href="#6-angle-openglframework" title="Permanent link">&para;</a></h2>
-<p>Apple 上必须对 ANGLE 的 <code>libGLESv2</code>/<code>libEGL</code>/<code>libANGLE</code> 用 <code>-force_load</code> 强制全量链接
-（见 <code>bridge/engine_api/CMakeLists.txt</code>），否则 GL/EGL 符号可能被系统框架抢先解析。</p>
-<h2 id="7-2026-09">7. 平台收敛与恢复历史（2026-09）<a class="headerlink" href="#7-2026-09" title="Permanent link">&para;</a></h2>
-<p>仓库先收敛为 <strong>iOS + macOS</strong>，随后（2026-09）恢复 Android，定位改为 <strong>mobile（iOS + Android）</strong>。</p>
-<p>第一次收敛（iOS + macOS）时删除：</p>
-<table>
-<thead>
-<tr>
-<th>已删除</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>apps/flutter_app/{android,linux,windows}/</code></td>
-<td>Flutter 壳平台目录</td>
-</tr>
-<tr>
-<td><code>bridge/flutter_engine_bridge/{android,linux,windows}/</code> 及 example 中对应目录</td>
-<td>插件平台实现</td>
-</tr>
-<tr>
-<td><code>platforms/{android,linux,windows}/</code></td>
-<td>平台入口（Android JNI、Linux、Windows）</td>
-</tr>
-<tr>
-<td><code>cpp/core/environ/{android,linux}/</code></td>
-<td>JNI/Linux 平台实现</td>
-</tr>
-<tr>
-<td><code>build/build_android.sh</code>、<code>cmake/vcpkg_android.cmake</code></td>
-<td>Android 构建</td>
-</tr>
-<tr>
-<td><code>vcpkg/triplets/*-android.cmake</code>（4个）</td>
-<td>Android triplets</td>
-</tr>
-<tr>
-<td><code>cpp/plugins/layerex_draw/windows/</code></td>
-<td>Windows 专属绘制</td>
-</tr>
-<tr>
-<td><code>environ/win32/</code> 大部分死代码</td>
-<td>见第 1 节</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>保留项：<code>platforms/apple/macos/</code>（macOS 资源）、<code>tools/</code>（macOS 工具）、
-<code>docs/dev/</code>（本文档）、<code>docs/</code>（GitHub Pages 落地页）。</p>
-</blockquote>
-<p>第二次恢复（Android，2026-09）新增：</p>
-<table>
-<thead>
-<tr>
-<th>新增</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>apps/flutter_app/android/</code></td>
-<td>Flutter Android 壳层（标准模板，gradlew/wrapper jar 由 <code>flutter create</code> 再生成）</td>
-</tr>
-<tr>
-<td><code>bridge/flutter_engine_bridge/android/</code></td>
-<td>Kotlin 插件（MethodChannel + SurfaceTexture + JNI）</td>
-</tr>
-<tr>
-<td><code>bridge/engine_api/src/engine_api_android_jni.cpp</code></td>
-<td>JNI 胶水（<code>krkr_GetNativeWindow</code> 定义、<code>nativeSetSurface</code>/<code>nativeDetachSurface</code>）</td>
-</tr>
-<tr>
-<td><code>vcpkg/triplets/arm64-android.cmake</code></td>
-<td>Android triplet（arm64-v8a，API 24）</td>
-</tr>
-<tr>
-<td><code>build/build_android.sh</code></td>
-<td>Android 一键构建（镜像 build_ios.sh）</td>
-</tr>
-<tr>
-<td><code>.github/workflows/android_package.yml</code></td>
-<td>Android CI 打包（Ubuntu runner）</td>
-</tr>
-</tbody>
-</table>
-<h2 id="8">8. 其他约定<a class="headerlink" href="#8" title="Permanent link">&para;</a></h2>
+<h2 id="live2d-cubism-sdk">Live2D Cubism SDK（可选）<a class="headerlink" href="#live2d-cubism-sdk" title="Permanent link">&para;</a></h2>
+<p>Live2D SDK 不通过 vcpkg 管理，相关商业 SDK 文件也不会提交到仓库。需要启用 Live2D 时，从官方 SDK 包中将以下内容放入 <code>cpp/plugins/cubism/</code>：</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cpp/plugins/cubism/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── Core/
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   ├── include/Live2DCubismCore.h        已随仓库保留
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   └── lib/
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│       ├── ios/Release-iphoneos/libLive2DCubismCore.a
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│       └── macos/
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│           ├── arm64/libLive2DCubismCore.a
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│           └── x86_64/libLive2DCubismCore.a
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>└── Framework/                            SDK Framework 源码
+</code></pre></div>
 <ul>
-<li>Dart 壳应用中存在大量 <code>Platform.isAndroid</code> 等运行时分支，在 iOS/macOS 上恒为 false，
-  编译运行无影响；<strong>属业务逻辑</strong>，与平台基础设施无关，未清理。这些分支正是 Android 恢复时
-  的现成支持（SurfaceTexture 零拷贝 + RGBA 回读兜底）。</li>
-<li><code>ENABLE_TESTS</code> / <code>BUILD_TOOLS</code> 在 iOS/Android 上默认关闭（<code>CMakePresets.json</code> 对应预设里 <code>false</code>）；
-  Linux 宿主验证预设里打开。</li>
-<li>根 <code>CMakeLists.txt</code> 不再生成独立可执行 <code>krkr2</code>（Flutter 壳接管入口），仅构建引擎库。</li>
-<li><code>docs/</code>（GitHub Pages + FAQ/插件清单/兼容列表）与 <code>docs/dev/</code>（开发文档）已合并为单一 docs 目录；
-  <code>doc/</code> 旧目录与无引用图片已删除（2026-09）。</li>
+<li><code>Framework/</code> 应包含 Cubism Framework 的 C++ 源码，OpenGL ES 2 渲染器由当前 CMake 配置使用。</li>
+<li>iOS 使用 <code>Core/lib/ios/Release-iphoneos/</code> 下的静态库；macOS 根据架构使用对应目录下的静态库。</li>
+<li>配置时若同时检测到 <code>Framework/*.cpp</code> 和目标平台的 <code>libLive2DCubismCore.a</code>，CMake 会编译 <code>krkrlive2d.cpp</code> 并定义 <code>KRKR2_LIVE2D</code>。</li>
+<li>缺少任一部分时，CMake 会保留空的 <code>CubismFramework</code> 接口并禁用 Live2D 插件；其他平台的核心构建仍可继续。</li>
+<li><code>Core/lib/</code> 和 <code>Framework/</code> 已加入 <code>.gitignore</code>，重新获取 SDK 后无需修改忽略规则。</li>
 </ul>
-<h2 id="9-simdhighway2026-09">9. SIMD（Highway）审计记录（2026-09）<a class="headerlink" href="#9-simdhighway2026-09" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>结论：<strong>无语法错误</strong>（Highway foreach_target 模式、HWY_EXPORT/HWY_DYNAMIC_DISPATCH 结构正确），
-但存在<strong>多处向量公式与标量参考不一致</strong>的缺陷。修复时务必逐函数对照
-<code>cpp/core/visual/tvpgl.cpp</code> 中 <code>*_c</code> 标量实现。</p>
-<p><strong>✅ 最新定案（2026-09-08，Linux CI <code>tvpgl_simd_compare</code> 已全绿）</strong>：
-- 11 个 PS 混合模式（Alpha/Add/Sub/Mul/Screen/Lighten/Darken/Diff/Overlay/HardLight/Exclusion）
-  在 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/cpp/core/visual/simd/tvpgl_simd_init.cpp">tvpgl_simd_init.cpp</a> <strong>不再注册，回退标量</strong>
-  （提交 <code>8ff8760</code>）。
-- <strong>回退根因（结构性，非符号级）</strong>：这些模式最终步骤 <code>ps_alpha_blend_func</code> 标量用
-  <strong>32 位打包 R/B 算术（跨字节借位 <code>%2^32</code>，B 下溢借 R）</strong>；SIMD 用逐字节 u16 通道 +
-  <code>OrderedDemote2To</code>（对 16 位中间值<strong>饱和</strong>到 0xFF，标量是 <code>&amp;0xFF</code> <strong>截断</strong>）。二者<strong>无法</strong>逐位一致。
-- 待办（放回前提）：用 <strong>u32 lane</strong> 复现标量打包算术（每像素 32 位）+ <code>&amp;0xFF</code> 截断；
-  算法已由 <a href="https://github.com/FiresonZ/PocketKrKr/blob/main/harness_ps.cpp">harness_ps.cpp</a> 实证位级一致（u8 核心 + u32 打包 alpha），
-  尚需改写为 Highway u32 lane 并注册回放。
-- 其余 SIMD（copy/fill、Alpha/Add/Sub/Mul/Screen blend、AdditiveAlphaBlend、convert、misc、blur）
-  保持注册且与标量逐位一致（CI 覆盖）。</p>
-</blockquote>
-<h3 id="_2">高危（输出明显错误）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
-<ol>
-<li>
-<p><strong>SubBlend 系（<code>tvpgl_simd_arithmetic_blend.cpp</code> 全部 4 个）</strong>
-   SIMD 用 <code>SaturatedSub(d, s)</code>（= max(d−s,0)）；标量 <code>TVPSubBlend_c</code> 语义是
-   <strong><code>max(s+d−255, 0)</code></strong>（饱和 d+s−255）。向量路径整段错误，且与同函数尾部标量不一致 → 行内带状错误。</p>
-</li>
-<li>
-<p><strong>ScreenBlend_o / ScreenBlend_HDA_o（<code>tvpgl_simd_arithmetic_blend.cpp</code>）</strong>
-   标量（<code>TVPScreenBlend_o_c</code>）：<code>(~d) * ~((s*opa)&gt;&gt;8) &gt;&gt; 8</code>（无外层取反）；
-   SIMD：<code>~((~d) * ((~s*opa)&gt;&gt;8) &gt;&gt; 8)</code>。源缩放公式与最终取反均不同，数值差异巨大。</p>
-</li>
-</ol>
-<h3 id="alpha">中危（alpha 通道不一致，合成边缘出错）<a class="headerlink" href="#alpha" title="Permanent link">&para;</a></h3>
-<ol>
-<li>
-<p><strong>AdditiveAlphaBlend / AdditiveAlphaBlend_o（<code>tvpgl_simd_premul_blend.cpp</code>）</strong>
-   标量不对 alpha 字节缩放（结果 alpha = src_a）；SIMD 对 alpha 字节也做
-   <code>d_a*(255-s_a)&gt;&gt;8</code> 缩放再饱和加 → 向量与尾部不一致。</p>
-</li>
-<li>
-<p><strong>Ps*Blend NORM / _o 全系（<code>tvpgl_simd_ps_blend.cpp</code> / <code>_ps_blend2.cpp</code>，8 模式 × 2）</strong>
-   标量（<code>tvpps.inc</code> + <code>TVPPS_ALPHABLEND</code>）NORM/_o 输出 <strong>alpha=0</strong>（只写 RGB）；
-   SIMD 的 <code>PsApplyAlpha</code> 对 alpha 字节做 <code>(s_a*a&gt;&gt;8)+(d_a*(255-a)&gt;&gt;8)</code> 混合 → 不一致。</p>
-</li>
-</ol>
-<h3 id="_3">低危（位级偏差 / 死代码）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>AlphaBlend / ConstAlphaBlend / PS alpha 应用</strong>：<code>(s*a&gt;&gt;8)+(d*(255-a)&gt;&gt;8)</code> 与标量
-   <code>d+((s-d)*a&gt;&gt;8)</code> 舍入至多差 1，视觉可忽略，但与 C 参考非位一致（对截图比对/Z 兼容测试有影响）。</li>
-<li><strong>ConvertAlphaToAdditiveAlpha</strong>：SIMD <code>(ch*a)&gt;&gt;8</code>（÷256）vs 标量 <code>(ch*a)/255</code>；
-   255 满 alpha 时 SIMD 得 254 而非 255。</li>
-<li><strong><code>tvpgl_simd_common.h</code> 的辅助函数（BlendChannelU16 等）</strong>：<code>(s-d)*a</code> 存在 u16 溢出隐患，
-   且<strong>全部未被任何实现文件使用</strong>（死代码）。未来复用前必须重写。</li>
-<li><strong>未注册的导出函数</strong>：<code>ConstAlphaBlend_d/a</code>、<code>AdditiveAlphaBlend_a/ao</code>、<code>DoBoxBlurAvg*</code>、
-   <code>ChBlur*</code> 等声明与实现存在但 <code>tvpgl_simd_init.cpp</code> 未注册——死代码，无害但易误导。</li>
-</ol>
-<h3 id="_4">修复建议<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>检查方式：确认上述目录和静态库存在后，重新配置目标平台；配置输出不再出现 <code>Live2D Cubism SDK not found</code>，并在构建目标中看到 <code>krkrlive2d.cpp</code>。</p>
+<h2 id="_3">构建与链接<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
-<li>逐函数将 SIMD 公式<strong>对齐标量参考</strong>（SubBlend → <code>max(d+s-255,0)</code>；ScreenBlend_o →
-  标量式；AdditiveAlphaBlend 的 alpha=s_a；PS NORM 的 alpha=0 等）。</li>
-<li>修复后做 <strong>SIMD on/off 输出比对</strong>（<code>TVPGL_SIMD_Init</code> 是否调用）确认逐像素一致。
-  该验证<strong>不需要 macOS</strong>：在 Windows（SSE/AVX2）或 Android（NEON）上编译同一份核心即可，
-  公式缺陷与指令集无关。</li>
-<li>若短期不修：可在 <code>tvpgl_simd_init.cpp</code> 中把高危函数改为不注册（回退标量），避免错误渲染。</li>
+<li>Apple 使用 ANGLE 的 Metal feature；Android 和 Linux 使用 Vulkan feature，不要跨平台混用。</li>
+<li>iOS 产物是静态库，macOS 产物是动态库，Android 产物是自包含 <code>libengine_api.so</code>。</li>
+<li>Android 插件源码通过 CMake 目标源传播进共享库，使用普通链接 <code>krkr2core</code> 和 <code>krkr2plugin</code>；不要使用 <code>--whole-archive</code>。</li>
+<li>Android JNI 的 Java 包名、native 方法名和 C++ 声明必须同步修改。</li>
+<li>修改 vcpkg manifest、overlay port 或 triplet 后，必须重新验证对应平台的依赖缓存和 ABI。</li>
 </ul>
-<h2 id="10-android-2026-09">10. Android 恢复要点（2026-09）<a class="headerlink" href="#10-android-2026-09" title="Permanent link">&para;</a></h2>
+<h2 id="_4">生命周期<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>引擎侧早已就绪</strong>：<code>engine_api.cpp</code> 的 Android 渲染路径（<code>InitializeWithWindow</code>/
-  <code>AttachNativeWindow</code>/自动挂载 ANativeWindow）与 <code>__ANDROID__</code> ifdef 是恢复前就存在的，
-  只缺 <code>krkr_GetNativeWindow()</code>/<code>krkr_GetSurfaceDimensions()</code> 的实现（现在在
-  <code>engine_api_android_jni.cpp</code>，由 <code>-landroid -llog</code> 链接）。</li>
-<li><strong><code>.so</code> 必须自包含</strong>：Android 无法像 iOS 那样额外合并静态库，但插件子库
-  <code>target_sources(PUBLIC)</code> 的源码会经 <code>INTERFACE_SOURCES</code> 直接编进 <code>engine_api.so</code>，
-  所以 <code>engine_api</code> 以 SHARED 形态<strong>普通链接</strong> <code>krkr2core+krkr2plugin</code> 即可自包含。
-  注意 <strong>不要加 <code>--whole-archive</code></strong>：它会强制把 psbfile.a/motionplayer.a 的对象再拉一份，
-  与 engine_api 已编译的副本冲突，产生 ld.lld 重复符号（对齐上游 reAAAq/KrKr2-Next 做法）。</li>
-<li><strong>vcpkg angle 分平台</strong>：<code>vcpkg.json</code> 中 angle 拆成两条 —— Apple 用 <code>metal</code> feature，
-  Android 用 <code>vulkan</code> feature（feature 带 <code>supports</code> 约束，混用会编译失败）。</li>
-<li><strong>libpng</strong> 平台条件扩展为 <code>osx | ios | android</code>（<code>find_package(PNG REQUIRED)</code> 在
-  visual/CMakeLists.txt，所有平台都需要）。</li>
-<li><strong>Android 壳层的 gradlew/wrapper jar 是二进制产物</strong>，已被 <code>.gitignore</code> 忽略；
-  若缺失，在 <code>apps/flutter_app</code> 下执行 <code>flutter create --platforms=android .</code> 一键再生成
-  （不会破坏 Dart 代码）。Gradle/AGP/Kotlin 版本需与本机 Flutter 匹配，<code>flutter create</code> 会
-  生成匹配版本，优先采用。</li>
-<li><strong>minSdk 24</strong>：<code>apps/flutter_app/android/app/build.gradle</code> 与 vcpkg triplet 一致
-  （API 24 = Android 7.0），低于此版本的设备无法加载引擎 .so。</li>
+<li>引擎重启必须分别处理脚本、存储、插件、字体、音频、窗口、渲染器和 GPU 资源。</li>
+<li>进程级单例不能把一次性进程退出清理误当作引擎周期清理；需要显式 reset 时，为其定义独立的初始化和复位接口。</li>
+<li>EGL context 重建后不能复用旧 context 的纹理、FBO、shader 或扩展状态；所有 GPU 对象必须绑定当前 context generation。</li>
+<li>异步启动、销毁和帧回调要明确所有权，不能让旧引擎实例持有回调或资源。</li>
+</ul>
+<h2 id="simd">渲染与 SIMD<a class="headerlink" href="#simd" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>cpp/core/visual/tvpgl.cpp</code> 的标量实现是像素混合的正确性基准。</li>
+<li>修改 SIMD 公式前必须进行标量与 SIMD 的逐像素对比，覆盖透明度、边界值、溢出和负值路径。</li>
+<li>当前未完成逐位验证的 PS 混合保持标量回退；只有通过验证后才能重新注册 SIMD 派发。</li>
+<li>渲染目标、FBO、纹理和 Layer 的坐标系必须在接口处明确，禁止在不同层重复应用缩放、偏移或旋转。</li>
+<li>探针默认关闭；高频日志必须采样或限频，避免改变时序和性能。</li>
+</ul>
+<h2 id="_5">代码与文档<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<ul>
+<li>新增代码遵循现有模块边界和错误处理风格，不引入未在项目中使用的库。</li>
+<li>注释只解释非显然的约束、算法和生命周期；复杂逻辑可使用中英双语短注释，避免重复描述代码本身。</li>
+<li>文档描述当前事实、约束和验收条件，不记录个人设备、日志文件名、临时目录、内部提交编号或逐次试错过程。</li>
+<li>外部资料只作为协议和行为入口，不在文档中将某段实现描述为直接复制，也不把参考实现当作本项目能力声明。</li>
+<li>改动完成后至少运行对应的格式检查、类型检查、构建或测试；渲染和生命周期改动必须覆盖目标平台回归。</li>
 </ul>
 
 
@@ -1857,7 +1543,9 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/language-redirect.js"></script>
       
     
   </body>
