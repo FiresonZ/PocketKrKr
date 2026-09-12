@@ -11,7 +11,7 @@ on:
           - release
           - debug
       enable_render_probe:
-        description: '开启渲染诊断探针（黑屏/渲染排查，含每帧像素采样，见 docs/dev/rendering-diagnosis.md）'
+        description: '开启统一诊断探针总开关（默认关闭，见 docs/dev/probes.md）'
         type: boolean
         default: false
       log_level:

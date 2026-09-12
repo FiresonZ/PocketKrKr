@@ -135,6 +135,7 @@ void TVPMapPrerenderedFont(const tTVPFont &font, const ttstr &storage) {
     // map specified font to specified prerendered font
     ttstr fn = TVPSearchPlacedPath(storage);
 
+#if defined(KRKR_RENDER_PROBE)
     // [tpf mapping probe] Which .tpf file does the game map for which face?
     // Yuzusoft option boxes map e.g. "font/スキップ.tpf"; a case/path mismatch
     // on Android could map a WRONG-size .tpf (→ option text smaller/offset).
@@ -145,6 +146,7 @@ void TVPMapPrerenderedFont(const tTVPFont &font, const ttstr &storage) {
                  font.Face.AsNarrowStdString(), font.Height,
                  storage.AsNarrowStdString(), fn.AsNarrowStdString());
     }
+#endif
 
     // search or retrieve specified storage
     tTVPPrerenderedFont *object;
@@ -299,6 +301,7 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
     if(pfont)
         pitem = pfont->Find(font.Character);
 
+#if defined(KRKR_RENDER_PROBE)
     // [PrerenderedFont probe] Was the .tpf glyph actually hit, and what are its
     // baked metrics vs the requested size / the fallback rasterizer ascent?
     // The .tpf glyphs were pre-baked for the ORIGIN font (e.g. MS Gothic,
@@ -337,6 +340,7 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
             }
         }
     }
+#endif
 
     if(pitem) {
         // prerendered font
@@ -1211,6 +1215,7 @@ void tTVPNativeBaseBitmap::DrawTextSingle(
 
     ApplyFont();
 
+#if defined(KRKR_RENDER_PROBE)
     // [text probe] single-char draw, mirror of the multi-char probe above (deduped).
     // [文字探针] 单字符绘制，与上文多字符探针对应（去重）。
     {
@@ -1231,6 +1236,7 @@ void tTVPNativeBaseBitmap::DrawTextSingle(
             }
         }
     }
+#endif
 
     const tjs_char *p = text.c_str();
     tTVPDrawTextData dtdata;
@@ -1403,6 +1409,7 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
 
     ApplyFont();
 
+#if defined(KRKR_RENDER_PROBE)
     // [text probe] Option/menu text sizing & placement diagnostics (deduped per
     // face so it does not spam for every character). See FreeTypeFontRasterizer
     // FontProbe for glyph metrics.
@@ -1426,6 +1433,7 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
             }
         }
     }
+#endif
 
     const tjs_char *p = text.c_str();
     tTVPDrawTextData dtdata;

@@ -94,6 +94,7 @@ plugins:
             构建与约定: Build and conventions
             构建与工具链: Build and toolchain
             开发约定: Development conventions
+            诊断探针清单: Diagnostic probes
             渲染 / 黑屏诊断: Rendering diagnosis
             兼容与性能: Compatibility and performance
             游戏兼容性: Game compatibility
@@ -152,6 +153,7 @@ nav:
   - 构建与约定:
       - 构建与工具链: dev/build.md
       - 开发约定: dev/conventions.md
+      - 诊断探针清单: dev/probes.md
       - 渲染 / 黑屏诊断: dev/rendering-diagnosis.md
   - 兼容与性能:
       - 游戏兼容性: dev/compatibility.md

@@ -52,7 +52,10 @@ Verification: after confirming that the directories and static libraries above e
 - Before modifying SIMD formulas, compare scalar and SIMD results pixel by pixel, covering alpha, boundary values, overflow, and negative-value paths.
 - PS blending that has not completed bit-level verification remains on the scalar fallback; SIMD dispatch may be registered again only after verification passes.
 - Coordinate systems for render targets, FBOs, textures, and Layers must be explicit at interfaces; scaling, offset, or rotation must not be applied repeatedly at different layers.
-- Probes are disabled by default; high-frequency logs must be sampled or rate-limited to avoid changing timing and performance.
+- Diagnostic probes uniformly use `KRKR_RENDER_PROBE` and are disabled by default; do not add module-level probe switches that default to enabled.
+- High-frequency logs must be sampled, rate-limited, deduplicated, or limited to state edges; diagnostic-only scans must not run when the macro is disabled.
+- Probes must not change rendering results, event ordering, thread scheduling, resource lifetime, or normal performance; logs must not contain complete user text, personal paths, or device-private data.
+- When adding or changing a probe, update the [probe inventory](probes.md) and verify that switching probes ON/OFF reconfigures the build directory.
 
 ## Code and Documentation
 

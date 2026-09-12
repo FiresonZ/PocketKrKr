@@ -19,10 +19,9 @@ cmake -DKRKR_LOG_LEVEL=debug <其他参数>
 |---|---|
 | `UpdateDrawBuffer` | 记录渲染路径、目标纹理、图层数和合成次数 |
 | `SourceSample` | 采样引擎源纹理，判断引擎是否写入有效像素 |
-| `PostBlit` | 判断源纹理到显示目标的提交是否成功 |
 | `IOSurfacePixelSample` | 判断共享 IOSurface 是否收到有效像素 |
 | `BlackScreen` | 汇总连续黑屏时的绘制、图层和视频状态 |
-| `VideoOverlay` | 记录视频打开、播放和合成状态 |
+| `engine_tick` | 记录桥接帧调用是否进入并返回 |
 | `RequestUpdate` | 判断图层变化是否请求窗口重绘 |
 | `DeliverWinUpdate` | 判断窗口重绘事件是否被投递和处理 |
 
@@ -30,8 +29,8 @@ cmake -DKRKR_LOG_LEVEL=debug <其他参数>
 
 1. 查看 `SourceSample`。源纹理非黑时，继续检查 blit 或共享纹理；源纹理全黑时，检查合成和图层更新。
 2. 查看 `draw` 或合成次数。计数增长表示引擎仍在绘制；不增长时再检查更新请求、事件投递和绘制设备。
-3. 查看 `PostBlit err`。零表示提交没有报告图形错误，非零表示需要检查 FBO、shader 和状态绑定。
-4. 查看 `IOSurfacePixelSample` 或 SurfaceTexture 路径，确认目标纹理收到像素。
+3. 查看 `IOSurfacePixelSample` 或 SurfaceTexture 路径，确认目标纹理收到像素。
+4. 查看 `engine_tick` 的进入和返回记录，确认桥接调用没有停在中途。
 5. 视频相关问题同时检查视频帧计数、播放状态和目标 Layer 更新，不能只根据黑屏判断视频故障。
 
 `avg=(0,0,0,255)` 是不透明黑，通常表示源纹理没有被有效内容覆盖；`avg=(0,0,0,0)` 是透明黑，表示内容可能为空但透明度正常。
