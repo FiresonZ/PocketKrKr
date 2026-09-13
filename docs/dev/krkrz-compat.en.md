@@ -37,6 +37,9 @@ PocketKrKr directly inherits from and continues [reAAAq/KrKr2-Next](https://gith
 - KIRIKIRI 2 compatibility script materials: <https://github.com/krkrz/Krkr2Compat>
 - SDL runtime and M2 player materials: <https://github.com/krkrsdl3/krkrsdl3>
 - TJS2 bytecode tools: <https://github.com/crate-1556/tjs2-decompiler>
+- AetherKiri shared implementation and plugins: <https://github.com/AetherKiri/AetherKiri>
+- AetherKiri plugin-gap audit: <https://github.com/AetherKiri/AetherKiri/blob/main/tools/plugin_gap_audit.py>
+- PocketKrKr plugin compatibility inventory: [plugin-compatibility.en.md](plugin-compatibility.en.md)
 
 ## Rules for Using Reference Materials
 

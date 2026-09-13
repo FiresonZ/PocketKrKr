@@ -16,7 +16,8 @@ This directory provides PocketKrKr architecture, build, source code, and compati
 10. [Rendering Diagnosis](rendering-diagnosis.md): Troubleshoot black screens, frozen frames, and display pipeline issues.
 11. [Optimization Roadmap](optimization-roadmap.md): View performance, stability, and code structure optimization plans.
 12. [AetherKiri Comparison Audit](aetherkiri-audit.en.md): View the shared-implementation, testing, diagnostics, and compatibility difference matrix.
-13. [Todo](todo.md): View current unfinished items.
+13. [Plugin Compatibility Inventory](plugin-compatibility.en.md): View plugin status, gaps, compatibility adapters, and reference implementation entry points.
+14. [Todo](todo.md): View current unfinished items.
 
 ## Project Boundaries
 

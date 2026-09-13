@@ -16,7 +16,8 @@
 10. [渲染诊断](rendering-diagnosis.md)：排查黑屏、停帧和显示链路问题。
 11. [优化路线](optimization-roadmap.md)：查看性能、稳定性和代码结构优化方案。
 12. [AetherKiri 对照审计](aetherkiri-audit.md)：查看同源实现、测试、诊断和兼容性差异矩阵。
-13. [待办](todo.md)：查看当前未完成事项。
+13. [插件兼容清单](plugin-compatibility.md)：查看插件状态、缺失能力、兼容桩和参考实现入口。
+14. [待办](todo.md)：查看当前未完成事项。
 
 ## 项目边界
 

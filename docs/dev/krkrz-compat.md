@@ -37,6 +37,9 @@ PocketKrKr 直接继承并发展自 [reAAAq/KrKr2-Next](https://github.com/reAAA
 - KIRIKIRI 2 兼容脚本资料：<https://github.com/krkrz/Krkr2Compat>
 - SDL 运行时和 M2 播放器资料：<https://github.com/krkrsdl3/krkrsdl3>
 - TJS2 字节码工具：<https://github.com/crate-1556/tjs2-decompiler>
+- AetherKiri 同源实现与插件：<https://github.com/AetherKiri/AetherKiri>
+- AetherKiri 插件缺口审计：<https://github.com/AetherKiri/AetherKiri/blob/main/tools/plugin_gap_audit.py>
+- PocketKrKr 插件兼容清单：[plugin-compatibility.md](plugin-compatibility.md)
 
 ## 使用参考资料的规则
 
