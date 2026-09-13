@@ -57,6 +57,10 @@ public:
     const tTVPPrerenderedCharacterItem *Find(tjs_char ch); // serch character
     void Retrieve(const tTVPPrerenderedCharacterItem *item, tjs_uint8 *buffer,
                   tjs_int bufferpitch);
+    // TPF source-font baseline (max OriginY). Public so glyph placement can use
+    // it instead of the runtime fallback font's ascent. See MaxOriginY above.
+    // TPF 源字体基线(max OriginY)，供字形摆放使用。见上文 MaxOriginY。
+    [[nodiscard]] tjs_int GetMaxOriginY() const { return MaxOriginY; }
 };
 
 #endif // __TVP_PRERENDERED_FONT_H__
