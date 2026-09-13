@@ -8583,7 +8583,8 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
         if(numparams < 4)
             return TJS_E_BADPARAMCOUNT;
         const tjs_int x = *param[0];
-        tjs_int y = *param[1];
+        const tjs_int requestedY = *param[1];
+        tjs_int y = requestedY;
         const ttstr text = *param[2];
         const tjs_int shadowLevel =
             (numparams >= 7 && param[6]->Type() != tvtVoid) ? (tjs_int)*param[6] : 0;
@@ -8600,12 +8601,12 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
                     shadowLevel, shadowWidth, shadowOffsetY),
                 _this->GetClipTop());
 #if defined(KRKR_RENDER_PROBE)
-            if(y != *param[1]) {
+            if(y != requestedY) {
                 if(auto logger = spdlog::get("core")) {
                     logger->info(
                         "[FontLayoutProbe] drawText layer='{}' requestedY={} "
                         "effectiveY={} glyphTop={} clipTop={}",
-                        _this->GetName().AsNarrowStdString(), (tjs_int)*param[1], y,
+                        _this->GetName().AsNarrowStdString(), requestedY, y,
                         glyphBounds.top, _this->GetClipTop());
                 }
             }
