@@ -25,6 +25,10 @@ C++ engine (TJS2) -> C ABI -> Dart FFI / MethodChannel -> Flutter texture
 
 The engine uses ANGLE with Metal on Apple platforms and Vulkan on Android. Native texture sharing is preferred, with an RGBA readback path available as a fallback.
 
+## Project Lineage
+
+PocketKrKr directly inherits from and continues [reAAAq/KrKr2-Next](https://github.com/reAAAq/KrKr2-Next). Building on that KiriKiri2 runtime foundation, this project extends mobile platform support, the Flutter shell, ANGLE graphics backends, the C ABI bridge, resource formats, plugin compatibility, and runtime diagnostics. Current behavior and later extensions are defined by this repository's code and documentation.
+
 ## Platforms
 
 | Platform | Backend | Texture path | Engine form |

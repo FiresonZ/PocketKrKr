@@ -21,6 +21,8 @@ PocketKrKr 使用 GPL-3.0 协议发布。开发入口、架构约束和参考资
 
 ## 简介
 
+**PocketKrKr** 直接继承并发展自 [reAAAq/KrKr2-Next](https://github.com/reAAAq/KrKr2-Next)。在其 KiriKiri2 运行环境基础上，本项目继续扩展移动端平台支持、Flutter 壳、ANGLE 图形后端、C ABI 桥接、资源格式、插件兼容和运行时诊断能力；当前实现与后续扩展以本仓库代码和文档为准。
+
 **PocketKrKr** 是 [KiriKiri2 (吉里吉里2)](https://zh.wikipedia.org/wiki/%E5%90%89%E9%87%8C%E5%90%89%E9%87%8C2) 视觉小说引擎的现代化运行环境，**专注移动端：iOS + Android**（macOS 保留为 Apple 开发/调试目标）。它完全兼容原版游戏脚本，通过 ANGLE（iOS/macOS 用 Metal 后端，Android 用 Vulkan 后端）+ 零拷贝纹理共享（IOSurface / SurfaceTexture）实现硬件加速渲染，并在渲染性能与脚本执行效率上做了大量优化。
 
 项目采用「C++ 引擎 + Flutter 壳」架构：C++ 引擎离屏渲染到 IOSurface（iOS/macOS）或 SurfaceTexture（Android），Flutter 以原生纹理零拷贝显示，UI 完全由 Flutter 构建。

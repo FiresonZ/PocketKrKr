@@ -2,6 +2,10 @@
 
 This document retains only the current compatibility boundaries, capability gaps, and unified reference entry points. External materials are used to understand formats, interfaces, and behavior; they do not mean that PocketKrKr has implemented the corresponding functionality, nor are external code sections copied directly.
 
+## Project Lineage and Evolution
+
+PocketKrKr directly inherits from and continues [reAAAq/KrKr2-Next](https://github.com/reAAAq/KrKr2-Next). That project provided the foundation of this repository's early KiriKiri2 runtime; PocketKrKr has continued to maintain and extend mobile platforms, Flutter integration, ANGLE rendering, the C ABI bridge, resource formats, plugin compatibility, and diagnostic tooling. This lineage describes project origin and does not imply that the two repositories currently have identical code, capabilities, or verification results.
+
 ## Current Capability Matrix
 
 | Capability | Current status | Main locations | Next step |
