@@ -43,6 +43,7 @@ Android、iOS 和 macOS 构建脚本会在环境变量 `ENABLE_RENDER_PROBE` 明
 | `m2foldProbe` | 检查 M2 折叠部件的最终角点包围盒、锚点和变换结果 | `cpp/plugins/motionplayer/Player.h` | 目标图标且达到折叠阶段；有几何计算和日志成本 |
 | `drawAnimatedTree stencil` | 记录受控的 stencil 离屏层准备和合成结果 | `cpp/plugins/motionplayer/Player.h` | stencil 合成时；低到中成本 |
 | `applyStencilComposite: RGB-rotation alpha recovered` | 记录蒙版从 RGB 恢复 alpha 的异常兼容路径 | `cpp/plugins/motionplayer/Player.h` | 仅发生时；低成本 |
+| `[MotionSkipProbe]` | 记录 `skipToSync` 命中的 motion、时间线末端、时钟与循环状态，定位“跳过被连带传播到后续标题背景动画”是 Player 级还是脚本/KAG 级 | `cpp/plugins/motionplayer/Player.h` 的 `skipToSync()` | 跳过触发时；低成本 |
 
 ## 已移除探针
 

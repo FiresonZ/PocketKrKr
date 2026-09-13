@@ -43,6 +43,7 @@ The Android, iOS, and macOS build scripts explicitly pass `ON` or `OFF` whenever
 | `m2foldProbe` | Check folded M2 parts using final corner bounds, anchors, and transform results | `cpp/plugins/motionplayer/Player.h` | Target icons during the fold stage; geometry and logging cost |
 | `drawAnimatedTree stencil` | Record controlled stencil scratch-layer preparation and compositing results | `cpp/plugins/motionplayer/Player.h` | During stencil compositing; low to medium cost |
 | `applyStencilComposite: RGB-rotation alpha recovered` | Record the exceptional compatibility path that recovers mask alpha from RGB | `cpp/plugins/motionplayer/Player.h` | Only when it occurs; low cost |
+| `[MotionSkipProbe]` | Record the motion targeted by `skipToSync`, timeline end, clock, and loop state, to attribute whether a skip that propagates into the later title-background animation is Player-level or script/KAG-level | `cpp/plugins/motionplayer/Player.h` `skipToSync()` | On skip; low cost |
 
 ## Removed Probes
 

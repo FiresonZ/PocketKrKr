@@ -65,6 +65,17 @@ tTVPPrerenderedFont::tTVPPrerenderedFont(const ttstr &storage)
             (const tTVPPrerenderedCharacterItem *)(Image +
                                                    *(const tjs_uint32 *)(Image +
                                                                          32));
+
+        // Cache the TPF's own baseline (max OriginY = source-font ascent) so we
+        // can place prerendered glyphs without depending on the runtime fallback
+        // font's ascent. See MaxOriginY in PrerenderedFont.h.
+        // 缓存 TPF 自身基线（max OriginY=源字形字体 ascent），摆放预渲染字形时不再
+        // 依赖运行时回退字体的 ascent。
+        MaxOriginY = 0;
+        for(tjs_uint i = 0; i < IndexCount; i++) {
+            if(Index[i].OriginY > MaxOriginY)
+                MaxOriginY = Index[i].OriginY;
+        }
     } catch(...) {
 
         delete stream;

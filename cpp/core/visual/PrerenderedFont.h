@@ -38,6 +38,15 @@ private:
     const tjs_char *ChIndex;
     const tTVPPrerenderedCharacterItem *Index;
     tjs_uint IndexCount;
+    // Maximum OriginY across this .tpf's glyphs. For a KiriKiri prerendered
+    // (bitmap) font this equals the ascent of the source font the .tpf was baked
+    // from (e.g. font1_39 -> ~34, font1_32 -> ~28 = MSゴシック ascent). Placing
+    // glyphs at this baseline keeps them aligned with the fixed source crop the
+    // PreRenderFontEx script applies, instead of the runtime fallback font's
+    // ascent (Noto CJK ~1.16x height) which pushes glyphs down and clips them.
+    // 该 .tpf 全部字形的 OriginY 最大值，等于生成此 TPF 的源字号字体的 ascent
+    //（如 font1_39≈34、font1_32≈28 = MSゴシック ascent）。
+    tjs_int MaxOriginY;
 
 public:
     tTVPPrerenderedFont(const ttstr &storage);

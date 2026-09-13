@@ -3000,6 +3000,20 @@ namespace motion {
             _motionLoopTime = 0;
             _tickCount = std::max(_tickCount, end);
             _lastTime = std::max(_lastTime, _tickCount);
+
+#if defined(KRKR_RENDER_PROBE)
+            // [motion probe] Record WHICH motion a skip targets and the resulting
+            // timeline state, so a "skip leaked into the title bg" is attributable
+            // to this Player vs a script-level KAG skip. Default off.
+            // [运动探针] 记录 skip 命中的 motion 与结果状态，用于区分是 Player 被连带跳过
+            // 还是脚本/KAG 全局跳过。默认关闭。
+            if(auto l = _logger()) {
+                l->info("[MotionSkipProbe] skipToSync motion='{}' end={} "
+                        "tick={} loopTime={} playing={}",
+                        _motion.AsStdString(), end, _tickCount, _motionLoopTime,
+                        _playing ? 1 : 0);
+            }
+#endif
         }
 
         // Public accessor for the most recent motion source, so the
