@@ -2116,6 +2116,8 @@ void tTJSNI_BaseLayer::InternalSetSize(tjs_uint width, tjs_uint height) {
         const tjs_uint minimumHeight = static_cast<tjs_uint>(Font.Height) * 2;
         if(height < minimumHeight)
             height = minimumHeight;
+    } else if(Name == TJS_W("PreRenderFontExResizeLayer") && height < 64) {
+        height = 64;
     }
     if(Rect.get_width() != (tjs_int)width ||
        Rect.get_height() != (tjs_int)height) {
