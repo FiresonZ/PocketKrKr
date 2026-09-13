@@ -2,22 +2,64 @@
 
 This directory provides PocketKrKr architecture, build, source code, and compatibility materials. Content is based on the current code state; historical troubleshooting processes are not stored here.
 
-## Reading Order
+## Entry Points
 
-1. [Getting Started](getting-started.md): Quickly understand the project, build, and run it.
-2. [Architecture](architecture.md): View the engine, bridge, and rendering data flow.
-3. [Source Map](source-map.md): Locate module responsibilities by directory.
-4. [Key References](key-references.md): Find major files and C ABI symbols.
-5. [Build](build.md): View platform toolchains, artifacts, and CI.
-6. [Conventions](conventions.md): Must-read before modifying platform, lifecycle, linking, Live2D, or SIMD code.
-7. [Compatibility](compatibility.md): Run game compatibility regressions.
-8. [Probe Inventory](probes.md): View the unified switch, probe types, log prefixes, and source locations.
-9. [Development Tools](tools.en.md): Use XP3 extraction and TJS2/TJS2100 decompilation analysis tools.
-10. [Rendering Diagnosis](rendering-diagnosis.md): Troubleshoot black screens, frozen frames, and display pipeline issues.
-11. [Optimization Roadmap](optimization-roadmap.md): View performance, stability, and code structure optimization plans.
-12. [AetherKiri Comparison Audit](aetherkiri-audit.en.md): View the shared-implementation, testing, diagnostics, and compatibility difference matrix.
-13. [Plugin Compatibility Inventory](plugin-compatibility.en.md): View plugin status, gaps, compatibility adapters, and reference implementation entry points.
-14. [Todo](todo.md): View current unfinished items.
+- [Documentation Map](document-map.en.md): Choose the canonical page by topic and avoid duplicate records.
+- [Documentation Rules](documentation-rules.en.md): Define content boundaries, fact states, bilingual maintenance, and placeholder requirements.
+
+## Reading By Category
+
+### Orientation and Facts
+
+- [Getting Started](getting-started.en.md): Quickly understand the project, build, and run it.
+- [Technology Stack](tech-stack.en.md): View the main languages, frameworks, dependencies, and runtime forms.
+- [Architecture](architecture.en.md): View the engine, bridge, and rendering data flow.
+
+### Source and Interfaces
+
+- [Source Map](source-map.en.md): Locate module responsibilities by directory.
+- [Key References](key-references.en.md): Find major files and C ABI symbols.
+- [API Contracts](api-contracts.en.md): Record stable C ABI, Dart FFI, TJS, and plugin interfaces.
+
+### Build and Platforms
+
+- [Build](build.en.md): View platform toolchains, artifacts, presets, and CI.
+
+### Development Rules
+
+- [Conventions](conventions.en.md): Must-read before modifying platform, lifecycle, linking, Live2D, or SIMD code.
+
+### Compatibility
+
+- [Compatibility](compatibility.en.md): Run game compatibility regressions.
+- [Plugin Compatibility Inventory](plugin-compatibility.en.md): View plugin status, missing capabilities, compatibility adapters, and reference implementations.
+- [AetherKiri Comparison Audit](aetherkiri-audit.en.md): View the shared-implementation, testing, diagnostics, and compatibility difference matrix.
+- [KiriKiri Z Compatibility References](krkrz-compat.en.md): View external implementations, format materials, and protocol entry points.
+
+### Tests and Acceptance
+
+- [Test Fixtures](test-fixtures.en.md): Register reproducible game, script, resource, font, and rendering inputs.
+- [Compatibility](compatibility.en.md): Record regression matrices and acceptance requirements.
+
+### Diagnostics and Incidents
+
+- [Probe Inventory](probes.en.md): View the unified switch, probe types, log prefixes, and source locations.
+- [Rendering Diagnosis](rendering-diagnosis.en.md): Troubleshoot black screens, frozen frames, and display pipeline issues.
+- [Incident Reports](incident-reports.en.md): Record confirmed issue boundaries and verification results.
+
+### Tools and Analysis
+
+- [Development Tools](tools.en.md): Use XP3 extraction and TJS2/TJS2100 decompilation analysis tools.
+
+### Planning and Optimization
+
+- [Todo](todo.en.md): View current unfinished items.
+- [Optimization Roadmap](optimization-roadmap.en.md): View confirmed long-term optimization directions.
+- [Performance Optimization](perf-optimization.en.md): View performance evaluation principles and acceptance methods.
+
+### Releases and Changes
+
+- [Release Notes](release-notes.en.md): Record version scope, user impact, compatibility impact, and verification status.
 
 ## Project Boundaries
 
@@ -45,4 +87,4 @@ Android plugin sources are propagated into the engine shared library through tar
 
 ## References
 
-External implementations, format materials, and behavior comparison entry points are collected in [krkrz-compat.md](krkrz-compat.md). Reference materials are only for understanding protocols and behavior; they do not mean that PocketKrKr has the corresponding capabilities, nor do they directly copy external code.
+External implementations, format materials, and behavior comparison entry points are collected in [krkrz-compat.en.md](krkrz-compat.en.md). Reference materials are only for understanding protocols and behavior; they do not mean that PocketKrKr has the corresponding capabilities, nor do they directly copy external code.

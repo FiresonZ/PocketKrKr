@@ -2,22 +2,64 @@
 
 本目录提供 PocketKrKr 的架构、构建、源码和兼容性资料。内容以当前代码状态为准，历史排查过程不在这里保存。
 
-## 阅读顺序
+## 入口
 
-1. [入门指南](getting-started.md)：快速了解项目、构建和运行。
-2. [架构](architecture.md)：查看引擎、桥接和渲染数据流。
-3. [源码地图](source-map.md)：按目录定位模块职责。
-4. [关键引用](key-references.md)：查找主要文件和 C ABI 符号。
-5. [构建](build.md)：查看平台工具链、产物和 CI。
-6. [约定](conventions.md)：修改平台、生命周期、链接、Live2D 和 SIMD 代码前必读。
-7. [兼容性](compatibility.md)：执行游戏兼容性回归。
-8. [探针清单](probes.md)：查看统一开关、探针类型、日志前缀和源码位置。
-9. [开发工具](tools.md)：使用 XP3 解包和 TJS2/TJS2100 反编译分析工具。
-10. [渲染诊断](rendering-diagnosis.md)：排查黑屏、停帧和显示链路问题。
-11. [优化路线](optimization-roadmap.md)：查看性能、稳定性和代码结构优化方案。
-12. [AetherKiri 对照审计](aetherkiri-audit.md)：查看同源实现、测试、诊断和兼容性差异矩阵。
-13. [插件兼容清单](plugin-compatibility.md)：查看插件状态、缺失能力、兼容桩和参考实现入口。
-14. [待办](todo.md)：查看当前未完成事项。
+- [文档分类地图](document-map.md)：按主题选择规范文档，避免重复记录。
+- [文档写入规则](documentation-rules.md)：规定内容边界、事实状态、双语维护和占位页要求。
+
+## 分类阅读
+
+### 入门与事实
+
+- [入门指南](getting-started.md)：快速了解项目、构建和运行。
+- [技术栈](tech-stack.md)：查看主要语言、框架、依赖和运行形态。
+- [架构](architecture.md)：查看引擎、桥接和渲染数据流。
+
+### 源码与接口
+
+- [源码地图](source-map.md)：按目录定位模块职责。
+- [关键引用](key-references.md)：查找主要文件和 C ABI 符号。
+- [API 契约](api-contracts.md)：记录稳定的 C ABI、Dart FFI、TJS 和插件接口。
+
+### 构建与平台
+
+- [构建](build.md)：查看平台工具链、产物、预设和 CI。
+
+### 开发规则
+
+- [开发约定](conventions.md)：修改平台、生命周期、链接、Live2D 或 SIMD 代码前必读。
+
+### 兼容性
+
+- [兼容性](compatibility.md)：执行游戏兼容性回归。
+- [插件兼容清单](plugin-compatibility.md)：查看插件状态、缺失能力、兼容桩和参考实现入口。
+- [AetherKiri 对照审计](aetherkiri-audit.md)：查看同源实现、测试、诊断和兼容性差异矩阵。
+- [KiriKiri Z 兼容参考](krkrz-compat.md)：查看外部实现、格式资料和协议入口。
+
+### 测试与验收
+
+- [测试夹具](test-fixtures.md)：登记可重复准备的游戏、脚本、资源、字体和渲染输入。
+- [兼容性](compatibility.md)：记录回归矩阵和验收要求。
+
+### 诊断与问题
+
+- [探针清单](probes.md)：查看统一开关、探针类型、日志前缀和源码位置。
+- [渲染诊断](rendering-diagnosis.md)：排查黑屏、停帧和显示链路问题。
+- [问题记录](incident-reports.md)：记录已经确认边界的问题及其验证结果。
+
+### 工具与分析
+
+- [开发工具](tools.md)：使用 XP3 解包和 TJS2/TJS2100 反编译分析工具。
+
+### 规划与优化
+
+- [待办](todo.md)：查看当前未完成事项。
+- [优化路线](optimization-roadmap.md)：查看已确认的长期优化方向。
+- [性能优化](perf-optimization.md)：查看性能评估原则和验收方法。
+
+### 发布与变更
+
+- [发布变更](release-notes.md)：记录版本范围、用户影响、兼容性影响和验证状态。
 
 ## 项目边界
 
