@@ -13,7 +13,7 @@
 - 当前能力、回归闭环和游戏兼容性写入 `compatibility.md`。
 - 外部仓库、格式资料和协议入口写入 `krkrz-compat.md`。
 - 插件状态和缺口写入 `plugin-compatibility.md`。
-- 外部实现逐项差异写入 `aetherkiri-audit.md`。
+- 外部行为的抽象契约写入 `reference/`，不建立逐项仓库对照页。
 - 探针名称、开关、位置和成本写入 `probes.md`；使用探针判断问题写入 `rendering-diagnosis.md`。
 - 未完成事项写入 `todo.md`；已确认的长期方向写入 `optimization-roadmap.md`。
 - 性能测量方法和验收规则写入 `perf-optimization.md`。

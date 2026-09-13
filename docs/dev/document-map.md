@@ -10,7 +10,7 @@
 | 源码与接口 | 文件职责、关键符号、C ABI 和模块边界 | [source-map.md](source-map.md)、[key-references.md](key-references.md)、[api-contracts.md](api-contracts.md) |
 | 构建与平台 | 工具链、预设、产物、CI 和平台差异 | [build.md](build.md) |
 | 开发规则 | 修改前约束、生命周期、渲染、链接和文档规则 | [conventions.md](conventions.md)、[documentation-rules.md](documentation-rules.md) |
-| 兼容性 | 当前能力、游戏回归、插件缺口和外部实现对照 | [compatibility.md](compatibility.md)、[plugin-compatibility.md](plugin-compatibility.md)、[aetherkiri-audit.md](aetherkiri-audit.md)、[krkrz-compat.md](krkrz-compat.md) |
+| 兼容性 | 当前能力、游戏回归、插件缺口和外部行为参考 | [compatibility.md](compatibility.md)、[plugin-compatibility.md](plugin-compatibility.md)、[krkrz-compat.md](krkrz-compat.md)、[reference/README.md](reference/README.md) |
 | 测试与验收 | 可重复的 fixture、回归矩阵和验收条件 | [test-fixtures.md](test-fixtures.md)、[compatibility.md](compatibility.md) |
 | 诊断与问题 | 探针、渲染诊断和结构化问题记录 | [probes.md](probes.md)、[rendering-diagnosis.md](rendering-diagnosis.md)、[incident-reports.md](incident-reports.md) |
 | 工具与分析 | 解包、TJS2 反编译和开发辅助工具 | [tools.md](tools.md) |
@@ -22,7 +22,7 @@
 - `compatibility.md` 记录测试闭环和回归要求，不记录外部仓库资料总表。
 - `krkrz-compat.md` 记录外部参考入口和项目兼容边界，不记录单个游戏排查过程。
 - `plugin-compatibility.md` 只记录插件状态、缺口、兼容桩和插件参考入口。
-- `aetherkiri-audit.md` 只记录与 AetherKiri 的逐项实现对照，不替代通用兼容性文档。
+- `reference/` 只记录去特征化的抽象行为契约，不保存外部源码或逐项仓库对照。
 - `todo.md` 只记录尚未完成的工作；已验证事项应移除或转入事实文档。
 - `optimization-roadmap.md` 记录已确认的长期优化方向；`perf-optimization.md` 记录性能评估原则和验收方法。
 - `probes.md` 记录探针清单；`rendering-diagnosis.md` 记录如何使用探针判断问题。

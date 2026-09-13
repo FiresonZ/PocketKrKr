@@ -10,7 +10,7 @@ This page is the single classification entry for `docs/dev/`. Before adding a do
 | Source and interfaces | File responsibilities, key symbols, C ABI, and module boundaries | [source-map.en.md](source-map.en.md), [key-references.en.md](key-references.en.md), [api-contracts.en.md](api-contracts.en.md) |
 | Build and platforms | Toolchains, presets, artifacts, CI, and platform differences | [build.en.md](build.en.md) |
 | Development rules | Pre-change constraints, lifecycle, rendering, linking, and documentation rules | [conventions.en.md](conventions.en.md), [documentation-rules.en.md](documentation-rules.en.md) |
-| Compatibility | Current capabilities, game regression, plugin gaps, and external implementation comparison | [compatibility.en.md](compatibility.en.md), [plugin-compatibility.en.md](plugin-compatibility.en.md), [aetherkiri-audit.en.md](aetherkiri-audit.en.md), [krkrz-compat.en.md](krkrz-compat.en.md) |
+| Compatibility | Current capabilities, game regression, plugin gaps, and external behavior references | [compatibility.en.md](compatibility.en.md), [plugin-compatibility.en.md](plugin-compatibility.en.md), [krkrz-compat.en.md](krkrz-compat.en.md), [reference/README.en.md](reference/README.en.md) |
 | Tests and acceptance | Reproducible fixtures, regression matrices, and acceptance conditions | [test-fixtures.en.md](test-fixtures.en.md), [compatibility.en.md](compatibility.en.md) |
 | Diagnostics and incidents | Probes, rendering diagnosis, and structured issue records | [probes.en.md](probes.en.md), [rendering-diagnosis.en.md](rendering-diagnosis.en.md), [incident-reports.en.md](incident-reports.en.md) |
 | Tools and analysis | Extraction, TJS2 decompilation, and developer tools | [tools.en.md](tools.en.md) |
@@ -22,7 +22,7 @@ This page is the single classification entry for `docs/dev/`. Before adding a do
 - `compatibility.en.md` records the test loop and regression requirements, not the external reference catalog.
 - `krkrz-compat.en.md` records external reference entry points and project compatibility boundaries, not individual game investigations.
 - `plugin-compatibility.en.md` records plugin status, gaps, compatibility adapters, and plugin references only.
-- `aetherkiri-audit.en.md` records the itemized AetherKiri comparison and does not replace the general compatibility documents.
+- `reference/` stores de-featured abstract behavior contracts only; it does not store external source code or a repository-by-repository comparison.
 - `todo.en.md` records unfinished work only; verified items should be removed or moved into a facts document.
 - `optimization-roadmap.en.md` records confirmed long-term directions; `perf-optimization.en.md` records performance evaluation rules and acceptance methods.
 - `probes.en.md` records the probe inventory; `rendering-diagnosis.en.md` records how to use probes to classify a problem.

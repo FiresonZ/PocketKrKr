@@ -33,7 +33,7 @@ This directory provides PocketKrKr architecture, build, source code, and compati
 
 - [Compatibility](compatibility.en.md): Run game compatibility regressions.
 - [Plugin Compatibility Inventory](plugin-compatibility.en.md): View plugin status, missing capabilities, compatibility adapters, and reference implementations.
-- [AetherKiri Comparison Audit](aetherkiri-audit.en.md): View the shared-implementation, testing, diagnostics, and compatibility difference matrix.
+- [General References](reference/README.en.md): View de-featured text-baseline and animation-sync contracts.
 - [KiriKiri Z Compatibility References](krkrz-compat.en.md): View external implementations, format materials, and protocol entry points.
 
 ### Tests and Acceptance

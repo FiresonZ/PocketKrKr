@@ -13,7 +13,7 @@ Read the [documentation map](document-map.en.md) before adding content. Prefer u
 - Current capabilities, regression loops, and game compatibility belong in `compatibility.en.md`.
 - External repositories, format material, and protocol entry points belong in `krkrz-compat.en.md`.
 - Plugin status and gaps belong in `plugin-compatibility.en.md`.
-- Itemized external implementation differences belong in `aetherkiri-audit.en.md`.
+- Abstract contracts for external behavior belong in `reference/`; do not create repository-by-repository comparison pages.
 - Probe names, switches, locations, and cost belong in `probes.en.md`; probe-based diagnosis belongs in `rendering-diagnosis.en.md`.
 - Unfinished work belongs in `todo.en.md`; confirmed long-term directions belong in `optimization-roadmap.en.md`.
 - Performance measurement methods and acceptance rules belong in `perf-optimization.en.md`.

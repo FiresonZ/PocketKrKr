@@ -33,7 +33,7 @@
 
 - [兼容性](compatibility.md)：执行游戏兼容性回归。
 - [插件兼容清单](plugin-compatibility.md)：查看插件状态、缺失能力、兼容桩和参考实现入口。
-- [AetherKiri 对照审计](aetherkiri-audit.md)：查看同源实现、测试、诊断和兼容性差异矩阵。
+- [通用参考](reference/README.md)：查看去特征化的文字基线和动画同步契约。
 - [KiriKiri Z 兼容参考](krkrz-compat.md)：查看外部实现、格式资料和协议入口。
 
 ### 测试与验收
