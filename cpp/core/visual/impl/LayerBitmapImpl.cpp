@@ -1394,14 +1394,16 @@ void tTVPNativeBaseBitmap::DrawTextSingle(
 struct tTVPCharacterDrawData {
     tTVPCharacterData *Data; // main character data
     tTVPCharacterData *Shadow; // shadow character data
+    tjs_char Character;
     tjs_int X, Y;
     tTVPRect ShadowRect;
     bool ShadowDrawn;
 
     tTVPCharacterDrawData(tTVPCharacterData *data, tTVPCharacterData *shadow,
-                          tjs_int x, tjs_int y) {
+                          tjs_char character, tjs_int x, tjs_int y) {
         Data = data;
         Shadow = shadow;
+        Character = character;
         X = x;
         Y = y;
         ShadowDrawn = false;
@@ -1425,6 +1427,7 @@ struct tTVPCharacterDrawData {
     }
 
     void operator=(const tTVPCharacterDrawData &rhs) {
+        Character = rhs.Character;
         X = rhs.X;
         Y = rhs.Y;
         ShadowRect = rhs.ShadowRect;
@@ -1452,6 +1455,8 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
     tjs_uint32 color, tTVPBBBltMethod bltmode, tjs_int opa, bool holdalpha,
     bool aa, tjs_int shlevel, tjs_uint32 shadowcolor, tjs_int shwidth,
     tjs_int shofsx, tjs_int shofsy, tTVPComplexRect *updaterects) {
+    const tjs_int batchX = x;
+    const tjs_int batchY = y;
     // text drawing function for multiple characters
 
     if(!Is32BPP())
@@ -1551,7 +1556,7 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
                 if(data->BlackBoxX != 0 && data->BlackBoxY != 0) {
                     // append to array
                     drawdata.push_back(
-                        tTVPCharacterDrawData(data, shadow, x, y));
+                        tTVPCharacterDrawData(data, shadow, font.Character, x, y));
                 }
 
                 // step to the next character position
@@ -1583,6 +1588,60 @@ void tTVPNativeBaseBitmap::DrawTextMultiple(
 
         p++;
     }
+
+#if defined(KRKR_RENDER_PROBE)
+    {
+        static std::set<std::string> sProbedBatches;
+        std::size_t textHash = 1469598103934665603ULL;
+        for(const tjs_char *hashChar = text.c_str(); *hashChar; ++hashChar) {
+            textHash ^= static_cast<std::size_t>(*hashChar);
+            textHash *= 1099511628211ULL;
+        }
+        const std::string batchKey = Font.Face.AsNarrowStdString() + "|" +
+            std::to_string(Font.Height) + "|" +
+            std::to_string(destrect.left) + ":" + std::to_string(destrect.top) + "|" +
+            std::to_string(destrect.right) + ":" + std::to_string(destrect.bottom) + "|" +
+            std::to_string(batchX) + ":" + std::to_string(batchY) + "|" +
+            std::to_string(text.GetLen()) + "|" + std::to_string(textHash);
+        if(sProbedBatches.insert(batchKey).second) {
+            if(auto logger = spdlog::get("core")) {
+                std::string summary;
+                for(std::vector<tTVPCharacterDrawData>::const_iterator i = drawdata.begin();
+                    i != drawdata.end(); ++i) {
+                    const tTVPCharacterData *data = i->Data;
+                    const tjs_int glyphLeft = i->X + data->OriginX;
+                    const tjs_int glyphTop = i->Y + data->OriginY;
+                    const tjs_int glyphRight = glyphLeft + data->BlackBoxX;
+                    const tjs_int glyphBottom = glyphTop + data->BlackBoxY;
+                    const tjs_int clipLeft = glyphLeft > destrect.left ? glyphLeft : destrect.left;
+                    const tjs_int clipTop = glyphTop > destrect.top ? glyphTop : destrect.top;
+                    const tjs_int clipRight = glyphRight < destrect.right ? glyphRight : destrect.right;
+                    const tjs_int clipBottom = glyphBottom < destrect.bottom ? glyphBottom : destrect.bottom;
+                    const bool clippedEmpty = clipLeft >= clipRight || clipTop >= clipBottom;
+                    const std::string clipSummary = clippedEmpty ? "empty" :
+                        std::to_string(clipLeft) + "," + std::to_string(clipTop) + "," +
+                        std::to_string(clipRight) + "," + std::to_string(clipBottom);
+                    if(!summary.empty()) summary += ";";
+                    summary += "U+" + std::to_string(static_cast<unsigned>(i->Character)) +
+                        ":glyph=" + std::to_string(glyphLeft) + "," +
+                        std::to_string(glyphTop) + "," + std::to_string(glyphRight) + "," +
+                        std::to_string(glyphBottom) + "+size=" +
+                        std::to_string(data->BlackBoxX) + "x" + std::to_string(data->BlackBoxY) +
+                        "+origin=" + std::to_string(data->OriginX) + "," +
+                        std::to_string(data->OriginY) + "+xy=" + std::to_string(i->X) + "," +
+                        std::to_string(i->Y) + "+clip=" + clipSummary + "+inc=" +
+                        std::to_string(data->Metrics.CellIncX);
+                }
+                logger->info(
+                    "[TextBatchProbe] face='{}' height={} prerender={} "
+                    "destRect=({},{},{},{}) start=({},{}) drawn={} chars={}",
+                    Font.Face.AsNarrowStdString(), Font.Height,
+                    PrerenderedFont ? 1 : 0, destrect.left, destrect.top,
+                    destrect.right, destrect.bottom, batchX, batchY, drawdata.size(), summary);
+            }
+        }
+    }
+#endif
 
     // draw shadows first
     if(shlevel != 0) {
