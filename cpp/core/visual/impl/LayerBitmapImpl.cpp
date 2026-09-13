@@ -1208,7 +1208,6 @@ void tTVPNativeBaseBitmap::DrawGlyph(
         }
 
         if(data) {
-
             if(data->BlackBoxX != 0 && data->BlackBoxY != 0) {
                 tTVPRect drect;
                 tTVPRect shadowdrect;
@@ -1345,6 +1344,43 @@ void tTVPNativeBaseBitmap::DrawTextSingle(
         }
 
         if(data) {
+#if defined(KRKR_RENDER_PROBE)
+            {
+                static std::set<std::string> sProbedSingleLayouts;
+                const tjs_int glyphLeft = x + data->OriginX;
+                const tjs_int glyphTop = y + data->OriginY;
+                const tjs_int glyphRight = glyphLeft + data->BlackBoxX;
+                const tjs_int glyphBottom = glyphTop + data->BlackBoxY;
+                const tjs_int clipLeft = glyphLeft > destrect.left ? glyphLeft : destrect.left;
+                const tjs_int clipTop = glyphTop > destrect.top ? glyphTop : destrect.top;
+                const tjs_int clipRight = glyphRight < destrect.right ? glyphRight : destrect.right;
+                const tjs_int clipBottom = glyphBottom < destrect.bottom ? glyphBottom : destrect.bottom;
+                const bool clippedEmpty = clipLeft >= clipRight || clipTop >= clipBottom;
+                const std::string clipSummary = clippedEmpty ? "empty" :
+                    std::to_string(clipLeft) + "," + std::to_string(clipTop) + "," +
+                    std::to_string(clipRight) + "," + std::to_string(clipBottom);
+                const std::string layoutKey = Font.Face.AsNarrowStdString() + "|" +
+                    std::to_string(Font.Height) + "|" +
+                    std::to_string(static_cast<unsigned>(font.Character)) + "|" +
+                    std::to_string(destrect.left) + ":" + std::to_string(destrect.top) + "|" +
+                    std::to_string(destrect.right) + ":" + std::to_string(destrect.bottom) + "|" +
+                    std::to_string(x) + ":" + std::to_string(y);
+                if(sProbedSingleLayouts.insert(layoutKey).second) {
+                    if(auto logger = spdlog::get("core")) {
+                        logger->info(
+                            "[TextSingleLayoutProbe] face='{}' height={} prerender={} "
+                            "char=U+{} request=({},{}) glyph=({},{},{},{}) size={}x{} "
+                            "origin=({}, {}) clip={} inc={}",
+                            Font.Face.AsNarrowStdString(), Font.Height,
+                            PrerenderedFont ? 1 : 0,
+                            static_cast<unsigned>(font.Character), x, y,
+                            glyphLeft, glyphTop, glyphRight, glyphBottom,
+                            data->BlackBoxX, data->BlackBoxY, data->OriginX, data->OriginY,
+                            clipSummary, data->Metrics.CellIncX);
+                    }
+                }
+            }
+#endif
 
             if(data->BlackBoxX != 0 && data->BlackBoxY != 0) {
                 tTVPRect drect;
