@@ -150,9 +150,6 @@ namespace motion {
             _motionTracks.clear();
             _motionNodes.clear();
             _captureActive = false;
-            _skipApplied = false;
-            if(sSkipOwner == this)
-                sSkipOwner = nullptr;
             _lastFramePosX.clear();
             _lastFramePosY.clear();
             cleanupTempLayer();
@@ -235,8 +232,6 @@ namespace motion {
                 }
                 _playing = false;
                 _allplaying = false;
-                if(sSkipOwner == this)
-                    sSkipOwner = nullptr;
                 return true; // finished this frame / 本帧播完
             }
             return false;
