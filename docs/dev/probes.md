@@ -34,6 +34,7 @@ Android、iOS 和 macOS 构建脚本会在环境变量 `ENABLE_RENDER_PROBE` 明
 | `[TextLayerProbe]` | 记录文字所属图层矩形、图像偏移、裁剪矩形和位图尺寸，把局部文字坐标还原到图层合成坐标 | `cpp/core/visual/LayerIntf.cpp` 的 `tTJSNI_BaseLayer::DrawText()` | 按字符、图层矩形、图像偏移和裁剪矩形去重；低成本 |
 | `[TextLayoutProbe]` | 对比请求坐标、最终字形矩形、裁剪后矩形、源矩形和 ascent 偏移，定位 GAL 选项文字偏小或偏出选项框 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` 的 `InternalDrawText()` | 按字体、字号和目标矩形去重；低成本 |
 | `[TextBatchProbe]` | 汇总整行多字符文字的每个字符码点、字形尺寸、Origin、起始坐标和 advance，比较 GAL 选项的字号与基线 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` 的 `DrawTextMultiple()` | 按字体、字号、目标矩形、起始坐标和字符序列去重；不记录原始文本 |
+| `[TextRenderScaleProbe]` | 记录 TextRender 插件的逻辑字号、请求缩放、窗口源尺寸、帧缓冲尺寸和最终缩放，确认独立文字渲染器是否被重复缩放 | `cpp/plugins/textrender.cpp` 的 `TextRenderBase::getEffectiveFontScale()` | 按尺寸、字号和缩放参数去重；低成本 |
 | `PSB frameColor` | 检查 PSB 帧颜色字段是否存在及其四角颜色解析结果 | `cpp/plugins/psbfile/PSBMedia.cpp` | 目标 PSB 帧解析时；低成本 |
 | `loadProbe` | 对比 MotionPlayer 资源的实际加载尺寸和 PSB 缓存元数据 | `cpp/plugins/motionplayer/Player.h` | 目标 m2logo 线条节点加载时；低成本 |
 | `m2foldProbe` | 检查 M2 折叠部件的最终角点包围盒、锚点和变换结果 | `cpp/plugins/motionplayer/Player.h` | 目标图标且达到折叠阶段；有几何计算和日志成本 |

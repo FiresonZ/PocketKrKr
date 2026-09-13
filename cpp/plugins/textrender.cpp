@@ -13,11 +13,13 @@
 #include "tvpfontstruc.h"
 #include "WindowIntf.h"
 #include "krkr_egl_context.h"
+#include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -404,6 +406,25 @@ double TextRenderBase::getEffectiveFontScale() const {
       std::clamp(std::max(static_cast<double>(srcW) / static_cast<double>(fbW),
                           static_cast<double>(srcH) / static_cast<double>(fbH)),
                  1.0, 2.0);
+#if defined(KRKR_RENDER_PROBE)
+  {
+    static std::set<std::string> sProbedScales;
+    const std::string key = std::to_string(srcW) + "x" + std::to_string(srcH) + "|" +
+        std::to_string(fbW) + "x" + std::to_string(fbH) + "|" +
+        std::to_string(m_boxWidth) + "x" + std::to_string(m_boxHeight) + "|" +
+        std::to_string(m_state.fontSize) + "|" + std::to_string(scale) + "|" +
+        std::to_string(autoScale);
+    if(sProbedScales.insert(key).second) {
+      if(auto logger = spdlog::get("core")) {
+        logger->info(
+            "[TextRenderScaleProbe] box={}x{} source={}x{} framebuffer={}x{} "
+            "fontSize={} requestedScale={} autoScale={} effectiveScale={}",
+            m_boxWidth, m_boxHeight, srcW, srcH, fbW, fbH, m_state.fontSize,
+            scale, autoScale, scale * autoScale);
+      }
+    }
+  }
+#endif
   return scale * autoScale;
 }
 
