@@ -48,6 +48,33 @@ Scope: AetherKiri's current public core directories, build entry points, plugins
 | Web/ONS/Siglus | AetherKiri product and runtime extensions | Outside PocketKrKr's current boundary | Not applicable | None | Exclude from the PocketKrKr compatibility roadmap |
 | Development-tool cache | Linux setup, Godot/vcpkg cache, and diagnostic tooling | Build scripts, vcpkg, and TJS2 tooling exist, with more scattered environment guidance | Partial | P2 | Add tool-availability checks and a Linux verification entry without importing the Godot toolchain |
 
+## Fine-Grained Implementation and Removal Checklist
+
+These entries are intended to be implemented, verified, and closed one by one. Once an item is complete, move it to a verified section instead of leaving it as a permanent vague capability statement.
+
+| ID | Chain | PocketKrKr status | AetherKiri comparison | Acceptance condition | After completion |
+|---|---|---|---|---|---|
+| AK-FONT-01 | `Layer::drawText` glyph-top boundary | `GetFontGlyphDrawRect` plus ClipTop correction is present | Has dedicated baseline helpers and tests | Options, dialogue, shadows, and negative y do not clip; ordinary coordinates remain unchanged | Close after font regression |
+| AK-FONT-02 | TPF `OriginY` and FreeType bearing | Both paths exist; unified tests are missing | Shared `ComputeGlyphOriginY` contract | TPF and fallback glyph tops match for the same baseline | Close after tests pass |
+| AK-FONT-03 | Prerendered-font width/height/zoom | `PreRenderFontEx` and stretch probes exist | More complete font state tracking | Source size, requested size, and destination rectangle can be correlated from logs | Close after verification |
+| AK-FONT-04 | GAL option font-size compatibility | Empty-name `PreRenderFont` 32->39 compatibility is present | External implementation has no game-specific rule | Only the target path changes; ordinary 32px text is unchanged | Move into a compatibility rule after device verification |
+| AK-SYNC-01 | `D3DEmote.tjs stopMovie/sync` | Script calls `skipToSync -> progress(1) -> stop` | Same script chain relies on a working skip operation | Early click continues into the title screen | Close the bug item after regression |
+| AK-SYNC-02 | `Player::skipToSync` | Was empty; now advances a non-looping timeline to its end | AetherKiri finishes one-shot timelines and clears sync state | `progress(1)` reports completion and `onSync` fires once | Close after a fixture is added |
+| AK-SYNC-03 | Sync-wait state | `_syncWaiting/_syncActive` are absent | Explicit sync gating and release paths exist | Repeated clicks, natural completion, skip, stop, and destroy do not lose the wait | Implement only if a real caller is confirmed |
+| AK-SYNC-04 | Command-list pulse | Mostly relies on one-shot `_stopCommandSent` | AetherKiri has a command-list pulse | Animation end and early click each produce one effective repaint/STOP | Decide after a fixture exists |
+| AK-SYNC-05 | Automatic progress | Depends on script/current main-loop progress calls | AetherKiri registers continuous-tick progress | Animation still completes after click without an extra script tick | Port only if a missing call path is proven |
+| AK-SYNC-06 | `releaseSyncWait` | No equivalent method | Explicitly clears sync wait/active state | Resource switch, stop, and destroy leave no stale wait | Implement only if a caller is confirmed |
+| AK-MOTION-01 | M2 timeline units | Uses parsed milliseconds | Also separates parsed time from real delta | Logo 4s/1.5s timelines are not converted twice | Close after existing verification |
+| AK-MOTION-02 | M2 sub-motion expansion | Flat/tree expansion and deduplication exist | Split into node-tree modules | Title submotions expand once and parent transforms propagate correctly | Close after a multi-level fixture |
+| AK-MOTION-03 | Motion `captureCanvas` | Mobile uses no-op/direct-composition compatibility | More layered host/backend separation | Call-only scripts do not block; result-consuming games are identified separately | Close by call-contract evidence |
+| AK-PLUGIN-01 | Plugin registration gaps | No unified real/stub/empty report | Has `plugin_gap_audit.py` | Every registered name has an implementation state and parameter contract | Close after CI report integration |
+| AK-TEST-01 | TJS/KAG fixtures | Decompiler workflow exists; isolated fixtures are limited | CP932, missing-member, and script-compatibility tests exist | Dynamic properties, Variants, exceptions, encoding, and waits are independently reproducible | Close after CI coverage |
+| AK-DIAG-01 | Diagnostic profiles | Unified macro and file logs, without profile contract | Baseline/render/script profiles exist | Same issue can be reproduced at low/medium/high overhead with correlated logs | Close after evidence-bundle support |
+
+### Current Bug: Early Click Freezes the Title Animation
+
+A concrete gap has been identified: `cpp/plugins/motionplayer/Player.h` had an empty `skipToSync()` implementation, while `D3DEmote.tjs` explicitly calls `skipToSync()`, `progress(1)`, and `stop()` for the skip path. The minimal timeline-skip semantics are now implemented; a real-device regression is still required to confirm that an early click enters the title screen normally.
+
 ## Staged Plan
 
 ### P0: Close the current font issue

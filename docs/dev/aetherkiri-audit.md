@@ -48,7 +48,32 @@
 | Web/ONS/Siglus | AetherKiri 的产品和运行时扩展 | PocketKrKr 当前边界不包含这些运行时 | 不适用 | 无 | 不列入 PocketKrKr 兼容路线 |
 | 开发工具缓存 | Linux setup、Godot/vcpkg cache、诊断工具 | PocketKrKr 有构建脚本、vcpkg 和 TJS2 工具，但环境依赖说明较分散 | 部分 | P2 | 补充工具可用性检查和 Linux 验证入口，不引入 Godot 工具链 |
 
-## 分阶段实施顺序
+## 细粒度待实现/待删除清单
+
+以下条目用于逐项实现、验证和关闭。每项完成后应从“待实现”移到“已验证”，而不是长期保留为模糊能力描述。
+
+| ID | 链路 | PocketKrKr 当前状态 | AetherKiri 对照 | 验收条件 | 完成后处理 |
+|---|---|---|---|---|---|
+| AK-FONT-01 | `Layer::drawText` 字形顶部边界 | 已补 `GetFontGlyphDrawRect` + ClipTop 修正 | 有独立基线辅助函数和测试 | 选项、对话、阴影、负 y 不裁切，普通坐标不改变 | 加入字体回归后关闭 |
+| AK-FONT-02 | TPF `OriginY` 与 FreeType bearing | 已有两条路径，缺统一测试 | 共享 `ComputeGlyphOriginY` 契约 | 同一 baseline 下 TPF/fallback 字形顶部一致 | 测试通过后关闭 |
+| AK-FONT-03 | 预渲染字体 width/height/zoom | 已有 `PreRenderFontEx` 和 Stretch 探针 | AetherKiri 维护更完整字体状态 | 原始字库尺寸、目标字号、目标矩形三者可从日志闭合 | 验证后关闭 |
+| AK-FONT-04 | GAL 选项字号兼容 | 当前对空名 `PreRenderFont` 的 32->39 兼容 | 外部实现不提供该游戏特例 | 仅目标路径生效，普通 32px 不变 | 真机验证后移入兼容规则 |
+| AK-SYNC-01 | `D3DEmote.tjs stopMovie/sync` | 脚本调用 `skipToSync -> progress(1) -> stop` | 同一脚本链路依赖有效 skip | 提前点击后标题继续进入主界面 | 通过后关闭 bug 条目 |
+| AK-SYNC-02 | `Player::skipToSync` | 原先为空；本次已推进非循环时间线末端 | AetherKiri 会结束 one-shot timeline 并清同步状态 | skip 后 `progress(1)` 返回完成，`onSync` 只触发一次 | 加回归后关闭 |
+| AK-SYNC-03 | sync wait 状态 | 缺少 `_syncWaiting/_syncActive` | 有 release/skip 时的同步门控 | 连续点击、动画自然结束、跳过后 stop 均不丢 wait | 若脚本实际读取再实现 |
+| AK-SYNC-04 | command-list pulse | 当前以 `_stopCommandSent` 一次性 STOP 为主 | AetherKiri 有 command-list pulse | 动画结束和提前点击都能触发一次有效重绘/STOP | 建 fixture 后决定是否实现 |
+| AK-SYNC-05 | 自动进度 | 当前依赖脚本/现有主循环调用 `progress` | AetherKiri 有 continuous tick 自动进度注册 | 点击后无脚本额外 tick 依赖，动画仍可完成 | 证明缺失后再移植 |
+| AK-SYNC-06 | `releaseSyncWait` | 当前无同名接口 | AetherKiri 显式清理 sync wait/active | 资源切换、stop、destroy 后不会残留等待状态 | 若调用方存在再实现 |
+| AK-MOTION-01 | M2 轨道时间单位 | 当前按解析后的毫秒推进 | AetherKiri 也区分解析时间与实时 delta | logo 4s/1.5s 时间线不二次换算 | 已有验证后关闭 |
+| AK-MOTION-02 | M2 子运动展开 | 当前有 flat/tree 展开和去重逻辑 | AetherKiri 拆分为节点树模块 | title 子运动只展开一次且父变换传递正确 | 加多层 fixture 后关闭 |
+| AK-MOTION-03 | motion captureCanvas | 当前移动端按 no-op/直接合成兼容 | AetherKiri 有更完整 host/backend 分层 | 脚本只调用不取返回值时不阻塞；取返回值的游戏单独识别 | 按调用契约关闭 |
+| AK-PLUGIN-01 | 插件注册缺口 | 没有统一 real/stub/empty 报告 | 有 `plugin_gap_audit.py` | 每个注册名有实现状态和参数契约 | 报告纳入 CI 后关闭 |
+| AK-TEST-01 | TJS/KAG fixture | 有反编译工具，独立 fixture 较少 | 有 CP932、缺成员、脚本兼容测试 | 动态属性、Variant、异常、编码和 wait 均可独立回归 | 测试进入 CI 后关闭 |
+| AK-DIAG-01 | 诊断 profile | 有统一宏和文件日志，无 profile 契约 | 有 baseline/render/script 等 profile | 同一问题能按低/中/高开销复现并导出关联日志 | 证据包完成后关闭 |
+
+### 当前新增 Bug：标题动画提前点击卡住
+
+已定位到一个确定缺口：`cpp/plugins/motionplayer/Player.h` 的 `skipToSync()` 原先是空实现，而 `D3DEmote.tjs` 的跳过链路明确调用 `skipToSync()`、`progress(1)`、`stop()`。本次先实现最小时间线跳过语义；仍需真机确认标题动画提前点击后是否正常进入标题界面。
 
 ### P0：当前字体问题闭环
 

@@ -2983,9 +2983,26 @@ namespace motion {
         }
 
     public:
-        void skipToSync() {}
+        void skipToSync() {
+            if(!_playWasCalled || !_playing)
+                return;
 
-        // Public accessor for the most recent motion source player, so the
+            tjs_int end = 0;
+            if(_motionTracksLoaded) {
+                for(const auto &track : _motionTracks) {
+                    if(!track.frames.empty())
+                        end = std::max(end, track.frames.back().time);
+                }
+            }
+            if(end <= 0)
+                end = 100;
+
+            _motionLoopTime = 0;
+            _tickCount = std::max(_tickCount, end);
+            _lastTime = std::max(_lastTime, _tickCount);
+        }
+
+        // Public accessor for the most recent motion source, so the
         // D3DAdaptor/SeparateLayerAdaptor captureCanvas callbacks (defined in a
         // separate native class in main.cpp) can reach the active Player.
         // sLastDrawSource 的公开访问器：main.cpp 中独立的 D3DAdaptor/
