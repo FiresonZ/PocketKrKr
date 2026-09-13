@@ -1728,10 +1728,22 @@ void tTVPNativeBaseBitmap::GetTextSize(const ttstr &text) {
             tjs_uint width = 0;
             const tjs_char *buf = text.c_str();
             while(*buf) {
-                const tTVPPrerenderedCharacterItem *item =
-                    PrerenderedFont->Find(*buf);
-                if(item != nullptr) {
-                    width += item->Inc;
+                tTVPFontAndCharacterData font;
+                font.Font = Font;
+                font.Antialiased = true;
+                font.Hinting = true;
+                font.BlurLevel = 0;
+                font.BlurWidth = 0;
+                font.FontHash = FontHash;
+                font.Character = *buf;
+                font.Blured = false;
+
+                tTVPCharacterData *data =
+                    TVPGetCharacter(font, this, PrerenderedFont, AscentOfsX,
+                                    AscentOfsY);
+                if(data) {
+                    width += data->Metrics.CellIncX;
+                    data->Release();
                 } else {
                     tjs_int w, h;
                     GetCurrentRasterizer()->GetTextExtent(*buf, w, h);
@@ -1790,7 +1802,46 @@ double tTVPNativeBaseBitmap::GetEscHeightY(const ttstr &text) {
 void tTVPNativeBaseBitmap::GetFontGlyphDrawRect(const ttstr &text,
                                                 struct tTVPRect &area) {
     ApplyFont();
-    GetCurrentRasterizer()->GetGlyphDrawRect(text, area);
+
+    area.left = area.top = area.right = area.bottom = 0;
+    tjs_int offsetx = 0;
+    tjs_int offsety = 0;
+    const tjs_char *buf = text.c_str();
+
+    while(*buf) {
+        tTVPFontAndCharacterData font;
+        font.Font = Font;
+        font.Antialiased = true;
+        font.Hinting = true;
+        font.BlurLevel = 0;
+        font.BlurWidth = 0;
+        font.FontHash = FontHash;
+        font.Character = *buf;
+        font.Blured = false;
+
+        tTVPCharacterData *data =
+            TVPGetCharacter(font, this, PrerenderedFont, AscentOfsX,
+                            AscentOfsY);
+        if(data) {
+            tTVPRect glyphRect(
+                offsetx + data->OriginX,
+                offsety + data->OriginY,
+                offsetx + data->OriginX + data->BlackBoxX,
+                offsety + data->OriginY + data->BlackBoxY);
+            if(glyphRect.left != glyphRect.right &&
+               glyphRect.top != glyphRect.bottom) {
+                if(area.left == area.right && area.top == area.bottom) {
+                    area = glyphRect;
+                } else {
+                    area.do_union(glyphRect);
+                }
+            }
+            offsetx += data->Metrics.CellIncX;
+            offsety += data->Metrics.CellIncY;
+            data->Release();
+        }
+        buf++;
+    }
 }
 iTVPTexture2D *tTVPNativeBaseBitmap::GetTextureForRender(bool isBlendTarget,
                                                          const tTVPRect *rc) {
