@@ -31,6 +31,7 @@ Android、iOS 和 macOS 构建脚本会在环境变量 `ENABLE_RENDER_PROBE` 明
 | `[TpfProbe] HIT/MISS` | 确认字符是否命中预渲染字体以及缺字回退信息 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | 按 face、字号、字符和结果去重；低成本 |
 | `[TextProbe] single/multi` | 对比文本目标矩形、绘制位置、ascent 偏移和预渲染字体路径 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` | 文本绘制时；受控日志成本，不执行额外像素扫描 |
 | `[TextSingleLayoutProbe]` | 记录单字符绘制的码点、请求坐标、最终字形矩形、Origin、裁剪结果和 advance，定位 GAL 选项文字偏小或偏移 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` 的 `DrawTextSingle()` | 按字体、字号、字符、目标矩形和坐标去重；低成本 |
+| `[TextLayerProbe]` | 记录文字所属图层矩形、图像偏移、裁剪矩形和位图尺寸，把局部文字坐标还原到图层合成坐标 | `cpp/core/visual/LayerIntf.cpp` 的 `tTJSNI_BaseLayer::DrawText()` | 按字符、图层矩形、图像偏移和裁剪矩形去重；低成本 |
 | `[TextLayoutProbe]` | 对比请求坐标、最终字形矩形、裁剪后矩形、源矩形和 ascent 偏移，定位 GAL 选项文字偏小或偏出选项框 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` 的 `InternalDrawText()` | 按字体、字号和目标矩形去重；低成本 |
 | `[TextBatchProbe]` | 汇总整行多字符文字的每个字符码点、字形尺寸、Origin、起始坐标和 advance，比较 GAL 选项的字号与基线 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` 的 `DrawTextMultiple()` | 按字体、字号、目标矩形、起始坐标和字符序列去重；不记录原始文本 |
 | `PSB frameColor` | 检查 PSB 帧颜色字段是否存在及其四角颜色解析结果 | `cpp/plugins/psbfile/PSBMedia.cpp` | 目标 PSB 帧解析时；低成本 |

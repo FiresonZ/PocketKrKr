@@ -18,6 +18,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <cmath>
+#include <set>
+#include <string>
 #include <spdlog/spdlog.h>
 
 #include "tjsArray.h"
@@ -4517,6 +4519,35 @@ void tTJSNI_BaseLayer::DrawText(tjs_int x, tjs_int y, const ttstr &text,
     tTVPComplexRect r;
 
     color = TVPToActualColor(color);
+
+#if defined(KRKR_RENDER_PROBE)
+    {
+        static std::set<std::string> sProbedLayerTexts;
+        const tjs_char *probeChar = text.c_str();
+        const unsigned probeCodePoint = probeChar && *probeChar ?
+            static_cast<unsigned>(*probeChar) : 0;
+        const std::string probeKey = std::to_string(static_cast<unsigned>(text.GetLen())) + "|" +
+            std::to_string(probeCodePoint) + "|" + std::to_string(Rect.left) + ":" +
+            std::to_string(Rect.top) + ":" + std::to_string(Rect.right) + ":" +
+            std::to_string(Rect.bottom) + "|" + std::to_string(ImageLeft) + ":" +
+            std::to_string(ImageTop) + "|" + std::to_string(ClipRect.left) + ":" +
+            std::to_string(ClipRect.top) + ":" + std::to_string(ClipRect.right) + ":" +
+            std::to_string(ClipRect.bottom);
+        if(sProbedLayerTexts.insert(probeKey).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info(
+                    "[TextLayerProbe] len={} first=U+{} request=({},{}) "
+                    "layerRect=({},{},{},{}) imageOffset=({},{}) "
+                    "clip=({},{},{},{}) imageSize={}x{}",
+                    text.GetLen(), probeCodePoint, x, y,
+                    Rect.left, Rect.top, Rect.right, Rect.bottom,
+                    ImageLeft, ImageTop,
+                    ClipRect.left, ClipRect.top, ClipRect.right, ClipRect.bottom,
+                    MainImage->GetWidth(), MainImage->GetHeight());
+            }
+        }
+    }
+#endif
 
     MainImage->DrawText(ClipRect, x, y, text, TVP_REVRGB(color), met, opa,
                         HoldAlpha, aa, shadowlevel, TVP_REVRGB(shadowcolor),
