@@ -33,8 +33,9 @@ iOS 使用静态库，macOS 使用动态库，Android 使用自包含 `libengine
 8. `cpp/core/visual/tvpgl.cpp` 的标量实现是像素混合基准。SIMD 修改须逐像素覆盖透明度、边界、溢出和负值路径；未验证的 PS 混合保持标量回退。
 9. 诊断探针统一使用 `KRKR_RENDER_PROBE` 且默认关闭；高频日志必须采样、限频、去重或只记录状态边沿，诊断专用扫描在宏关闭时不得执行。
 10. 探针不得改变正常结果、时序、生命周期或性能；日志不得记录完整用户文本、个人路径或设备隐私。新增或修改探针时同步更新 `docs/dev/probes.md` 及英文版，并验证 ON/OFF 重配置。
-11. 注释只解释非显然的约束、算法和生命周期；复杂源码注释使用简短中英双语，避免复述代码。
-12. 文档只写当前事实、约束、解法和验收标准；外部资料统一从 [兼容性与参考资料](docs/dev/krkrz-compat.md) 进入，不描述逐段复制或个人验证过程。
+11. 分析 `TJS2100` 或编译 `.tjs` 时优先使用 `tools/tjs2dec/tjs2dec-linux-x86_64`，先看 `tjs`，再用 `disasm` 或 `ssa --hlir` 核对调用、坐标、尺寸和缩放；该工具仅用于 Linux x86_64 开发分析，不进入平台产物。
+12. 注释只解释非显然的约束、算法和生命周期；复杂源码注释使用简短中英双语，避免复述代码。
+13. 文档只写当前事实、约束、解法和验收标准；外部资料统一从 [兼容性与参考资料](docs/dev/krkrz-compat.md) 进入，不描述逐段复制或个人验证过程。
 
 ## 执行与验证
 
@@ -51,6 +52,7 @@ iOS 使用静态库，macOS 使用动态库，Android 使用自包含 `libengine
 - 待办：[docs/dev/todo.md](docs/dev/todo.md)
 - 优化：[docs/dev/optimization-roadmap.md](docs/dev/optimization-roadmap.md)
 - 架构与源码：[docs/dev/README.md](docs/dev/README.md)
+- 开发工具：[docs/dev/tools.md](docs/dev/tools.md)
 - 构建：[docs/dev/build.md](docs/dev/build.md)
 - 兼容性与参考：[docs/dev/krkrz-compat.md](docs/dev/krkrz-compat.md)
 
