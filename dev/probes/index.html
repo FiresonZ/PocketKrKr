@@ -1,28 +1,28 @@
 
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="zh" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Mobile-oriented KiriKiri2 runtime">
+        <meta name="description" content="口袋里的吉里吉里2 —— 面向移动端的 KiriKiri2 视觉小说引擎运行环境（C++ 引擎 + Flutter 壳）">
       
       
       
-        <link rel="canonical" href="https://krkr2next.com/en/support_games/">
+        <link rel="canonical" href="https://krkr2next.com/dev/probes/">
       
       
-        <link rel="prev" href="../plugins/">
+        <link rel="prev" href="../conventions/">
       
       
-        <link rel="next" href="../dev/">
+        <link rel="next" href="../rendering-diagnosis/">
       
       
         
-          <link rel="alternate" href="../../support_games/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
-          <link rel="alternate" href="./" hreflang="en">
+          <link rel="alternate" href="../../en/dev/probes/" hreflang="en">
         
       
       
@@ -31,7 +31,7 @@
     
     
       
-        <title>Supported Games - PocketKrKr</title>
+        <title>诊断探针清单 - PocketKrKr</title>
       
     
     
@@ -84,8 +84,8 @@
     <div data-md-component="skip">
       
         
-        <a href="#supported-games" class="md-skip">
-          Skip to content
+        <a href="#_1" class="md-skip">
+          跳转至
         </a>
       
     </div>
@@ -99,8 +99,8 @@
   
 
 <header class="md-header md-header--shadow" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../" title="PocketKrKr" class="md-header__button md-logo" aria-label="PocketKrKr" data-md-component="logo">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="PocketKrKr" class="md-header__button md-logo" aria-label="PocketKrKr" data-md-component="logo">
       
   <img src="../../resources/logo.png" alt="logo">
 
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Supported Games
+              诊断探针清单
             
           </span>
         </div>
@@ -159,20 +159,20 @@
       <div class="md-header__option">
   <div class="md-select">
     
-    <button class="md-header__button md-icon" aria-label="Select language">
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
     </button>
     <div class="md-select__inner">
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../support_games/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               简体中文
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="./" hreflang="en" class="md-select__link">
+            <a href="../../en/dev/probes/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -193,21 +193,21 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
       </label>
-      <nav class="md-search__options" aria-label="Search">
+      <nav class="md-search__options" aria-label="查找">
         
-          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
             
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
           </a>
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
@@ -220,7 +220,7 @@
       <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
-            Initializing search
+            正在初始化搜索引擎
           </div>
           <ol class="md-search-result__list" role="presentation"></ol>
         </div>
@@ -232,7 +232,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/FiresonZ/PocketKrKr" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/FiresonZ/PocketKrKr" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -266,9 +266,9 @@
 
 
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../" title="PocketKrKr" class="md-nav__button md-logo" aria-label="PocketKrKr" data-md-component="logo">
+    <a href="../.." title="PocketKrKr" class="md-nav__button md-logo" aria-label="PocketKrKr" data-md-component="logo">
       
   <img src="../../resources/logo.png" alt="logo">
 
@@ -277,7 +277,7 @@
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/FiresonZ/PocketKrKr" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/FiresonZ/PocketKrKr" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
@@ -297,14 +297,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
+    首页
   
 
     
@@ -321,10 +321,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -343,11 +341,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
@@ -357,7 +355,7 @@
   <span class="md-ellipsis">
     
   
-    Project
+    项目简介
   
 
     
@@ -368,12 +366,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Project
+    项目简介
   
 
           </label>
@@ -386,7 +384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../FAQ/" class="md-nav__link">
+      <a href="../../FAQ/" class="md-nav__link">
         
   
   
@@ -414,14 +412,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../plugins/" class="md-nav__link">
+      <a href="../../plugins/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Plugins
+    插件清单
   
 
     
@@ -439,44 +437,17 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Supported games
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../support_games/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Supported games
+    支持的游戏
   
 
     
@@ -485,48 +456,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#confirmed-support" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Confirmed Support
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-contribute" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How to Contribute
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -577,14 +506,14 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../dev/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
   <span class="md-ellipsis">
     
   
-    Development
+    开发文档
   
 
     
@@ -606,7 +535,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Development
+    开发文档
   
 
           </label>
@@ -621,14 +550,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/getting-started/" class="md-nav__link">
+      <a href="../getting-started/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Getting started
+    入门指南
   
 
     
@@ -649,14 +578,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/tech-stack/" class="md-nav__link">
+      <a href="../tech-stack/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Technology stack
+    技术栈
   
 
     
@@ -677,14 +606,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/todo/" class="md-nav__link">
+      <a href="../todo/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Known issues
+    待办 / 已知问题
   
 
     
@@ -705,14 +634,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/optimization-roadmap/" class="md-nav__link">
+      <a href="../optimization-roadmap/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Optimization roadmap
+    待优化方案
   
 
     
@@ -771,7 +700,7 @@
   <span class="md-ellipsis">
     
   
-    Architecture and source
+    架构与源码
   
 
     
@@ -787,7 +716,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Architecture and source
+    架构与源码
   
 
           </label>
@@ -800,14 +729,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/architecture/" class="md-nav__link">
+      <a href="../architecture/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Architecture
+    架构
   
 
     
@@ -828,14 +757,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/source-map/" class="md-nav__link">
+      <a href="../source-map/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Source map
+    源代码结构地图
   
 
     
@@ -856,14 +785,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/key-references/" class="md-nav__link">
+      <a href="../key-references/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Key references
+    关键引用
   
 
     
@@ -888,8 +817,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -910,11 +841,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -924,7 +855,7 @@
   <span class="md-ellipsis">
     
   
-    Build and conventions
+    构建与约定
   
 
     
@@ -935,12 +866,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Build and conventions
+    构建与约定
   
 
           </label>
@@ -953,14 +884,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/build/" class="md-nav__link">
+      <a href="../build/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Build and toolchain
+    构建与工具链
   
 
     
@@ -981,14 +912,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/conventions/" class="md-nav__link">
+      <a href="../conventions/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Development conventions
+    开发约定
   
 
     
@@ -1006,17 +937,44 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../dev/probes/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    诊断探针清单
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Diagnostic probes
+    诊断探针清单
   
 
     
@@ -1025,6 +983,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        使用方式
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        探针类型
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        已移除探针
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        维护规则
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1037,14 +1059,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/rendering-diagnosis/" class="md-nav__link">
+      <a href="../rendering-diagnosis/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Rendering diagnosis
+    渲染 / 黑屏诊断
   
 
     
@@ -1103,7 +1125,7 @@
   <span class="md-ellipsis">
     
   
-    Compatibility and performance
+    兼容与性能
   
 
     
@@ -1119,7 +1141,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Compatibility and performance
+    兼容与性能
   
 
           </label>
@@ -1132,14 +1154,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/compatibility/" class="md-nav__link">
+      <a href="../compatibility/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Game compatibility
+    游戏兼容性
   
 
     
@@ -1160,14 +1182,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/krkrz-compat/" class="md-nav__link">
+      <a href="../krkrz-compat/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    KIRIKIRI Z plugin compatibility
+    KIRIKIRI Z(krkrz) 插件兼容移植清单
   
 
     
@@ -1188,14 +1210,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../dev/perf-optimization/" class="md-nav__link">
+      <a href="../perf-optimization/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Performance candidates
+    性能优化候选
   
 
     
@@ -1223,14 +1245,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../download/" class="md-nav__link">
+      <a href="../../download/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Downloads
+    下载
   
 
     
@@ -1256,7 +1278,7 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<nav class="md-nav md-nav--secondary" aria-label="目录">
   
   
   
@@ -1265,15 +1287,15 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      目录
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#confirmed-support" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Confirmed Support
+        使用方式
       
     </span>
   </a>
@@ -1281,10 +1303,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-contribute" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to Contribute
+        探针类型
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        已移除探针
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        维护规则
       
     </span>
   </a>
@@ -1311,33 +1355,156 @@
   
 
 
-<h1 id="supported-games">Supported Games<a class="headerlink" href="#supported-games" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>This page lists KiriKiri2 games that have been verified to run or launch on PocketKrKr.
-Compatibility is updated based on actual test results; see <a href="../dev/compatibility/">Game Compatibility</a> for details.</p>
-</blockquote>
-<h2 id="confirmed-support">Confirmed Support<a class="headerlink" href="#confirmed-support" title="Permanent link">&para;</a></h2>
+<h1 id="_1">诊断探针清单<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>本文登记源码中的诊断探针。所有诊断探针统一由 CMake 选项 <code>ENABLE_RENDER_PROBE</code> 控制，并通过编译宏 <code>KRKR_RENDER_PROBE</code> 实现；默认值为 <code>OFF</code>。关闭时，诊断专用日志和扫描不应执行。</p>
+<h2 id="_2">使用方式<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>工作流中的 <code>enable_render_probe</code> 是全局开关，不只控制黑屏诊断。开启后会同时启用渲染、字体、预渲染字体、PSB 解析和 MotionPlayer 诊断探针。</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cmake<span class="w"> </span>-DENABLE_RENDER_PROBE<span class="o">=</span>ON<span class="w"> </span>&lt;其他参数&gt;
+</code></pre></div>
+<p>Android、iOS 和 macOS 构建脚本会在环境变量 <code>ENABLE_RENDER_PROBE</code> 明确存在时显式传递 <code>ON</code> 或 <code>OFF</code>，确保切换状态时重新配置 CMake。诊断完成后应使用 <code>OFF</code> 重新配置并构建。</p>
+<h2 id="_3">探针类型<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Game</th>
-<th>Release date</th>
-<th>Notes</th>
+<th>类型和前缀</th>
+<th>作用</th>
+<th>位置</th>
+<th>频率与成本</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>天神乱漫 LUCKY or UNLUCKY!?</td>
-<td>2009-05-29</td>
-<td>Verified to run</td>
+<td><code>StorageExec</code>、<code>StartupProbe</code>、<code>EngineState</code></td>
+<td>定位脚本启动、存储执行和引擎状态变化</td>
+<td><code>cpp/core/base/ScriptMgnIntf.cpp</code></td>
+<td>启动或状态边沿；低成本</td>
+</tr>
+<tr>
+<td><code>RequestUpdate</code></td>
+<td>判断图层变化是否请求窗口更新</td>
+<td><code>cpp/core/visual/WindowIntf.cpp</code></td>
+<td>受限频率；低成本</td>
+</tr>
+<tr>
+<td><code>DeliverWinUpdate</code>、<code>ContinuousProbe</code></td>
+<td>判断窗口更新事件是否投递、处理和持续运行</td>
+<td><code>cpp/core/base/EventIntf.cpp</code></td>
+<td>受限频率；低成本</td>
+</tr>
+<tr>
+<td><code>TimerProbe</code></td>
+<td>检查计时器回调是否持续触发</td>
+<td><code>cpp/core/utils/win32/TVPTimer.cpp</code></td>
+<td>受限频率；低成本</td>
+</tr>
+<tr>
+<td><code>BasicShow</code></td>
+<td>记录基础绘制设备的异常显示路径</td>
+<td><code>cpp/core/visual/impl/BasicDrawDevice.cpp</code></td>
+<td>异常路径；低成本</td>
+</tr>
+<tr>
+<td><code>RTProbe</code>、<code>UpdateDrawBuffer</code></td>
+<td>检查渲染目标、绘制缓冲和图层合成状态</td>
+<td><code>cpp/core/environ/stubs/ui_stubs.cpp</code></td>
+<td>受限频率；低到中成本</td>
+</tr>
+<tr>
+<td><code>SourceSample</code></td>
+<td>采样引擎源纹理，判断是否写入有效像素</td>
+<td><code>cpp/core/environ/stubs/ui_stubs.cpp</code></td>
+<td>采样触发时；有像素读取成本</td>
+</tr>
+<tr>
+<td><code>BlackScreen</code></td>
+<td>汇总连续黑屏时的绘制与目标状态</td>
+<td><code>cpp/core/environ/stubs/ui_stubs.cpp</code></td>
+<td>黑屏状态触发；中成本</td>
+</tr>
+<tr>
+<td><code>IOSurfacePixelSample</code></td>
+<td>判断共享 IOSurface 是否收到有效像素</td>
+<td><code>bridge/engine_api/src/engine_api.cpp</code> 及 Apple 桥接路径</td>
+<td>采样触发时；有回读成本</td>
+</tr>
+<tr>
+<td><code>engine_tick</code></td>
+<td>判断桥接帧调用是否进入并返回</td>
+<td><code>bridge/engine_api/src/engine_api.cpp</code></td>
+<td>帧级诊断；开启时有日志成本</td>
+</tr>
+<tr>
+<td><code>[FontProbe]</code></td>
+<td>对比请求字体、实际字体和 ascent 等度量，定位字体基线或字号缩放异常</td>
+<td><code>cpp/core/visual/FreeTypeFontRasterizer.cpp</code></td>
+<td>字体应用时；低成本</td>
+</tr>
+<tr>
+<td><code>[TpfMap]</code></td>
+<td>确认字体 face/字号映射到的 <code>.tpf</code> 路径</td>
+<td><code>cpp/core/visual/impl/LayerBitmapImpl.cpp</code></td>
+<td>映射时；低成本</td>
+</tr>
+<tr>
+<td><code>[TpfProbe] HIT/MISS</code></td>
+<td>确认字符是否命中预渲染字体以及缺字回退信息</td>
+<td><code>cpp/core/visual/impl/LayerBitmapImpl.cpp</code></td>
+<td>按 face、字号、字符和结果去重；低成本</td>
+</tr>
+<tr>
+<td><code>[TextProbe] single/multi</code></td>
+<td>对比文本目标矩形、绘制位置、ascent 偏移和预渲染字体路径</td>
+<td><code>cpp/core/visual/impl/LayerBitmapImpl.cpp</code></td>
+<td>文本绘制时；受控日志成本，不执行额外像素扫描</td>
+</tr>
+<tr>
+<td><code>[TextLayoutProbe]</code></td>
+<td>对比请求坐标、最终字形矩形、裁剪后矩形、源矩形和 ascent 偏移，定位 GAL 选项文字偏小或偏出选项框</td>
+<td><code>cpp/core/visual/impl/LayerBitmapImpl.cpp</code> 的 <code>InternalDrawText()</code></td>
+<td>按字体、字号和目标矩形去重；低成本</td>
+</tr>
+<tr>
+<td><code>PSB frameColor</code></td>
+<td>检查 PSB 帧颜色字段是否存在及其四角颜色解析结果</td>
+<td><code>cpp/plugins/psbfile/PSBMedia.cpp</code></td>
+<td>目标 PSB 帧解析时；低成本</td>
+</tr>
+<tr>
+<td><code>loadProbe</code></td>
+<td>对比 MotionPlayer 资源的实际加载尺寸和 PSB 缓存元数据</td>
+<td><code>cpp/plugins/motionplayer/Player.h</code></td>
+<td>目标 m2logo 线条节点加载时；低成本</td>
+</tr>
+<tr>
+<td><code>m2foldProbe</code></td>
+<td>检查 M2 折叠部件的最终角点包围盒、锚点和变换结果</td>
+<td><code>cpp/plugins/motionplayer/Player.h</code></td>
+<td>目标图标且达到折叠阶段；有几何计算和日志成本</td>
+</tr>
+<tr>
+<td><code>drawAnimatedTree stencil</code></td>
+<td>记录受控的 stencil 离屏层准备和合成结果</td>
+<td><code>cpp/plugins/motionplayer/Player.h</code></td>
+<td>stencil 合成时；低到中成本</td>
+</tr>
+<tr>
+<td><code>applyStencilComposite: RGB-rotation alpha recovered</code></td>
+<td>记录蒙版从 RGB 恢复 alpha 的异常兼容路径</td>
+<td><code>cpp/plugins/motionplayer/Player.h</code></td>
+<td>仅发生时；低成本</td>
 </tr>
 </tbody>
 </table>
-<h2 id="how-to-contribute">How to Contribute<a class="headerlink" href="#how-to-contribute" title="Permanent link">&para;</a></h2>
+<h2 id="_4">已移除探针<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>以下日志会按节点或按帧输出大量内容，且没有稳定的长期诊断价值，已删除：MotionPlayer 的 <code>param</code>、<code>cp</code>、<code>mesh</code>、<code>motionDt</code>、<code>strclip</code>、<code>viewportClip</code>、<code>rawColor</code> 以及颜色处理中的逐像素统计。对应的参数化动画、网格变形、裁剪、颜色处理仍然是正常功能代码。</p>
+<h2 id="_5">维护规则<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Run the game on a real device and confirm that it launches, then add it to the table above (game name, release date, and notes).</li>
-<li>For compatibility issues (black screen, crash, script errors, etc.), first check <a href="../dev/todo/">To-do / Known Issues</a> to see whether they are already known,
-  then record the issue according to the process in <a href="../dev/compatibility/">Game Compatibility</a>.</li>
+<li>新增或修改诊断探针必须使用 <code>KRKR_RENDER_PROBE</code>，不能另设模块级默认开启的日志开关。</li>
+<li>探针默认关闭，不能改变渲染结果、事件顺序、线程调度、资源生命周期或错误处理。</li>
+<li>高频日志必须采样、限频、去重或只记录状态边沿；逐像素扫描只能在明确诊断需要时启用。</li>
+<li>日志不得记录完整用户文本、个人路径、设备隐私或完整游戏资源内容；路径和文本应限制为必要的标识。</li>
+<li>探针前缀、触发条件、源码位置和性能成本必须同步更新本文及英文版清单。</li>
+<li>关闭探针时要重新配置构建目录，确认编译命令不再包含 <code>KRKR_RENDER_PROBE</code>。</li>
 </ul>
 
 
@@ -1345,9 +1512,6 @@ Compatibility is updated based on actual test results; see <a href="../dev/compa
 
 
 
-
-  
-  
 
 
 
@@ -1367,7 +1531,7 @@ Compatibility is updated based on actual test results; see <a href="../dev/compa
           <button type="button" class="md-top md-icon" data-md-component="top" hidden>
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Back to top
+  回到页面顶部
 </button>
         
       </main>
@@ -1376,33 +1540,33 @@ Compatibility is updated based on actual test results; see <a href="../dev/compa
   
     
       
-      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
         
           
-          <a href="../plugins/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Plugins">
+          <a href="../conventions/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 开发约定">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
             </div>
             <div class="md-footer__title">
               <span class="md-footer__direction">
-                Previous
+                上一页
               </span>
               <div class="md-ellipsis">
-                Plugins
+                开发约定
               </div>
             </div>
           </a>
         
         
           
-          <a href="../dev/" class="md-footer__link md-footer__link--next" aria-label="Next: Developer index">
+          <a href="../rendering-diagnosis/" class="md-footer__link md-footer__link--next" aria-label="下一页: 渲染 / 黑屏诊断">
             <div class="md-footer__title">
               <span class="md-footer__direction">
-                Next
+                下一页
               </span>
               <div class="md-ellipsis">
-                Developer index
+                渲染 / 黑屏诊断
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1454,7 +1618,7 @@ Compatibility is updated based on actual test results; see <a href="../dev/compa
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.top", "navigation.sections", "navigation.indexes", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

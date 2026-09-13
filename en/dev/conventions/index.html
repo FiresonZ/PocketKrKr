@@ -16,7 +16,7 @@
         <link rel="prev" href="../build/">
       
       
-        <link rel="next" href="../rendering-diagnosis/">
+        <link rel="next" href="../probes/">
       
       
         
@@ -830,6 +830,8 @@
       
         
       
+        
+      
     
     
     
@@ -1039,6 +1041,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../probes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnostic probes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1418,7 +1448,10 @@
 <li>Before modifying SIMD formulas, compare scalar and SIMD results pixel by pixel, covering alpha, boundary values, overflow, and negative-value paths.</li>
 <li>PS blending that has not completed bit-level verification remains on the scalar fallback; SIMD dispatch may be registered again only after verification passes.</li>
 <li>Coordinate systems for render targets, FBOs, textures, and Layers must be explicit at interfaces; scaling, offset, or rotation must not be applied repeatedly at different layers.</li>
-<li>Probes are disabled by default; high-frequency logs must be sampled or rate-limited to avoid changing timing and performance.</li>
+<li>Diagnostic probes uniformly use <code>KRKR_RENDER_PROBE</code> and are disabled by default; do not add module-level probe switches that default to enabled.</li>
+<li>High-frequency logs must be sampled, rate-limited, deduplicated, or limited to state edges; diagnostic-only scans must not run when the macro is disabled.</li>
+<li>Probes must not change rendering results, event ordering, thread scheduling, resource lifetime, or normal performance; logs must not contain complete user text, personal paths, or device-private data.</li>
+<li>When adding or changing a probe, update the <a href="../probes/">probe inventory</a> and verify that switching probes ON/OFF reconfigures the build directory.</li>
 </ul>
 <h2 id="code-and-documentation">Code and Documentation<a class="headerlink" href="#code-and-documentation" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1482,13 +1515,13 @@
         
         
           
-          <a href="../rendering-diagnosis/" class="md-footer__link md-footer__link--next" aria-label="Next: Rendering diagnosis">
+          <a href="../probes/" class="md-footer__link md-footer__link--next" aria-label="Next: Diagnostic probes">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Rendering diagnosis
+                Diagnostic probes
               </div>
             </div>
             <div class="md-footer__button md-icon">

@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://krkr2next.com/en/dev/rendering-diagnosis/">
       
       
-        <link rel="prev" href="../conventions/">
+        <link rel="prev" href="../probes/">
       
       
         <link rel="next" href="../compatibility/">
@@ -830,6 +830,8 @@
       
         
       
+        
+      
     
     
     
@@ -918,6 +920,34 @@
     
   
     Development conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../probes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagnostic probes
   
 
     
@@ -1373,20 +1403,16 @@
 <td>Samples the engine source texture to determine whether the engine wrote valid pixels</td>
 </tr>
 <tr>
-<td><code>PostBlit</code></td>
-<td>Determines whether submission from the source texture to the display target succeeded</td>
-</tr>
-<tr>
 <td><code>IOSurfacePixelSample</code></td>
 <td>Determines whether the shared IOSurface received valid pixels</td>
 </tr>
 <tr>
 <td><code>BlackScreen</code></td>
-<td>Summarizes drawing, layer, and video state during a continuous black screen</td>
+<td>Summarizes drawing, layer, and video state during continuous black screens</td>
 </tr>
 <tr>
-<td><code>VideoOverlay</code></td>
-<td>Records video opening, playback, and compositing state</td>
+<td><code>engine_tick</code></td>
+<td>Records whether the bridge frame call entered and returned</td>
 </tr>
 <tr>
 <td><code>RequestUpdate</code></td>
@@ -1402,9 +1428,9 @@
 <ol>
 <li>Check <code>SourceSample</code>. If the source texture is not black, continue checking blit or shared-texture paths; if the source texture is completely black, check compositing and layer updates.</li>
 <li>Check the <code>draw</code> or compositing count. A growing count indicates that the engine is still drawing; when it does not grow, check update requests, event delivery, and the drawing device.</li>
-<li>Check <code>PostBlit err</code>. Zero means that submission reported no graphics error; a nonzero value means that FBO, shader, and state bindings need to be checked.</li>
-<li>Check the <code>IOSurfacePixelSample</code> or SurfaceTexture path to confirm that the target texture received pixels.</li>
-<li>For video-related issues, also check the video frame count, playback state, and target Layer updates. Do not determine a video failure from a black screen alone.</li>
+<li>Check <code>IOSurfacePixelSample</code> or the SurfaceTexture path to confirm that the destination texture received pixels.</li>
+<li>Check <code>engine_tick</code> entry and return records to confirm that the bridge call did not stop midway.</li>
+<li>For video issues, also check video frame counts, playback state, and target Layer updates; do not diagnose video faults from black-screen state alone.</li>
 </ol>
 <p><code>avg=(0,0,0,255)</code> is opaque black and usually means that the source texture was not covered by valid content; <code>avg=(0,0,0,0)</code> is transparent black and means that the content may be empty while the alpha is normal.</p>
 <h2 id="log-capacity">Log Capacity<a class="headerlink" href="#log-capacity" title="Permanent link">&para;</a></h2>
@@ -1448,7 +1474,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../conventions/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Development conventions">
+          <a href="../probes/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Diagnostic probes">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1458,7 +1484,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Development conventions
+                Diagnostic probes
               </div>
             </div>
           </a>
