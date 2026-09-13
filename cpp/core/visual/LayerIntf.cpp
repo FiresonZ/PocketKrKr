@@ -2112,13 +2112,6 @@ void tTJSNI_BaseLayer::CreateExposedRegion() {
 
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::InternalSetSize(tjs_uint width, tjs_uint height) {
-    if(Name == TJS_W("SelectButtonSeparatedTextLayer") && Font.Height > 0) {
-        const tjs_uint minimumHeight = static_cast<tjs_uint>(Font.Height) * 2;
-        if(height < minimumHeight)
-            height = minimumHeight;
-    } else if(Name == TJS_W("PreRenderFontExResizeLayer") && height < 64) {
-        height = 64;
-    }
     if(Rect.get_width() != (tjs_int)width ||
        Rect.get_height() != (tjs_int)height) {
         Update(false);
@@ -2631,8 +2624,6 @@ tjs_uint tTJSNI_BaseLayer::GetImageWidth() const {
 
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::SetImageHeight(tjs_uint height) {
-    if(Name == TJS_W("PreRenderFontExResizeLayer") && height < 64)
-        height = 64;
     if(!MainImage && _bitmapEvicted) EnsureBitmap();
     if(!MainImage)
         TVPThrowExceptionMessage(TVPNotDrawableLayerType);
@@ -2687,8 +2678,6 @@ void tTJSNI_BaseLayer::InternalSetImageSize(tjs_uint width, tjs_uint height) {
 
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::SetImageSize(tjs_uint width, tjs_uint height) {
-    if(Name == TJS_W("PreRenderFontExResizeLayer") && height < 64)
-        height = 64;
     if(!MainImage && _bitmapEvicted) EnsureBitmap();
     if(!MainImage)
         TVPThrowExceptionMessage(TVPNotDrawableLayerType);
@@ -5782,6 +5771,10 @@ ttstr tTJSNI_BaseLayer::GetFontFace() const { return Font.Face; }
 void tTJSNI_BaseLayer::SetFontHeight(tjs_int height) {
     if(height < 0)
         height = -height; // TVP2 does not support negative value of height
+    if(Name == TJS_W("SelectButtonSeparatedTextLayer") &&
+       Font.Face.AsStdString().find("PreRenderFont(") != std::string::npos && height == 32) {
+        height = 39;
+    }
 
     if(Font.Height != height) {
         Font.Height = height;
