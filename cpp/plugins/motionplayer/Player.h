@@ -51,10 +51,14 @@ namespace motion {
         }
 
     public:
-        Player() = default;
+        Player() {
+            ++sLivePlayers;
+        }
         ~Player() {
-            if(sSkipOwner == this)
-                sSkipOwner = nullptr;
+            if(sLivePlayers > 0)
+                --sLivePlayers;
+            if(sLivePlayers == 0)
+                sSkipConsumed = false;
             cleanupTempLayer();
         }
 
@@ -2992,9 +2996,9 @@ namespace motion {
                 return;
             if(!_motionTracksLoaded)
                 return;
-            if(sSkipOwner && sSkipOwner != this)
+            if(sSkipConsumed)
                 return;
-            sSkipOwner = this;
+            sSkipConsumed = true;
             _skipApplied = true;
 
             tjs_int end = 0;
@@ -3409,7 +3413,8 @@ static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
         // 解耦，其上的 captureCanvas 借该指针找到活动 Player，把当前帧合成到游戏传入的
         // 目标层。在 play()/draw()/drawOnto() 中设置。
         inline static Player *sLastDrawSource = nullptr;
-        inline static Player *sSkipOwner = nullptr;
+        inline static int sLivePlayers = 0;
+        inline static bool sSkipConsumed = false;
 
         bool _playing = false;
         bool _allplaying = false;
