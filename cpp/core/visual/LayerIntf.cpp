@@ -59,11 +59,23 @@ extern void TVPMapPrerenderedFont(const tTVPFont &font, const ttstr &storage);
 
 extern void TVPUnmapPrerenderedFont(const tTVPFont &font);
 
-static tjs_int TVPClampTextOriginToClipTop(tjs_int originY, tjs_int glyphTop,
-                                           tjs_int outlineWidth,
-                                           tjs_int clipTop) {
-    const tjs_int inkTop = originY + glyphTop - std::max<tjs_int>(0, outlineWidth);
-    return inkTop < clipTop ? originY + (clipTop - inkTop) : originY;
+static tjs_int TVPClampTextOriginToClip(tjs_int originY,
+                                        const tTVPRect &glyphBounds,
+                                        tjs_int outlineWidth,
+                                        const tTVPRect &clipRect) {
+    const tjs_int padding = std::max<tjs_int>(0, outlineWidth);
+    const tjs_int inkTop = originY + glyphBounds.top - padding;
+    const tjs_int inkBottom = originY + glyphBounds.bottom + padding;
+    const tjs_int glyphHeight = inkBottom - inkTop;
+    const tjs_int clipHeight = clipRect.bottom - clipRect.top;
+
+    if(glyphHeight > clipHeight)
+        return originY + (clipRect.top - inkTop);
+    if(inkTop < clipRect.top)
+        originY += clipRect.top - inkTop;
+    if(inkBottom > clipRect.bottom)
+        originY -= inkBottom - clipRect.bottom;
+    return originY;
 }
 
 static tjs_int TVPComputeTextShadowTopPadding(tjs_int shadowLevel,
@@ -8591,11 +8603,11 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
         try {
             tTVPRect glyphBounds;
             _this->GetFontGlyphDrawRect(text, glyphBounds);
-            y = TVPClampTextOriginToClipTop(
-                y, glyphBounds.top,
+            y = TVPClampTextOriginToClip(
+                y, glyphBounds,
                 TVPComputeTextShadowTopPadding(
                     shadowLevel, shadowWidth, shadowOffsetY),
-                _this->GetClipTop());
+                _this->GetClip());
 #if defined(KRKR_RENDER_PROBE)
             if(y != requestedY) {
                 if(auto logger = spdlog::get("core")) {
