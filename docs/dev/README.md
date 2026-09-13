@@ -15,7 +15,8 @@
 9. [开发工具](tools.md)：使用 XP3 解包和 TJS2/TJS2100 反编译分析工具。
 10. [渲染诊断](rendering-diagnosis.md)：排查黑屏、停帧和显示链路问题。
 11. [优化路线](optimization-roadmap.md)：查看性能、稳定性和代码结构优化方案。
-12. [待办](todo.md)：查看当前未完成事项。
+12. [AetherKiri 对照审计](aetherkiri-audit.md)：查看同源实现、测试、诊断和兼容性差异矩阵。
+13. [待办](todo.md)：查看当前未完成事项。
 
 ## 项目边界
 
