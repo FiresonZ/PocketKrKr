@@ -5200,22 +5200,25 @@ void tTJSNI_BaseLayer::OperateStretch(const tTVPRect &destrect,
     if(!src)
         TVPThrowExceptionMessage(TVPSourceLayerHasNoImage);
 #if defined(KRKR_RENDER_PROBE)
-    if(src->GetWidth() == 79 && src->GetHeight() >= 64) {
+    {
         static std::set<std::string> sProbedPreRenderStretches;
         const std::string key = std::to_string(destrect.left) + ":" +
             std::to_string(destrect.top) + ":" + std::to_string(destrect.right) + ":" +
             std::to_string(destrect.bottom) + "|" + std::to_string(srcrect.left) + ":" +
             std::to_string(srcrect.top) + ":" + std::to_string(srcrect.right) + ":" +
-            std::to_string(srcrect.bottom) + "|" + Name.AsNarrowStdString();
+            std::to_string(srcrect.bottom) + "|" + Name.AsNarrowStdString() + "|" +
+            std::to_string(src->GetWidth()) + "x" + std::to_string(src->GetHeight());
         if(sProbedPreRenderStretches.insert(key).second) {
             if(auto logger = spdlog::get("core")) {
                 logger->info(
                     "[PreRenderFontStretchProbe] owner='{}' dest=({},{},{},{}) "
-                    "source=({},{},{},{}) sourceSize={}x{} clip=({},{},{},{})",
+                    "source=({},{},{},{}) sourceSize={}x{} dstSize={}x{} "
+                    "clip=({},{},{},{})",
                     Name.AsNarrowStdString(), destrect.left, destrect.top,
                     destrect.right, destrect.bottom, srcrect.left, srcrect.top,
                     srcrect.right, srcrect.bottom, src->GetWidth(), src->GetHeight(),
-                    ClipRect.left, ClipRect.top, ClipRect.right, ClipRect.bottom);
+                    MainImage->GetWidth(), MainImage->GetHeight(), ClipRect.left,
+                    ClipRect.top, ClipRect.right, ClipRect.bottom);
             }
         }
     }

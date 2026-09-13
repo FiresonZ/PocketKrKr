@@ -4,6 +4,11 @@
 #include "BitmapIntf.h"
 #include "RectItf.h"
 
+#if defined(KRKR_RENDER_PROBE)
+#include <set>
+#include <spdlog/spdlog.h>
+#endif
+
 tTJSNI_ImageFunction::tTJSNI_ImageFunction() = default;
 
 tjs_error tTJSNI_ImageFunction::Construct(tjs_int numparams,
@@ -509,6 +514,28 @@ TJS_BEGIN_NATIVE_METHOD_DECL(/*func. name*/ operateStretch) {
     if(ur.bottom < ur.top)
         std::swap(ur.bottom, ur.top);
     if(TVPIntersectRect(&ur, ur, clipRect)) {
+#if defined(KRKR_RENDER_PROBE)
+        {
+            static std::set<std::string> sProbedOperateStretches;
+            const std::string key = std::to_string(dstRect.left) + ":" +
+                std::to_string(dstRect.top) + ":" + std::to_string(dstRect.right) + ":" +
+                std::to_string(dstRect.bottom) + "|" + std::to_string(srcRect.left) + ":" +
+                std::to_string(srcRect.top) + ":" + std::to_string(srcRect.right) + ":" +
+                std::to_string(srcRect.bottom) + "|" + std::to_string(src->GetWidth()) + "x" +
+                std::to_string(src->GetHeight());
+            if(sProbedOperateStretches.insert(key).second) {
+                if(auto logger = spdlog::get("core")) {
+                    logger->info(
+                        "[OperateStretchProbe] dest=({},{},{},{}) source=({},{},{},{}) "
+                        "sourceSize={}x{} mode={} opacity={} type={}",
+                        dstRect.left, dstRect.top, dstRect.right, dstRect.bottom,
+                        srcRect.left, srcRect.top, srcRect.right, srcRect.bottom,
+                        src->GetWidth(), src->GetHeight(), static_cast<int>(mode), opa,
+                        static_cast<int>(type));
+                }
+            }
+        }
+#endif
         tTVPBBBltMethod met = GetBltMethodFromOperationMode(mode, face);
         updated =
             dst->GetBitmap()->StretchBlt(clipRect, dstRect, src->GetBitmap(),
