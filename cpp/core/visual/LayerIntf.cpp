@@ -8299,13 +8299,19 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
         tjs_uint32 key = clNone; // TODO Intfなのに固有値が
         if(numparams >= 2 && param[1]->Type() != tvtVoid)
             key = (tjs_uint32)param[1]->AsInteger();
-        iTJSDispatch2 *metainfo = _this->LoadImages(name, key);
+        iTJSDispatch2 *metainfo = nullptr;
         try {
+            metainfo = _this->LoadImages(name, key);
             if(result)
                 *result = metainfo;
         } catch(...) {
             if(metainfo)
                 metainfo->Release();
+            if(name.AsLowerCase().AsStdString().rfind("psb://", 0) == 0) {
+                if(result)
+                    result->Clear();
+                return TJS_S_OK;
+            }
             throw;
         }
         if(metainfo)
