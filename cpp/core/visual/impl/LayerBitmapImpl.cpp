@@ -395,6 +395,10 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
         // render font
         tTVPCharacterData *data =
             GetCurrentRasterizer()->GetBitmap(font, aofsx, aofsy);
+        if(data && pfont) {
+            const tjs_int baselineShift = pfont->GetMaxOriginY() - aofsy;
+            data->OriginY += baselineShift;
+        }
 
         // add to hash table
         tTVPCharacterDataHolder holder(data);

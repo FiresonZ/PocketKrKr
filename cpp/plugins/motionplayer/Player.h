@@ -52,7 +52,11 @@ namespace motion {
 
     public:
         Player() = default;
-        ~Player() { cleanupTempLayer(); }
+        ~Player() {
+            if(sSkipOwner == this)
+                sSkipOwner = nullptr;
+            cleanupTempLayer();
+        }
 
         Player(const Player &) = delete;
         Player &operator=(const Player &) = delete;
@@ -146,6 +150,9 @@ namespace motion {
             _motionTracks.clear();
             _motionNodes.clear();
             _captureActive = false;
+            _skipApplied = false;
+            if(sSkipOwner == this)
+                sSkipOwner = nullptr;
             _lastFramePosX.clear();
             _lastFramePosY.clear();
             cleanupTempLayer();
@@ -228,6 +235,8 @@ namespace motion {
                 }
                 _playing = false;
                 _allplaying = false;
+                if(sSkipOwner == this)
+                    sSkipOwner = nullptr;
                 return true; // finished this frame / 本帧播完
             }
             return false;
@@ -2984,8 +2993,14 @@ namespace motion {
 
     public:
         void skipToSync() {
-            if(!_playWasCalled || !_playing)
+            if(!_playWasCalled || !_playing || _skipApplied)
                 return;
+            if(!_motionTracksLoaded)
+                return;
+            if(sSkipOwner && sSkipOwner != this)
+                return;
+            sSkipOwner = this;
+            _skipApplied = true;
 
             tjs_int end = 0;
             if(_motionTracksLoaded) {
@@ -3399,12 +3414,14 @@ static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
         // 解耦，其上的 captureCanvas 借该指针找到活动 Player，把当前帧合成到游戏传入的
         // 目标层。在 play()/draw()/drawOnto() 中设置。
         inline static Player *sLastDrawSource = nullptr;
+        inline static Player *sSkipOwner = nullptr;
 
         bool _playing = false;
         bool _allplaying = false;
         bool _playWasCalled = false;
         bool _isTransition = false;
         bool _stopCommandSent = false;
+        bool _skipApplied = false;
         // Node index of the currently active str_clip text crop, or -1 when none. Reset on
         // play() and cleared as soon as a node outside that str_clip's subtree is drawn,
         // so the crop can't leak across motions/frames.

@@ -59,34 +59,6 @@ extern void TVPMapPrerenderedFont(const tTVPFont &font, const ttstr &storage);
 
 extern void TVPUnmapPrerenderedFont(const tTVPFont &font);
 
-static tjs_int TVPClampTextOriginToClip(tjs_int originY,
-                                        const tTVPRect &glyphBounds,
-                                        tjs_int outlineWidth,
-                                        const tTVPRect &clipRect) {
-    const tjs_int padding = std::max<tjs_int>(0, outlineWidth);
-    const tjs_int inkTop = originY + glyphBounds.top - padding;
-    const tjs_int inkBottom = originY + glyphBounds.bottom + padding;
-    const tjs_int glyphHeight = inkBottom - inkTop;
-    const tjs_int clipHeight = clipRect.bottom - clipRect.top;
-
-    if(glyphHeight > clipHeight)
-        return originY + (clipRect.top - inkTop);
-    if(inkTop < clipRect.top)
-        originY += clipRect.top - inkTop;
-    if(inkBottom > clipRect.bottom)
-        originY -= inkBottom - clipRect.bottom;
-    return originY;
-}
-
-static tjs_int TVPComputeTextShadowTopPadding(tjs_int shadowLevel,
-                                              tjs_int shadowWidth,
-                                              tjs_int shadowOffsetY) {
-    if(shadowLevel == 0)
-        return 0;
-    const tjs_int width = std::abs(shadowWidth);
-    return std::max<tjs_int>(0, width - shadowOffsetY);
-}
-
 extern tjs_int TVPGetCursor(const ttstr &name);
 
 //---------------------------------------------------------------------------
@@ -8591,36 +8563,8 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
         if(numparams < 4)
             return TJS_E_BADPARAMCOUNT;
         const tjs_int x = *param[0];
-        const tjs_int requestedY = *param[1];
-        tjs_int y = requestedY;
+        const tjs_int y = *param[1];
         const ttstr text = *param[2];
-        const tjs_int shadowLevel =
-            (numparams >= 7 && param[6]->Type() != tvtVoid) ? (tjs_int)*param[6] : 0;
-        const tjs_int shadowWidth =
-            (numparams >= 9 && param[8]->Type() != tvtVoid) ? (tjs_int)*param[8] : 0;
-        const tjs_int shadowOffsetY =
-            (numparams >= 11 && param[10]->Type() != tvtVoid) ? (tjs_int)*param[10] : 0;
-        try {
-            tTVPRect glyphBounds;
-            _this->GetFontGlyphDrawRect(text, glyphBounds);
-            y = TVPClampTextOriginToClip(
-                y, glyphBounds,
-                TVPComputeTextShadowTopPadding(
-                    shadowLevel, shadowWidth, shadowOffsetY),
-                _this->GetClip());
-#if defined(KRKR_RENDER_PROBE)
-            if(y != requestedY) {
-                if(auto logger = spdlog::get("core")) {
-                    logger->info(
-                        "[FontLayoutProbe] drawText layer='{}' requestedY={} "
-                        "effectiveY={} glyphTop={} clipTop={}",
-                        _this->GetName().AsNarrowStdString(), requestedY, y,
-                        glyphBounds.top, _this->GetClipTop());
-                }
-            }
-#endif
-        } catch(...) {
-        }
         _this->DrawText(
             x, y, text,
             static_cast<tjs_uint32>((tjs_int64)*param[3]),
