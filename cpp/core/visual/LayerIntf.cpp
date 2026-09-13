@@ -2112,6 +2112,11 @@ void tTJSNI_BaseLayer::CreateExposedRegion() {
 
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::InternalSetSize(tjs_uint width, tjs_uint height) {
+    if(Name == TJS_W("SelectButtonSeparatedTextLayer") && Font.Height > 0) {
+        const tjs_uint minimumHeight = static_cast<tjs_uint>(Font.Height) * 2;
+        if(height < minimumHeight)
+            height = minimumHeight;
+    }
     if(Rect.get_width() != (tjs_int)width ||
        Rect.get_height() != (tjs_int)height) {
         Update(false);
@@ -4536,10 +4541,10 @@ void tTJSNI_BaseLayer::DrawText(tjs_int x, tjs_int y, const ttstr &text,
         if(sProbedLayerTexts.insert(probeKey).second) {
             if(auto logger = spdlog::get("core")) {
                 logger->info(
-                    "[TextLayerProbe] len={} first=U+{} request=({},{}) "
+                    "[TextLayerProbe] name='{}' len={} first=U+{} request=({},{}) "
                     "layerRect=({},{},{},{}) imageOffset=({},{}) "
                     "clip=({},{},{},{}) imageSize={}x{}",
-                    text.GetLen(), probeCodePoint, x, y,
+                    Name.AsNarrowStdString(), text.GetLen(), probeCodePoint, x, y,
                     Rect.left, Rect.top, Rect.right, Rect.bottom,
                     ImageLeft, ImageTop,
                     ClipRect.left, ClipRect.top, ClipRect.right, ClipRect.bottom,
