@@ -2631,6 +2631,8 @@ tjs_uint tTJSNI_BaseLayer::GetImageWidth() const {
 
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::SetImageHeight(tjs_uint height) {
+    if(Name == TJS_W("PreRenderFontExResizeLayer") && height < 64)
+        height = 64;
     if(!MainImage && _bitmapEvicted) EnsureBitmap();
     if(!MainImage)
         TVPThrowExceptionMessage(TVPNotDrawableLayerType);
@@ -2685,6 +2687,8 @@ void tTJSNI_BaseLayer::InternalSetImageSize(tjs_uint width, tjs_uint height) {
 
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::SetImageSize(tjs_uint width, tjs_uint height) {
+    if(Name == TJS_W("PreRenderFontExResizeLayer") && height < 64)
+        height = 64;
     if(!MainImage && _bitmapEvicted) EnsureBitmap();
     if(!MainImage)
         TVPThrowExceptionMessage(TVPNotDrawableLayerType);
