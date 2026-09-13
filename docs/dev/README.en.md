@@ -11,9 +11,10 @@ This directory provides PocketKrKr architecture, build, source code, and compati
 5. [Build](build.md): View platform toolchains, artifacts, and CI.
 6. [Conventions](conventions.md): Must-read before modifying platform, lifecycle, linking, Live2D, or SIMD code.
 7. [Compatibility](compatibility.md): Run game compatibility regressions.
-8. [Rendering Diagnosis](rendering-diagnosis.md): Troubleshoot black screens, frozen frames, and display pipeline issues.
-9. [Optimization Roadmap](optimization-roadmap.md): View performance, stability, and code structure optimization plans.
-10. [Todo](todo.md): View current unfinished items.
+8. [Probe Inventory](probes.md): View the unified switch, probe types, log prefixes, and source locations.
+9. [Rendering Diagnosis](rendering-diagnosis.md): Troubleshoot black screens, frozen frames, and display pipeline issues.
+10. [Optimization Roadmap](optimization-roadmap.md): View performance, stability, and code structure optimization plans.
+11. [Todo](todo.md): View current unfinished items.
 
 ## Project Boundaries
 

@@ -1161,17 +1161,18 @@ namespace PSB {
                             }
                         }
                     }
+#if defined(KRKR_RENDER_PROBE)
                     // Trace probe (P1): print the AUTHORED per-corner packed color of every
                     // m2logo frame that either carries a non-white color (so we see the
                     // red→black line and red C/W values the parser actually read) or is one
                     // of the thin line icons (icon17/18/32) even when white — this decides
                     // whether the vertical cross bar's missing color is (a) absent in the
                     // data, (b) a format we don't parse, or (c) meant to come from an icon
-                    // base color / parent. Compare with the draw-time rawColor probe.
+                    // base color / parent.
                     // 追踪探针(P1)：把 m2logo 中**带非白颜色**的每帧作者打包色（红转黑线、
                     // 红色 C/W 的实际解析值）以及**线框 icon(17/18/32)**（即使为白）的作者
                     // 打包色全部打印——用来判定十字竖线缺色是 ① 数据里真没有 ② 解析漏了新
-                    // 格式 ③ 应来自 icon 基准色/父容器。与绘制期 rawColor 探针对照。
+                    // 格式 ③ 应来自 icon 基准色/父容器。
                     {
                         auto plogger = LOGGER;
                         if(plogger && !f.src.empty() &&
@@ -1198,6 +1199,7 @@ namespace PSB {
                             }
                         }
                     }
+#endif
                     // E-mote mesh: content["mesh"]["bp"] (or "b") → 16 control points
                     // (32 floats) for a bicubic Bernstein patch that deforms children.
                     // E-mote 面片：content["mesh"]["bp"]（或 "b"）→ 16 个控制点（32 float）

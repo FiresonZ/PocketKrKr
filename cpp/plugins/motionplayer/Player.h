@@ -687,40 +687,6 @@ namespace motion {
             //（参考 updateLayersPhase3_VertexComputation）。不存在独立的笔位/左对齐
             // 路径：每个字母节点各自动画自己的 coord(cx/cy) 关键帧，图标原点与 content
             // 的 ox 承载锚点；str_clip 容器只负责裁剪子树（type-7 shapeAABB）。
-            if(auto l = _logger()) {
-                l->info("loadMotionTracks: {} tracks for {}/{} motion={}",
-                    _motionTracks.size(), storageStr, charaStr, motionStr);
-                for(const auto &tr : _motionTracks) {
-                    l->info("  track '{}': {} frames (first src='{}', last time={})",
-                        tr.label, tr.frames.size(),
-                        tr.frames.empty() ? std::string("") : tr.frames.front().src,
-                        tr.frames.empty() ? 0 : tr.frames.back().time);
-                    // Dump every frame (time, src, ox/oy/cx/cy, opacity, visible) once
-                    // per loaded motion so we can see the real M2 timeline and implement
-                    // the coord/opacity animation correctly rather than guessing.
-                    // 每帧转储（time, src, ox/oy/cx/cy, opacity, visible），只在 motion
-                    // 装载时打一次，据此拿到真实的 M2 时间线，按真实坐标实现动画而非猜测。
-                    for(const auto &f : tr.frames) {
-                        l->info("    t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} a={} bm={} clip={} op={} vis={}",
-                            f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
-                            f.angle, f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
-                    }
-                }
-                l->info("loadMotionTracks: {} nodes for {}/{} motion={} (tree, "
-                        "parent-before-child)",
-                    _motionNodes.size(), storageStr, charaStr, motionStr);
-                for(size_t ni = 0; ni < _motionNodes.size(); ni++) {
-                    const auto &nd = _motionNodes[ni];
-                    l->info("  node[{}] '{}' parent={} frames={}",
-                        ni, nd.label, nd.parentIndex,
-                        static_cast<int>(nd.frames.size()));
-                    for(const auto &f : nd.frames) {
-                        l->info("    n[{}] t={} ty={} src='{}' ox={} oy={} cx={} cy={} s={},{} a={} bm={} clip={} op={} vis={}",
-                            ni, f.time, f.type, f.src, f.ox, f.oy, f.cx, f.cy, f.scaleX, f.scaleY,
-                            f.angle, f.blendMode, f.hasClip ? 1 : 0, f.opacity, f.visible ? 1 : 0);
-                    }
-                }
-            }
         }
 
         // Evaluate the motion at the current clock and draw the active frame of every
@@ -1083,10 +1049,6 @@ namespace motion {
                                 parameterizedClipTime(parameter, rawValue) * 1000.0 / 60.0);
                             nodeTimeOverride[i] = effNow;
                         }
-                        if(logger)
-                            logger->info("drawAnimatedTree param: '{}' param[{}]='{}' value={:.3f} nodeTime={}",
-                                         node.label, node.parameterizeIndex, parameter.id,
-                                         rawValue, static_cast<tjs_int>(effNow));
                     }
                 } else if(node.submotionContent && !node.subRefSrc.empty()) {
                     // (b) child clock: submotion starts at its launch keyframe and
@@ -1304,9 +1266,6 @@ namespace motion {
                             interpCy = static_cast<float>(
                                 af->cy + dCx * sinA + dCy * cosA);
                             anyCp = true;
-                            if(logger)
-                                logger->info("drawAnimatedTree cp: '{}' t={:.3f} rot=({:.4f},{:.4f}) pos=({:.1f},{:.1f})",
-                                             node.label, t, cosA, sinA, interpCx, interpCy);
                         }
                         interpOp = af->opacity + (next->opacity - af->opacity) * tOpa;
                         interpSx = af->scaleX + (next->scaleX - af->scaleX) * tScale;
@@ -1550,10 +1509,6 @@ namespace motion {
                             meshScaleFactor = static_cast<float>(
                                 std::sqrt(area1 + area2 + area2 + area1) / 0.0002);
                         }
-                        if(logger)
-                            logger->info("drawAnimatedTree mesh: child='{}' parent='{}' u={:.3f} v={:.3f} local=({:.1f},{:.1f})->({:.1f},{:.1f}) angleDelta={:.2f} scaleFactor={:.3f} flags=0x{:x}",
-                                         node.label, pnode.label, u, v, loX, loY, defCx, defCy,
-                                         meshAngleDelta, meshScaleFactor, pnode.meshSyncChildMask);
                     }
                 }
                 float px = pOn
@@ -1715,9 +1670,6 @@ namespace motion {
                     // 保存本节点自身位置，供下一帧模式 2 的位移差使用。
                     _lastFramePosX[node.label] = interpCx;
                     _lastFramePosY[node.label] = interpCy;
-                    if(logger)
-                        logger->info("drawAnimatedTree motionDt: '{}' mode={} dofst={:.2f} extra={:.2f}",
-                                     node.label, af->motionDt, af->motionDofst, motionDtExtra);
                 }
                 const float effAngle = (inh & 0x010)
                     ? baseAngle + interpAngle + meshAngleDelta
@@ -1895,10 +1847,6 @@ namespace motion {
                     wcR = wcL + winW;
                     wcB = wcT + 120.0f; // enough height for the glyph / 足够容纳字形
                 }
-                if(logger && isStrClipContainer)
-                    logger->info("drawAnimatedTree strclip: '{}' clip=({},{},{},{}) win=[{},{}]",
-                        node.label, static_cast<int>(wcL), static_cast<int>(wcT),
-                        static_cast<int>(wcR), static_cast<int>(wcB), winMin, winMax);
                 // ⑤ 父 viewport 裁剪（通用）：非 type-7 容器若本帧自带 clip 矩形
                 //（frame clip），把该矩形按其世界盒换算成层坐标，作为其后代的裁剪窗。
                 // 与 str_clip 的"字母范围"启发式不同，这里直接用作者给出的矩形。
@@ -1919,9 +1867,6 @@ namespace motion {
                     wcR = left + af->clipR * scxChild;
                     wcB = top + af->clipB * scyChild;
                     isViewportClip = (wcR > wcL && wcB > wcT);
-                    if(logger)
-                        logger->info("drawAnimatedTree viewportClip: '{}' clip=({:.0f},{:.0f},{:.0f},{:.0f})",
-                                     node.label, wcL, wcT, wcR, wcB);
                 }
                 // Only image lines draw; layout/motion containers only accumulate.
                 // 仅图像行绘制；layout/motion 容器只累加不绘制。
@@ -1982,6 +1927,7 @@ namespace motion {
                 //（icon32 深色/icon18 浅灰），但引擎常得到 1x1（竖线不可见）。
                 // 打印解析路径、实际加载尺寸与缓存的图像元数据，一次看清是元数据
                 // 宽高错了还是 Open/convert 对这些精灵失败。
+#if defined(KRKR_RENDER_PROBE)
                 if(logger &&
                    (af->src == "src/logo/icon17" ||
                     af->src == "src/logo/icon18" ||
@@ -1999,6 +1945,7 @@ namespace motion {
                         hasGi ? gi.width : 0, hasGi ? gi.height : 0,
                         static_cast<int>(gi.compress), gi.type, gi.palette.size());
                 }
+#endif
                 // Draw an M2 content sprite with the REFERENCE single-world-matrix + origin
                 // anchor model (`org = pos - M*(originX+ox, originY+oy)`, quad
                 // `org + M*[0..iw,0..ih]`). A sprite's position px,py is its world
@@ -2072,31 +2019,8 @@ namespace motion {
                 const tjs_real mB = static_cast<tjs_real>(mB0);
                 const tjs_real mC = static_cast<tjs_real>(mC0);
                 const tjs_real mD = static_cast<tjs_real>(mD0);
-                // Probe logs the FINAL quad position (px/py local + the center/top-left
-                // anchored left/top) so a real-device run can pin down glitches like the
-                // title ch1_芳乃 end-of-motion shift or where each m2logo glyph lands.
-                // 探针输出最终四边形位置（局部 px/py + 锚定后的 left/top），便于真机定位
-                // 标题 ch1_芳乃 播放末尾左移、或 m2logo 各字形落点等动画错位。
-                if(logger) logger->info("drawAnimatedTree: '{}' fty={} now={} anchorMode={} iconOrigin={} t={} pos=({:.1f},{:.1f}) anchor=({:.1f},{:.1f}) M=({:.3f},{:.3f},{:.3f},{:.3f}) tx=({:.1f},{:.1f}) box=({},{}) ang={:.1f} op={} bm={} src='{}'",
-                    node.label, af->type, static_cast<tjs_int>(now), coordOrigin,
-                    hasIconOrigin ? (std::to_string(static_cast<int>(iconOrX)) + "," + std::to_string(static_cast<int>(iconOrY))) : std::string("-"),
-                    static_cast<tjs_int>(af->time), px, py, anchorX, anchorY,
-                    mA, mB, mC, mD, outputTx, outputTy,
-                    iw, ih, finalAngle, wop, af->blendMode, af->src);
-                // Probe: m2logo M-fold palette screen coverage — at the very START of
-                // the fold (horizontal-bar phase) the six panels (icon25/26/27/28/29/48)
-                // must tile into ONE continuous thick line (then the chain folds up to an
-                // M). Real-device runs reported "出现时不是连成一排的粗横线" — a 125px gap
-                // between icon27 and icon29 plus an icon25/icon27 overlap. Log each panel's
-                // screen-space AABB (min/max over {0,iw}×{0,ih} corners pushed through the
-                // world matrix) so the next run quantifies every gap/overlap and tells us
-                // which anchor/coord term causes the mis-tiling, instead of guessing.
-                // 探针：m2logo M 折叠链的屏幕覆盖——折叠**起始**（粗横线阶段）这 6 块面板
-                //（icon25/26/27/28/29/48）必须拼成**一条连续**的粗横线再折成 M。真机报
-                // "出现时不是连成一排的粗横线"（icon27 与 icon29 之间约 125px 断档 +
-                // icon25/icon27 重叠）。把每块面板经世界矩阵变换后在**屏幕坐标**的四角
-                // AABB（min/max）打出来，让下一次日志定量呈现每处缝隙/重叠由哪个锚点项
-                // 引起，便于定点修复而非盲改。
+
+#if defined(KRKR_RENDER_PROBE)
                 if(logger && now >= 190.0 &&
                    (af->src == "src/logo/icon25" ||
                     af->src == "src/logo/icon26" ||
@@ -2134,16 +2058,7 @@ namespace motion {
                                           std::to_string(static_cast<int>(iconOrY)))
                                        : std::string("-")));
                 }
-                // Probe: log scene-composite SUBLAYER order for m2logo so we can tell
-                // whether a missing glyph is a load failure vs. z-order vs. occlusion.
-                // 探针：打印 m2logo 场景合成子层顺序，判断缺字是加载失败、z 序还是遮挡。
-                if(logger && now >= 190.0 && now <= 430.0 &&
-                   (af->src == "src/logo/icon25" ||
-                    af->src == "src/logo/icon65" || af->src == "src/logo/icon9" ||
-                    af->src == "src/logo/icon35" || af->src == "src/logo/icon39" ||
-                    af->src == "src/logo/icon32" || af->src == "src/logo/icon17"))
-                    logger->info("m2foldProbe z: '{}' src='{}' op={} bm={}",
-                                 node.label, af->src, wop, af->blendMode);
+#endif
                 tjs_int opaClamp = std::clamp(wop, 0, 255);
                 // Apply the M2 PER-CORNER vertex-color tint to the glyph texture before
                 // drawing (identity when all corners white). This is what colors the
@@ -2155,28 +2070,7 @@ namespace motion {
                 // 色——operateAffine 没有颜色通道，因此在此乘源像素。
                 if(effPacked[0] != 0xFFFFFFFFu || effPacked[1] != 0xFFFFFFFFu ||
                    effPacked[2] != 0xFFFFFFFFu || effPacked[3] != 0xFFFFFFFFu) {
-                    const bool tintApplied = applyCornerTint(temp, effPacked);
-                    if(logger)
-                        logger->info("drawAnimatedTree tint: '{}' c0={:08x} c1={:08x} c2={:08x} c3={:08x} applied={}",
-                                     node.label, effPacked[0], effPacked[1],
-                                     effPacked[2], effPacked[3], tintApplied ? 1 : 0);
-                } else {
-                    // Always log the RAW frame color for the m2logo pieces that should
-                    // be colored (C/W letters icon35/icon39, cross vertical icon32, and
-                    // any icon2x/icon4x stroke) so we can tell whether their PSB frame
-                    // actually carries a color that our parser is missing, vs. the color
-                    // genuinely being white (then the red/black must come from the
-                    // texture or a merged-text color).
-                    // 总是打印 m2logo 该着色的部件（C/W 字母 icon35/39、十字竖线 icon32、
-                    // 及各种 icon2x/icon4x 笔画）的**原始帧色**，以判断其 PSB 帧是否真的带
-                    // 颜色而我们解析漏了，还是本来就是白（那样红/黑来自纹理或合字颜色）。
-                    if(logger &&
-                       (af->src.compare(0, 15, "src/logo/icon3") == 0 ||
-                        af->src.compare(0, 15, "src/logo/icon2") == 0 ||
-                        af->src == "src/logo/icon32")) {
-                        logger->info("drawAnimatedTree rawColor: '{}' own={:08x} eff={:08x}",
-                                     node.label, af->packedColors[0], effPacked[0]);
-                    }
+                    applyCornerTint(temp, effPacked);
                 }
                 // Round 2 blend mode: map M2 content "bm" to an operate blend op.
                 // 0=normal(alpha),1=additive,2=subtractive,3=multiplicative,4=addalpha
@@ -2191,9 +2085,6 @@ namespace motion {
                     case 4: blendOm = 12; break; // addalpha / 加 alpha
                     default: blendOm = 2; break; // alpha (normal) / 正常
                 }
-                if(logger && af->hasClip)
-                    logger->info("drawAnimatedTree clip: '{}' clip=({},{},{},{})", node.label,
-                        af->clipL, af->clipT, af->clipR, af->clipB);
                 // 参数依 Layer.operateAffine(src, x, y, w, h, affine, a,b,c,d,
                 // tx,ty, mode, opa, ...)。dst 对象绑定到 dest（调用对象），src 是
                 // 临时层上的纹理。
@@ -2263,7 +2154,7 @@ namespace motion {
             // scratch layers are single-buffered); a probe notes every composite.
             // ③ stencil 合成收尾：把蒙版 alpha 乘进组层，再把蒙版后的组层以普通 alpha
             // 一道合成到目标。本轮只折叠第一个活跃的 type-12 合成组（离屏层为单缓冲）；
-            // 探针会打印每个合成组。
+            // 离屏层为单缓冲，超出一个合成组时只处理第一个。
             if(stencilActive && drewGroup) {
                 iTJSDispatch2 *gl = getOrCreateStencilLayer(dest, false, cw, ch);
                 iTJSDispatch2 *ml = getOrCreateStencilLayer(dest, true, cw, ch);
@@ -2301,22 +2192,15 @@ namespace motion {
                         } catch(...) {
                             if(auto l = _logger()) l->warn("drawAnimatedTree stencil: composite blit exception");
                         }
+#if defined(KRKR_RENDER_PROBE)
                         if(logger)
                             logger->info("drawAnimatedTree stencil: '{}' stencilType={} group={} mask={} applied={}",
                                          gnd.label, gnd.stencilType, drewGroup ? 1 : 0, drewMask ? 1 : 0, applied ? 1 : 0);
+#endif
                     }
                     if(gl) clear(gl, 0);
                     if(ml) clear(ml, 0);
                 }
-            }
-            // Feature-hit probe (logs once per frame aggregated) — lets a device run
-            // show which of ②③④⑤ actually fired in the data at a glance.
-            // 功能命中探针（每帧聚合打印一次）——真机日志一眼看出 ②③④⑤ 哪些真被数据触发。
-            if(logger) {
-                if(anyMesh || anyStencil || anyParam || anyCp || anySubClock || anyGround || anyMotionDt)
-                    logger->info("drawAnimatedTree features: mesh={} stencil={} param={} cp={} subClock={} ground={} motionDt={}",
-                                 anyMesh ? 1 : 0, anyStencil ? 1 : 0, anyParam ? 1 : 0, anyCp ? 1 : 0,
-                                 anySubClock ? 1 : 0, anyGround ? 1 : 0, anyMotionDt ? 1 : 0);
             }
             return drawn;
         }
@@ -2968,9 +2852,11 @@ namespace motion {
                     }
                 }
                 groupNI->Update(tTVPRect(0, 0, w, h));
+#if defined(KRKR_RENDER_PROBE)
                 auto logger = _logger();
                 if(logger && recoveredRgbAlpha)
                     logger->info("applyStencilComposite: RGB-rotation alpha recovered in mask");
+#endif
                 return true;
             } catch(...) {
                 return false;
@@ -3030,14 +2916,8 @@ namespace motion {
                 unsigned char *buf = (unsigned char *)ni->GetMainImagePixelBufferForWrite();
                 const tjs_int pitch = ni->GetMainImagePixelBufferPitch();
                 if(!buf || pitch < w * 4) return false;
-                // Probe (P3): gather the first opaque resulting pixel + opaque count so the
-                // physical layer really holds the tint color (and in the right R/G/B order)
-                // — this distinguishes a bad tint write from the color being absent in data.
-                // 探针(P3)：统计首个不透明结果像素 + 不透明像素数，确认层缓冲真的写入了
-                // tint 色且 R/G/B 通道序正确——区分"着色写失败"还是"数据里根本没色"。
-                tjs_uint32 firstOpaque = 0;
-                tjs_int opaqueCount = 0;
-                bool gotFirst = false;
+                // Apply the bilinear corner tint to each non-transparent source pixel.
+                // 对每个非透明源像素应用四角双线性颜色。
                 for(tjs_int y = 0; y < h; ++y) {
                     tjs_uint32 *row = (tjs_uint32 *)(buf + (tjs_int)y * pitch);
                     // left column lerps topLeft↔bottomLeft, right column topRight↔bottomRight
@@ -3072,15 +2952,9 @@ namespace motion {
                         const tjs_uint32 na = std::min(255, tintA * static_cast<int>(srcA) / 255);
                         row[x] = (nb & 0xffu) | ((ng & 0xffu) << 8) |
                                  ((nr & 0xffu) << 16) | (na << 24);
-                        if(!gotFirst) { firstOpaque = row[x]; gotFirst = true; }
-                        opaqueCount++;
                     }
                 }
                 ni->Update(tTVPRect(0, 0, w, h)); // notify the layer its pixels changed / 通知层像素已变
-                { auto l = _logger();
-                  if(l) l->info(
-                      "cornerTint applied tint={:08x} firstOpaque={:08x} opaquePx={} (w={} h={} uniform={})",
-                      tints[0], firstOpaque, opaqueCount, w, h, uniform ? 1 : 0); }
                 return true;
             } catch(...) {
                 return false;

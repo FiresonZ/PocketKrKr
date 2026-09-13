@@ -139,10 +139,22 @@ log_step "Step 1/3: Building C++ engine"
 
 export VCPKG_ROOT
 
+RENDER_PROBE_OPT=""
+if [[ -n "${ENABLE_RENDER_PROBE+x}" ]]; then
+    RENDER_PROBE_OPT="-DENABLE_RENDER_PROBE=OFF"
+    case "$ENABLE_RENDER_PROBE" in
+        true|on|1) RENDER_PROBE_OPT="-DENABLE_RENDER_PROBE=ON" ;;
+    esac
+fi
+LOG_LEVEL_OPT=""
+if [[ -n "${KRKR_LOG_LEVEL:-}" && "${KRKR_LOG_LEVEL}" != "auto" ]]; then
+    LOG_LEVEL_OPT="-DKRKR_LOG_LEVEL=$KRKR_LOG_LEVEL"
+fi
+
 # Configure (only if needed)
-if [[ ! -f "$CMAKE_BUILD_DIR/build.ninja" ]]; then
+if [[ ! -f "$CMAKE_BUILD_DIR/build.ninja" || -n "${RENDER_PROBE_OPT}${LOG_LEVEL_OPT}" ]]; then
     log_info "Running CMake configure..."
-    cmake --preset "$CMAKE_CONFIG_PRESET"
+    cmake --preset "$CMAKE_CONFIG_PRESET" ${RENDER_PROBE_OPT} ${LOG_LEVEL_OPT}
 else
     log_info "Build directory already configured, skipping configure."
 fi

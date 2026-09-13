@@ -115,6 +115,7 @@ void FreeTypeFontRasterizer::ApplyFont(const tTVPFont &font) {
     }
     Face->SetHeight(font.Height < 0 ? -font.Height : font.Height);
 
+#if defined(KRKR_RENDER_PROBE)
     // [Font probe] Log the requested face/height against what FreeType actually
     // used for this face+size. If the rendered text looks half-sized or shifted
     // out of its box:
@@ -139,6 +140,7 @@ void FreeTypeFontRasterizer::ApplyFont(const tTVPFont &font) {
             Face->GetAscender(), Face->GetDescender(), Face->GetUnitsPerEM(),
             font.Angle);
     }
+#endif
     if(recreate == false) {
         if(font.Flags & TVP_TF_ITALIC) {
             Face->SetOption(TVP_TF_ITALIC);

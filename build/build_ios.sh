@@ -155,9 +155,8 @@ export VCPKG_ROOT
 # KRKR_LOG_LEVEL），透传为 CMake 缓存变量。为空表示沿用 CMake 默认
 #（探针 OFF；日志级别按构建类型自动）。
 RENDER_PROBE_OPT=""
-if [[ -n "${ENABLE_RENDER_PROBE:-}" ]]; then
-    # 注意：此脚本跑在 macOS（默认 bash 3.2），不可用 ${var,,} 小写展开；
-    # workflow 布尔输入恒为小写 true/false，直接匹配即可。
+if [[ -n "${ENABLE_RENDER_PROBE+x}" ]]; then
+    RENDER_PROBE_OPT="-DENABLE_RENDER_PROBE=OFF"
     case "$ENABLE_RENDER_PROBE" in
         true|on|1) RENDER_PROBE_OPT="-DENABLE_RENDER_PROBE=ON" ;;
     esac

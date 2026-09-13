@@ -228,6 +228,8 @@ void EngineLoop::HandlePointerDown(const EngineInputEvent& event) {
     const tjs_int y = static_cast<tjs_int>(event.y);
     const uint32_t shift = ConvertModifiers(event.modifiers);
 
+    TVPPostInputEvent(new tTVPOnMouseMoveInputEvent(win, x, y, shift));
+
     // Update cached cursor position for Layer.cursorX/cursorY queries
     if (win->GetForm())
         win->GetForm()->UpdateCursorPos(x, y);
