@@ -4536,13 +4536,13 @@ void tTJSNI_BaseLayer::DrawText(tjs_int x, tjs_int y, const ttstr &text,
         if(sProbedLayerTexts.insert(probeKey).second) {
             if(auto logger = spdlog::get("core")) {
                 logger->info(
-                    "[TextLayerProbe] name='{}' len={} first=U+{} request=({},{}) "
-                    "layerRect=({},{},{},{}) imageOffset=({},{}) "
+                    "[TextLayerProbe] name='{}' face='{}' height={} len={} first=U+{} "
+                    "request=({},{}) layerRect=({},{},{},{}) imageOffset=({},{}) "
                     "clip=({},{},{},{}) imageSize={}x{}",
-                    Name.AsNarrowStdString(), text.GetLen(), probeCodePoint, x, y,
-                    Rect.left, Rect.top, Rect.right, Rect.bottom,
-                    ImageLeft, ImageTop,
-                    ClipRect.left, ClipRect.top, ClipRect.right, ClipRect.bottom,
+                    Name.AsNarrowStdString(), Font.Face.AsStdString(), Font.Height,
+                    text.GetLen(), probeCodePoint, x, y, Rect.left, Rect.top,
+                    Rect.right, Rect.bottom, ImageLeft, ImageTop, ClipRect.left,
+                    ClipRect.top, ClipRect.right, ClipRect.bottom,
                     MainImage->GetWidth(), MainImage->GetHeight());
             }
         }
@@ -5769,12 +5769,30 @@ ttstr tTJSNI_BaseLayer::GetFontFace() const { return Font.Face; }
 
 //---------------------------------------------------------------------------
 void tTJSNI_BaseLayer::SetFontHeight(tjs_int height) {
+    const tjs_int requestedHeight = height;
     if(height < 0)
         height = -height; // TVP2 does not support negative value of height
     if(Name == TJS_W("SelectButtonSeparatedTextLayer") &&
        Font.Face.AsStdString().find("PreRenderFont(") != std::string::npos && height == 32) {
         height = 39;
     }
+#if defined(KRKR_RENDER_PROBE)
+    {
+        static std::set<std::string> sProbedFontHeights;
+        const std::string key = Name.AsNarrowStdString() + "|" +
+            Font.Face.AsStdString() + "|" + std::to_string(requestedHeight) +
+            "|" + std::to_string(height);
+        if(sProbedFontHeights.insert(key).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info(
+                    "[FontLayoutProbe] layer='{}' face='{}' requestedHeight={} "
+                    "effectiveHeight={}",
+                    Name.AsNarrowStdString(), Font.Face.AsStdString(),
+                    requestedHeight, height);
+            }
+        }
+    }
+#endif
 
     if(Font.Height != height) {
         Font.Height = height;
@@ -5882,7 +5900,25 @@ tjs_int tTJSNI_BaseLayer::GetTextWidth(const ttstr &text) {
 
     ApplyFont();
 
-    return MainImage->GetTextWidth(text);
+    const tjs_int width = MainImage->GetTextWidth(text);
+#if defined(KRKR_RENDER_PROBE)
+    {
+        static std::set<std::string> sProbedTextMeasures;
+        const std::string key = Name.AsNarrowStdString() + "|" +
+            Font.Face.AsStdString() + "|" + std::to_string(Font.Height) + "|w|" +
+            std::to_string(width);
+        if(sProbedTextMeasures.insert(key).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info(
+                    "[FontLayoutProbe] measure layer='{}' face='{}' height={} "
+                    "width={} heightResult=pending",
+                    Name.AsNarrowStdString(), Font.Face.AsStdString(), Font.Height,
+                    width);
+            }
+        }
+    }
+#endif
+    return width;
 }
 
 //---------------------------------------------------------------------------
@@ -5893,7 +5929,25 @@ tjs_int tTJSNI_BaseLayer::GetTextHeight(const ttstr &text) {
 
     ApplyFont();
 
-    return MainImage->GetTextHeight(text);
+    const tjs_int height = MainImage->GetTextHeight(text);
+#if defined(KRKR_RENDER_PROBE)
+    {
+        static std::set<std::string> sProbedTextMeasureHeights;
+        const std::string key = Name.AsNarrowStdString() + "|" +
+            Font.Face.AsStdString() + "|" + std::to_string(Font.Height) + "|h|" +
+            std::to_string(height);
+        if(sProbedTextMeasureHeights.insert(key).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info(
+                    "[FontLayoutProbe] measure layer='{}' face='{}' height={} "
+                    "widthResult=pending heightResult={}",
+                    Name.AsNarrowStdString(), Font.Face.AsStdString(), Font.Height,
+                    height);
+            }
+        }
+    }
+#endif
+    return height;
 }
 
 //---------------------------------------------------------------------------
