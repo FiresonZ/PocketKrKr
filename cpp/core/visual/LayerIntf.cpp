@@ -9034,6 +9034,7 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
             return TJS_E_BADPARAMCOUNT;
 
         iTVPBaseBitmap *src = nullptr;
+        bool sourceIsPrerenderedFont = false;
         tTJSVariantClosure clo = param[4]->AsObjectClosureNoAddRef();
         tTVPBlendOperationMode automode = omAlpha;
         if(clo.Object) {
@@ -9042,9 +9043,14 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
                    TJS_NIS_GETINSTANCE, tTJSNC_Layer::ClassID,
                    (iTJSNativeInstance **)&srclayer)))
                 src = nullptr;
-            else
-                src = srclayer->GetMainImage(),
+            else {
+                src = srclayer->GetMainImage();
                 automode = srclayer->GetOperationModeFromType();
+                const ttstr sourceFace = srclayer->GetFontFace();
+                sourceIsPrerenderedFont =
+                    sourceFace.IndexOf(TJS_W("PrerenderFont")) >= 0 ||
+                    sourceFace.IndexOf(TJS_W("PreRenderFont")) >= 0;
+            }
 
             if(src == nullptr) { // try to get bitmap interface
                 tTJSNI_Bitmap *srcbmp = nullptr;
@@ -9066,6 +9072,13 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
         tTVPRect srcrect(*param[5], *param[6], *param[7], *param[8]);
         srcrect.right += srcrect.left;
         srcrect.bottom += srcrect.top;
+
+        if(sourceIsPrerenderedFont && srcrect.right > srcrect.left &&
+           srcrect.bottom > srcrect.top) {
+            destrect.right = destrect.left + srcrect.right - srcrect.left;
+            destrect.top = std::max(destrect.top, 0);
+            destrect.bottom = destrect.top + srcrect.bottom - srcrect.top;
+        }
 
         tTVPBlendOperationMode mode;
         if(numparams >= 10 && param[9]->Type() != tvtVoid)

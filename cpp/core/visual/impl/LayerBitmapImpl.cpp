@@ -350,14 +350,7 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
         data->Metrics.CellIncX = pitem->IncX;
         data->Metrics.CellIncY = pitem->IncY;
         data->OriginX = pitem->OriginX + aofsx;
-        // Prerendered glyphs carry the source-font baseline in MaxOriginY. Use
-        // it (instead of the runtime fallback font's aofsy/ascent) so glyphs land
-        // inside the fixed source crop the PreRenderFontEx script operates on;
-        // otherwise Noto's larger ascent pushes them down and clips the box
-        // ("option text small / top-left"). Rotation offset is kept via aofsx.
-        // 用 TPF 自身的基线(MaxOriginY)摆放字形，而非回退字体 Noto 的 ascent，避免
-        // 字形在固定裁切区内被下压/裁切（选项文字偏小、偏左上）。
-        data->OriginY = -pitem->OriginY + pfont->GetMaxOriginY();
+        data->OriginY = -pitem->OriginY + aofsy;
 
         data->Antialiased = font.Antialiased;
 
