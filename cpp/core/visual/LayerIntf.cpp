@@ -5772,7 +5772,7 @@ void tTJSNI_BaseLayer::SetFontHeight(tjs_int height) {
     const tjs_int requestedHeight = height;
     if(height < 0)
         height = -height; // TVP2 does not support negative value of height
-    if(Name == TJS_W("SelectButtonSeparatedTextLayer") &&
+    if((Name.IsEmpty() || Name == TJS_W("SelectButtonSeparatedTextLayer")) &&
        Font.Face.AsStdString().find("PreRenderFont(") != std::string::npos && height == 32) {
         height = 39;
     }
