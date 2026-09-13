@@ -1774,6 +1774,9 @@ namespace PSB {
             evictedBytes += it->second.sizeBytes;
             _bytesInUse -= it->second.sizeBytes;
             _resources.erase(it);
+            const auto slashPos = victimKey.find('/');
+            if(slashPos != std::string::npos)
+                _loadedArchives.erase(victimKey.substr(0, slashPos));
         }
 
         if(evictedCount > 0) {
