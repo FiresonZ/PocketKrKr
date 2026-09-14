@@ -1768,6 +1768,31 @@ void tTVPNativeBaseBitmap::GetTextSize(const ttstr &text) {
             TextHeight = std::abs(Font.Height);
         }
     }
+#if defined(KRKR_RENDER_PROBE)
+    {
+        // Report the exact metrics a script gets for layout so a mismatch
+        // between the requested Font.Height and the actual prerendered (TPF)
+        // / rasterizer advance can be seen. This drives the options-label
+        // "whole text shifted top-left and scaled down" symptom.
+        // 脚本布局拿到的精确度量：请求字号与实际 TPF/栅格化 advance 是否一致，
+        // 用于定位选项文字"整体偏左上且缩小"的字号错配。
+        static std::set<std::string> sProbedTextSize;
+        std::string key = Font.Face.AsNarrowStdString() + "|" +
+            std::to_string(Font.Height) + "|" + std::to_string(TextWidth) +
+            "|" + std::to_string(TextHeight);
+        if(sProbedTextSize.insert(key).second) {
+            if(auto logger = spdlog::get("core")) {
+                logger->info(
+                    "[TextSizeProbe] face='{}' h={} prerendered={} "
+                    "firstchar=U+{:04X} textWidth={} textHeight={}",
+                    Font.Face.AsNarrowStdString(), Font.Height,
+                    PrerenderedFont ? 1 : 0,
+                    text.length() ? static_cast<unsigned>(text.c_str()[0]) : 0,
+                    TextWidth, TextHeight);
+            }
+        }
+    }
+#endif
 }
 //---------------------------------------------------------------------------
 tjs_int tTVPNativeBaseBitmap::GetTextWidth(const ttstr &text) {

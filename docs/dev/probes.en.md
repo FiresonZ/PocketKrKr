@@ -44,6 +44,8 @@ The Android, iOS, and macOS build scripts explicitly pass `ON` or `OFF` whenever
 | `drawAnimatedTree stencil` | Record controlled stencil scratch-layer preparation and compositing results | `cpp/plugins/motionplayer/Player.h` | During stencil compositing; low to medium cost |
 | `applyStencilComposite: RGB-rotation alpha recovered` | Record the exceptional compatibility path that recovers mask alpha from RGB | `cpp/plugins/motionplayer/Player.h` | Only when it occurs; low cost |
 | `[MotionSkipProbe]` | Record the motion targeted by `skipToSync`, timeline end, clock, and loop state, to attribute whether a skip that propagates into the later title-background animation is Player-level or script/KAG-level | `cpp/plugins/motionplayer/Player.h` `skipToSync()` | On skip; low cost |
+| `[TextSizeProbe]` | Log the `GetTextSize` metrics a script receives for layout (face, height, whether TPF was used, first code point, width, height), to compare the requested font size with the actual prerendered (TPF) / rasterizer advance and pinpoint the "options label shifted top-left and scaled down" size mismatch | `cpp/core/visual/impl/LayerBitmapImpl.cpp` `GetTextSize()` | Deduped by face, height and result; low cost |
+| `[DrawTextProbe]` | Log the top-clip correction (clamp) decision in native `Layer.drawText`: layer name, text length, first two code points, glyph bounds top, clip top, and applied y, to tell whether the script y mismatches the real glyph top | `cpp/core/visual/LayerIntf.cpp` `Layer.drawText` | Deduped by layer name, text prefix and applied y; low cost |
 
 ## Removed Probes
 

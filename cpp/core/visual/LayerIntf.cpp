@@ -8590,6 +8590,32 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
                         ? (tjs_int)*param[10]
                         : 0),
                 _this->GetClipTop());
+#if defined(KRKR_RENDER_PROBE)
+            {
+                // Options labels are laid out by scripts from getTextSize; the
+                // asymmetry between the script's y and the real glyph top shows
+                // up here as a clamp that moves the whole label, or as a label
+                // that still starts above the clip. Print what clamp decided.
+                // 选项文字由脚本用 getTextSize 布局；脚本 y 与字形真实顶部的偏差
+                // 会体现为 clamp 整体下移，或文字仍起点在 clip 之上。打印 clamp 决策。
+                static std::set<std::string> sProbedDrawText;
+                char16_t fc = text.length() ? text.c_str()[0] : 0;
+                char16_t sc = text.length() > 1 ? text.c_str()[1] : 0;
+                std::string key = _this->GetName().AsNarrowStdString() + "|" +
+                    std::to_string(fc) + ":" + std::to_string(sc) + "|" +
+                    std::to_string(y);
+                if(sProbedDrawText.insert(key).second) {
+                    if(auto logger = spdlog::get("core")) {
+                        logger->info(
+                            "[DrawTextProbe] layer='{}' textlen={} first=U+{:04X} "
+                            "second=U+{:04X} glyphTop={} clipTop={} y={}",
+                            _this->GetName().AsNarrowStdString(), text.length(),
+                            static_cast<unsigned>(fc), static_cast<unsigned>(sc),
+                            glyphBounds.top, _this->GetClipTop(), y);
+                    }
+                }
+            }
+#endif
         } catch(...) {
             // keep the requested position when bounds are unavailable
             // 字形边界不可用时保持请求坐标

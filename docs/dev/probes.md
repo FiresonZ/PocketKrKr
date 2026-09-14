@@ -44,6 +44,8 @@ Android、iOS 和 macOS 构建脚本会在环境变量 `ENABLE_RENDER_PROBE` 明
 | `drawAnimatedTree stencil` | 记录受控的 stencil 离屏层准备和合成结果 | `cpp/plugins/motionplayer/Player.h` | stencil 合成时；低到中成本 |
 | `applyStencilComposite: RGB-rotation alpha recovered` | 记录蒙版从 RGB 恢复 alpha 的异常兼容路径 | `cpp/plugins/motionplayer/Player.h` | 仅发生时；低成本 |
 | `[MotionSkipProbe]` | 记录 `skipToSync` 命中的 motion、时间线末端、时钟与循环状态，定位“跳过被连带传播到后续标题背景动画”是 Player 级还是脚本/KAG 级 | `cpp/plugins/motionplayer/Player.h` 的 `skipToSync()` | 跳过触发时；低成本 |
+| `[TextSizeProbe]` | 记录脚本布局拿到的 `GetTextSize` 度量（face、字号、是否命中 TPF、文本首字符、宽度、高度），对照请求字号与实际 TPF/栅格化 advance，定位选项文字“整体偏左上且缩小”的字号错配 | `cpp/core/visual/impl/LayerBitmapImpl.cpp` 的 `GetTextSize()` | 按 face、字号与测量结果去重；低成本 |
+| `[DrawTextProbe]` | 记录原生 `Layer.drawText` 顶部越界修正（clamp）决策：图层名、文本长度、首两个字符码点、字形边界顶、Clip 顶与生效 y，判断脚本 y 与字形真实顶部是否错位 | `cpp/core/visual/LayerIntf.cpp` 的 `Layer.drawText` | 按图层名、文本前缀与生效 y 去重；低成本 |
 
 ## 已移除探针
 
