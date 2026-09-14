@@ -9076,7 +9076,6 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
         if(sourceIsPrerenderedFont && srcrect.right > srcrect.left &&
            srcrect.bottom > srcrect.top) {
             destrect.right = destrect.left + srcrect.right - srcrect.left;
-            destrect.top = std::max(destrect.top, 0);
             destrect.bottom = destrect.top + srcrect.bottom - srcrect.top;
         }
 
