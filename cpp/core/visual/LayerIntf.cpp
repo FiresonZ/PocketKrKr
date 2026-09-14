@@ -40,6 +40,7 @@
 #include "TVPColor.h"
 // #include "TVPSysFont.h"
 #include "FontRasterizer.h"
+#include "FontBaseline.h"
 #include "RectItf.h"
 #include "FontSystem.h"
 #include "tjsDictionary.h"
@@ -8566,8 +8567,33 @@ tTJSNC_Layer::tTJSNC_Layer() : tTJSNativeClass(TJS_W("Layer")) {
         if(numparams < 4)
             return TJS_E_BADPARAMCOUNT;
         const tjs_int x = *param[0];
-        const tjs_int y = *param[1];
+        tjs_int y = *param[1];
         const ttstr text = *param[2];
+        // Replacement fonts can push a glyph's ink above the logical line box.
+        // Shift the whole draw into the clip (shared baseline unchanged) so the
+        // ink and its outline stay visible.  Measurement is best-effort.
+        // 回退字体可能把字形墨迹推到行盒之上；整段绘制下移进裁剪区（共享基线
+        // 不变），保证墨迹与描边可见。字形实测为尽力而为。
+        try {
+            tTVPRect glyphBounds;
+            _this->GetFontGlyphDrawRect(text, glyphBounds);
+            y = TVPClampTextOriginToClipTop(
+                y, glyphBounds.top,
+                TVPComputeTextShadowTopPadding(
+                    (numparams >= 7 && param[6]->Type() != tvtVoid)
+                        ? (tjs_int)*param[6]
+                        : 0,
+                    (numparams >= 9 && param[8]->Type() != tvtVoid)
+                        ? (tjs_int)*param[8]
+                        : 0,
+                    (numparams >= 11 && param[10]->Type() != tvtVoid)
+                        ? (tjs_int)*param[10]
+                        : 0),
+                _this->GetClipTop());
+        } catch(...) {
+            // keep the requested position when bounds are unavailable
+            // 字形边界不可用时保持请求坐标
+        }
         _this->DrawText(
             x, y, text,
             static_cast<tjs_uint32>((tjs_int64)*param[3]),

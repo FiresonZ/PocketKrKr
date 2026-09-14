@@ -39,6 +39,7 @@ void TVPInitWindowOptions();
 // #include "TVPSysFont.h"
 #include "CharacterData.h"
 #include "PrerenderedFont.h"
+#include "FontBaseline.h"
 #include "FontSystem.h"
 #include "FreeType.h"
 #include "FreeTypeFontRasterizer.h"
@@ -350,7 +351,7 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
         data->Metrics.CellIncX = pitem->IncX;
         data->Metrics.CellIncY = pitem->IncY;
         data->OriginX = pitem->OriginX + aofsx;
-        data->OriginY = -pitem->OriginY + aofsy;
+        data->OriginY = TVPComputeGlyphOriginY(aofsy, pitem->OriginY);
 
         data->Antialiased = font.Antialiased;
 

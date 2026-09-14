@@ -12,6 +12,7 @@
 #endif
 #include "MsgIntf.h"
 #include "FontSystem.h"
+#include "FontBaseline.h"
 #include <complex>
 #include <spdlog/spdlog.h>
 
@@ -214,6 +215,17 @@ FreeTypeFontRasterizer::GetBitmap(const tTVPFontAndCharacterData &font,
         ApplyFallbackFace();
         if(FaceFallback) {
             data = FaceFallback->GetGlyphFromCharcode(font.Character);
+            if(data) {
+                // The caller supplies a single y coordinate for the whole
+                // line. Missing CJK glyphs may come from a fallback face whose
+                // ascender/descent metrics differ from the requested face.
+                // Keep those bitmaps on the requested face's baseline instead
+                // of letting adjacent characters jump vertically.
+                // 整行只提供一个 y 坐标。缺失 CJK 字形可能来自度量与请求字体不同
+                // 的回退字体；把其位图放到请求字体的基线上，避免相邻字符上下跳动。
+                data->OriginY += TVPComputeFallbackBaselineAdjustment(
+                    Face->GetLineBaseline(), FaceFallback->GetLineBaseline());
+            }
         }
     }
     if(data == nullptr) {
@@ -275,6 +287,19 @@ void FreeTypeFontRasterizer::GetGlyphDrawRect(const ttstr &text,
         tjs_int ax, ay;
         tTVPRect rt(0, 0, 0, 0);
         bool result = Face->GetGlyphRectFromCharcode(rt, ch, ax, ay);
+        if(result == false && !isUnicodeSpace(ch)) {
+            ApplyFallbackFace();
+            if(FaceFallback) {
+                result = FaceFallback->GetGlyphRectFromCharcode(rt, ch, ax,
+                                                                ay);
+                if(result) {
+                    rt.add_offsets(
+                        0, TVPComputeFallbackBaselineAdjustment(
+                               Face->GetLineBaseline(),
+                               FaceFallback->GetLineBaseline()));
+                }
+            }
+        }
         if(result == false)
             result = Face->GetGlyphRectFromCharcode(rt, Face->GetDefaultChar(),
                                                     ax, ay);

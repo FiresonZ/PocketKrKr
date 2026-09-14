@@ -118,6 +118,12 @@ public:
         if(upe == 0) return 0;
         return FTFace->ascender * ppem / upe;
     }
+    // Baseline of the face's line box.  The box may be shorter than the
+    // design ascender (replacement fonts), so the baseline is clamped below
+    // the top and reserves the face descent so ink never escapes the box.
+    // 字面行盒基线。行盒可能矮于设计 ascender(回退字体)，基线需钳制并预留
+    // descent，保证墨迹不落出行盒。
+    [[nodiscard]] tjs_int GetLineBaseline() const;
     void GetUnderline(tjs_int &pos, tjs_int &thickness) const {
         if(!FTFace || !FTFace->size || FTFace->units_per_EM == 0) {
             pos = 0; thickness = 1; return;
