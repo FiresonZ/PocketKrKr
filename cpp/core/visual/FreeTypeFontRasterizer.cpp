@@ -183,7 +183,7 @@ void FreeTypeFontRasterizer::GetTextExtent(tjs_char ch, tjs_int &w,
 //---------------------------------------------------------------------------
 tjs_int FreeTypeFontRasterizer::GetAscentHeight() {
     if(Face)
-        return Face->GetAscent();
+        return Face->GetLineBaseline();
     return 0;
 }
 static bool isUnicodeSpace(char16_t ch) {
