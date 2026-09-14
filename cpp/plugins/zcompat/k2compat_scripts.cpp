@@ -2217,8 +2217,8 @@ class FontSelectDialog extends WIN32GenericDialogEX
 				.setImageSize(w, h);
 				.fillRect(0, 0, w, h,           getcol(selected ? clHighlight : clWindow) | 0xFF000000);
 				drawFontLayer(y2, h);
-				fontLayer.fillRect(x, y2, w, h, getcol(selected ? clHighlightText : clWindowText));
-				.operateRect(0, 0, fontLayer, x, y2, w, h);
+				fontLayer.fillRect(0, y2, w, h, getcol(selected ? clHighlightText : clWindowText));
+				.operateRect(0, 0, fontLayer, 0, y2, w, h);
 			}
 			info.draw(selectBitmap, x, y);
 		} catch (e) {}
