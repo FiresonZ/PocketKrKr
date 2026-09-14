@@ -350,7 +350,7 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
         data->Metrics.CellIncX = pitem->IncX;
         data->Metrics.CellIncY = pitem->IncY;
         data->OriginX = pitem->OriginX + aofsx;
-        data->OriginY = -pitem->OriginY + pfont->GetMaxOriginY();
+        data->OriginY = -pitem->OriginY + aofsy;
 
         data->Antialiased = font.Antialiased;
 
@@ -388,10 +388,6 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
         // render font
         tTVPCharacterData *data =
             GetCurrentRasterizer()->GetBitmap(font, aofsx, aofsy);
-        if(data && pfont) {
-            const tjs_int baselineShift = pfont->GetMaxOriginY() - aofsy;
-            data->OriginY += baselineShift;
-        }
 
         // add to hash table
         tTVPCharacterDataHolder holder(data);
