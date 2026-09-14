@@ -350,7 +350,7 @@ static tTVPCharacterData *TVPGetCharacter(const tTVPFontAndCharacterData &font,
         data->Metrics.CellIncX = pitem->IncX;
         data->Metrics.CellIncY = pitem->IncY;
         data->OriginX = pitem->OriginX + aofsx;
-        data->OriginY = -pitem->OriginY + aofsy;
+        data->OriginY = -pitem->OriginY + pfont->GetMaxOriginY();
 
         data->Antialiased = font.Antialiased;
 

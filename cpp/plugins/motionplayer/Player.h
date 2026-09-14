@@ -51,14 +51,8 @@ namespace motion {
         }
 
     public:
-        Player() {
-            ++sLivePlayers;
-        }
+        Player() = default;
         ~Player() {
-            if(sLivePlayers > 0)
-                --sLivePlayers;
-            if(sLivePlayers == 0)
-                sSkipConsumed = false;
             cleanupTempLayer();
         }
 
@@ -3413,7 +3407,6 @@ static void buildLocalMatrix(bool fx, bool fy, double ang, double sx, double sy,
         // 解耦，其上的 captureCanvas 借该指针找到活动 Player，把当前帧合成到游戏传入的
         // 目标层。在 play()/draw()/drawOnto() 中设置。
         inline static Player *sLastDrawSource = nullptr;
-        inline static int sLivePlayers = 0;
         inline static bool sSkipConsumed = false;
 
         bool _playing = false;
