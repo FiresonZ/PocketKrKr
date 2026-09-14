@@ -5200,10 +5200,13 @@ void tTJSNI_BaseLayer::OperateStretch(const tTVPRect &destrect,
         if(sProbedPreRenderStretches.insert(key).second) {
             if(auto logger = spdlog::get("core")) {
                 logger->info(
-                    "[PreRenderFontStretchProbe] owner='{}' dest=({},{},{},{}) "
-                    "source=({},{},{},{}) sourceSize={}x{} dstSize={}x{} "
-                    "clip=({},{},{},{})",
-                    Name.AsNarrowStdString(), destrect.left, destrect.top,
+                    "[PreRenderFontStretchProbe] owner='{}' face='{}' size={} "
+                    "layerRect=({},{},{},{}) imgOfs=({},{}) "
+                    "dest=({},{},{},{}) source=({},{},{},{}) "
+                    "sourceSize={}x{} dstSize={}x{} clip=({},{},{},{})",
+                    Name.AsNarrowStdString(), Font.Face.AsNarrowStdString(),
+                    Font.Height, Rect.left, Rect.top, Rect.right, Rect.bottom,
+                    ImageLeft, ImageTop, destrect.left, destrect.top,
                     destrect.right, destrect.bottom, srcrect.left, srcrect.top,
                     srcrect.right, srcrect.bottom, src->GetWidth(), src->GetHeight(),
                     MainImage->GetWidth(), MainImage->GetHeight(), ClipRect.left,
